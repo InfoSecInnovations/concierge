@@ -14,7 +14,7 @@ services:
     - 8080:8080
     - 50051:50051
     volumes:
-    - /home/douglas/weaviate_data:/var/lib/weaviate
+    - ${WEAVIATE_DATA_DIR}:/var/lib/weaviate
     restart: on-failure:0
     environment:
       QUERY_DEFAULTS_LIMIT: 25

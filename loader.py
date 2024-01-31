@@ -1,15 +1,15 @@
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+from dotenv import load_dotenv
 import os
 import weaviate
-import json
-import requests
+
+load_dotenv()
 
 # variables
-source_path = '/home/douglas/All_SANS_Classes/'
-
+source_path = os.environ['DOCS_DIR']
 
 source_files = os.listdir(source_path)
 chunk_size = 200
