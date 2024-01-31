@@ -1,15 +1,21 @@
 # Concierge #
 
 ## Setup ##
+`mkdir concierge` create a directory for use by Concierge
 
-`pip install -r requirements.txt`
+`cd concierge` go into this directory
+
+`python -m venv .` create a python virtual enviornment in the current directory
+
+`source ./bin/activate` enter into the virtual enviornment
+
+`pip install -r requirements.txt` install all dependencies
 
 copy `.env.example` into a file named `.env` and set the paths to the PDF documents you wish to analyze and a folder on your computer that weaviate will use to store the database.
 
 https://ollama.ai/blog/ollama-is-now-available-as-an-official-docker-image configure the ollama container. The Linux CPU Only instructions seem to work fine on a Windows host too.
 
 ## Usage ##
-
 `docker compose up` will start the docker container with the vector DB
 
 `docker exec -it ollama ollama run mistral` will start the docker container with the model
