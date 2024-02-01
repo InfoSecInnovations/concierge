@@ -27,11 +27,12 @@ conn = connections.connect(host="127.0.0.1", port=19530)
 
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+    FieldSchema(name="metadata_type", dtype=DataType.VARCHAR, max_length=64),
     FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=500),
     FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=500),
     FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=384)
 ]
-schema = CollectionSchema(fields=fields, description="Vectorized PDFs")
+schema = CollectionSchema(fields=fields, description="vectorized facts")
 collection = Collection(name="facts", schema=schema)
 index_params={
     "metric_type":"IP",
@@ -49,17 +50,22 @@ def Vectorize(pages):
         for chunk in chunks:
             vect = stransform.encode(chunk)
             entries.append({
+                "metadata_type":page["metadata_type"],
                 "metadata":page["metadata"],
                 "text":chunk,
                 "vector":vect
             })
 
-for pdf in source_files:
-    print(pdf)
-    pages = LoadPDF(source_path, pdf)
-    Vectorize(pages)
+for file in source_files:
+    print(file)
+    pages = None
+    if (file.endswith(".pdf")):
+        pages = LoadPDF(source_path, file)
+    if (pages):
+        Vectorize(pages)
 
 collection.insert([
+    [x["metadata_type"] for x in entries],
     [x["metadata"] for x in entries],
     [x["text"] for x in entries],
     [x["vector"] for x in entries],

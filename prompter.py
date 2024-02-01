@@ -23,7 +23,7 @@ while True:
         anns_field="vector",
         param=search_params,
         limit=references,
-        output_fields=["metadata", "text"],
+        output_fields=["metadata_type", "metadata", "text"],
         expr=None,
         consistency_level="Strong"
     )
@@ -33,11 +33,16 @@ while True:
     for resp in response:
         for hit in resp:
             context = context + hit.entity.get("text")
-            sources.append(hit.entity.get("metadata"))
+            sources.append({
+                "type": hit.entity.get("metadata_type"),
+                "metadata": hit.entity.get("metadata")
+            })
 
     print('Will be answering from:')
     for source in sources:
-        print(f'   {source}')
+        if (source["type"] == "pdf"):
+            metadata = json.loads(source["metadata"])
+            print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
 
     data={
         "model":"mistral",
