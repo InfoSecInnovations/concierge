@@ -5,6 +5,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 import os
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
+from loaders.pdf import LoadPDF
 
 load_dotenv()
 
@@ -40,25 +41,23 @@ index_params={
 collection.create_index(field_name="vector", index_params=index_params)
 
 entries = []
-def VectorizePDF(pdf):
-    loader = PyPDFLoader(f'{source_path}{pdf}')
-    pages = loader.load_and_split()
+def Vectorize(pages):
     PageProgress = tqdm(total=len(pages))
     for page in pages:
         PageProgress.update(1)
-        metadata = page.metadata
-        chunks = splitter.split_text(page.page_content)
+        chunks = splitter.split_text(page["content"])
         for chunk in chunks:
             vect = stransform.encode(chunk)
             entries.append({
-                "metadata":str(f"Page {metadata['page']+1} of {pdf}"),
+                "metadata":page["metadata"],
                 "text":chunk,
                 "vector":vect
             })
 
 for pdf in source_files:
     print(pdf)
-    VectorizePDF(pdf)
+    pages = LoadPDF(source_path, pdf)
+    Vectorize(pages)
 
 collection.insert([
     [x["metadata"] for x in entries],

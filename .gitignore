@@ -4,6 +4,11 @@
 # don't really know what this dir is but I don't think it needs to be committed
 share
 
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 .Python
