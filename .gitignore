@@ -1,6 +1,9 @@
 # .env file used to set local paths for Docker and scripts
 .env
 
+# don't really know what this dir is but I don't think it needs to be committed
+share
+
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
 .Python

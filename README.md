@@ -7,7 +7,7 @@
 
 `python -m venv .` create a python virtual enviornment in the current directory
 
-`source ./bin/activate` enter into the virtual enviornment
+Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` enter into the virtual environment
 
 `pip install -r requirements.txt` install all dependencies
 

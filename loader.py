@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 from dotenv import load_dotenv
 import os
-from pymilvus import connections, db
+from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 # import weaviate
 
 load_dotenv()
@@ -43,6 +43,22 @@ class_obj = {
     ],
 }
 
+fields = [
+    FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+    FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=500),
+    FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=500),
+    FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=384)
+]
+schema = CollectionSchema(fields=fields, description="Vectorized PDFs")
+collection = Collection(name="facts", schema=schema)
+index_params={
+    "metric_type":"IP",
+    "index_type":"IVF_FLAT",
+    "params":{"nlist":128}
+}
+collection.create_index(field_name="vector", index_params=index_params)
+entries = []
+
 def VectorizePDF(pdf):
     loader = PyPDFLoader(f'{source_path}{pdf}')
     pages = loader.load_and_split()
@@ -53,7 +69,11 @@ def VectorizePDF(pdf):
         chunks = splitter.split_text(page.page_content)
         for chunk in chunks:
             vect = stransform.encode(chunk)
-
+            entries.append({
+                "metadata":str(f"Page {metadata['page']+1} of {pdf}"),
+                "text":chunk,
+                "vector":vect
+            })
 """             client.data_object.create(class_name="Fact",
                                       data_object={
                                           "metadata":str(f"Page {metadata['page']+1} of {pdf}"),
@@ -61,6 +81,7 @@ def VectorizePDF(pdf):
                                           },
                                           vector = vect
             ) """
+    
 
 
 # client.schema.create_class(class_obj) 
@@ -68,3 +89,9 @@ def VectorizePDF(pdf):
 for pdf in source_files:
     print(pdf)
     VectorizePDF(pdf)
+
+collection.insert([
+    [x["metadata"] for x in entries],
+    [x["text"] for x in entries],
+    [x["vector"] for x in entries],
+])
