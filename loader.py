@@ -5,7 +5,6 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 import os
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
-# import weaviate
 
 load_dotenv()
 
@@ -23,25 +22,7 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=chunk_overlap
 )
 
-""" client = weaviate.Client(
-    url = "http://127.0.0.1:8080"
-) """
-
 conn = connections.connect(host="127.0.0.1", port=19530)
-
-""" class_obj = {
-    "class": "Fact",
-    "properties": [
-        {
-            "name": "metadata",
-            "dataType": ["text"],
-        },
-        {
-            "name": "text",
-            "dataType": ["text"],
-        },
-    ],
-} """
 
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
@@ -57,8 +38,8 @@ index_params={
     "params":{"nlist":128}
 }
 collection.create_index(field_name="vector", index_params=index_params)
-entries = []
 
+entries = []
 def VectorizePDF(pdf):
     loader = PyPDFLoader(f'{source_path}{pdf}')
     pages = loader.load_and_split()
@@ -74,17 +55,6 @@ def VectorizePDF(pdf):
                 "text":chunk,
                 "vector":vect
             })
-"""             client.data_object.create(class_name="Fact",
-                                      data_object={
-                                          "metadata":str(f"Page {metadata['page']+1} of {pdf}"),
-                                          "text":chunk,
-                                          },
-                                          vector = vect
-            ) """
-    
-
-
-# client.schema.create_class(class_obj) 
 
 for pdf in source_files:
     print(pdf)

@@ -1,3 +1,5 @@
+# TODO: delete this script and use a persona in prompter.py
+
 import weaviate
 import json
 import requests
