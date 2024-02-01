@@ -29,7 +29,7 @@ splitter = RecursiveCharacterTextSplitter(
 
 conn = connections.connect(host="127.0.0.1", port=19530)
 
-class_obj = {
+""" class_obj = {
     "class": "Fact",
     "properties": [
         {
@@ -41,7 +41,7 @@ class_obj = {
             "dataType": ["text"],
         },
     ],
-}
+} """
 
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),

@@ -26,4 +26,4 @@ https://ollama.ai/blog/ollama-is-now-available-as-an-official-docker-image confi
 
 `python fact-check.py` will open the command line interface to ask true/false questions about the information in the documents
 
-ctrl+C in the docker command-line to stop the container and `docker compose down` to remove
+`docker compose down` will remove the vector DB container once you've finished using the tool

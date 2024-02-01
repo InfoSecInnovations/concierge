@@ -1,6 +1,7 @@
-import weaviate
+#import weaviate
 import json
 import requests
+from pymilvus import connections, Collection
 
 from sentence_transformers import SentenceTransformer
 
@@ -8,16 +9,31 @@ references = 5
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
 
-client = weaviate.Client(
+""" client = weaviate.Client(
     url = "http://127.0.0.1:8080"
-)
+) """
 
+conn = connections.connect(host="127.0.0.1", port=19530)
+collection = Collection("facts")
+collection.load()
+
+search_params = {
+    "metric_type": "IP"
+}
 
 while True:
     print("what do you want to know?")
     question = input()
-
-    response = (
+    response = collection.search(
+        data=[stransform.encode(question)],
+        anns_field="vector",
+        param=search_params,
+        limit=references,
+        output_fields=["metadata", "text"],
+        expr=None,
+        consistency_level="Strong"
+    )
+    """     response = (
         client.query
         .get("Fact", ["metadata", "text"])
         .with_near_vector({
@@ -26,14 +42,16 @@ while True:
         .with_limit(references)
         .with_additional(["distance"])
         .do()
-    )
-
-
+    ) """
     context = ""
     sources = []
-    for resp in response['data']['Get']['Fact']:
+    for resp in response:
+        for hit in resp:
+            context = context + hit.entity.get("text")
+            sources.append(hit.entity.get("metadata"))
+    """ for resp in response['data']['Get']['Fact']:
         context = context + resp['text']
-        sources.append(resp['metadata'])
+        sources.append(resp['metadata']) """
 
 
     print('Will be answering from:')
