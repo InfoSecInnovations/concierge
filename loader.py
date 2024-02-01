@@ -4,7 +4,8 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 from dotenv import load_dotenv
 import os
-import weaviate
+from pymilvus import connections, db
+# import weaviate
 
 load_dotenv()
 
@@ -22,9 +23,11 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=chunk_overlap
 )
 
-client = weaviate.Client(
+""" client = weaviate.Client(
     url = "http://127.0.0.1:8080"
-)
+) """
+
+conn = connections.connect(host="127.0.0.1", port=19530)
 
 class_obj = {
     "class": "Fact",
@@ -51,16 +54,16 @@ def VectorizePDF(pdf):
         for chunk in chunks:
             vect = stransform.encode(chunk)
 
-            client.data_object.create(class_name="Fact",
+"""             client.data_object.create(class_name="Fact",
                                       data_object={
                                           "metadata":str(f"Page {metadata['page']+1} of {pdf}"),
                                           "text":chunk,
                                           },
                                           vector = vect
-            )
+            ) """
 
 
-client.schema.create_class(class_obj) 
+# client.schema.create_class(class_obj) 
 
 for pdf in source_files:
     print(pdf)

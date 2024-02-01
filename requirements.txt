@@ -1,8 +1,10 @@
 langchain
-weaviate-client==3.*
 sentence-transformers
 python-dotenv
 tqdm
 requests
 langchain-community
 pypdf
+protobuf
+grpcio-tools
+pymilvus==2.3.6
