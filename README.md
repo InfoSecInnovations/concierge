@@ -1,7 +1,7 @@
 # Concierge #
 
 ## Setup ##
-`mkdir concierge` create a directory for use by Concierge
+git clone repo or extract zip  
 
 `cd concierge` go into this directory
 
@@ -12,6 +12,9 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 `pip install -r requirements.txt` install all dependencies
 
 copy `.env.example` into a file named `.env` and set the paths to the PDF documents you wish to analyze and a folder on your computer that weaviate will use to store the database.
+
+Create a docker bridge network for intra container networking: 
+`docker network create -d bridge concierge`
 
 Important: only pick on of these to choose your ollama start/setup:  
 CPU only use the line below:  
