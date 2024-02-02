@@ -1,9 +1,9 @@
 # Concierge #
 
 ## Setup ##
-`mkdir concierge` create a directory for use by Concierge
+do a `git pull` or download the zip of the project
 
-`cd concierge` go into this directory
+`cd concierge` go into the cloned project directory
 
 `python -m venv .` create a python virtual enviornment in the current directory
 
