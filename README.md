@@ -13,7 +13,9 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 
 copy `.env.example` into a file named `.env` and set the paths to the PDF documents you wish to analyze and a folder on your computer that weaviate will use to store the database.
 
-https://ollama.ai/blog/ollama-is-now-available-as-an-official-docker-image configure the ollama container. The Linux CPU Only instructions seem to work fine on a Windows host too.
+Important: only pick on of these to choose your ollama start/setup:  
+CPU only: `docker run -d --network concierge -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama` 
+GPU support: `docker run -d --network concierge --gpus=all -v ollama:/root/.ollama -p 11434:11434 --name ollama ollama/ollama`
 
 ## Usage ##
 `docker compose up` will start the docker container with the vector DB
