@@ -1,0 +1,36 @@
+[default]
+greeting = What do you want to know?
+
+prompt = Using only the context provided, answer the user input that follows.
+         You must limit the response to the provided context.
+
+
+[fact_check]
+greeting = What statement do you want to fact check?
+
+prompt = Using only the context provided, determine if the statement that follows is true or not.
+         You must evaluate the truth of the statement with only the provided context.
+
+
+[summary]
+greeting = What topic would you like a brief summary?
+
+prompt = Using only the context provided, summarize the following content.
+         You must only summarize the context provided. You may not add other data.
+
+
+[counterpoint]
+greeting = Make a statement and I'll provide a counter arugment.
+
+prompt = Using only the context provided, give a rebuttal style argument to the following statement.
+         If possible, provide three to five short points of rebuttal. These should be no more than one sentence each.
+         You must only use the context provided to form the response.
+
+
+[coach]
+greeting = How can I help?
+
+prompt = Carefully evaluate the question that follows.
+         If it is too vague or poorly worded, state this and do not answer the question.
+         If the question is too vague or poorly worded, provide a better question, but do not answer the question.
+         If the question will allow adequate repsonse, answer with only the provided context.
