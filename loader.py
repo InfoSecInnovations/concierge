@@ -39,12 +39,12 @@ index_params={
 }
 collection.create_index(field_name="vector", index_params=index_params)
 
-entries = []
 def VectorizePDF(pdf):
     loader = PyPDFLoader(f'{source_path}{pdf}')
     pages = loader.load_and_split()
     PageProgress = tqdm(total=len(pages))
     for page in pages:
+        entries = []
         PageProgress.update(1)
         metadata = page.metadata
         chunks = splitter.split_text(page.page_content)
@@ -55,13 +55,20 @@ def VectorizePDF(pdf):
                 "text":chunk,
                 "vector":vect
             })
+        #insert each page's vectors
+        collection.insert([
+            [x["metadata"] for x in entries],
+            [x["text"] for x in entries],
+            [x["vector"] for x in entries],
+        ])
+
 
 for pdf in source_files:
     print(pdf)
     VectorizePDF(pdf)
 
-collection.insert([
-    [x["metadata"] for x in entries],
-    [x["text"] for x in entries],
-    [x["vector"] for x in entries],
-])
+#collection.insert([
+#    [x["metadata"] for x in entries],
+#    [x["text"] for x in entries],
+#    [x["vector"] for x in entries],
+#])
