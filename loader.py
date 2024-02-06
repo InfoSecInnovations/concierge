@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
 from loaders.pdf import LoadPDF
+from pympler.asizeof import asizeof
 
 load_dotenv()
 
@@ -41,20 +42,42 @@ index_params={
 }
 collection.create_index(field_name="vector", index_params=index_params)
 
-entries = []
+# on a huge dataset grpc can error due to size limits, so we need to break it into batches
+batched_entries = []
+batched_entries.append([])
+batch_index = 0
+batch_size = 0
+max_batch_size = 60000000 # 67108864 is the true value but we're leaving a safety margin
+
 def Vectorize(pages):
+    global batch_index
+    global batch_size
     PageProgress = tqdm(total=len(pages))
     for page in pages:
         PageProgress.update(1)
         chunks = splitter.split_text(page["content"])
         for chunk in chunks:
             vect = stransform.encode(chunk)
-            entries.append({
+            entry = {
                 "metadata_type":page["metadata_type"],
                 "metadata":page["metadata"],
                 "text":chunk,
                 "vector":vect
-            })
+            }
+            entry_size = asizeof(entry)
+            if (batch_size + entry_size > max_batch_size):
+                batched_entries.append([])
+                batch_index = batch_index + 1
+                batch_size = 0
+            batched_entries[batch_index].append(entry)
+            batch_size = batch_size + entry_size
+        #insert each page's vectors
+        # collection.insert([
+        #     [x["metadata"] for x in entries],
+        #     [x["text"] for x in entries],
+        #     [x["vector"] for x in entries],
+        # ])
+
 
 for file in source_files:
     print(file)
@@ -64,9 +87,10 @@ for file in source_files:
     if (pages):
         Vectorize(pages)
 
-collection.insert([
-    [x["metadata_type"] for x in entries],
-    [x["metadata"] for x in entries],
-    [x["text"] for x in entries],
-    [x["vector"] for x in entries],
-])
+for batch in batched_entries:
+    collection.insert([
+        [x["metadata_type"] for x in batch],
+        [x["metadata"] for x in batch],
+        [x["text"] for x in batch],
+        [x["vector"] for x in batch],
+    ])
