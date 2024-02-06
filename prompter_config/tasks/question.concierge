@@ -1,0 +1,4 @@
+greeting = What do you want to know?
+
+prompt = '''Using only the context provided, answer the user input that follows.
+         You must limit the response to the provided context.'''

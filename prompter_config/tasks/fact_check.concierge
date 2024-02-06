@@ -1,0 +1,4 @@
+greeting = What statement do you want to fact check?
+
+prompt = '''Using only the context provided, determine if the statement that follows is true or not.
+         You must evaluate the truth of the statement with only the provided context.'''

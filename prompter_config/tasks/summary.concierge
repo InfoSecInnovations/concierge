@@ -1,0 +1,4 @@
+greeting = What topic would you like a brief summary?
+
+prompt = '''Using only the context provided, summarize the following content.
+         You must only summarize the context provided. You may not add other data.'''

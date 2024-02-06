@@ -3,30 +3,33 @@ import random
 import requests
 # line below commented; future feature.
 # import antigravity
-from configparser import ConfigParser
 from pymilvus import connections, Collection
 from sentence_transformers import SentenceTransformer
+import argparse
+from configobj import ConfigObj
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--task", required=True)
+parser.add_argument("--persona")
+parser.add_argument("--enhancers", nargs="*")
+args = parser.parse_args()
+
+enhancer_options = None
+if args.enhancers:
+    enhancer_options = [ConfigObj(f"prompter_config/enhancers/{enhancer}.concierge", list_values=False) for enhancer in args.enhancers]
+
+persona = None
+if args.persona:
+    persona = ConfigObj(f"prompter_config/personas/{args.persona}.concierge", list_values=False)
+
+task = ConfigObj(f"prompter_config/tasks/{args.task}.concierge", list_values=False)
 
 ### VARs ###
 # % chance of a parting comment after a response
 # must be 0-100. can be decimal if desired. no trailing %
 enhancement_chance = 100
-personafile = "personas/default.persona"
-voicefile = "personas/voice.persona"
 # will want to make this a select later
 references = 5
-
-### main program ###
-### !!! this is not great... config with same keys start overwriting
-# go to a single file? something else?
-# could put all vars in a single config... then mount when we dockerize this
-# kinda like that idea actually... 
-config = ConfigParser()
-config.read(personafile)
-personas = config.sections()
-
-config.read(voicefile)
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
@@ -40,19 +43,13 @@ search_params = {
 }
 
 while True:
-    print("which persona do you want to work with?")
-    print(personas)
-    persona = input()
-    greeting = config.get(persona, 'greeting')
-    prompt = config.get(persona, 'prompt')
 
-    enhancer = ""
-    if enhancement_chance >= random.randrange(1, 100):
-        enhancer_options = config.options('enhancer')
+    enhancer = None
+    if enhancer_options and len(enhancer_options) and enhancement_chance >= random.randrange(1, 100):
         enhancer_selection = (random.choice(enhancer_options))
-        enhancer = config.get('enhancer', enhancer_selection)
+        enhancer = enhancer_selection['prompt']
 
-    print(greeting)
+    print(task['greeting'])
     user_input = input()
 
     response = collection.search(
@@ -77,13 +74,15 @@ while True:
 
     print('\nResponding based on the following sources:')
     for source in sources:
-        if (source["type"] == "pdf"):
+        if source["type"] == "pdf":
             metadata = json.loads(source["metadata"])
             print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
 
-    if enhancer != "":
+    prompt = task['prompt']
+    if enhancer:
         prompt = prompt + "\n\n" + enhancer
-
+    if persona:
+        prompt = persona['prompt'] + "\n\n" + prompt
     prompt = prompt + "\n\nContext: " + context + "\n\nUser input: " + user_input
 
     data={

@@ -1,0 +1,6 @@
+greeting = How can I help?
+
+prompt = '''Carefully evaluate the question that follows.
+         If it is too vague or poorly worded, state this and do not answer the question.
+         If the question is too vague or poorly worded, provide a better question, but do not answer the question.
+         If the question will allow adequate repsonse, answer with only the provided context.'''

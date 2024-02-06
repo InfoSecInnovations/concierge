@@ -1,0 +1,5 @@
+greeting = Make a statement and I'll provide a counter arugment.
+
+prompt = '''Using only the context provided, give a rebuttal style argument to the following statement.
+         If possible, provide three to five short points of rebuttal. These should be no more than one sentence each.
+         You must only use the context provided to form the response.'''
