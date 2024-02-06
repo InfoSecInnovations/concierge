@@ -5,6 +5,7 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 import os
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
+from loaders.pdf import LoadPDF
 
 load_dotenv()
 
@@ -26,11 +27,12 @@ conn = connections.connect(host="127.0.0.1", port=19530)
 
 fields = [
     FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+    FieldSchema(name="metadata_type", dtype=DataType.VARCHAR, max_length=64),
     FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=500),
     FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=500),
     FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=384)
 ]
-schema = CollectionSchema(fields=fields, description="Vectorized PDFs")
+schema = CollectionSchema(fields=fields, description="vectorized facts")
 collection = Collection(name="facts", schema=schema)
 index_params={
     "metric_type":"IP",
@@ -39,19 +41,17 @@ index_params={
 }
 collection.create_index(field_name="vector", index_params=index_params)
 
-def VectorizePDF(pdf):
-    loader = PyPDFLoader(f'{source_path}{pdf}')
-    pages = loader.load_and_split()
+def Vectorize(pages):
     PageProgress = tqdm(total=len(pages))
     for page in pages:
         entries = []
         PageProgress.update(1)
-        metadata = page.metadata
-        chunks = splitter.split_text(page.page_content)
+        chunks = splitter.split_text(page["content"])
         for chunk in chunks:
             vect = stransform.encode(chunk)
             entries.append({
-                "metadata":str(f"Page {metadata['page']+1} of {pdf}"),
+                "metadata_type":page["metadata_type"],
+                "metadata":page["metadata"],
                 "text":chunk,
                 "vector":vect
             })
@@ -63,9 +63,13 @@ def VectorizePDF(pdf):
         ])
 
 
-for pdf in source_files:
-    print(pdf)
-    VectorizePDF(pdf)
+for file in source_files:
+    print(file)
+    pages = None
+    if (file.endswith(".pdf")):
+        pages = LoadPDF(source_path, file)
+    if (pages):
+        Vectorize(pages)
 
 #collection.insert([
 #    [x["metadata"] for x in entries],
