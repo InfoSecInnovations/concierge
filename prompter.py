@@ -7,6 +7,7 @@ from pymilvus import connections, Collection
 from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task", required=True)
@@ -30,6 +31,34 @@ task = ConfigObj(f"prompter_config/tasks/{args.task}.concierge", list_values=Fal
 enhancement_chance = 100
 # will want to make this a select later
 references = 5
+
+models = requests.get("http://localhost:11434/api/tags")
+model_list = json.loads(models.text)['models']
+if next(filter(lambda x: x.name == 'mistral', model_list), None):
+    print('mistral model found')
+else:
+    print('mistral model not found. Please wait while it loads')
+    request = requests.post("http://localhost:11434/api/pull", data=json.dumps({"name": "mistral"}), stream=True)
+    current = 0
+    pbar = tqdm(
+        unit="B",
+        unit_scale=True,
+        unit_divisor=1024
+    )
+    for item in request.iter_lines():
+        if item:
+            value = json.loads(item)
+            # TODO: display statuses
+            if 'total' in value:
+                if 'completed' in value:
+                    current = value['completed']
+                    # slight hackiness to set the initial value if resuming a download or switching files
+                    if pbar.initial == 0 or pbar.initial > current:
+                        pbar.initial = current
+                pbar.total = value['total']
+                pbar.n = current
+                pbar.refresh()
+    pbar.close()
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 

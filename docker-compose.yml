@@ -36,7 +36,7 @@ services:
       timeout: 20s
       retries: 3
 
-  standalone:
+  milvus-standalone:
     container_name: milvus-standalone
     image: milvusdb/milvus:v2.3.7
     command: ["milvus", "run", "standalone"]
@@ -60,6 +60,15 @@ services:
       - "etcd"
       - "minio"
 
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
+    restart: unless-stopped
+
 networks:
   default:
-    name: milvus
+    name: concierge
