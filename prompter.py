@@ -34,10 +34,8 @@ references = 5
 
 models = requests.get("http://localhost:11434/api/tags")
 model_list = json.loads(models.text)['models']
-if next(filter(lambda x: x.name == 'mistral', model_list), None):
-    print('mistral model found')
-else:
-    print('mistral model not found. Please wait while it loads')
+if not next(filter(lambda x: x['name'].split(':')[0] == 'mistral', model_list), None):
+    print('mistral model not found. Please wait while it loads.')
     request = requests.post("http://localhost:11434/api/pull", data=json.dumps({"name": "mistral"}), stream=True)
     current = 0
     pbar = tqdm(
