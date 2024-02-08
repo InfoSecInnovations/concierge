@@ -1,4 +1,5 @@
 import json
+import os
 import random
 import requests
 # line below commented; future feature.
@@ -10,9 +11,14 @@ from configobj import ConfigObj
 from tqdm import tqdm
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--task", required=True)
-parser.add_argument("--persona")
-parser.add_argument("--enhancers", nargs="*")
+parser.add_argument("-t", "--task", required=True,
+                    help="Required: What you want Concierge to do.")
+parser.add_argument("-p", "--persona",
+                    help="What personality or tone you want as the response")
+parser.add_argument("-e", "--enhancers", nargs="*",
+                    help="Comments to be added after the main response")
+parser.add_argument("-f", "--file",
+                    help="file to be used in prompt to Concierge")
 args = parser.parse_args()
 
 enhancer_options = None
@@ -22,6 +28,13 @@ if args.enhancers:
 persona = None
 if args.persona:
     persona = ConfigObj(f"prompter_config/personas/{args.persona}.concierge", list_values=False)
+
+source_file = None
+if args.file:
+    if not os.path.exists(args.file):
+        parser.error("The file %s does not exist!" % args.file)
+    else:
+        source_file = open(args.file, 'r')  # return an open file handle
 
 task = ConfigObj(f"prompter_config/tasks/{args.task}.concierge", list_values=False)
 
@@ -111,6 +124,10 @@ while True:
     if persona:
         prompt = persona['prompt'] + "\n\n" + prompt
     prompt = prompt + "\n\nContext: " + context + "\n\nUser input: " + user_input
+
+    if source_file:
+        file_contents = source_file.read()
+        prompt = prompt + "\n\nSource file: " + file_contents
 
     data={
         "model":"mistral",
