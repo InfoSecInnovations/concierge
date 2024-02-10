@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import requests
 # line below commented; future feature.
 # import antigravity
@@ -10,6 +9,8 @@ import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
 
+# TODO add collection as an option
+# TODO make these be web inputs for streamlit
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--task", required=True,
                     help="Required: What you want Concierge to do.")
@@ -21,30 +22,31 @@ parser.add_argument("-f", "--file",
                     help="file to be used in prompt to Concierge")
 args = parser.parse_args()
 
-enhancer_options = None
-if args.enhancers:
-    enhancer_options = [ConfigObj(f"prompter_config/enhancers/{enhancer}.concierge", list_values=False) for enhancer in args.enhancers]
+
+task = ConfigObj(f"prompter_config/tasks/{args.task}.concierge", list_values=False)
 
 persona = None
 if args.persona:
     persona = ConfigObj(f"prompter_config/personas/{args.persona}.concierge", list_values=False)
+
+enhancer = None
+if args.enhancers:
+    enhancer = [ConfigObj(f"prompter_config/enhancers/{enhancer}.concierge", list_values=False) for enhancer in args.enhancers]
 
 source_file = None
 if args.file:
     if not os.path.exists(args.file):
         parser.error("The file %s does not exist!" % args.file)
     else:
-        source_file = open(args.file, 'r')  # return an open file handle
+        source_file = open(args.file, 'r')
 
-task = ConfigObj(f"prompter_config/tasks/{args.task}.concierge", list_values=False)
 
 ### VARs ###
-# % chance of a parting comment after a response
-# must be 0-100. can be decimal if desired. no trailing %
-enhancement_chance = 100
-# will want to make this a select later
+# TODO will want to make this a select later
 references = 5
 
+# TODO several revs in the future... allow users to pick model.
+# very much low priority atm
 models = requests.get("http://localhost:11434/api/tags")
 model_list = json.loads(models.text)['models']
 if not next(filter(lambda x: x['name'].split(':')[0] == 'mistral', model_list), None):
@@ -73,8 +75,11 @@ if not next(filter(lambda x: x['name'].split(':')[0] == 'mistral', model_list), 
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
+# TODO make this into variable up top, or move to config file
+# will need to support non-local host better for very large deployments
 # DB connection info
 conn = connections.connect(host="127.0.0.1", port=19530)
+# TODO make this be a selectable attribute
 collection = Collection("facts")
 collection.load()
 
@@ -83,11 +88,6 @@ search_params = {
 }
 
 while True:
-
-    enhancer = None
-    if enhancer_options and len(enhancer_options) and enhancement_chance >= random.randrange(1, 100):
-        enhancer_selection = (random.choice(enhancer_options))
-        enhancer = enhancer_selection['prompt']
 
     print(task['greeting'])
     user_input = input()
@@ -108,21 +108,27 @@ while True:
         for hit in resp:
             context = context + hit.entity.get("text")
             sources.append({
-                "type": hit.entity.get("metadata_type"),
+               "type": hit.entity.get("metadata_type"),
                 "metadata": hit.entity.get("metadata")
             })
 
     print('\nResponding based on the following sources:')
     for source in sources:
+        metadata = json.loads(source["metadata"])
         if source["type"] == "pdf":
-            metadata = json.loads(source["metadata"])
             print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
+        if source["type"] == "web":
+            print(f'   Web page: {metadata["source"]} scraped {metadata[ingest_date]}')
 
     prompt = task['prompt']
-    if enhancer:
-        prompt = prompt + "\n\n" + enhancer
+
     if persona:
         prompt = persona['prompt'] + "\n\n" + prompt
+
+    if enhancer:
+        for enhancement in enhancer:
+            prompt = prompt + "\n\n" + enhancement['prompt']
+
     prompt = prompt + "\n\nContext: " + context + "\n\nUser input: " + user_input
 
     if source_file:
