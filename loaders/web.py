@@ -1,4 +1,3 @@
-from bs4 import BeautifulSoup
 from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
 from datetime import datetime
 import json

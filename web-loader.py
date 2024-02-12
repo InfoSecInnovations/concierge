@@ -3,7 +3,7 @@ from loader_functions import Insert, InitCollection
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument('url')
+parser.add_argument('url', required=True, help="Required: the URL of the website you wish to scrape.")
 args = parser.parse_args()
 url = args.url
 
