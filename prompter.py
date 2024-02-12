@@ -120,30 +120,33 @@ while True:
         if source["type"] == "web":
             print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
 
-    prompt = task['prompt']
+    if ('prompt' in task):
+        prompt = task['prompt']
 
-    if persona:
-        prompt = persona['prompt'] + "\n\n" + prompt
+        if persona:
+            prompt = persona['prompt'] + "\n\n" + prompt
 
-    if enhancer:
-        for enhancement in enhancer:
-            prompt = prompt + "\n\n" + enhancement['prompt']
+        if enhancer:
+            for enhancement in enhancer:
+                prompt = prompt + "\n\n" + enhancement['prompt']
 
-    prompt = prompt + "\n\nContext: " + context + "\n\nUser input: " + user_input
+        prompt = prompt + "\n\nContext: " + context + "\n\nUser input: " + user_input
 
-    if source_file:
-        file_contents = source_file.read()
-        prompt = prompt + "\n\nSource file: " + file_contents
+        if source_file:
+            file_contents = source_file.read()
+            prompt = prompt + "\n\nSource file: " + file_contents
 
-    data={
-        "model":"mistral",
-        "prompt": prompt,
-        "stream": False
-    }
+        data={
+            "model":"mistral",
+            "prompt": prompt,
+            "stream": False
+        }
 
-    response = requests.post('http://127.0.0.1:11434/api/generate', data=json.dumps(data))
+        response = requests.post('http://127.0.0.1:11434/api/generate', data=json.dumps(data))
 
-    result = json.loads(response.text)['response']
-    print("\n\n")
-    print(result)
-    print("\n\n")
+        result = json.loads(response.text)['response']
+        print("\n\n")
+        print(result)
+        print("\n\n")
+    else:
+        print("\n\n")
