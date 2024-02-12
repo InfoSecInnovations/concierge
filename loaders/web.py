@@ -14,8 +14,8 @@ def LoadWeb(url):
     return [{
         "metadata_type": "web",
         "metadata": json.dumps({'source': x.metadata['source'], \
-                                'title':  x.metadata['title'], \
-                                'language':  x.metadata['language'], \
+                                'title':  None if 'title' not in x.metadata else x.metadata['title'], \
+                                'language':  None if 'language' not in x.metadata else x.metadata['language'], \
                                 'ingest_date': str_date_time}),
         "content": x.page_content
     } for x in pages]

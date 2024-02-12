@@ -118,7 +118,7 @@ while True:
         if source["type"] == "pdf":
             print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
         if source["type"] == "web":
-            print(f'   Web page: {metadata["source"]} scraped {metadata[ingest_date]}')
+            print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
 
     prompt = task['prompt']
 
