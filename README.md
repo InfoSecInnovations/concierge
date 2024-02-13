@@ -1,4 +1,5 @@
-# Concierge #
+# Concierge #  
+AI should be simple, safe, and amazing.
 
 ## Setup ##
 git clone repo or extract zip. 
