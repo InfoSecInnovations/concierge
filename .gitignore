@@ -1,6 +1,9 @@
 # .env file used to set local paths for Docker and scripts
 .env
 
+# directory used by web server to store uploaded files
+uploads
+
 # don't really know what this dir is but I don't think it needs to be committed
 share
 
