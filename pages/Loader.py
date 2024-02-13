@@ -1,6 +1,7 @@
 import streamlit as st
 from loader_functions import InitCollection, Insert
 from loaders.pdf import LoadPDF
+from loaders.web import LoadWeb
 from pathlib import Path
 
 # cached items
@@ -24,6 +25,9 @@ collection = GetCollection()
 if "file_uploader_key" not in st.session_state:
     st.session_state["file_uploader_key"] = 0
 
+if "input_urls" not in st.session_state:
+    st.session_state["input_urls"] = []
+
 st.write('# Document Loader')
 
 if "files" in st.session_state:
@@ -38,10 +42,30 @@ if "files" in st.session_state:
     del st.session_state["files"]
     st.rerun()
 
+elif "urls" in st.session_state:
+    st.write('Processing URLs')
+    for url in st.session_state["urls"]:
+        print(url)
+        pages = LoadWeb(url)
+        Insert(pages, collection)
+    del st.session_state["urls"]
+    st.rerun()
+
 else:
     files = st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"])
-    if files and len(files):
-        if st.button(label='Ingest'):
+    st.write('### URLs ###')
+    for index, url in enumerate(st.session_state["input_urls"]):
+        st.session_state["input_urls"][index] = st.text_input("URL", label_visibility="collapsed", key=f"input_url_{index}")
+    new_url = st.text_input("URL", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}')
+    if new_url:
+        st.session_state["input_urls"].append(new_url)
+        st.rerun()
+
+    if st.button(label='Ingest'):
+        if files and len(files):
             st.session_state["files"] = files
             st.session_state["file_uploader_key"] += 1
-            st.rerun()
+        if len(st.session_state["input_urls"]):
+            st.session_state["urls"] = st.session_state["input_urls"].copy()
+            st.session_state["input_urls"] = []
+        st.rerun()
