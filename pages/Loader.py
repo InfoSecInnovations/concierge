@@ -28,6 +28,11 @@ if "file_uploader_key" not in st.session_state:
 if "input_urls" not in st.session_state:
     st.session_state["input_urls"] = []
 
+def add_url():
+    url = st.session_state[f'input_url_{len(st.session_state["input_urls"])}']
+    if url:
+        st.session_state["input_urls"].append(url)
+
 st.write('# Document Loader')
 
 if "files" in st.session_state:
@@ -55,11 +60,8 @@ else:
     files = st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"])
     st.write('### URLs ###')
     for index, url in enumerate(st.session_state["input_urls"]):
-        st.session_state["input_urls"][index] = st.text_input("URL", label_visibility="collapsed", key=f"input_url_{index}")
-    new_url = st.text_input("URL", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}')
-    if new_url:
-        st.session_state["input_urls"].append(new_url)
-        st.rerun()
+        st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}")
+    st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url)
 
     if st.button(label='Ingest'):
         if files and len(files):
