@@ -1,8 +1,8 @@
-from tqdm import tqdm
 from pympler.asizeof import asizeof
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
+from tqdm import tqdm
 
 chunk_size = 200
 chunk_overlap = 25
@@ -20,10 +20,10 @@ def Insert (pages, collection):
     batched_entries = []
     batched_entries.append([])
     batch_index = 0
-    batch_size = 0 
-    page_progress = tqdm(total=len(pages))
-    for page in pages:
-        page_progress.update(1)
+    batch_size = 0
+    total = len(pages)
+    for index, page in enumerate(pages):
+        
         chunks = splitter.split_text(page["content"])
         for chunk in chunks:
             vect = stransform.encode(chunk)
@@ -40,6 +40,7 @@ def Insert (pages, collection):
                 batch_size = 0
             batched_entries[batch_index].append(entry)
             batch_size = batch_size + entry_size
+            yield (index, total)
     for batch in batched_entries:
         collection.insert([
             [x["metadata_type"] for x in batch],
@@ -48,12 +49,18 @@ def Insert (pages, collection):
             [x["vector"] for x in batch],
         ])
 
+def InsertWithTqdm (pages, collection):
+    console_page_progress = tqdm(total=len(pages))
+    for x in Insert(pages, collection):
+        console_page_progress.update()
+    console_page_progress.close()
+
 def InitCollection (collection_name):
     connections.connect(host="127.0.0.1", port=19530)
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
         FieldSchema(name="metadata_type", dtype=DataType.VARCHAR, max_length=64),
-        FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=500),
+        FieldSchema(name="metadata", dtype=DataType.VARCHAR, max_length=2500),
         FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=500),
         FieldSchema(name="vector", dtype=DataType.FLOAT_VECTOR, dim=384)
     ]

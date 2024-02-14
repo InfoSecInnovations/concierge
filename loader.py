@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 import os
 from loaders.pdf import LoadPDF
-from loader_functions import Insert, InitCollection
+from loader_functions import InsertWithTqdm, InitCollection
 
 load_dotenv()
 
@@ -17,4 +17,4 @@ for file in source_files:
     if (file.endswith(".pdf")):
         pages = LoadPDF(source_path, file)
     if (pages):
-        Insert(pages, collection)
+        InsertWithTqdm(pages, collection)

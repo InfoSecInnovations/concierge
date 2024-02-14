@@ -3,6 +3,7 @@ from loader_functions import InitCollection, Insert
 from loaders.pdf import LoadPDF
 from loaders.web import LoadWeb
 from pathlib import Path
+from tqdm import tqdm
 
 # cached items
 
@@ -43,16 +44,36 @@ if "files" in st.session_state:
                 with open(Path(upload_dir, file.name), "wb") as f:
                     f.write(file.getbuffer())
                 pages = LoadPDF(upload_dir, file.name)
-                Insert(pages, collection)
+                console_page_progress = tqdm(total=len(pages))
+                progress_text = f"Loading PDF {file.name}"
+                page_progress = st.progress(0, text=progress_text)
+                for x in Insert(pages, collection):
+                    console_page_progress.n = x[0] + 1
+                    console_page_progress.refresh()
+                    page_progress.progress((x[0] + 1) / x[1], text=progress_text)
+                page_progress.empty()
+                console_page_progress.close()
+    print('done loading files\n')
     del st.session_state["files"]
     st.rerun()
 
 elif "urls" in st.session_state:
     st.write('Processing URLs')
     for url in st.session_state["urls"]:
+        if not url:
+            continue
         print(url)
         pages = LoadWeb(url)
-        Insert(pages, collection)
+        console_page_progress = tqdm(total=len(pages))
+        progress_text = f"Loading URL {url}"
+        page_progress = st.progress(0, text=progress_text)
+        for x in Insert(pages, collection):
+            console_page_progress.n = x[0] + 1
+            console_page_progress.refresh()
+            page_progress.progress((x[0] + 1) / x[1], text=progress_text)
+        page_progress.empty()
+        console_page_progress.close()
+    print('done loading URLs\n')
     del st.session_state["urls"]
     st.rerun()
 
