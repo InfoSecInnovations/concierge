@@ -12,3 +12,4 @@ pymilvus==2.3.6
 pympler
 configobj
 streamlit
+stqdm

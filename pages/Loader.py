@@ -3,7 +3,7 @@ from loader_functions import InitCollection, Insert
 from loaders.pdf import LoadPDF
 from loaders.web import LoadWeb
 from pathlib import Path
-from tqdm import tqdm
+from stqdm import stqdm
 
 # cached items
 
@@ -45,15 +45,11 @@ def ingest():
                     with open(Path(upload_dir, file.name), "wb") as f:
                         f.write(file.getbuffer())
                     pages = LoadPDF(upload_dir, file.name)
-                    console_page_progress = tqdm(total=len(pages))
-                    progress_text = f"Loading PDF {file.name}"
-                    page_progress = st.progress(0, text=progress_text)
+                    page_progress = stqdm(total=len(pages), desc=f"Loading PDF {file.name}", backend=True)
                     for x in Insert(pages, collection):
-                        console_page_progress.n = x[0] + 1
-                        console_page_progress.refresh()
-                        page_progress.progress((x[0] + 1) / x[1], text=progress_text)
-                    page_progress.empty()
-                    console_page_progress.close()
+                        page_progress.n = x[0] + 1
+                        page_progress.refresh()
+                    page_progress.close()
         print('done loading files\n')
         st.session_state["file_uploader_key"] += 1
 
@@ -65,15 +61,11 @@ def ingest():
                     continue
                 print(url)
                 pages = LoadWeb(url)
-                console_page_progress = tqdm(total=len(pages))
-                progress_text = f"Loading URL {url}"
-                page_progress = st.progress(0, text=progress_text)
+                page_progress = stqdm(total=len(pages), desc=f"Loading URL {url}", backend=True)
                 for x in Insert(pages, collection):
-                    console_page_progress.n = x[0] + 1
-                    console_page_progress.refresh()
-                    page_progress.progress((x[0] + 1) / x[1], text=progress_text)
-                page_progress.empty()
-                console_page_progress.close()
+                    page_progress.n = x[0] + 1
+                    page_progress.refresh()
+                page_progress.close()
         print('done loading URLs\n')
         st.session_state["input_urls"] = []
 
