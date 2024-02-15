@@ -3,7 +3,7 @@ import os
 from stqdm import stqdm
 from configobj import ConfigObj
 from pathlib import Path
-from prompter_functions import LoadModel, InitCollection, GetContext, StreamResponse
+from prompter_functions import LoadModel, InitCollection, GetContext, GetResponse
 
 @st.cache_data
 def LoadConfig(dir):
@@ -41,6 +41,7 @@ reference_limit = 5
 tasks = LoadConfig('tasks')
 personas = LoadConfig('personas')
 enhancers = LoadConfig('enhancers')
+default_task_index = 0 if 'question' not in tasks else list(tasks.keys()).index('question')
 
 collection = GetCollection()
 
@@ -49,7 +50,7 @@ if "messages" not in st.session_state:
 
 st.write('# Query your data')
 col1, col2, col3 = st.columns(3)
-task = col1.selectbox('Task', tasks.keys())
+task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
 persona = col2.selectbox('Persona', ['None', *personas.keys()])
 selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
 source_file = st.file_uploader("Source File (optional)")
@@ -82,7 +83,7 @@ with st.container():
                         print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
                         yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
                 if "prompt" in tasks[task]:
-                    yield from StreamResponse(
+                    yield GetResponse(
                         context["context"], 
                         tasks[task]["prompt"], 
                         user_input,
