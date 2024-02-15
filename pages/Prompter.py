@@ -65,9 +65,15 @@ with st.container():
     user_input = st.chat_input(tasks[task]["greeting"])
     if user_input:
         print(f'User asked: {user_input}\n')
-        st.session_state["messages"].append({"role": "user", "content": user_input})
+        full_message = f'Task: {task}'
+        if persona and persona != 'None':
+            full_message += f', Persona: {persona}'
+        if selected_enhancers and len(selected_enhancers):
+            full_message += f', Enhancers: {selected_enhancers}'
+        full_message += f'.\n\nInput: {user_input}'
+        st.session_state["messages"].append({"role": "user", "content": full_message})
         with message_container.chat_message("user"):
-            st.write(user_input)
+            st.write(full_message)
         with message_container.chat_message("assistant"):
             context = GetContext(collection, reference_limit, user_input)
 
