@@ -3,7 +3,7 @@ import os
 from stqdm import stqdm
 from configobj import ConfigObj
 from pathlib import Path
-from prompter_functions import LoadModel, InitCollection, GetContext, GetResponse
+from prompter_functions import LoadModel, InitCollection, GetContext, StreamResponse
 
 @st.cache_data
 def LoadConfig(dir):
@@ -51,40 +51,47 @@ st.write('# Query your data')
 col1, col2, col3 = st.columns(3)
 task = col1.selectbox('Task', tasks.keys())
 persona = col2.selectbox('Persona', ['None', *personas.keys()])
-enhancers = col3.multiselect('Enhancers', enhancers.keys())
+selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
 source_file = st.file_uploader("Source File (optional)")
 with st.container():
     message_container = st.container()
     for message in st.session_state["messages"]:
         with message_container.chat_message(message["role"]):
-            st.write(message["content"])
+            if message["role"] == "assistant":
+                st.markdown(message["content"])
+            else:
+                st.write(message["content"])
     user_input = st.chat_input(tasks[task]["greeting"])
     if user_input:
+        print(f'User asked: {user_input}\n')
         st.session_state["messages"].append({"role": "user", "content": user_input})
         with message_container.chat_message("user"):
             st.write(user_input)
         with message_container.chat_message("assistant"):
             context = GetContext(collection, reference_limit, user_input)
-            st.write('Responding based on the following sources:')
-            print('\nResponding based on the following sources:')
-            for source in context["sources"]:
-                metadata = source["metadata"]
-                if source["type"] == "pdf":
-                    print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
-                    st.write(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
-                if source["type"] == "web":
-                    print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
-                    st.write(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
-            
-            if "prompt" in tasks[task]:
-                response = GetResponse(
-                    context["context"], 
-                    tasks[task]["prompt"], 
-                    user_input,
-                    None if not persona or persona == 'None' else personas[persona]["prompt"],
-                    None if not enhancers else [enhancers[enhancer]["prompt"] for enhancer in enhancers],
-                    None if not source_file else source_file.getvalue().decode()
-                )
 
-                print(response)
-                st.markdown(response)
+            def stream_message():
+                yield 'Responding based on the following sources:\n\n'
+                print('Responding based on the following sources:')
+                for source in context["sources"]:
+                    metadata = source["metadata"]
+                    if source["type"] == "pdf":
+                        print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
+                        yield f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}\n\n'
+                    if source["type"] == "web":
+                        print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
+                        yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
+                if "prompt" in tasks[task]:
+                    yield from StreamResponse(
+                        context["context"], 
+                        tasks[task]["prompt"], 
+                        user_input,
+                        None if not persona or persona == 'None' else personas[persona]["prompt"],
+                        None if not selected_enhancers else [enhancers[enhancer]["prompt"] for enhancer in selected_enhancers],
+                        None if not source_file else source_file.getvalue().decode()
+                    )
+
+            full_response = st.write_stream(stream_message)
+            print(full_response)
+            print('\n')
+            st.session_state["messages"].append({"role": "assistant", "content": full_response})

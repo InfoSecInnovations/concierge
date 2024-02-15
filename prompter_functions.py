@@ -64,7 +64,7 @@ def GetContext(collection, reference_limit, user_input):
         "sources": sources
     }
 
-def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
+def PreparePrompt(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
     prompt = task_prompt
 
     if persona_prompt:
@@ -79,6 +79,11 @@ def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhance
     if source_file_contents:
         prompt = prompt + "\n\nSource file: " + source_file_contents
 
+    return prompt
+
+def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
+    prompt = PreparePrompt(context, task_prompt, user_input, persona_prompt, enhancer_prompts, source_file_contents)
+
     data={
         "model":"mistral",
         "prompt": prompt,
@@ -88,3 +93,20 @@ def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhance
     response = requests.post('http://127.0.0.1:11434/api/generate', data=json.dumps(data))
 
     return json.loads(response.text)['response']
+
+def StreamResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
+    prompt = PreparePrompt(context, task_prompt, user_input, persona_prompt, enhancer_prompts, source_file_contents)
+
+    data={
+        "model":"mistral",
+        "prompt": prompt,
+        "stream": True
+    }
+
+    response = requests.post('http://127.0.0.1:11434/api/generate', data=json.dumps(data))
+
+    for item in response.iter_lines():
+        if item:
+            value = json.loads(item)
+            if 'response' in value:
+                yield value ["response"]
