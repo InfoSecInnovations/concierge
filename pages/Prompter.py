@@ -37,6 +37,8 @@ def LoadLLMModel():
 def GetCollection():
     return InitCollection()
 
+
+
 reference_limit = 5
 tasks = LoadConfig('tasks')
 personas = LoadConfig('personas')
@@ -49,11 +51,6 @@ if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
 st.write('# Query your data')
-col1, col2, col3 = st.columns(3)
-task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
-persona = col2.selectbox('Persona', ['None', *personas.keys()])
-selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
-source_file = st.file_uploader("Source File (optional)")
 with st.container():
     message_container = st.container()
     for message in st.session_state["messages"]:
@@ -62,6 +59,11 @@ with st.container():
                 st.markdown(message["content"])
             else:
                 st.write(message["content"])
+    col1, col2, col3 = st.columns(3)
+    task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
+    persona = col2.selectbox('Persona', ['None', *personas.keys()])
+    selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
+    source_file = st.file_uploader("Source File (optional)")
     user_input = st.chat_input(tasks[task]["greeting"])
     if user_input:
         full_message = f'Task: {task}'

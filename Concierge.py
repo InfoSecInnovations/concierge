@@ -1,9 +1,13 @@
 import streamlit as st
+from add_api_handler import AddApiHandler
+from tornado.web import StaticFileHandler
 
 st.set_page_config(
     page_title="Concierge",
     page_icon="👋",
 )
+
+AddApiHandler(r"/uploads/(.*)", StaticFileHandler, {"path": "uploads"})
 
 st.write("# Welcome to Concierge!")
 
