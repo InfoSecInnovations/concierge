@@ -92,6 +92,8 @@ def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhance
 
     response = requests.post('http://127.0.0.1:11434/api/generate', data=json.dumps(data))
 
+    print(f"Response: {response}")
+
     return json.loads(response.text)['response']
 
 def StreamResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):

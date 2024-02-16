@@ -86,8 +86,8 @@ with st.container():
                 for source in context["sources"]:
                     metadata = source["metadata"]
                     if source["type"] == "pdf":
-                        print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
-                        yield f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}\n\n'
+                        print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]}')
+                        yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](uploads/{metadata["filename"]}#page={metadata["page"]})\n\n'
                     if source["type"] == "web":
                         print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
                         yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
