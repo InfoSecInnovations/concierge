@@ -5,6 +5,8 @@ from configobj import ConfigObj
 from pathlib import Path
 from prompter_functions import LoadModel, InitCollection, GetContext, GetResponse
 
+# ---- first run only ----
+
 @st.cache_data
 def LoadConfig(dir):
     files = os.listdir(Path('prompter_config', dir).as_posix())
@@ -32,10 +34,13 @@ def LoadLLMModel():
         pbar.refresh()
     if pbar:
         pbar.close()
+    print("Language model loaded.\n")
 
 @st.cache_resource
 def GetCollection():
     return InitCollection()
+
+LoadLLMModel()
 
 reference_limit = 5
 tasks = LoadConfig('tasks')
@@ -50,6 +55,8 @@ if "messages" not in st.session_state:
 
 if "processing" not in st.session_state:
     st.session_state["processing"] = False
+
+# ---- main loop ----
 
 def on_input():
     st.session_state["processing"] = True

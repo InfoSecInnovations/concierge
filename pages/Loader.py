@@ -5,7 +5,7 @@ from loaders.web import LoadWeb
 from pathlib import Path
 from stqdm import stqdm
 
-# cached items
+# ---- first run only ----
 
 upload_dir = 'uploads'
 
@@ -20,8 +20,6 @@ def GetCollection():
 CreateUploadDir()
 collection = GetCollection()
 
-# mutable page display
-
 # https://discuss.streamlit.io/t/are-there-any-ways-to-clear-file-uploader-values-without-using-streamlit-form/40903 see this hack for clearing the file uploader
 if "file_uploader_key" not in st.session_state:
     st.session_state["file_uploader_key"] = 0
@@ -32,6 +30,8 @@ if "input_urls" not in st.session_state:
 
 if "processing" not in st.session_state:
     st.session_state["processing"] = False
+
+# ---- main loop ----
 
 def add_url():
     url = st.session_state[f'input_url_{len(st.session_state["input_urls"])}']

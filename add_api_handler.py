@@ -5,7 +5,7 @@ import streamlit as st
 
 @st.cache_data()
 def AddApiHandler(uri, handler, kwargs = None):
-    print("Setup Tornado. Should be called only once per handler")
+    print(f"Configured Tornado route for {uri}.\n")
 
     if "tornado" not in st.session_state:
         # Get instance of Tornado
