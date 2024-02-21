@@ -94,6 +94,9 @@ def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhance
 
     print(f"Response: {response}")
 
+    if response.status_code != 200:
+        return f"ollama status: {response.status_code}"
+
     return json.loads(response.text)['response']
 
 def StreamResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
