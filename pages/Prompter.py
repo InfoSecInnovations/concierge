@@ -37,8 +37,6 @@ def LoadLLMModel():
 def GetCollection():
     return InitCollection()
 
-
-
 reference_limit = 5
 tasks = LoadConfig('tasks')
 personas = LoadConfig('personas')
@@ -49,6 +47,12 @@ collection = GetCollection()
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
+
+if "processing" not in st.session_state:
+    st.session_state["processing"] = False
+
+def on_input():
+    st.session_state["processing"] = True
 
 st.write('# Query your data')
 with st.container():
@@ -63,8 +67,8 @@ with st.container():
     task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
     persona = col2.selectbox('Persona', ['None', *personas.keys()])
     selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
-    source_file = st.file_uploader("Source File (optional)")
-    user_input = st.chat_input(tasks[task]["greeting"])
+    source_file = st.file_uploader("Source File (optional)", disabled=st.session_state["processing"])
+    user_input = st.chat_input(tasks[task]["greeting"], disabled=st.session_state["processing"], on_submit=on_input)
     if user_input:
         full_message = f'Task: {task}'
         if persona and persona != 'None':
@@ -87,7 +91,7 @@ with st.container():
                     metadata = source["metadata"]
                     if source["type"] == "pdf":
                         print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]}')
-                        yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](uploads/{metadata["filename"]}#page={metadata["page"]})\n\n'
+                        yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>)\n\n'
                     if source["type"] == "web":
                         print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
                         yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
@@ -105,3 +109,5 @@ with st.container():
             print(full_response)
             print('\n')
             st.session_state["messages"].append({"role": "assistant", "content": full_response})
+            st.session_state["processing"] = False
+            st.rerun()
