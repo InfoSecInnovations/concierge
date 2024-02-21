@@ -1,5 +1,5 @@
 from loaders.web import LoadWeb
-from loader_functions import Insert, InitCollection
+from loader_functions import InsertWithTqdm, InitCollection
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -12,4 +12,4 @@ collection = InitCollection("facts")
 pages = LoadWeb(url)
 print (url)
 if (pages):
-    Insert(pages, collection)
+    InsertWithTqdm(pages, collection)

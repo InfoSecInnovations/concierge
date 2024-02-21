@@ -1,13 +1,11 @@
-import json
 import os
-import requests
 # line below commented; future feature.
 # import antigravity
-from pymilvus import connections, Collection
 from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
+from prompter_functions import LoadModel, InitCollection, GetContext, GetResponse
 
 # TODO add collection as an option
 # TODO make these be web inputs for streamlit
@@ -29,9 +27,9 @@ persona = None
 if args.persona:
     persona = ConfigObj(f"prompter_config/personas/{args.persona}.concierge", list_values=False)
 
-enhancer = None
+enhancers = None
 if args.enhancers:
-    enhancer = [ConfigObj(f"prompter_config/enhancers/{enhancer}.concierge", list_values=False) for enhancer in args.enhancers]
+    enhancers = [ConfigObj(f"prompter_config/enhancers/{enhancer}.concierge", list_values=False) for enhancer in args.enhancers]
 
 source_file = None
 if args.file:
@@ -45,43 +43,26 @@ if args.file:
 # TODO will want to make this a select later
 references = 5
 
-# TODO several revs in the future... allow users to pick model.
-# very much low priority atm
-models = requests.get("http://localhost:11434/api/tags")
-model_list = json.loads(models.text)['models']
-if not next(filter(lambda x: x['name'].split(':')[0] == 'mistral', model_list), None):
-    print('mistral model not found. Please wait while it loads.')
-    request = requests.post("http://localhost:11434/api/pull", data=json.dumps({"name": "mistral"}), stream=True)
-    current = 0
-    pbar = tqdm(
-        unit="B",
-        unit_scale=True,
-        unit_divisor=1024
-    )
-    for item in request.iter_lines():
-        if item:
-            value = json.loads(item)
-            # TODO: display statuses
-            if 'total' in value:
-                if 'completed' in value:
-                    current = value['completed']
-                    # slight hackiness to set the initial value if resuming a download or switching files
-                    if pbar.initial == 0 or pbar.initial > current:
-                        pbar.initial = current
-                pbar.total = value['total']
-                pbar.n = current
-                pbar.refresh()
+pbar = None
+for progress in LoadModel():
+    if not pbar:
+        pbar = tqdm(
+            unit="B",
+            unit_scale=True,
+            unit_divisor=1024
+        )
+    # slight hackiness to set the initial value if resuming a download or switching files
+    if pbar.initial == 0 or pbar.initial > progress[0]:
+        pbar.initial = progress[0]
+    pbar.total = progress[1]
+    pbar.n = progress[0]
+    pbar.refresh()
+if pbar:
     pbar.close()
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
-# TODO make this into variable up top, or move to config file
-# will need to support non-local host better for very large deployments
-# DB connection info
-conn = connections.connect(host="127.0.0.1", port=19530)
-# TODO make this be a selectable attribute
-collection = Collection("facts")
-collection.load()
+collection = InitCollection()
 
 search_params = {
     "metric_type": "IP"
@@ -92,61 +73,28 @@ while True:
     print(task['greeting'])
     user_input = input()
 
-    response = collection.search(
-        data=[stransform.encode(user_input)],
-        anns_field="vector",
-        param=search_params,
-        limit=references,
-        output_fields=["metadata_type", "metadata", "text"],
-        expr=None,
-        consistency_level="Strong"
-    )
-
-    context = ""
-    sources = []
-    for resp in response:
-        for hit in resp:
-            context = context + hit.entity.get("text")
-            sources.append({
-               "type": hit.entity.get("metadata_type"),
-                "metadata": hit.entity.get("metadata")
-            })
+    context = GetContext(collection, references, user_input)
 
     print('\nResponding based on the following sources:')
-    for source in sources:
-        metadata = json.loads(source["metadata"])
+    for source in context["sources"]:
+        metadata = source["metadata"]
         if source["type"] == "pdf":
             print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
         if source["type"] == "web":
             print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
+    print("\n\n")
 
     if ('prompt' in task):
-        prompt = task['prompt']
+        response = GetResponse(
+            context["context"], 
+            task["prompt"], 
+            user_input,
+            None if not persona else persona["prompt"],
+            None if not enhancers else [enhancer["prompt"] for enhancer in enhancers],
+            None if not source_file else source_file.read()
+        )
 
-        if persona:
-            prompt = persona['prompt'] + "\n\n" + prompt
-
-        if enhancer:
-            for enhancement in enhancer:
-                prompt = prompt + "\n\n" + enhancement['prompt']
-
-        prompt = prompt + "\n\nContext: " + context + "\n\nUser input: " + user_input
-
-        if source_file:
-            file_contents = source_file.read()
-            prompt = prompt + "\n\nSource file: " + file_contents
-
-        data={
-            "model":"mistral",
-            "prompt": prompt,
-            "stream": False
-        }
-
-        response = requests.post('http://127.0.0.1:11434/api/generate', data=json.dumps(data))
-
-        result = json.loads(response.text)['response']
-        print("\n\n")
-        print(result)
+        print(response)
         print("\n\n")
     else:
         print("\n\n")
