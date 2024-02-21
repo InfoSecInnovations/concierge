@@ -28,6 +28,10 @@ if "file_uploader_key" not in st.session_state:
 
 if "input_urls" not in st.session_state:
     st.session_state["input_urls"] = []
+    st.session_state["processing_urls"] = []
+
+if "processing" not in st.session_state:
+    st.session_state["processing"] = False
 
 def add_url():
     url = st.session_state[f'input_url_{len(st.session_state["input_urls"])}']
@@ -35,7 +39,17 @@ def add_url():
         st.session_state["input_urls"].append(url)
 
 def ingest():
-    files = st.session_state[st.session_state["file_uploader_key"]]
+    st.session_state["processing"] = True
+    st.session_state["processing_urls"] = st.session_state["input_urls"].copy()
+    st.session_state["processing_files"] = st.session_state[st.session_state["file_uploader_key"]]
+    st.session_state["input_urls"] = []
+    st.session_state["file_uploader_key"] += 1
+
+st.write('# Document Loader')
+st.session_state["loader_container"] = st.empty()
+st.session_state["input_container"] = st.empty()
+if st.session_state["processing"]:
+    files = st.session_state["processing_files"]
     if files and len(files):
         with st.session_state["loader_container"].container():
             st.write('Processing files...')
@@ -51,12 +65,11 @@ def ingest():
                         page_progress.refresh()
                     page_progress.close()
         print('done loading files\n')
-        st.session_state["file_uploader_key"] += 1
 
-    if len(st.session_state["input_urls"]):
+    if len(st.session_state["processing_urls"]):
         with st.session_state["loader_container"].container():
             st.write('Processing URLs...')
-            for url in st.session_state["input_urls"]:
+            for url in st.session_state["processing_urls"]:
                 if not url:
                     continue
                 print(url)
@@ -67,13 +80,14 @@ def ingest():
                     page_progress.refresh()
                 page_progress.close()
         print('done loading URLs\n')
-        st.session_state["input_urls"] = []
-
-st.write('# Document Loader')
-st.session_state["loader_container"] = st.empty()
-st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"])
-st.write('### URLs ###')
-for index, url in enumerate(st.session_state["input_urls"]):
-    st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}")
-st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url)
-st.button(label='Ingest', on_click=ingest)
+        st.session_state["processing_urls"] = []
+    st.session_state["processing"] = False
+    st.rerun()
+else:
+    with st.session_state["input_container"].container():
+        st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state["processing"])
+        st.write('### URLs ###')
+        for index, url in enumerate(st.session_state["input_urls"]):
+            st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}", disabled=st.session_state["processing"])
+        st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url, disabled=st.session_state["processing"])
+        st.button(label='Ingest', on_click=ingest, disabled=st.session_state["processing"])
