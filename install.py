@@ -233,7 +233,7 @@ if language_model == "":
     print("note: the current recommended default for Concierge is mistral.")
     print("For more info on language models available please go here:")
     print("https://ollama.com/library")
-    language_model = input("which language model? [mistral]").strip() or "mistral"
+    language_model = input("which language model? [mistral] ").strip() or "mistral"
 else:
     print("Answer provided by command line argument.")
 install_options = install_options + " --language_model=" + language_model
@@ -325,6 +325,7 @@ if ready_to_rock == "Y":
 
     pip_loader()
 
+    # docker compose
     if compute_method == "GPU":
         docker_compose_helper("GPU")
     elif compute_method == "CPU":
@@ -334,6 +335,10 @@ if ready_to_rock == "Y":
         print("You have selected an unknown/unexpected compute method.")
         print("you will need to run the docker compose file manually")
         exit()
+
+    # ollama model load
+    returncode = subprocess.run(["/usr/bin/docker", "exec", "-it", "ollama", "ollama", "run", language_model])
+
 else:
     print("Install cancelled. No changes were made. Have a nice day! :-)\n\n")
     exit()
