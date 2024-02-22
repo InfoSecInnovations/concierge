@@ -36,30 +36,23 @@ if my_platform == "Windows":
 
 install_parameters = {}
 
-def get_docker_directory():
+def get_base_directory():
     # set default docker volumes directory
     if my_platform == "Linux":
-        #linux stand alone: ~/concierge/volumes
         if install_parameters["instance_type"] == "standalone":
             return "~/concierge/"
-        #linux multi user: /opt/concierge/volumes
         return "/opt/concierge/"
     if my_platform == "Windows":
         if install_parameters["instance_type"] == "standalone":
             return os.path.join(os.getenv('LOCALAPPDATA'), "concierge")
         return "C:\ProgramData\concierge"
     # TODO: macOS
+
+def get_docker_directory():
+    return get_base_directory()
     
 def get_default_log_dir():
-    if my_platform == "Linux":
-        if install_parameters["instance_type"] == "standalone":
-            return "~/concierge/logs"
-        return "/opt/concierge/logs"
-    if my_platform == "Windows":
-        if install_parameters["instance_type"] == "standalone":
-            return os.path.join(os.path.expanduser('~'), "concierge", "logs")
-        return os.path.join(os.getenv('LOCALAPPDATA'), "concierge", "logs")
-    # TODO: macOS
+    return os.path.join(get_base_directory(), "logs")
     
 def show_logging_directory():
     return install_parameters["activity_logging"] == "True"
