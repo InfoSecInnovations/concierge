@@ -20,7 +20,7 @@ class InstallArgument:
     condition: Callable[[], bool] | None = None
 
 # determine os - needed for pathing and other OS specific options
-my_platform = platform.platform()
+my_platform = platform.system()
 
 if my_platform == "Linux":
     if os.geteuid() == 0:
@@ -46,8 +46,8 @@ def get_docker_directory():
         return "/opt/concierge/"
     if my_platform == "Windows":
         if install_parameters["instance_type"] == "standalone":
-            return os.path.join(os.path.expanduser('~'), "concierge")
-        return os.path.join(os.getenv('LOCALAPPDATA'), "concierge")
+            return os.path.join(os.getenv('LOCALAPPDATA'), "concierge")
+        return "C:\ProgramData\concierge"
     # TODO: macOS
     
 def get_default_log_dir():
