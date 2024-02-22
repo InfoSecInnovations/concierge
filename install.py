@@ -165,10 +165,10 @@ install_options = install_options + " --instance_type="+instance_type
 if platform == "posix":
     #linux stand alone: ~/concierge/volumes
     if instance_type == "standalone":
-        default_docker_directory = "~/concierge/volumes"
+        default_docker_directory = "~/concierge/"
     #linux mulit user: /opt/concierge/volumes
     else:
-        default_docker_directory = "/opt/concierge/volumes"
+        default_docker_directory = "/opt/concierge/"
 #   TODO windows standalone?
 #   TODO windows everyone?
 #   TODO mac standalone?
@@ -177,7 +177,7 @@ if platform == "posix":
 print("\nQuestion 2 of X:")
 if docker_volumes == "":
     print("Where do you want your Concierge data to perist?")
-    docker_volumes = input("path for data?[" + default_docker_directory +"]").strip() or default_docker_directory
+    docker_volumes = input("path for data? [" + default_docker_directory +"] ").strip() or default_docker_directory
 else:
     print("Answer provided by command line argument.")
 install_options = install_options + " --docker_volumes=" + docker_volumes
@@ -185,7 +185,7 @@ install_options = install_options + " --docker_volumes=" + docker_volumes
 print("\nQusetion Y of X:")
 if compute_method == "":
     print("Do you want to use CPU (default) or GPU compute to speed up Concierge responses?")
-    compute_method = input("CPU or GPU?").strip() or "CPU"
+    compute_method = input("[CPU] or GPU? ").strip() or "CPU"
 else:
     print("Answer provided by command line argument.")
 install_options = install_options + " --compute_method=" + compute_method
