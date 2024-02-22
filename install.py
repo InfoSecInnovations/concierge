@@ -1,6 +1,5 @@
 import argparse
 import os
-import requests
 import shutil
 import subprocess
 import sys
@@ -147,7 +146,7 @@ if os.path.isfile(".env"):
     print("Concierge instance discovered.")
     print("This script can help reset your system for a re-install.")
     #read the .env
-    load_dotenv()
+    # TODO: load_dotenv()
     concierge_volumes = os.getenv('DOCKER_VOLUME_DIRECTORY')
     print("Remove the concierge volumes?")
     approve_to_delete = input("Type 'yes' to delete " + concierge_volumes)
