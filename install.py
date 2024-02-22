@@ -1,8 +1,10 @@
 import argparse
 import os
 import requests
+import shutil
 import subprocess
 import sys
+#from dotenv import load_dotenv
 from os.path import abspath
 from subprocess import run
 from venv import create
@@ -113,9 +115,11 @@ def check_venv():
 
 def docker_compose_helper(compute_method):
     if compute_method == "GPU":
-        returncode = subprocess.call["/usr/bin/docker", "compose", "-f", abspath("docker-compose-gpu.yml"), "up", "-d"]
+        returncode = subprocess.run(["/usr/bin/docker", "compose", "-f", abspath("docker-compose-gpu.yml"), "up", "-d"])
     else:
-        returncode = subprocess.call["/usr/bin/docker", "compose", "up", "-d"]
+        returncode = subprocess.run(["/usr/bin/docker", "compose", "up", "-d"])
+
+
 
 
 ### main ###
@@ -137,8 +141,41 @@ if platform == "posix":
 # message:
 print("\n\n\nConcierge: AI should be simple, safe, and amazing.\n\n\n")
 
-# TODO check for existing Concierge instance
+# TODO is this enough of a check for existing Concierge instance?
 # if no concierge, do install
+if os.path.isfile(".env"):
+    print("Concierge instance discovered.")
+    print("This script can help reset your system for a re-install.")
+    #read the .env
+    load_dotenv()
+    concierge_volumes = os.getenv('DOCKER_VOLUME_DIRECTORY')
+    print("Remove the concierge volumes?")
+    approve_to_delete = input("Type 'yes' to delete " + concierge_volumes)
+    if approve_to_delete == "yes":
+        shutil.rmtree(concierge_volumes)
+
+    # check docker containers
+    print("The following docker containers were discovered:")
+    subprocess.run(["docker", "container", "ls", "--all", "--format", "{{.Names}}"])
+
+    print("\nWould you like to have the installer remove any for you?")
+    containers_to_remove = input("Please give a space seperated list of the containers you would like removed: ")
+
+    if containers_to_remove != "":
+        subprocess.run(["docker", "container", "rm", containers_to_remove])
+
+    # check docker networks
+    print("The following docker networks were discovered:")
+    subprocess.run(["docker", "network", "ls", "--format", "{{.Name}}"])
+
+    print("\nWould you like to have the installer remove any for you?")
+    networks_to_remove = input("Please give a space seperated list of the containers you would like removed: ")
+
+    if networks_to_remove != "":
+        subprocess.run(["docker", "network", "rm", networks_to_remove])
+
+
+
 print("Welcome to the Concierge installer.")
 print("Just a few configuration questions and then some download scripts will run.")
 print("Note: you can just hit enter to accept the default option.\n\n")
@@ -271,14 +308,14 @@ print("\ninstall.py" + install_options + "\n\n\n")
 
 print("About to make changes to your system.\n")
 # TODO make a download size variable & update based on findings
-print("Based on your selections, you will be downloading aproximately X of data")
-print("Depending on network speed, this may take a while")
+#print("Based on your selections, you will be downloading aproximately X of data")
+#print("Depending on network speed, this may take a while")
 print("No changes have yet been made to your system. If you stop now or answer no, nothing will have changed.")
 ready_to_rock = input("Ready to apply settings and start downloading? [Y/n]: ")
 
 if ready_to_rock == "Y":
     # no further input is needed. Let's get to work.
-    print("installing")
+    print("installing...")
 
     # setup .env (needed for docker compose files)
     env_file = open(".env", "w")
@@ -303,7 +340,6 @@ else:
 
 ### do stuff ###
 
-# write .env
 # create docker volumes directory
 # if fails, sudo or runas
 
