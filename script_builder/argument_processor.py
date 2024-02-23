@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from collections.abc import Callable
 
 @dataclass
-class InstallArgument:
+class ArgumentData:
     @dataclass
-    class ArgumentInput:
+    class InputData:
         default: str | Callable[[ArgumentProcessor], str]
         prompt: str | None = None
         options: list[str] | None = None
@@ -14,15 +14,15 @@ class InstallArgument:
     key: str
     help: str
     description: list[str]
-    input: ArgumentInput
+    input: InputData
     condition: Callable[[ArgumentProcessor], bool] | None = None
 
 class ArgumentProcessor:
-    def __init__(self, install_arguments: list[InstallArgument]) -> None:
-        self.install_arguments = install_arguments
-        self.install_parameters: dict[str, str] = {}
+    def __init__(self, arguments: list[ArgumentData]) -> None:
+        self.arguments = arguments
+        self.parameters: dict[str, str] = {}
 
-    def __get_argument_input(self, input_data: InstallArgument.ArgumentInput):
+    def __get_argument_input(self, input_data: ArgumentData.InputData):
         input_text = ""
         if callable(input_data.default):
             input_default = input_data.default(self)
@@ -35,25 +35,28 @@ class ArgumentProcessor:
         else: 
             input_text += f"[{input_default}]"
         input_text += ": "
-        return input(input_text)
+        return input(input_text).strip() or input_default
 
     def init_args(self):
         parser = argparse.ArgumentParser()
-        for argument in self.install_arguments:
+        for argument in self.arguments:
             parser.add_argument(f"--{argument.key}", help=argument.help)
         args = parser.parse_args()
-        for argument in self.install_arguments:
+        for argument in self.arguments:
             value = getattr(args, argument.key)
             if value:
-                self.install_parameters[argument.key] = value
+                self.parameters[argument.key] = value
 
     def prompt_for_parameters(self):
-        for index, argument in enumerate(self.install_arguments):
-            print(f"Question {index + 1} of {len(self.install_arguments)}:")
-            if argument.key in self.install_parameters:
+        for index, argument in enumerate(self.arguments):
+            print(f"Question {index + 1} of {len(self.arguments)}:")
+            if argument.key in self.parameters:
                 print("Answer provided by command line argument.")
                 continue
             for line in argument.description:
                 print(line)
-            self.install_parameters[argument.key] = self.__get_argument_input(argument.input)
+            self.parameters[argument.key] = self.__get_argument_input(argument.input)
             print("\n")
+
+    def get_command_parameters(self):
+        return " ".join([f"--{argument.key}={self.parameters[argument.key]}" for argument in self.arguments])
