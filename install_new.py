@@ -1,76 +1,33 @@
 import platform
 import os
-import ctypes
-import argparse
-from dataclasses import dataclass
-from collections.abc import Callable
-
-@dataclass
-class InstallArgument:
-    @dataclass
-    class ArgumentInput:
-        default: str | Callable[[], str]
-        prompt: str | None = None
-        options: list[str] | None = None
-        
-    key: str
-    help: str
-    description: list[str]
-    input: ArgumentInput
-    condition: Callable[[], bool] | None = None
+from script_builder.util import disallow_admin
+from script_builder.argument_processor import ArgumentProcessor, InstallArgument
 
 # determine os - needed for pathing and other OS specific options
 my_platform = platform.system()
 
-if my_platform == "Linux":
-    if os.geteuid() == 0:
-        print("Please do not run this script as root or with sudo.")
-        print("If needed, this script will prompt for elevated permission.")
-        exit()
-if my_platform == "Windows":
-    if ctypes.windll.shell32.IsUserAnAdmin() != 0:
-        print("Please do not run this script as administrator")
-        print("If needed, this script will prompt for elevated permission.")
-        exit()
-# TODO: macOS
+disallow_admin()
 
-install_parameters = {}
-
-def get_base_directory():
+def get_base_directory(processor: ArgumentProcessor):
     # set default docker volumes directory
     if my_platform == "Linux":
-        if install_parameters["instance_type"] == "standalone":
+        if processor.install_parameters["instance_type"] == "standalone":
             return "~/concierge/"
         return "/opt/concierge/"
     if my_platform == "Windows":
-        if install_parameters["instance_type"] == "standalone":
+        if processor.install_parameters["instance_type"] == "standalone":
             return os.path.join(os.getenv('LOCALAPPDATA'), "concierge")
         return "C:\ProgramData\concierge"
     # TODO: macOS
 
-def get_docker_directory():
-    return get_base_directory()
+def get_docker_directory(processor: ArgumentProcessor):
+    return get_base_directory(processor)
     
-def get_default_log_dir():
-    return os.path.join(get_base_directory(), "logs")
+def get_default_log_dir(processor: ArgumentProcessor):
+    return os.path.join(get_base_directory(processor), "logs")
     
-def show_logging_directory():
-    return install_parameters["activity_logging"] == "True"
-
-def get_argument_input(input_data: InstallArgument.ArgumentInput):
-    input_text = ""
-    if callable(input_data.default):
-        input_default = input_data.default()
-    else:
-        input_default = input_data.default
-    if input_data.prompt:
-        input_text += input_data.prompt + " "
-    if input_data.options:
-        input_text += " or ".join([f"[{input_option}]" if input_option == input_default else input_option for input_option in input_data.options])
-    else: 
-        input_text += f"[{input_default}]"
-    input_text += ": "
-    return input(input_text)
+def show_logging_directory(processor: ArgumentProcessor):
+    return processor.install_parameters["activity_logging"] == "True"
 
 install_arguments = [
     InstallArgument(
@@ -160,14 +117,9 @@ install_arguments = [
     )
 ]
 
-parser = argparse.ArgumentParser()
-for argument in install_arguments:
-    parser.add_argument(f"--{argument.key}", help=argument.help)
-args = parser.parse_args()
-for argument in install_arguments:
-    value = getattr(args, argument.key)
-    if value:
-        install_parameters[argument.key] = value
+argument_processor = ArgumentProcessor(install_arguments)
+
+argument_processor.init_args()
 
 # message:
 print("\n\n\nConcierge: AI should be simple, safe, and amazing.\n\n\n")
@@ -176,14 +128,6 @@ print("Welcome to the Concierge installer.")
 print("Just a few configuration questions and then some download scripts will run.")
 print("Note: you can just hit enter to accept the default option.\n\n")
 
-for index, argument in enumerate(install_arguments):
-    print(f"Question {index} of {len(install_arguments)}:")
-    if argument.key in install_parameters:
-        print("Answer provided by command line argument.")
-        continue
-    for line in argument.description:
-        print(line)
-    install_parameters[argument.key] = get_argument_input(argument.input)
-    print("\n")
+argument_processor.prompt_for_parameters()
     
 
