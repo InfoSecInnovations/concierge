@@ -17,6 +17,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    restart: unless-stopped
 
   minio:
     container_name: milvus-minio
@@ -35,6 +36,7 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    restart: unless-stopped
 
   standalone:
     container_name: milvus-standalone
@@ -51,6 +53,7 @@ services:
     ports:
       - "19530:19530"
       - "9091:9091"
+    restart: unless-stopped
     deploy:
       resources:
         reservations:
