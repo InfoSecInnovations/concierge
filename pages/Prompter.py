@@ -3,10 +3,8 @@ import os
 from stqdm import stqdm
 from configobj import ConfigObj
 from pathlib import Path
-from prompter_functions import LoadModel, GetContext, GetResponse
-from concierge_streamlit_lib.collection_dropdown import CollectionDropdown
-from concierge_streamlit_lib.add_collections import EnsureCollections
-from concierge_streamlit_lib.get_collection import GetCollectionForReading
+from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
+from concierge_streamlit_lib.collections import CollectionDropdown, EnsureCollections, GetExistingCollectionCached
 
 # ---- first run only ----
 
@@ -89,7 +87,7 @@ with st.container():
             with message_container.chat_message("user"):
                 st.write(full_message)
             with message_container.chat_message("assistant"):
-                context = GetContext(GetCollectionForReading(st.session_state["selected_collection"]), reference_limit, user_input)
+                context = GetContext(GetExistingCollectionCached(st.session_state["selected_collection"]), reference_limit, user_input)
 
                 def stream_message():
                     yield 'Responding based on the following sources:\n\n'

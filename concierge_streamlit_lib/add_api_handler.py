@@ -3,7 +3,7 @@ from tornado.routing import Rule, PathMatches
 import gc
 import streamlit as st
 
-@st.cache_data()
+@st.cache_data
 def AddApiHandler(uri, handler, kwargs = None):
     print(f"Configured Tornado route for {uri}.\n")
 

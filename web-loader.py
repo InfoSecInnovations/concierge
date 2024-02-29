@@ -1,5 +1,6 @@
 from loaders.web import LoadWeb
-from loader_functions import InsertWithTqdm, InitCollection
+from concierge_backend_lib.collections import InitCollection
+from concierge_backend_lib.ingesting import InsertWithTqdm
 import argparse
 
 parser = argparse.ArgumentParser()

@@ -1,7 +1,8 @@
 from dotenv import load_dotenv
 import os
 from loaders.pdf import LoadPDF
-from loader_functions import InsertWithTqdm, InitCollection
+from concierge_backend_lib.collections import InitCollection
+from concierge_backend_lib.ingesting import InsertWithTqdm
 
 load_dotenv()
 

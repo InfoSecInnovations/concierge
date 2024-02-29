@@ -5,7 +5,8 @@ from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
-from prompter_functions import LoadModel, InitCollection, GetContext, GetResponse
+from concierge_backend_lib.collections import GetExistingCollection
+from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
 
 # TODO add collection as an option
 # TODO make these be web inputs for streamlit
@@ -62,7 +63,7 @@ if pbar:
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
-collection = InitCollection()
+collection = GetExistingCollection("facts")
 
 search_params = {
     "metric_type": "IP"

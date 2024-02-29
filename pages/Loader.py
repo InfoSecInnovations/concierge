@@ -1,12 +1,10 @@
 import streamlit as st
-from loader_functions import Insert
 from loaders.pdf import LoadPDF
 from loaders.web import LoadWeb
 from pathlib import Path
 from stqdm import stqdm
-from concierge_streamlit_lib.add_collections import EnsureCollections
-from concierge_streamlit_lib.collection_dropdown import CollectionDropdown
-from concierge_streamlit_lib.get_collection import GetCollectionForWriting
+from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached
+from concierge_backend_lib.ingesting import Insert
 
 # ---- first run only ----
 
@@ -48,7 +46,7 @@ st.write('# Document Loader')
 st.session_state["loader_container"] = st.empty()
 st.session_state["input_container"] = st.empty()
 if st.session_state["processing"]:
-    collection = GetCollectionForWriting(st.session_state["selected_collection"])
+    collection = InitCollectionCached(st.session_state["selected_collection"])
     files = st.session_state["processing_files"]
     if files and len(files):
         with st.session_state["loader_container"].container():
@@ -92,7 +90,7 @@ else:
             if col2.form_submit_button(label="Create Collection"):
                 print(new_collection_name)
                 if new_collection_name:
-                    GetCollectionForWriting(new_collection_name)
+                    InitCollectionCached(new_collection_name)
                     st.session_state["collections"].append(new_collection_name)
                     st.rerun()
         if collections_exist:

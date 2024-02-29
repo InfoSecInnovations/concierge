@@ -2,10 +2,7 @@ import json
 import requests
 # line below commented; future feature.
 # import antigravity
-from pymilvus import connections, Collection
 from sentence_transformers import SentenceTransformer
-
-connections.connect(host="127.0.0.1", port=19530)
 
 def LoadModel():
     # TODO several revs in the future... allow users to pick model.
@@ -24,12 +21,6 @@ def LoadModel():
                     if 'completed' in value:
                         current = value['completed']
                     yield (current, value['total'])
-
-def InitCollection(collection_name):
-    # TODO make this be a selectable attribute
-    collection = Collection(collection_name)
-    collection.load()
-    return collection
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 search_params = {
