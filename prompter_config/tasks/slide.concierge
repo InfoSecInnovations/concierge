@@ -1,0 +1,15 @@
+greeting = What presentation can I make for you?
+
+prompt = '''Carefully evaluate the request that follows.
+         Create a slide using markdown that answers the prompt.
+
+         create four bullet points supporting the slide's title.
+         the bullet points must be no more than 7 words each
+
+         the slide must also contain a notes section.
+         The requirements for the notes section are as follows:
+         Each bullet point will be repeated and underlined.
+         below each bullet point will be a paragraph that explains that bullet point.
+
+         You must only respond using the provided context and prompt.
+         no additional resources are permitted'''
