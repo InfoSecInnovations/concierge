@@ -1,5 +1,5 @@
 import streamlit as st
-from add_api_handler import AddApiHandler
+from concierge_streamlit_lib.add_api_handler import AddApiHandler
 from tornado.web import StaticFileHandler
 
 st.set_page_config(

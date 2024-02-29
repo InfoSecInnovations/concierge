@@ -3,7 +3,10 @@ import os
 from stqdm import stqdm
 from configobj import ConfigObj
 from pathlib import Path
-from prompter_functions import LoadModel, InitCollection, GetContext, GetResponse
+from prompter_functions import LoadModel, GetContext, GetResponse
+from concierge_streamlit_lib.collection_dropdown import CollectionDropdown
+from concierge_streamlit_lib.add_collections import EnsureCollections
+from concierge_streamlit_lib.get_collection import GetCollectionForReading
 
 # ---- first run only ----
 
@@ -36,19 +39,14 @@ def LoadLLMModel():
         pbar.close()
     print("Language model loaded.\n")
 
-@st.cache_resource
-def GetCollection():
-    return InitCollection()
-
 LoadLLMModel()
+EnsureCollections()
 
 reference_limit = 5
 tasks = LoadConfig('tasks')
 personas = LoadConfig('personas')
 enhancers = LoadConfig('enhancers')
 default_task_index = 0 if 'question' not in tasks else list(tasks.keys()).index('question')
-
-collection = GetCollection()
 
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
@@ -70,51 +68,53 @@ with st.container():
                 st.markdown(message["content"])
             else:
                 st.write(message["content"])
-    col1, col2, col3 = st.columns(3)
-    task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
-    persona = col2.selectbox('Persona', ['None', *personas.keys()])
-    selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
-    source_file = st.file_uploader("Source File (optional)", disabled=st.session_state["processing"])
-    user_input = st.chat_input(tasks[task]["greeting"], disabled=st.session_state["processing"], on_submit=on_input)
-    if user_input:
-        full_message = f'Task: {task}'
-        if persona and persona != 'None':
-            full_message += f', Persona: {persona}'
-        if selected_enhancers and len(selected_enhancers):
-            full_message += f', Enhancers: {selected_enhancers}'
-        full_message += f'.\n\nInput: {user_input}'
-        print(full_message)
-        print('\n')
-        st.session_state["messages"].append({"role": "user", "content": full_message})
-        with message_container.chat_message("user"):
-            st.write(full_message)
-        with message_container.chat_message("assistant"):
-            context = GetContext(collection, reference_limit, user_input)
-
-            def stream_message():
-                yield 'Responding based on the following sources:\n\n'
-                print('Responding based on the following sources:')
-                for source in context["sources"]:
-                    metadata = source["metadata"]
-                    if source["type"] == "pdf":
-                        print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]}')
-                        yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>)\n\n'
-                    if source["type"] == "web":
-                        print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
-                        yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
-                if "prompt" in tasks[task]:
-                    yield GetResponse(
-                        context["context"], 
-                        tasks[task]["prompt"], 
-                        user_input,
-                        None if not persona or persona == 'None' else personas[persona]["prompt"],
-                        None if not selected_enhancers else [enhancers[enhancer]["prompt"] for enhancer in selected_enhancers],
-                        None if not source_file else source_file.getvalue().decode()
-                    )
-
-            full_response = st.write_stream(stream_message)
-            print(full_response)
+    if CollectionDropdown(no_collections_message="You don't have any collections. Please go to the Loader page, create a collection and ingest some data into it."):
+        col1, col2, col3 = st.columns(3)
+        task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
+        persona = col2.selectbox('Persona', ['None', *personas.keys()])
+        selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
+        source_file = st.file_uploader("Source File (optional)", disabled=st.session_state["processing"])
+        user_input = st.chat_input(tasks[task]["greeting"], disabled=st.session_state["processing"], on_submit=on_input)
+        if user_input:
+            full_message = f'Task: {task}'
+            if persona and persona != 'None':
+                full_message += f', Persona: {persona}'
+            if selected_enhancers and len(selected_enhancers):
+                full_message += f', Enhancers: {selected_enhancers}'
+            full_message += f'.\n\nCollection: {st.session_state["selected_collection"]}'
+            full_message += f'\n\nInput: {user_input}'
+            print(full_message)
             print('\n')
-            st.session_state["messages"].append({"role": "assistant", "content": full_response})
-            st.session_state["processing"] = False
-            st.rerun()
+            st.session_state["messages"].append({"role": "user", "content": full_message})
+            with message_container.chat_message("user"):
+                st.write(full_message)
+            with message_container.chat_message("assistant"):
+                context = GetContext(GetCollectionForReading(st.session_state["selected_collection"]), reference_limit, user_input)
+
+                def stream_message():
+                    yield 'Responding based on the following sources:\n\n'
+                    print('Responding based on the following sources:')
+                    for source in context["sources"]:
+                        metadata = source["metadata"]
+                        if source["type"] == "pdf":
+                            print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]}')
+                            yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>)\n\n'
+                        if source["type"] == "web":
+                            print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
+                            yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
+                    if "prompt" in tasks[task]:
+                        yield GetResponse(
+                            context["context"], 
+                            tasks[task]["prompt"], 
+                            user_input,
+                            None if not persona or persona == 'None' else personas[persona]["prompt"],
+                            None if not selected_enhancers else [enhancers[enhancer]["prompt"] for enhancer in selected_enhancers],
+                            None if not source_file else source_file.getvalue().decode()
+                        )
+
+                full_response = st.write_stream(stream_message)
+                print(full_response)
+                print('\n')
+                st.session_state["messages"].append({"role": "assistant", "content": full_response})
+                st.session_state["processing"] = False
+                st.rerun()

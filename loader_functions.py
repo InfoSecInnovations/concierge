@@ -1,7 +1,7 @@
 from pympler.asizeof import asizeof
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
-from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection
+from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 from tqdm import tqdm
 
 chunk_size = 200
@@ -14,6 +14,8 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_size=chunk_size,
     chunk_overlap=chunk_overlap
 )
+
+connections.connect(host="127.0.0.1", port=19530)
 
 def Insert (pages, collection):
     # on a huge dataset grpc can error due to size limits, so we need to break it into batches
@@ -56,7 +58,6 @@ def InsertWithTqdm (pages, collection):
     console_page_progress.close()
 
 def InitCollection (collection_name):
-    connections.connect(host="127.0.0.1", port=19530)
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
         FieldSchema(name="metadata_type", dtype=DataType.VARCHAR, max_length=64),
@@ -73,3 +74,6 @@ def InitCollection (collection_name):
     }
     collection.create_index(field_name="vector", index_params=index_params)
     return collection
+
+def GetCollections():
+    return utility.list_collections()

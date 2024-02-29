@@ -1,9 +1,12 @@
 import streamlit as st
-from loader_functions import InitCollection, Insert
+from loader_functions import Insert
 from loaders.pdf import LoadPDF
 from loaders.web import LoadWeb
 from pathlib import Path
 from stqdm import stqdm
+from concierge_streamlit_lib.add_collections import EnsureCollections
+from concierge_streamlit_lib.collection_dropdown import CollectionDropdown
+from concierge_streamlit_lib.get_collection import GetCollectionForWriting
 
 # ---- first run only ----
 
@@ -13,12 +16,8 @@ upload_dir = 'uploads'
 def CreateUploadDir():
     Path(upload_dir).mkdir(exist_ok=True)
 
-@st.cache_resource
-def GetCollection():
-    return InitCollection("facts")
-
 CreateUploadDir()
-collection = GetCollection()
+EnsureCollections()
 
 # https://discuss.streamlit.io/t/are-there-any-ways-to-clear-file-uploader-values-without-using-streamlit-form/40903 see this hack for clearing the file uploader
 if "file_uploader_key" not in st.session_state:
@@ -49,6 +48,7 @@ st.write('# Document Loader')
 st.session_state["loader_container"] = st.empty()
 st.session_state["input_container"] = st.empty()
 if st.session_state["processing"]:
+    collection = GetCollectionForWriting(st.session_state["selected_collection"])
     files = st.session_state["processing_files"]
     if files and len(files):
         with st.session_state["loader_container"].container():
@@ -85,9 +85,20 @@ if st.session_state["processing"]:
     st.rerun()
 else:
     with st.session_state["input_container"].container():
-        st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state["processing"])
-        st.write('### URLs ###')
-        for index, url in enumerate(st.session_state["input_urls"]):
-            st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}", disabled=st.session_state["processing"])
-        st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url, disabled=st.session_state["processing"])
-        st.button(label='Ingest', on_click=ingest, disabled=st.session_state["processing"])
+        collections_exist = CollectionDropdown()
+        with st.form(key="new_collection_form", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            new_collection_name = col1.text_input(label="New Collection", label_visibility="collapsed")
+            if col2.form_submit_button(label="Create Collection"):
+                print(new_collection_name)
+                if new_collection_name:
+                    GetCollectionForWriting(new_collection_name)
+                    st.session_state["collections"].append(new_collection_name)
+                    st.rerun()
+        if collections_exist:
+            st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state["processing"])
+            st.write('### URLs ###')
+            for index, url in enumerate(st.session_state["input_urls"]):
+                st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}", disabled=st.session_state["processing"])
+            st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url, disabled=st.session_state["processing"])
+            st.button(label='Ingest', on_click=ingest, disabled=st.session_state["processing"])

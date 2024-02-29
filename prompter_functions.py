@@ -5,6 +5,8 @@ import requests
 from pymilvus import connections, Collection
 from sentence_transformers import SentenceTransformer
 
+connections.connect(host="127.0.0.1", port=19530)
+
 def LoadModel():
     # TODO several revs in the future... allow users to pick model.
     # very much low priority atm
@@ -23,13 +25,9 @@ def LoadModel():
                         current = value['completed']
                     yield (current, value['total'])
 
-def InitCollection():
-    # TODO make this into variable up top, or move to config file
-    # will need to support non-local host better for very large deployments
-    # DB connection info
-    connections.connect(host="127.0.0.1", port=19530)
+def InitCollection(collection_name):
     # TODO make this be a selectable attribute
-    collection = Collection("facts")
+    collection = Collection(collection_name)
     collection.load()
     return collection
 
