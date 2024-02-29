@@ -1,5 +1,5 @@
 import streamlit as st
-from concierge_streamlit_lib.collections import EnsureCollections, GetExistingCollectionCached, CreateCollectionWidget
+from concierge_streamlit_lib.collections import EnsureCollections, GetExistingCollectionCached, CreateCollectionWidget, DropCollection
 
 # ---- first run only ----
 
@@ -23,4 +23,4 @@ for collection_name in st.session_state["collections"]:
             st.write("Entity count: ", collection.num_entities)
 
         with col2:
-            st.button("delete collection", key=f"delete_{collection_name}")
+            st.button("delete collection", key=f"delete_{collection_name}", on_click=DropCollection, args=[collection_name])
