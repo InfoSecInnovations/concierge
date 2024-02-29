@@ -3,7 +3,7 @@ from loaders.pdf import LoadPDF
 from loaders.web import LoadWeb
 from pathlib import Path
 from stqdm import stqdm
-from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached
+from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached, CreateCollectionWidget
 from concierge_backend_lib.ingesting import Insert
 
 # ---- first run only ----
@@ -62,6 +62,7 @@ if st.session_state["processing"]:
                         page_progress.n = x[0] + 1
                         page_progress.refresh()
                     page_progress.close()
+        collection.flush()
         print('done loading files\n')
 
     if len(st.session_state["processing_urls"]):
@@ -84,15 +85,7 @@ if st.session_state["processing"]:
 else:
     with st.session_state["input_container"].container():
         collections_exist = CollectionDropdown()
-        with st.form(key="new_collection_form", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            new_collection_name = col1.text_input(label="New Collection", label_visibility="collapsed")
-            if col2.form_submit_button(label="Create Collection"):
-                print(new_collection_name)
-                if new_collection_name:
-                    InitCollectionCached(new_collection_name)
-                    st.session_state["collections"].append(new_collection_name)
-                    st.rerun()
+        CreateCollectionWidget()
         if collections_exist:
             st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state["processing"])
             st.write('### URLs ###')

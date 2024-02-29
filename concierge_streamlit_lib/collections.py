@@ -23,3 +23,13 @@ def CollectionDropdown(no_collections_message = "You don't have any collections,
     else:
         st.selectbox("Collection", st.session_state["collections"], key="selected_collection")
         return True
+    
+def CreateCollectionWidget():
+    with st.form(key="new_collection_form", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        new_collection_name = col1.text_input(label="New Collection", label_visibility="collapsed")
+        if col2.form_submit_button(label="Create Collection"):
+            if new_collection_name:
+                InitCollectionCached(new_collection_name)
+                st.session_state["collections"].append(new_collection_name)
+                st.rerun()

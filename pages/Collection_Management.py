@@ -1,5 +1,5 @@
 import streamlit as st
-from concierge_streamlit_lib.collections import EnsureCollections, GetExistingCollectionCached
+from concierge_streamlit_lib.collections import EnsureCollections, GetExistingCollectionCached, CreateCollectionWidget
 
 # ---- first run only ----
 
@@ -8,6 +8,8 @@ EnsureCollections()
 # ---- main loop ----
 
 st.write('# Collections Manager')
+
+CreateCollectionWidget()
 
 for collection_name in st.session_state["collections"]:
     collection = GetExistingCollectionCached(collection_name)
