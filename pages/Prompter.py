@@ -4,7 +4,9 @@ from stqdm import stqdm
 from configobj import ConfigObj
 from pathlib import Path
 from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
-from concierge_streamlit_lib.collections import CollectionDropdown, EnsureCollections, GetExistingCollectionCached
+from concierge_streamlit_lib.collections import CollectionDropdown, EnsureCollections, GetExistingCollectionCached, SELECTED_COLLECTION
+
+PROCESSING = "prompter_processing"
 
 # ---- first run only ----
 
@@ -49,13 +51,13 @@ default_task_index = 0 if 'question' not in tasks else list(tasks.keys()).index(
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 
-if "processing" not in st.session_state:
-    st.session_state["processing"] = False
+if PROCESSING not in st.session_state:
+    st.session_state[PROCESSING] = False
 
 # ---- main loop ----
 
 def on_input():
-    st.session_state["processing"] = True
+    st.session_state[PROCESSING] = True
 
 st.write('# Query your data')
 with st.container():
@@ -66,20 +68,20 @@ with st.container():
                 st.markdown(message["content"])
             else:
                 st.write(message["content"])
-    if CollectionDropdown(no_collections_message="You don't have any collections. Please go to the Loader page, create a collection and ingest some data into it."):
+    if CollectionDropdown(no_collections_message="You don't have any collections. Please go to the Loader page, create a collection and ingest some data into it.", disabled=st.session_state[PROCESSING]):
         col1, col2, col3 = st.columns(3)
-        task = col1.selectbox('Task', tasks.keys(), index=default_task_index)
-        persona = col2.selectbox('Persona', ['None', *personas.keys()])
-        selected_enhancers = col3.multiselect('Enhancers', enhancers.keys())
-        source_file = st.file_uploader("Source File (optional)", disabled=st.session_state["processing"])
-        user_input = st.chat_input(tasks[task]["greeting"], disabled=st.session_state["processing"], on_submit=on_input)
+        task = col1.selectbox('Task', tasks.keys(), index=default_task_index, disabled=st.session_state[PROCESSING])
+        persona = col2.selectbox('Persona', ['None', *personas.keys()], disabled=st.session_state[PROCESSING])
+        selected_enhancers = col3.multiselect('Enhancers', enhancers.keys(), disabled=st.session_state[PROCESSING])
+        source_file = st.file_uploader("Source File (optional)", disabled=st.session_state[PROCESSING])
+        user_input = st.chat_input(tasks[task]["greeting"], disabled=st.session_state[PROCESSING], on_submit=on_input)
         if user_input:
             full_message = f'Task: {task}'
             if persona and persona != 'None':
                 full_message += f', Persona: {persona}'
             if selected_enhancers and len(selected_enhancers):
                 full_message += f', Enhancers: {selected_enhancers}'
-            full_message += f'.\n\nCollection: {st.session_state["selected_collection"]}'
+            full_message += f'.\n\nCollection: {st.session_state[SELECTED_COLLECTION]}'
             full_message += f'\n\nInput: {user_input}'
             print(full_message)
             print('\n')
@@ -87,7 +89,7 @@ with st.container():
             with message_container.chat_message("user"):
                 st.write(full_message)
             with message_container.chat_message("assistant"):
-                context = GetContext(GetExistingCollectionCached(st.session_state["selected_collection"]), reference_limit, user_input)
+                context = GetContext(GetExistingCollectionCached(st.session_state[SELECTED_COLLECTION]), reference_limit, user_input)
 
                 def stream_message():
                     yield 'Responding based on the following sources:\n\n'
@@ -114,5 +116,5 @@ with st.container():
                 print(full_response)
                 print('\n')
                 st.session_state["messages"].append({"role": "assistant", "content": full_response})
-                st.session_state["processing"] = False
+                st.session_state[PROCESSING] = False
                 st.rerun()

@@ -6,6 +6,7 @@ from pymilvus import utility
 INITIALIZED_COLLECTIONS = "initialized_collections"
 EXISTING_COLLECTIONS = "existing_collections"
 COLLECTIONS = "collections"
+SELECTED_COLLECTION = "selected_collection"
 
 @st.cache_resource
 def GetCollectionsCached():
@@ -21,12 +22,12 @@ def InitCollectionCached(collection_name):
 def GetExistingCollectionCached(collection_name):
     return CacheToSessionState(EXISTING_COLLECTIONS, collection_name, lambda: GetExistingCollection(collection_name))
 
-def CollectionDropdown(no_collections_message = "You don't have any collections, please create one."):
+def CollectionDropdown(no_collections_message = "You don't have any collections, please create one.", disabled = False):
     if not len(st.session_state[COLLECTIONS]):
         st.write(no_collections_message)
         return False
     else:
-        st.selectbox("Collection", st.session_state[COLLECTIONS], key="selected_collection")
+        st.selectbox("Collection", st.session_state[COLLECTIONS], key=SELECTED_COLLECTION, disabled=disabled)
         return True
     
 def CreateCollectionWidget():

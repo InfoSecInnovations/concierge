@@ -3,8 +3,10 @@ from loaders.pdf import LoadPDF
 from loaders.web import LoadWeb
 from pathlib import Path
 from stqdm import stqdm
-from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached, CreateCollectionWidget
+from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached, CreateCollectionWidget, SELECTED_COLLECTION
 from concierge_backend_lib.ingesting import Insert
+
+PROCESSING = "loader_processing"
 
 # ---- first run only ----
 
@@ -25,8 +27,8 @@ if "input_urls" not in st.session_state:
     st.session_state["input_urls"] = []
     st.session_state["processing_urls"] = []
 
-if "processing" not in st.session_state:
-    st.session_state["processing"] = False
+if PROCESSING not in st.session_state:
+    st.session_state[PROCESSING] = False
 
 # ---- main loop ----
 
@@ -36,7 +38,7 @@ def add_url():
         st.session_state["input_urls"].append(url)
 
 def ingest():
-    st.session_state["processing"] = True
+    st.session_state[PROCESSING] = True
     st.session_state["processing_urls"] = st.session_state["input_urls"].copy()
     st.session_state["processing_files"] = st.session_state[st.session_state["file_uploader_key"]]
     st.session_state["input_urls"] = []
@@ -45,8 +47,8 @@ def ingest():
 st.write('# Document Loader')
 st.session_state["loader_container"] = st.empty()
 st.session_state["input_container"] = st.empty()
-if st.session_state["processing"]:
-    collection = InitCollectionCached(st.session_state["selected_collection"])
+if st.session_state[PROCESSING]:
+    collection = InitCollectionCached(st.session_state[SELECTED_COLLECTION])
     files = st.session_state["processing_files"]
     if files and len(files):
         with st.session_state["loader_container"].container():
@@ -80,16 +82,16 @@ if st.session_state["processing"]:
                 page_progress.close()
         print('done loading URLs\n')
         st.session_state["processing_urls"] = []
-    st.session_state["processing"] = False
+    st.session_state[PROCESSING] = False
     st.rerun()
 else:
     with st.session_state["input_container"].container():
         collections_exist = CollectionDropdown()
         CreateCollectionWidget()
         if collections_exist:
-            st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state["processing"])
+            st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state[PROCESSING])
             st.write('### URLs ###')
             for index, url in enumerate(st.session_state["input_urls"]):
-                st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}", disabled=st.session_state["processing"])
-            st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url, disabled=st.session_state["processing"])
-            st.button(label='Ingest', on_click=ingest, disabled=st.session_state["processing"])
+                st.session_state["input_urls"][index] = st.text_input("URL", url, label_visibility="collapsed", key=f"input_url_{index}", disabled=st.session_state[PROCESSING])
+            st.text_input("URL", "", label_visibility="collapsed", key=f'input_url_{len(st.session_state["input_urls"])}', on_change=add_url, disabled=st.session_state[PROCESSING])
+            st.button(label='Ingest', on_click=ingest, disabled=st.session_state[PROCESSING])
