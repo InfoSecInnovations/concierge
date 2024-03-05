@@ -7,7 +7,8 @@ git clone repo or extract zip.
 `cd concierge` go into the cloned project directory.
 
 `python install.py` to launch the installer.  
-Answer the questions and then the installer will ask if you are ready to make changes to the system. Answer "Y" and let the download begin.
+Answer the questions and then the installer will ask if you are ready to make changes to the system.  
+Answer "Y" and let the downloading begin!
 
 
 ## Setup: manual ##
@@ -19,15 +20,16 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 
 `pip install -r requirements.txt` install all dependencies.
 
-copy `.env.example` into a file named `.env` and set the paths to the PDF documents you wish to analyze and a folder on your computer that will contain the vector database.
+copy `.env.example` into a file named `.env` and set the folder on your computer that will contain the concierge data.
 
 `docker compose up -d` will load the docker dependencies.
 
 `docker compose -f docker-compose-gpu.yml up -d` will load the docker dependencies and use the GPU.
 
 ## Usage: ##
-If you are not in the python virtual enviornment, please enter it by the correct method:
-Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` enter into the virtual environment.
+If you are not in the python virtual enviornment, please enter it by the correct method:  
+Linux: `source ./bin/activate`  
+Windows PowerShell: `.\Scripts\Activate.ps1`
 
-To start the web UI, run the following command:
-`streamlit run Concierge`
+To start the web UI, run the following command:  
+`streamlit run Concierge.py`
