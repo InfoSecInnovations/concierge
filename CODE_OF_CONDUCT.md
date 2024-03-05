@@ -55,6 +55,17 @@ Examples of unacceptable behavior include:
 * Other conduct which could reasonably be considered inappropriate in a
   professional setting
 
+## Special mention: "No Go Zones"  
+Consider that this is an OSS project, us asking for folks to stay away is a rare
+ask in the OSS movement. Typically, it means we have plans for this and outsider
+"help" may cause complexities they're unaware of, or perhaps are causing other 
+costs they do not understand. If you feel you MUST go into these rare areas,
+please consult with the project leadership team.  
+
+We may be convinced otherwise, but there’s a reason these were marked as "no go".
+You will be facing an uphill challenge. We’re not saying we don’t want your
+help. We’re saying we don’t want help in this specific area right now.
+
 ## Enforcement Responsibilities
 
 Community leaders are responsible for clarifying and enforcing our standards of
