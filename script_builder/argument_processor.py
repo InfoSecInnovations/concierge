@@ -10,7 +10,7 @@ class ArgumentData:
         default: str | Callable[[ArgumentProcessor], str]
         prompt: str | None = None
         options: list[str] | None = None
-        
+
     key: str
     help: str
     description: list[str]
@@ -32,7 +32,7 @@ class ArgumentProcessor:
             input_text += input_data.prompt + " "
         if input_data.options:
             input_text += " or ".join([f"[{input_option}]" if input_option == input_default else input_option for input_option in input_data.options])
-        else: 
+        else:
             input_text += f"[{input_default}]"
         input_text += ": "
         return input(input_text).strip() or input_default
@@ -59,4 +59,4 @@ class ArgumentProcessor:
             print("\n")
 
     def get_command_parameters(self):
-        return " ".join([f"--{argument.key}={self.parameters[argument.key]}" for argument in self.arguments])
+        return " ".join([f" --{argument.key}={self.parameters[argument.key]}" for argument in self.arguments])
