@@ -24,7 +24,8 @@ def LoadModel():
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 search_params = {
-    "metric_type": "IP"
+    "metric_type": "COSINE",
+    "params": {"radius": 0.5} # -1.0 to 1.0, positive values indicate similarity, negative values indicate difference
 }
 
 def GetContext(collection, reference_limit, user_input):
@@ -33,9 +34,7 @@ def GetContext(collection, reference_limit, user_input):
         anns_field="vector",
         param=search_params,
         limit=reference_limit,
-        output_fields=["metadata_type", "metadata", "text"],
-        expr=None,
-        consistency_level="Strong"
+        output_fields=["metadata_type", "metadata", "text"]
     )
 
     context = ""

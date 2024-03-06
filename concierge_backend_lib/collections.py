@@ -18,7 +18,7 @@ def InitCollection(collection_name):
     schema = CollectionSchema(fields=fields, description=collection_name)
     collection = Collection(name=collection_name, schema=schema)
     index_params={
-        "metric_type":"IP",
+        "metric_type":"COSINE",
         "index_type":"IVF_FLAT",
         "params":{"nlist":128}
     }

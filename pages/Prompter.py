@@ -68,7 +68,7 @@ with st.container():
                 st.markdown(message["content"])
             else:
                 st.write(message["content"])
-    if CollectionDropdown(no_collections_message="You don't have any collections. Please go to the Loader page, create a collection and ingest some data into it.", disabled=st.session_state[PROCESSING]):
+    if CollectionDropdown(no_collections_message="You don't have any collections. Please go to the [Loader](/Loader) page, create a collection and ingest some data into it.", disabled=st.session_state[PROCESSING]):
         col1, col2, col3 = st.columns(3)
         task = col1.selectbox('Task', tasks.keys(), index=default_task_index, disabled=st.session_state[PROCESSING])
         persona = col2.selectbox('Persona', ['None', *personas.keys()], disabled=st.session_state[PROCESSING])
@@ -90,29 +90,31 @@ with st.container():
                 st.write(full_message)
             with message_container.chat_message("assistant"):
                 context = GetContext(GetExistingCollectionCached(st.session_state[SELECTED_COLLECTION]), reference_limit, user_input)
+                if len(context["sources"]):
+                    def stream_message():
+                        yield 'Responding based on the following sources:\n\n'
+                        print('Responding based on the following sources:')
+                        for source in context["sources"]:
+                            metadata = source["metadata"]
+                            if source["type"] == "pdf":
+                                print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]}')
+                                yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>)\n\n'
+                            if source["type"] == "web":
+                                print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
+                                yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
+                        if "prompt" in tasks[task]:
+                            yield GetResponse(
+                                context["context"], 
+                                tasks[task]["prompt"], 
+                                user_input,
+                                None if not persona or persona == 'None' else personas[persona]["prompt"],
+                                None if not selected_enhancers else [enhancers[enhancer]["prompt"] for enhancer in selected_enhancers],
+                                None if not source_file else source_file.getvalue().decode()
+                            )
 
-                def stream_message():
-                    yield 'Responding based on the following sources:\n\n'
-                    print('Responding based on the following sources:')
-                    for source in context["sources"]:
-                        metadata = source["metadata"]
-                        if source["type"] == "pdf":
-                            print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]}')
-                            yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>)\n\n'
-                        if source["type"] == "web":
-                            print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
-                            yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
-                    if "prompt" in tasks[task]:
-                        yield GetResponse(
-                            context["context"], 
-                            tasks[task]["prompt"], 
-                            user_input,
-                            None if not persona or persona == 'None' else personas[persona]["prompt"],
-                            None if not selected_enhancers else [enhancers[enhancer]["prompt"] for enhancer in selected_enhancers],
-                            None if not source_file else source_file.getvalue().decode()
-                        )
-
-                full_response = st.write_stream(stream_message)
+                    full_response = st.write_stream(stream_message)
+                else:
+                    full_response = "No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."
                 print(full_response)
                 print('\n')
                 st.session_state["messages"].append({"role": "assistant", "content": full_response})
