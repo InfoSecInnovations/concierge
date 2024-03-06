@@ -15,23 +15,21 @@ st.sidebar.success("Please pick a mode above.")
 
 st.markdown(
     """
-    Concierge is an open-source AI suite built specifically for
+
+    Data Concierge AI:
+    AI should be simple, safe, and amazing.
+
+    Concierge is an open-source AI framework built specifically for
     how you use data.
 
-    **Select a mode from the sidebar** to see some examples
-    of what Concierge can do!
+    **Select a mode from the sidebar** to get started with
+    Concierge.  Have fun!
 
-    ### Want to learn more?
-    - Check out the quick start documentation
-    - Learn more with the detailed online documentation.
-    - Ask a question in our community forums
-    - Read the Concierge manifesto to learn more about why this project is different
 
-    ### Want to get involved?
+    #### Are you a dev? Want to get even more involved?
     - Create a task file to extend Concierge's capabilities
     - Add enhancer files to have parting thoughts
-    - build a loader to allow new data in Concierge
-    - Check the Dev Readme to see the quickest on ramps
-    - review our github issues where we're needing input
+    - Build a loader to allow new data in Concierge
+    - Review our github issues, we would love your input
 """
 )

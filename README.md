@@ -1,7 +1,19 @@
-# Concierge #  
-AI should be simple, safe, and amazing.
+# Data Concierge AI #  
+AI should be simple, safe, and amazing.  
 
-## Setup: `install.py` ##
+## TL;DR: ##
+Data Concierge AI (aka Concierge) is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
+
+## More details ##
+Concierge is a local and modular RAG framework still in alpha.  
+
+Built with simplicy and security in mind, it has some features we love -- and hope you do too!
+* The quick install method is so easy.  (Note: fast install method is only supported on Linux and Windows. MacOS in development now.) 
+* Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use
+* Tasks: you can change what the AI can do for you via dropdowns
+
+
+## Setup: Quick Install ##
 git clone repo or extract zip. 
 
 `cd concierge` go into the cloned project directory.
