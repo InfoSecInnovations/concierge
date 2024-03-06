@@ -59,4 +59,4 @@ class ArgumentProcessor:
             print("\n")
 
     def get_command_parameters(self):
-        return " ".join([f" --{argument.key}={self.parameters[argument.key]}" for argument in self.arguments])
+        return " " + " ".join([f"--{argument.key}={self.parameters[argument.key]}" for argument in self.arguments])
