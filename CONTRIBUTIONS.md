@@ -19,6 +19,10 @@ Additionally, the imperative style should be used. Rather than `added X, modifie
 
 - `add Contribution Guidelines file`
 
+## Coding style
+
+We have yet to decide on the set of conventions that will be used for code formatting, please stand by!
+
 ## Pull Requests
 
 Once you're happy with your changes, please submit a Pull Request and we will review your contribution and accept it if it matches our guidelines and the goals of the project.
