@@ -14,3 +14,5 @@ pages = LoadWeb(url)
 print (url)
 if pages:
     InsertWithTqdm(pages, collection)
+
+collection.flush() # if we don't flush, the Web UI won't be able to grab recent changes
