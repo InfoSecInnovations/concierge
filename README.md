@@ -26,7 +26,7 @@ Answer "Y" and let the downloading begin!
 ## Setup: manual ##
 If `install.py` did not work, follow these steps to setup your system. 
 
-`python -m venv .` create a python virtual enviornment in the current directory.
+`python -m venv .` create a python virtual environment in the current directory.
 
 Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` enter into the virtual environment.
 
@@ -39,7 +39,7 @@ copy `.env.example` into a file named `.env` and set the folder on your computer
 `docker compose -f docker-compose-gpu.yml up -d` will load the docker dependencies and use the GPU.
 
 ## Usage: ##
-If you are not in the python virtual enviornment, please enter it by the correct method:  
+If you are not in the python virtual environment, please enter it by the correct method:  
 Linux: `source ./bin/activate`  
 Windows PowerShell: `.\Scripts\Activate.ps1`
 
