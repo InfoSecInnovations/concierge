@@ -21,7 +21,7 @@ Additionally, the imperative style should be used. Rather than `added X, modifie
 
 ## Coding style
 
-We have yet to decide on the set of conventions that will be used for code formatting, please stand by!
+We will be implementing the [PEP 8](https://peps.python.org/pep-0008/) style guide in this repo. Some existing files may not have yet been formatted correctly, but please adopt the PEP 8 style for all new commits.
 
 ## Pull Requests
 
