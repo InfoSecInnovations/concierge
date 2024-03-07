@@ -4,8 +4,9 @@
 # directory used by web server to store uploaded files
 uploads
 
-# don't really know what this dir is but I don't think it needs to be committed
+# files that appear to be due to installing dependencies, try un-ignoring these if needed
 share
+etc
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
