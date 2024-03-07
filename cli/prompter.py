@@ -1,6 +1,4 @@
 import os
-# line below commented; future feature.
-# import antigravity
 from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
@@ -13,12 +11,14 @@ from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--task", required=True,
                     help="Required: What you want Concierge to do.")
+parser.add_argument("-c", "--collection", required=True,
+                    help="Milvus collection containing the vectorized data.")
 parser.add_argument("-p", "--persona",
-                    help="What personality or tone you want as the response")
+                    help="What personality or tone you want as the response.")
 parser.add_argument("-e", "--enhancers", nargs="*",
-                    help="Comments to be added after the main response")
+                    help="Comments to be added after the main response.")
 parser.add_argument("-f", "--file",
-                    help="file to be used in prompt to Concierge")
+                    help="file to be used in prompt to Concierge.")
 args = parser.parse_args()
 
 
@@ -62,12 +62,7 @@ if pbar:
     pbar.close()
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-
-collection = GetExistingCollection("facts")
-
-search_params = {
-    "metric_type": "IP"
-}
+collection = GetExistingCollection(args.collection)
 
 while True:
 

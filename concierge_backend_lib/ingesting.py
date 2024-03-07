@@ -49,7 +49,8 @@ def Insert (pages, collection):
         ])
 
 def InsertWithTqdm (pages, collection):
-    console_page_progress = tqdm(total=len(pages))
+    page_progress = tqdm(total=len(pages))
     for x in Insert(pages, collection):
-        console_page_progress.update()
-    console_page_progress.close()
+        page_progress.n = x[0] + 1
+        page_progress.refresh()
+    page_progress.close()

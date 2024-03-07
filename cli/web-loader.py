@@ -12,5 +12,5 @@ collection = InitCollection("facts")
 
 pages = LoadWeb(url)
 print (url)
-if (pages):
+if pages:
     InsertWithTqdm(pages, collection)

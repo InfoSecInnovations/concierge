@@ -1,7 +1,7 @@
 from script_builder.util import require_admin, pip_loader
 from script_builder.argument_processor import ArgumentProcessor
-from concierge_install_arguments import install_arguments
-from concierge_installer_functions import docker_compose_helper
+from concierge_installer.arguments import install_arguments
+from concierge_installer.functions import docker_compose_helper
 import os
 import shutil
 import subprocess
