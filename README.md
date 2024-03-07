@@ -48,4 +48,4 @@ To start the web UI, run the following command:
 
 ## Want to get involved? ##
 
-Please read our [Code of Conduct](CODE_OF_CONDUCT.md) then our [Contribution Guide](CONTRIBUTIONS.md).
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) then our [Contribution Guide](CONTRIBUTING.md).
