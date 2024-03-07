@@ -45,3 +45,7 @@ Windows PowerShell: `.\Scripts\Activate.ps1`
 
 To start the web UI, run the following command:  
 `streamlit run Concierge.py`
+
+## Want to get involved? ##
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) then our [Contribution Guide](CONTRIBUTIONS.md).
