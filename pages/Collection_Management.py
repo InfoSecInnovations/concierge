@@ -1,11 +1,14 @@
 import streamlit as st
 from concierge_streamlit_lib.collections import EnsureCollections, GetExistingCollectionCached, CreateCollectionWidget, DropCollection, COLLECTIONS
+from concierge_streamlit_lib.status import SidebarStatus
 
 # ---- first run only ----
 
 EnsureCollections()
 
 # ---- main loop ----
+
+SidebarStatus()
 
 st.write('# Collections Manager')
 

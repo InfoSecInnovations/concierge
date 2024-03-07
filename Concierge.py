@@ -1,5 +1,6 @@
 import streamlit as st
 from concierge_streamlit_lib.add_api_handler import AddApiHandler
+from concierge_streamlit_lib.status import SidebarStatus
 from tornado.web import StaticFileHandler
 
 st.set_page_config(
@@ -9,9 +10,9 @@ st.set_page_config(
 
 AddApiHandler(r"/uploads/(.*)", StaticFileHandler, {"path": "uploads"})
 
-st.write("# Welcome to Concierge!")
+SidebarStatus()
 
-st.sidebar.success("Please pick a mode above.")
+st.write("# Welcome to Concierge!")
 
 st.markdown(
     """

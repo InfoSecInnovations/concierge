@@ -5,6 +5,7 @@ from pathlib import Path
 from stqdm import stqdm
 from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached, CreateCollectionWidget, SELECTED_COLLECTION
 from concierge_backend_lib.ingesting import Insert
+from concierge_streamlit_lib.status import SidebarStatus
 
 PROCESSING = "loader_processing"
 
@@ -43,6 +44,8 @@ def ingest():
     st.session_state["processing_files"] = st.session_state[st.session_state["file_uploader_key"]]
     st.session_state["input_urls"] = []
     st.session_state["file_uploader_key"] += 1
+
+SidebarStatus()
 
 st.write('# Document Loader')
 st.session_state["loader_container"] = st.empty()

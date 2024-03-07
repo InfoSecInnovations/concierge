@@ -5,6 +5,7 @@ from configobj import ConfigObj
 from pathlib import Path
 from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
 from concierge_streamlit_lib.collections import CollectionDropdown, EnsureCollections, GetExistingCollectionCached, SELECTED_COLLECTION
+from concierge_streamlit_lib.status import SidebarStatus
 
 PROCESSING = "prompter_processing"
 
@@ -58,6 +59,8 @@ if PROCESSING not in st.session_state:
 
 def on_input():
     st.session_state[PROCESSING] = True
+
+SidebarStatus()
 
 st.write('# Query your data')
 with st.container():

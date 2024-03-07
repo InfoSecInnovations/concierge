@@ -1,13 +1,16 @@
 from pymilvus import connections, utility, Collection, FieldSchema, DataType, CollectionSchema
 
-connections.connect("default", host="127.0.0.1", port=19530)
+def Connect():
+    connections.connect("default", host="127.0.0.1", port=19530)
 
 def GetExistingCollection(collection_name):
+    Connect()
     collection = Collection(collection_name)
     collection.load()
     return collection
 
 def InitCollection(collection_name):
+    Connect()
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
         FieldSchema(name="metadata_type", dtype=DataType.VARCHAR, max_length=64),
@@ -26,4 +29,5 @@ def InitCollection(collection_name):
     return collection
 
 def GetCollections():
+    Connect()
     return utility.list_collections()
