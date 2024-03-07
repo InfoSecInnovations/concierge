@@ -21,16 +21,17 @@ parser.add_argument("-f", "--file",
                     help="file to be used in prompt to Concierge.")
 args = parser.parse_args()
 
+config_dir = os.path.join('..', 'prompter_config')
 
-task = ConfigObj(f"prompter_config/tasks/{args.task}.concierge", list_values=False)
+task = ConfigObj(os.path.join(config_dir, 'tasks', f'{args.task}.concierge'), list_values=False)
 
 persona = None
 if args.persona:
-    persona = ConfigObj(f"prompter_config/personas/{args.persona}.concierge", list_values=False)
+    persona = ConfigObj(os.path.join(config_dir, 'personas', f'{args.persona}.concierge'), list_values=False)
 
 enhancers = None
 if args.enhancers:
-    enhancers = [ConfigObj(f"prompter_config/enhancers/{enhancer}.concierge", list_values=False) for enhancer in args.enhancers]
+    enhancers = [ConfigObj(os.path.join(config_dir, 'enhancers', f'{enhancer}.concierge'), list_values=False) for enhancer in args.enhancers]
 
 source_file = None
 if args.file:
