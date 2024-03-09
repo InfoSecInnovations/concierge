@@ -12,6 +12,17 @@ Built with simplicy and security in mind, it has some features we love -- and ho
 * Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use
 * Tasks: you can change what the AI can do for you via dropdowns
 
+## Dependencies ##  
+Concierge requires the following to be available:
+1. `python` (note: for all commands in documentation we will call the executable `python`. On your system you may need to use `python3`)
+2. Docker (currently the vector database and natural language response engine are running in docker containers)
+3. Docker compose (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup)  
+   
+Optional:  
+If you want to use GPU acceleration (Concierge does NOT require this, but it will make responses dramatically faster), you must have the 
+NVIDIA drivers correctly setup and running. Concierge will not install or make any adjustmetns to your driver configuration.  
+
+Refer to the documentation from NVIDIA for information on how to do this for your OS.
 
 ## Setup: Quick Install ##
 git clone repo or extract zip. 
