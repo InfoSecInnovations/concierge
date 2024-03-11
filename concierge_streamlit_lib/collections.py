@@ -34,6 +34,7 @@ def CreateCollectionWidget():
     with st.form(key="new_collection_form", clear_on_submit=True):
         col1, col2 = st.columns(2)
         new_collection_name = col1.text_input(label="New Collection", label_visibility="collapsed")
+        st.write("Hint: Collection names must only be letters, numbers, or underscores.")
         if col2.form_submit_button(label="Create Collection"):
             if new_collection_name:
                 InitCollectionCached(new_collection_name)
