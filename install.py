@@ -91,10 +91,10 @@ print("About to make changes to your system.\n")
 # TODO make a download size variable & update based on findings
 #print("Based on your selections, you will be downloading aproximately X of data")
 #print("Depending on network speed, this may take a while")
-print("No changes have yet been made to your system. If you stop now or answer no, nothing will have changed.")
-ready_to_rock = input("Ready to apply settings and start downloading? [Y/n]: ")
+print("No changes have yet been made to your system. If you stop now or answer \"no\", nothing will have changed.")
+ready_to_rock = input("Ready to apply settings and start downloading? Please type \"yes\" to continue. (yes/[no]): ")
 
-if ready_to_rock == "Y":
+if ready_to_rock.upper() == "YES":
     # no further input is needed. Let's get to work.
     print("installing...")
 
