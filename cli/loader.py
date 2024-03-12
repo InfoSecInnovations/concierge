@@ -1,7 +1,7 @@
 import os
-from loaders.pdf import LoadPDF
-from concierge_backend_lib.collections import InitCollection
-from concierge_backend_lib.ingesting import InsertWithTqdm
+from loaders.pdf import load_pdf
+from concierge_backend_lib.collections import init_collection
+from concierge_backend_lib.ingesting import insert_with_tqdm
 import argparse
 import shutil
 
@@ -16,15 +16,15 @@ args = parser.parse_args()
 source_path = args.source
 
 source_files = os.listdir(source_path)
-collection = InitCollection(args.collection)
+collection = init_collection(args.collection)
 
 for file in source_files:
     shutil.copyfile(os.path.join(source_path, file), os.path.join(upload_dir, file))
     print(file)
     pages = None
     if file.endswith(".pdf"):
-        pages = LoadPDF(upload_dir, file)
+        pages = load_pdf(upload_dir, file)
     if pages:
-        InsertWithTqdm(pages, collection)
+        insert_with_tqdm(pages, collection)
 
 collection.flush() # if we don't flush, the Web UI won't be able to grab recent changes

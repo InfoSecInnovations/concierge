@@ -3,9 +3,9 @@ import os
 from stqdm import stqdm
 from configobj import ConfigObj
 from pathlib import Path
-from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
-from concierge_streamlit_lib.collections import CollectionDropdown, EnsureCollections, GetExistingCollectionCached, SELECTED_COLLECTION
-from concierge_streamlit_lib.status import SidebarStatus
+from concierge_backend_lib.prompting import load_model, get_context, get_response
+from concierge_streamlit_lib.collections import collection_dropdown, ensure_collections, get_existing_collection_cached, SELECTED_COLLECTION
+from concierge_streamlit_lib.status import sidebar_status
 
 PROCESSING = "prompter_processing"
 
@@ -21,7 +21,7 @@ def LoadConfig(dir):
 @st.cache_resource
 def LoadLLMModel():
     pbar = None
-    for progress in LoadModel():
+    for progress in load_model():
         if not pbar:
             pbar = stqdm(
                 unit="B",
@@ -41,7 +41,7 @@ def LoadLLMModel():
     print("Language model loaded.\n")
 
 LoadLLMModel()
-EnsureCollections()
+ensure_collections()
 
 reference_limit = 5
 tasks = LoadConfig('tasks')
@@ -60,7 +60,7 @@ if PROCESSING not in st.session_state:
 def on_input():
     st.session_state[PROCESSING] = True
 
-SidebarStatus()
+sidebar_status()
 
 st.write('# Query your data')
 with st.container():
@@ -71,7 +71,7 @@ with st.container():
                 st.markdown(message["content"])
             else:
                 st.write(message["content"])
-    if CollectionDropdown(no_collections_message="You don't have any collections. Please go to the [Loader](/Loader) page, create a collection and ingest some data into it.", disabled=st.session_state[PROCESSING]):
+    if collection_dropdown(no_collections_message="You don't have any collections. Please go to the [Loader](/Loader) page, create a collection and ingest some data into it.", disabled=st.session_state[PROCESSING]):
         col1, col2, col3 = st.columns(3)
         task = col1.selectbox('Task', tasks.keys(), index=default_task_index, disabled=st.session_state[PROCESSING])
         persona = col2.selectbox('Persona', ['None', *personas.keys()], disabled=st.session_state[PROCESSING])
@@ -92,7 +92,7 @@ with st.container():
             with message_container.chat_message("user"):
                 st.write(full_message)
             with message_container.chat_message("assistant"):
-                context = GetContext(GetExistingCollectionCached(st.session_state[SELECTED_COLLECTION]), reference_limit, user_input)
+                context = get_context(get_existing_collection_cached(st.session_state[SELECTED_COLLECTION]), reference_limit, user_input)
                 if len(context["sources"]):
                     def stream_message():
                         yield 'Responding based on the following sources:\n\n'
@@ -106,7 +106,7 @@ with st.container():
                                 print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
                                 yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
                         if "prompt" in tasks[task]:
-                            yield GetResponse(
+                            yield get_response(
                                 context["context"], 
                                 tasks[task]["prompt"], 
                                 user_input,

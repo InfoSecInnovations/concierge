@@ -1,21 +1,21 @@
 import streamlit as st
-from concierge_streamlit_lib.collections import EnsureCollections, GetExistingCollectionCached, CreateCollectionWidget, DropCollection, COLLECTIONS
-from concierge_streamlit_lib.status import SidebarStatus
+from concierge_streamlit_lib.collections import ensure_collections, get_existing_collection_cached, create_collection_widget, drop_collection, COLLECTIONS
+from concierge_streamlit_lib.status import sidebar_status
 
 # ---- first run only ----
 
-EnsureCollections()
+ensure_collections()
 
 # ---- main loop ----
 
-SidebarStatus()
+sidebar_status()
 
 st.write('# Collections Manager')
 
-CreateCollectionWidget()
+create_collection_widget()
 
 for collection_name in st.session_state[COLLECTIONS]:
-    collection = GetExistingCollectionCached(collection_name)
+    collection = get_existing_collection_cached(collection_name)
 
     with st.container(border=1):
         col1, col2 = st.columns(2)
@@ -26,4 +26,4 @@ for collection_name in st.session_state[COLLECTIONS]:
             st.write("Entity count: ", collection.num_entities)
 
         with col2:
-            st.button("delete collection", key=f"delete_{collection_name}", on_click=DropCollection, args=[collection_name])
+            st.button("delete collection", key=f"delete_{collection_name}", on_click=drop_collection, args=[collection_name])

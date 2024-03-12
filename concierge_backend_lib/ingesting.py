@@ -14,7 +14,7 @@ splitter = RecursiveCharacterTextSplitter(
     chunk_overlap=chunk_overlap
 )
 
-def Insert (pages, collection):
+def insert (pages, collection):
     # on a huge dataset grpc can error due to size limits, so we need to break it into batches
     batched_entries = []
     batched_entries.append([])
@@ -48,9 +48,9 @@ def Insert (pages, collection):
             [x["vector"] for x in batch],
         ])
 
-def InsertWithTqdm (pages, collection):
+def insert_with_tqdm (pages, collection):
     page_progress = tqdm(total=len(pages))
-    for x in Insert(pages, collection):
+    for x in insert(pages, collection):
         page_progress.n = x[0] + 1
         page_progress.refresh()
     page_progress.close()

@@ -1,11 +1,11 @@
 import streamlit as st
-from loaders.pdf import LoadPDF
-from loaders.web import LoadWeb
+from loaders.pdf import load_pdf
+from loaders.web import load_web
 from pathlib import Path
 from stqdm import stqdm
-from concierge_streamlit_lib.collections import EnsureCollections, CollectionDropdown, InitCollectionCached, CreateCollectionWidget, SELECTED_COLLECTION
-from concierge_backend_lib.ingesting import Insert
-from concierge_streamlit_lib.status import SidebarStatus
+from concierge_streamlit_lib.collections import ensure_collections, collection_dropdown, init_collection_cached, create_collection_widget, SELECTED_COLLECTION
+from concierge_backend_lib.ingesting import insert
+from concierge_streamlit_lib.status import sidebar_status
 
 PROCESSING = "loader_processing"
 
@@ -14,11 +14,11 @@ PROCESSING = "loader_processing"
 upload_dir = 'uploads'
 
 @st.cache_resource
-def CreateUploadDir():
+def create_upload_dir():
     Path(upload_dir).mkdir(exist_ok=True)
 
-CreateUploadDir()
-EnsureCollections()
+create_upload_dir()
+ensure_collections()
 
 # https://discuss.streamlit.io/t/are-there-any-ways-to-clear-file-uploader-values-without-using-streamlit-form/40903 see this hack for clearing the file uploader
 if "file_uploader_key" not in st.session_state:
@@ -45,13 +45,13 @@ def ingest():
     st.session_state["input_urls"] = []
     st.session_state["file_uploader_key"] += 1
 
-SidebarStatus()
+sidebar_status()
 
 st.write('# Document Loader')
 st.session_state["loader_container"] = st.empty()
 st.session_state["input_container"] = st.empty()
 if st.session_state[PROCESSING]:
-    collection = InitCollectionCached(st.session_state[SELECTED_COLLECTION])
+    collection = init_collection_cached(st.session_state[SELECTED_COLLECTION])
     files = st.session_state["processing_files"]
     if files and len(files):
         with st.session_state["loader_container"].container():
@@ -61,9 +61,9 @@ if st.session_state[PROCESSING]:
                     print(file.name)
                     with open(Path(upload_dir, file.name), "wb") as f:
                         f.write(file.getbuffer())
-                    pages = LoadPDF(upload_dir, file.name)
+                    pages = load_pdf(upload_dir, file.name)
                     page_progress = stqdm(total=len(pages), desc=f"Loading PDF {file.name}", backend=True)
-                    for x in Insert(pages, collection):
+                    for x in insert(pages, collection):
                         page_progress.n = x[0] + 1
                         page_progress.refresh()
                     page_progress.close()
@@ -77,9 +77,9 @@ if st.session_state[PROCESSING]:
                 if not url:
                     continue
                 print(url)
-                pages = LoadWeb(url)
+                pages = load_web(url)
                 page_progress = stqdm(total=len(pages), desc=f"Loading URL {url}", backend=True)
-                for x in Insert(pages, collection):
+                for x in insert(pages, collection):
                     page_progress.n = x[0] + 1
                     page_progress.refresh()
                 page_progress.close()
@@ -89,8 +89,8 @@ if st.session_state[PROCESSING]:
     st.rerun()
 else:
     with st.session_state["input_container"].container():
-        collections_exist = CollectionDropdown()
-        CreateCollectionWidget()
+        collections_exist = collection_dropdown()
+        create_collection_widget()
         if collections_exist:
             st.file_uploader(label='Select files to add to database', accept_multiple_files=True, key=st.session_state["file_uploader_key"], disabled=st.session_state[PROCESSING])
             st.write('### URLs ###')

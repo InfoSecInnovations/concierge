@@ -1,17 +1,17 @@
 import streamlit as st
 import requests
-from concierge_backend_lib.collections import GetCollections
+from concierge_backend_lib.collections import get_collections
 from pymilvus.exceptions import MilvusException
 
 @st.cache_data(ttl="10s")
-def GetStatus():
+def get_status():
     try:
         ollama_up = requests.get("http://localhost:11434/").status_code == 200
     except:
         ollama_up = False
 
     try:
-        GetCollections()
+        get_collections()
         milvus_up = True
     except MilvusException:
         milvus_up = False
@@ -21,8 +21,8 @@ def GetStatus():
         "milvus": milvus_up
     }
 
-def SidebarStatus():
-    status = GetStatus()
+def sidebar_status():
+    status = get_status()
     if status["ollama"]:
         st.sidebar.success("Ollama is up and running", icon="🟢")
     else:

@@ -7,7 +7,7 @@ date_time = datetime.now()
 str_date_time = date_time.isoformat()
 
 
-def LoadWeb(url):
+def load_web(url):
     loader = RecursiveUrlLoader(url, max_depth=100)
     pages = loader.load_and_split()
     return [{

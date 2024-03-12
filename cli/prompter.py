@@ -3,8 +3,8 @@ from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
-from concierge_backend_lib.collections import GetExistingCollection
-from concierge_backend_lib.prompting import LoadModel, GetContext, GetResponse
+from concierge_backend_lib.collections import get_existing_collection
+from concierge_backend_lib.prompting import load_model, get_context, get_response
 
 # TODO add collection as an option
 # TODO make these be web inputs for streamlit
@@ -46,7 +46,7 @@ if args.file:
 references = 5
 
 pbar = None
-for progress in LoadModel():
+for progress in load_model():
     if not pbar:
         pbar = tqdm(
             unit="B",
@@ -63,14 +63,14 @@ if pbar:
     pbar.close()
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-collection = GetExistingCollection(args.collection)
+collection = get_existing_collection(args.collection)
 
 while True:
 
     print(task['greeting'])
     user_input = input()
 
-    context = GetContext(collection, references, user_input)
+    context = get_context(collection, references, user_input)
 
     print('\nResponding based on the following sources:')
     for source in context["sources"]:
@@ -82,7 +82,7 @@ while True:
     print("\n\n")
 
     if ('prompt' in task):
-        response = GetResponse(
+        response = get_response(
             context["context"], 
             task["prompt"], 
             user_input,

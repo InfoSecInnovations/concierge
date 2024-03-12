@@ -1,6 +1,6 @@
 import streamlit as st
-from concierge_streamlit_lib.add_api_handler import AddApiHandler
-from concierge_streamlit_lib.status import SidebarStatus
+from concierge_streamlit_lib.add_api_handler import add_api_handler
+from concierge_streamlit_lib.status import sidebar_status
 from tornado.web import StaticFileHandler
 
 st.set_page_config(
@@ -8,9 +8,9 @@ st.set_page_config(
     page_icon="👋",
 )
 
-AddApiHandler(r"/uploads/(.*)", StaticFileHandler, {"path": "uploads"})
+add_api_handler(r"/uploads/(.*)", StaticFileHandler, {"path": "uploads"})
 
-SidebarStatus()
+sidebar_status()
 
 st.write("# Welcome to Concierge!")
 

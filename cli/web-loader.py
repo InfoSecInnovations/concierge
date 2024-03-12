@@ -1,6 +1,6 @@
-from loaders.web import LoadWeb
-from concierge_backend_lib.collections import InitCollection
-from concierge_backend_lib.ingesting import InsertWithTqdm
+from loaders.web import load_web
+from concierge_backend_lib.collections import init_collection
+from concierge_backend_lib.ingesting import insert_with_tqdm
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -11,11 +11,11 @@ parser.add_argument("-c", "--collection", required=True,
 args = parser.parse_args()
 url = args.url
 
-collection = InitCollection(args.collection)
+collection = init_collection(args.collection)
 
-pages = LoadWeb(url)
+pages = load_web(url)
 print (url)
 if pages:
-    InsertWithTqdm(pages, collection)
+    insert_with_tqdm(pages, collection)
 
 collection.flush() # if we don't flush, the Web UI won't be able to grab recent changes

@@ -4,7 +4,7 @@ import requests
 # import antigravity
 from sentence_transformers import SentenceTransformer
 
-def LoadModel():
+def load_model():
     # TODO several revs in the future... allow users to pick model.
     # very much low priority atm
     models = requests.get("http://localhost:11434/api/tags")
@@ -28,7 +28,7 @@ search_params = {
     "params": {"radius": 0.5} # -1.0 to 1.0, positive values indicate similarity, negative values indicate difference
 }
 
-def GetContext(collection, reference_limit, user_input):
+def get_context(collection, reference_limit, user_input):
     response = collection.search(
         data=[stransform.encode(user_input)],
         anns_field="vector",
@@ -52,7 +52,7 @@ def GetContext(collection, reference_limit, user_input):
         "sources": sources
     }
 
-def PreparePrompt(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
+def prepare_prompt(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
     prompt = task_prompt
 
     if persona_prompt:
@@ -69,8 +69,8 @@ def PreparePrompt(context, task_prompt, user_input, persona_prompt = None, enhan
 
     return prompt
 
-def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
-    prompt = PreparePrompt(context, task_prompt, user_input, persona_prompt, enhancer_prompts, source_file_contents)
+def get_response(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
+    prompt = prepare_prompt(context, task_prompt, user_input, persona_prompt, enhancer_prompts, source_file_contents)
 
     data={
         "model":"mistral",
@@ -87,8 +87,8 @@ def GetResponse(context, task_prompt, user_input, persona_prompt = None, enhance
 
     return json.loads(response.text)['response']
 
-def StreamResponse(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
-    prompt = PreparePrompt(context, task_prompt, user_input, persona_prompt, enhancer_prompts, source_file_contents)
+def stream_response(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
+    prompt = prepare_prompt(context, task_prompt, user_input, persona_prompt, enhancer_prompts, source_file_contents)
 
     data={
         "model":"mistral",

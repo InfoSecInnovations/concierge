@@ -1,16 +1,16 @@
 from pymilvus import connections, utility, Collection, FieldSchema, DataType, CollectionSchema
 
-def Connect():
+def connect():
     connections.connect("default", host="127.0.0.1", port=19530)
 
-def GetExistingCollection(collection_name):
-    Connect()
+def get_existing_collection(collection_name):
+    connect()
     collection = Collection(collection_name)
     collection.load()
     return collection
 
-def InitCollection(collection_name):
-    Connect()
+def init_collection(collection_name):
+    connect()
     fields = [
         FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
         FieldSchema(name="metadata_type", dtype=DataType.VARCHAR, max_length=64),
@@ -28,6 +28,6 @@ def InitCollection(collection_name):
     collection.create_index(field_name="vector", index_params=index_params)
     return collection
 
-def GetCollections():
-    Connect()
+def get_collections():
+    connect()
     return utility.list_collections()
