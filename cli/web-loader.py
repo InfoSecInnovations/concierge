@@ -1,3 +1,12 @@
+import platform
+import sys
+
+my_platform = platform.system()
+
+if my_platform == "Linux": # relative imports don't work the same on Windows and Linux!
+    sys.path.append('..')
+# TODO: check MacOS
+
 from loaders.web import load_web
 from concierge_backend_lib.collections import init_collection
 from concierge_backend_lib.ingesting import insert_with_tqdm

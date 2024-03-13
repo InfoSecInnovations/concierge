@@ -1,3 +1,12 @@
+import platform
+import sys
+
+my_platform = platform.system()
+
+if my_platform == "Linux": # relative imports don't work the same on Windows and Linux!
+    sys.path.append('..')
+# TODO: check MacOS
+
 import os
 from sentence_transformers import SentenceTransformer
 import argparse
@@ -6,8 +15,6 @@ from tqdm import tqdm
 from concierge_backend_lib.collections import get_existing_collection
 from concierge_backend_lib.prompting import load_model, get_context, get_response
 
-# TODO add collection as an option
-# TODO make these be web inputs for streamlit
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--task", required=True,
                     help="Required: What you want Concierge to do.")
