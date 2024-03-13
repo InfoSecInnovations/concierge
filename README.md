@@ -22,6 +22,10 @@ Optional:
 If you want to use GPU acceleration (Concierge does NOT require this, but it will make responses dramatically faster), you must have the 
 NVIDIA drivers correctly setup and running. Concierge will not install or make any adjustmetns to your driver configuration.  
 
+Note: if you want to use GPU acceleration on a Windows host, you must use WSL2.  
+More details here:  
+https://docs.docker.com/desktop/gpu/
+
 Refer to the documentation from NVIDIA for information on how to do this for your OS.
 
 ## Setup: Quick Install ##
