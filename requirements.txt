@@ -13,3 +13,4 @@ pympler
 configobj
 streamlit
 stqdm
+streamlit-option-menu

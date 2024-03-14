@@ -22,12 +22,15 @@ def init_collection_cached(collection_name):
 def get_existing_collection_cached(collection_name):
     return cache_to_session_state(EXISTING_COLLECTIONS, collection_name, lambda: get_existing_collection(collection_name))
 
+def set_selected_collection():
+    st.session_state[SELECTED_COLLECTION]=st.session_state["_selected_collection"] 
+
 def collection_dropdown(no_collections_message = "You don't have any collections, please create one.", disabled = False):
     if not len(st.session_state[COLLECTIONS]):
         st.write(no_collections_message)
         return False
     else:
-        st.selectbox("Collection", st.session_state[COLLECTIONS], key=SELECTED_COLLECTION, disabled=disabled)
+        st.selectbox("Collection", st.session_state[COLLECTIONS], key="_selected_collection", on_change=set_selected_collection, disabled=disabled)
         return True
     
 def create_collection_widget():
