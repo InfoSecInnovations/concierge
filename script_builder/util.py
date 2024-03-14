@@ -41,15 +41,16 @@ def get_default_directory(is_standalone: bool):
         return r"C:\ProgramData"
     # TODO: macOS
 
-def get_venv_dir():
+def get_venv_executable():
     if my_platform == "Linux":
-        return "bin"
+        path="bin"
     else:
-        return "Scripts"
+        path="Scripts"
     # TODO: macOS
+    return os.path.join(path, "python")
 
 def pip_loader():
     working_dir = os.getcwd()
     venv.create(working_dir, with_pip=True)
     # pip install command
-    subprocess.run([os.path.join(get_venv_dir(), "python"), "-m", "pip", "install", "-r", os.path.abspath("requirements.txt")], cwd=working_dir)
+    subprocess.run([os.path.join(get_venv_executable(), "python"), "-m", "pip", "install", "-r", os.path.abspath("requirements.txt")], cwd=working_dir)
