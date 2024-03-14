@@ -28,7 +28,7 @@ https://docs.docker.com/desktop/gpu/
 
 Refer to the documentation from NVIDIA for information on how to do this for your OS.
 
-## Setup: Quick Install ##
+## Setup: quick install ##
 git clone repo or extract zip. 
 
 `cd concierge` go into the cloned project directory.
@@ -53,7 +53,15 @@ copy `.env.example` into a file named `.env` and set the folder on your computer
 
 `docker compose -f docker-compose-gpu.yml up -d` will load the docker dependencies and use the GPU.
 
-## Usage: ##
+## Usage: launch script
+
+From the cloned project directory simply run `launch.py`.
+
+If the Docker container dependencies aren't found, you will be given the option to launch with CPU or GPU.
+
+## Usage: manual ##
+If `launch.py` did not work:
+
 If you are not in the python virtual environment, please enter it by the correct method:  
 Linux: `source ./bin/activate`  
 Windows PowerShell: `.\Scripts\Activate.ps1`
