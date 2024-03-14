@@ -12,14 +12,14 @@ PROCESSING = "prompter_processing"
 # ---- first run only ----
 
 @st.cache_data
-def LoadConfig(dir):
+def load_config(dir):
     files = os.listdir(Path('prompter_config', dir).as_posix())
     return { file.replace('.concierge', ''): ConfigObj(
         Path('prompter_config', dir, file).as_posix(), list_values=False
     ) for file in filter(lambda file: file.endswith('.concierge'), files)} 
 
 @st.cache_resource
-def LoadLLMModel():
+def load_llm_model():
     pbar = None
     for progress in load_model():
         if not pbar:
@@ -40,13 +40,13 @@ def LoadLLMModel():
         pbar.close()
     print("Language model loaded.\n")
 
-LoadLLMModel()
+load_llm_model()
 ensure_collections()
 
 reference_limit = 5
-tasks = LoadConfig('tasks')
-personas = LoadConfig('personas')
-enhancers = LoadConfig('enhancers')
+tasks = load_config('tasks')
+personas = load_config('personas')
+enhancers = load_config('enhancers')
 default_task_index = 0 if 'question' not in tasks else list(tasks.keys()).index('question')
 
 if "messages" not in st.session_state:
