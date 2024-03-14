@@ -30,7 +30,8 @@ def collection_dropdown(no_collections_message = "You don't have any collections
         st.write(no_collections_message)
         return False
     else:
-        st.selectbox("Collection", st.session_state[COLLECTIONS], key="_selected_collection", on_change=set_selected_collection, disabled=disabled)
+        index = 0 if SELECTED_COLLECTION not in st.session_state else st.session_state[COLLECTIONS].index(st.session_state[SELECTED_COLLECTION])
+        st.selectbox("Collection", st.session_state[COLLECTIONS], key="_selected_collection", on_change=set_selected_collection, disabled=disabled, index=index)
         return True
     
 def create_collection_widget():
