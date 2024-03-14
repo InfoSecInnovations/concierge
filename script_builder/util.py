@@ -53,4 +53,4 @@ def pip_loader():
     working_dir = os.getcwd()
     venv.create(working_dir, with_pip=True)
     # pip install command
-    subprocess.run([os.path.join(get_venv_executable(), "python"), "-m", "pip", "install", "-r", os.path.abspath("requirements.txt")], cwd=working_dir)
+    subprocess.run([get_venv_executable(), "-m", "pip", "install", "-r", os.path.abspath("requirements.txt")], cwd=working_dir)
