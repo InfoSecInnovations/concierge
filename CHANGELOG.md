@@ -4,7 +4,8 @@
 
 ### Added
 
-`launch.py` script to make starting Concierge simpler.
+- `launch.py` script to make starting Concierge simpler.
+- Collaborator Guide to clarify our internal policy on handling branches and versioning.
 
 ## 0.1.0 2024-03-06
 
