@@ -18,3 +18,8 @@ We will be using [semver](https://semver.org/) to number releases, i.e. MAJOR.MI
 - Make sure to update [CHANGELOG.md](CHANGELOG.md) with the changes that have been implemented since the previous release.
 - Merge the corresponding branch into the `main` branch. Ensure you're only merging features you intend to release, unfinished features need to remain on `development` or a dedicated feature branch.
 - Go to the Releases page, and create a new release from the `main` branch. Prefix the title with "Alpha" or "Beta" if appropriate. In the current stage, all releases should be prefixed with "Alpha"!
+- Copy appropriate section from CHANGELOG.md into the release description.
+
+### TODO
+
+Use script to automate publishing a release!
