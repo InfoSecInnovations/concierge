@@ -2,6 +2,10 @@
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) first, any changes that do not follow the Code of Conduct will not be considered for inclusion in Data Concierge!
 
+## GitHub Issues
+
+We welcome the use of GitHub Issues to report bugs and request features. Please search for existing Issues relating to your request. If the Issue already adequately describes your request, you can simply use an emoji reaction to the top comment, if you have additional information or questions please add to the existing Issue rather than creating a new one.
+
 ## Commit messages
 
 Please make sure your commit messages convey which files or features have been modified while remaining concise. The user can view commit details to see exactly which changes were made, so it only needs to be a short overview to provide at-a-glance identification.
