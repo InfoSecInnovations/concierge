@@ -15,6 +15,8 @@ def get_collections_cached():
 def ensure_collections():
     if COLLECTIONS not in st.session_state:
         st.session_state[COLLECTIONS] = get_collections_cached()
+        if len(st.session_state[COLLECTIONS]):
+            st.session_state[SELECTED_COLLECTION] = st.session_state[COLLECTIONS][0]
 
 def init_collection_cached(collection_name):
     return cache_to_session_state(INITIALIZED_COLLECTIONS, collection_name, lambda: init_collection(collection_name))
@@ -43,6 +45,7 @@ def create_collection_widget():
             if new_collection_name:
                 init_collection_cached(new_collection_name)
                 st.session_state[COLLECTIONS].append(new_collection_name)
+                st.session_state[SELECTED_COLLECTION] = new_collection_name
                 st.rerun()
 
 def drop_collection(collection_name):

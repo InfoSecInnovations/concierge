@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 from concierge_streamlit_lib.add_api_handler import add_api_handler
-from concierge_streamlit_lib.status import sidebar_status
+from concierge_streamlit_lib.status import sidebar_status, document_loader
 from concierge_streamlit_lib.collections import ensure_collections
 from tornado.web import StaticFileHandler
 from concierge_streamlit_pages.home import home
@@ -16,6 +16,8 @@ st.set_page_config(
 
 add_api_handler(r"/uploads/(.*)", StaticFileHandler, {"path": "uploads"})
 ensure_collections()
+if "selected_page" not in st.session_state:
+    st.session_state["selected_page"] = "Concierge"
 
 with st.sidebar:
     option_menu(
@@ -25,6 +27,8 @@ with st.sidebar:
     )
 
 sidebar_status()
+
+document_loader()
 
 if st.session_state["selected_page"] == "Concierge":
     home()
