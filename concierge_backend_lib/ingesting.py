@@ -21,8 +21,7 @@ def insert (pages, collection):
     batch_index = 0
     batch_size = 0
     total = len(pages)
-    for index, page in enumerate(pages):
-        
+    for index, page in enumerate(pages):      
         chunks = splitter.split_text(page["content"])
         for chunk in chunks:
             vect = stransform.encode(chunk)
@@ -39,7 +38,7 @@ def insert (pages, collection):
                 batch_size = 0
             batched_entries[batch_index].append(entry)
             batch_size = batch_size + entry_size
-            yield (index, total)
+        yield (index, total)
     for batch in batched_entries:
         collection.insert([
             [x["metadata_type"] for x in batch],
