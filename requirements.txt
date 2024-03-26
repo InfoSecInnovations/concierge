@@ -14,3 +14,4 @@ configobj
 stqdm
 streamlit
 streamlit-option-menu
+shiny
