@@ -42,7 +42,6 @@ def process_files(collection, files):
                 f.write(file.getbuffer())
             pages = load_pdf(UPLOAD_DIR, file.name)
             insert_with_progress(collection, pages, f"Loading PDF {file.name}")
-    collection.flush()
     print('done loading files\n')
     st.session_state["processing_files"] = []
 
@@ -53,7 +52,6 @@ def process_urls(collection):
         print(url)
         pages = load_web(url)
         insert_with_progress(collection, pages,f"Loading URL {url}" )
-    collection.flush()
     print('done loading URLs\n')
     st.session_state["processing_urls"] = []
 
@@ -64,6 +62,7 @@ def load_items():
         process_files(collection, files)
     if len(st.session_state["processing_urls"]):
         process_urls(collection)
+    collection.flush()
     st.session_state[LOADER_PROCESSING] = False
     st.session_state[AWAITING_ITEMS] = False
     st.rerun()

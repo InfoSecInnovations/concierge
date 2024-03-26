@@ -11,6 +11,6 @@ grpcio-tools
 pymilvus==2.3.6
 pympler
 configobj
-streamlit
 stqdm
+streamlit
 streamlit-option-menu
