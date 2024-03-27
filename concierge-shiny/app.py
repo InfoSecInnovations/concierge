@@ -7,13 +7,6 @@ COLLECTION = "facts"
 
 collection = init_collection(COLLECTION)
 
-def loader():
-    return [
-        ui.markdown("# Loader"),
-        ui.output_ui("ingester"),
-        ui.input_action_button(id="ingest", label="Ingest")
-    ]
-
 def prompter():
     return [
         ui.markdown("# Prompter")

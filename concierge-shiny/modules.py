@@ -48,6 +48,18 @@ def loader_ui():
 @module.server
 def loader_server(input: Inputs, output: Outputs, session: Session, collection, upload_dir):
 
+    file_input_trigger = reactive.value(0)
+
+    @render.ui
+    @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)
+    def file_input():
+        file_input_trigger.get()
+        return ui.input_file(
+            id="loader_files",
+            label="Documents",
+            multiple=True
+        )
+
     def ingest_files(files):
         for file in files:
             shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
@@ -67,6 +79,7 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
     @reactive.extended_task
     async def ingester_async(files):
         await asyncio.to_thread(ingest_files(files))
+        return True
 
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False)
@@ -75,16 +88,9 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
             print("yoyo")
             files = input.loader_files()
             if files and len(files):
-                print(len(files))         
+                print(len(files))
+                file_input_trigger.set(file_input_trigger.get() + 1)       
                 ingester_async(files)
-
-    @render.ui
-    def file_input():
-        return ui.input_file(
-            id="loader_files",
-            label="Documents",
-            multiple=True
-        )
 
     # @render.ui
     # @reactive.event(input.ingest, ignore_none=False, ignore_init=False)
