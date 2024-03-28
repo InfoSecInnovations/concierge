@@ -53,7 +53,6 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
     @render.ui
     @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)
     def file_input():
-        file_input_trigger.get()
         return ui.input_file(
             id="loader_files",
             label="Documents",
@@ -85,22 +84,17 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
     @reactive.event(input.ingest, ignore_none=False)
     def handle_click():
         if "loader_files" in input:
-            print("yoyo")
             files = input.loader_files()
             if files and len(files):
-                print(len(files))
                 file_input_trigger.set(file_input_trigger.get() + 1)       
                 ingester_async(files)
 
-    # @render.ui
-    # @reactive.event(input.ingest, ignore_none=False, ignore_init=False)
-    # def ingester():
-    #     if "loader_files" in input:
-    #         files = input.loader_files()
-    #         if files and len(files):
-    #             ingest_files(files)
-    #     return ui.input_file(
-    #         id="loader_files",
-    #         label="Documents",
-    #         multiple=True
-    #     )
+@module.ui
+def prompter_ui():
+    return [
+        ui.markdown("# Prompter")
+    ]
+
+@module.server
+def prompter_server(input: Inputs, output: Outputs, session: Session, collection, upload_dir):
+    pass
