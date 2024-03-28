@@ -1,6 +1,8 @@
 from shiny import App, ui, Inputs, Outputs, Session
 from concierge_backend_lib.collections import init_collection
-from modules import home_ui, loader_ui, loader_server, prompter_ui, prompter_server
+from home import home_ui
+from loader import loader_ui, loader_server
+from prompter import prompter_ui, prompter_server
 
 UPLOADS_DIR = "uploads"
 COLLECTION = "facts"
