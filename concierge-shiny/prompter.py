@@ -76,8 +76,8 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
             return ui.TagList(
                 ui.markdown("TODO: prompter UI"),
                 ui.markdown("TODO: collection selector"),
-                ui.input_selectize(id="task_select", label="Task", choices=list(tasks)),
-                ui.input_selectize(id="persona_select", label="Persona", choices=list(personas)),
+                ui.input_selectize(id="task_select", label="Task", choices=list(tasks), selected=None if 'question' not in tasks else 'question'),
+                ui.input_selectize(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
                 ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
             )
         else:
