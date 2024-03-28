@@ -36,7 +36,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
         print("Checking language model...")
         dummyp = tqdm(desc="Dummy loading", total=4)
         for i in range(4):
-            time.sleep(1)
+            time.sleep(0.25)
             dummyp.n = i+1
             dummyp.refresh()
         dummyp.close()
@@ -73,6 +73,12 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
     def prompter_ui():
         loaded = llm_loaded.get()
         if loaded:
-            return ui.markdown("TODO: prompter UI")
+            return ui.TagList(
+                ui.markdown("TODO: prompter UI"),
+                ui.markdown("TODO: collection selector"),
+                ui.input_selectize(id="task_select", label="Task", choices=list(tasks)),
+                ui.input_selectize(id="persona_select", label="Persona", choices=list(personas)),
+                ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
+            )
         else:
-            return ui.markdown("Loading Language Model...")
+            return ui.markdown("Loading Language Model, please wait...")

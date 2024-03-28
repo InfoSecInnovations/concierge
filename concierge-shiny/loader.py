@@ -10,7 +10,7 @@ from loaders.pdf import load_pdf
 def loader_ui():
     return [
         ui.markdown("# Loader"),
-        # TODO: collection select
+        ui.markdown("TODO: collection selector"),
         ui.output_ui("file_input"),
         ui.input_task_button(id="ingest", label="Ingest")
     ]

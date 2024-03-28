@@ -7,15 +7,15 @@ pool = concurrent.futures.ThreadPoolExecutor()
 
 app_ui = ui.page_auto(ui.markdown("#Testing"))
 
-def server(input: Inputs, output: Outputs, session: Session):
+def progress():
+    print("Starting progress!")
+    with ui.Progress(0, 4) as p:
+        for i in range(4):
+            time.sleep(1)
+            p.set(i + 1)
+    print("Progress done!")
 
-    def progress():
-        print("Starting progress!")
-        with ui.Progress(0, 4) as p:
-            for i in range(4):
-                time.sleep(1)
-                p.set(i + 1)
-        print("Progress done!")
+def server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.extended_task
     async def init_progress_executor():
@@ -28,6 +28,8 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.effect
     def init():
-        init_progress_to_thread()
+        # init_progress_to_thread()
+        init_progress_executor()
 
 app = App(app_ui, server)
+app.on_shutdown(pool.shutdown)
