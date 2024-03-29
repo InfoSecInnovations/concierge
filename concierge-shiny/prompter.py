@@ -32,6 +32,7 @@ def prompter_ui():
 def prompter_server(input: Inputs, output: Outputs, session: Session, collection, upload_dir):
 
     llm_loaded = reactive.value(False)
+    messages = reactive.value([])
 
     def dummy_generator():
         for i in range(4):
@@ -82,11 +83,13 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
         loaded = llm_loaded.get()
         if loaded:
             return ui.TagList(
-                ui.markdown("TODO: prompter UI"),
+                ui.markdown("TODO: messages"),
                 ui.markdown("TODO: collection selector"),
                 ui.input_selectize(id="task_select", label="Task", choices=list(tasks), selected=None if 'question' not in tasks else 'question'),
                 ui.input_selectize(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
-                ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
+                ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True),
+                ui.markdown("TODO: file input"),
+                ui.input_text(id="chat_input", label="Chat", placeholder="TODO: get placeholder from current task")
             )
         else:
             return ui.markdown("Loading Language Model, please wait...")
