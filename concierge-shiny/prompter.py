@@ -7,6 +7,7 @@ from tqdm import tqdm
 import time
 import asyncio
 import concurrent.futures
+from util.async_generator import asyncify
 
 pool = concurrent.futures.ThreadPoolExecutor()
 
@@ -32,42 +33,47 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
 
     llm_loaded = reactive.value(False)
 
-    def load_llm_model():
-        print("Checking language model...")
-        dummyp = tqdm(desc="Dummy loading", total=4)
+    def dummy_generator():
         for i in range(4):
-            time.sleep(0.25)
-            dummyp.n = i+1
-            dummyp.refresh()
-        dummyp.close()
-        pbar = None
-        for progress in load_model():
-            if not pbar:
-                pbar = tqdm(
-                    unit="B",
-                    unit_scale=True,
-                    unit_divisor=1024,
-                    desc="Loading Language Model"
-                )
-            # slight hackiness to set the initial value if resuming a download or switching files
-            if pbar.initial == 0 or pbar.initial > progress[0]:
-                pbar.initial = progress[0]
-            pbar.total = progress[1]
-            pbar.n = progress[0]
-            pbar.refresh()
-        if pbar:
-            pbar.close()      
-        print("Language model loaded.\n")   
+            time.sleep(0.5)
+            yield i
 
     @reactive.extended_task
-    async def init_llm():
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(pool, load_llm_model)
-        llm_loaded.set(True)
+    async def load_llm_model():
+        print("Checking language model...")
+        dummyp = tqdm(desc="Dummy loading", total=4)
+        with ui.Progress(min=0, max=4) as p:
+            p.set(value=0, message="Loading dummy...")
+            async for i in asyncify(dummy_generator()):
+                dummyp.n = i+1
+                dummyp.refresh()
+                p.set(value=i+1, message=f"{i+1}/4 dummy loading")
+        dummyp.close()
+        pbar = None
+        with ui.Progress() as p:
+            p.set(value=0, message="Loading language model...")
+            async for progress in asyncify(load_model()):
+                if not pbar:
+                    pbar = tqdm(
+                        unit="B",
+                        unit_scale=True,
+                        unit_divisor=1024,
+                        desc="Loading Language Model"
+                        )
+                # slight hackiness to set the initial value if resuming a download or switching files
+                if pbar.initial == 0 or pbar.initial > progress[0]:
+                    pbar.initial = progress[0]
+                pbar.total = progress[1]
+                pbar.n = progress[0]
+                pbar.refresh()
+        if pbar:
+            pbar.close()   
+        llm_loaded.set(True) 
+        print("Language model loaded.\n")   
 
     @reactive.effect
     def init():
-        init_llm()
+        load_llm_model()
 
     @render.ui
     def prompter_ui():
