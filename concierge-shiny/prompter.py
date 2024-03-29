@@ -51,7 +51,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
         dummyp.close()
         pbar = None
         with ui.Progress() as p:
-            p.set(value=0, message="Loading language model...")
+            p.set(value=0, message="Loading Language Model...")
             async for progress in asyncify(load_model()):
                 if not pbar:
                     pbar = tqdm(
@@ -60,10 +60,12 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
                         unit_divisor=1024,
                         desc="Loading Language Model"
                         )
+                pbar.total = progress[1]
+                p.max = progress[1]
                 # slight hackiness to set the initial value if resuming a download or switching files
                 if pbar.initial == 0 or pbar.initial > progress[0]:
                     pbar.initial = progress[0]
-                pbar.total = progress[1]
+                p.set(value=progress[0], message=f"Loading Language Model: {progress[0]}/{progress[1]}")
                 pbar.n = progress[0]
                 pbar.refresh()
         if pbar:

@@ -5,6 +5,7 @@ import asyncio
 from tqdm import tqdm
 from concierge_backend_lib.ingesting import insert
 from loaders.pdf import load_pdf
+from util.async_generator import asyncify
 
 @module.ui
 def loader_ui():
@@ -29,7 +30,9 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
             multiple=True
         )
 
-    def ingest_files(files):
+    @ui.bind_task_button(button_id="ingest")
+    @reactive.extended_task
+    async def ingest_files(files):
         for file in files:
             shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
             if file["type"] == 'application/pdf':
@@ -38,16 +41,11 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
                 page_progress = tqdm(total=len(pages))
                 with ui.Progress(1, len(pages)) as p:
                     p.set(0, message=f"{file["name"]}: loading...")
-                    for x in insert(pages, collection):
+                    async for x in asyncify(insert(pages, collection)):
                         p.set(x[0] + 1, message=f"{file["name"]}: page {x[0] + 1} of {x[1]}.")
                         page_progress.n = x[0] + 1
                         page_progress.refresh()
                 page_progress.close()
-
-    @ui.bind_task_button(button_id="ingest")
-    @reactive.extended_task
-    async def ingester_async(files):
-        await asyncio.to_thread(ingest_files(files))
 
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False)
@@ -56,4 +54,4 @@ def loader_server(input: Inputs, output: Outputs, session: Session, collection, 
             files = input.loader_files()
             if files and len(files):
                 file_input_trigger.set(file_input_trigger.get() + 1)       
-                ingester_async(files)
+                ingest_files(files)
