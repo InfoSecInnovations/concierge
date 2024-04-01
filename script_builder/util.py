@@ -28,7 +28,11 @@ def require_admin():
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             print("Please run this script as administrator")
             exit()
-    # TODO: macOS
+    if my_platform == "Darwin":
+         if os.geteuid() == 0:
+            print("Please do not run this script as root or with sudo.")
+            print("If needed, this script will prompt for elevated permission.")
+            exit()
 
 def get_default_directory(is_standalone: bool):
     if my_platform == "Linux":
@@ -39,14 +43,18 @@ def get_default_directory(is_standalone: bool):
         if is_standalone:
             return os.getenv('LOCALAPPDATA')
         return r"C:\ProgramData"
-    # TODO: macOS
+    if my_platform == "Darwin":
+        if is_standalone:
+            return "~/"
+        return "/opt/"
 
 def get_venv_executable():
     if my_platform == "Linux":
-        path="bin"
-    else:
-        path="Scripts"
-    # TODO: macOS
+        path = "bin"
+    elif my_platform == "Windows":
+        path = "Scripts"
+    elif my_platform == "Darwin":
+        path = "bin"
     return os.path.join(path, "python")
 
 def pip_loader():
