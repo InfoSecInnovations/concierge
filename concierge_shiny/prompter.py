@@ -2,9 +2,8 @@ from shiny import ui, Inputs, Outputs, Session, module, reactive, render
 from configobj import ConfigObj
 from pathlib import Path
 import os
-from concierge_backend_lib.prompting import load_model, get_context, get_response
+from concierge_backend_lib.prompting import load_model
 from tqdm import tqdm
-import time
 from util.async_generator import asyncify
 from components import collection_selector_ui, collection_selector_server 
 

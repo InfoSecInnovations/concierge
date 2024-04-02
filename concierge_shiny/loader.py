@@ -1,7 +1,6 @@
 from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 import shutil
 import os
-import asyncio
 from tqdm import tqdm
 from concierge_backend_lib.ingesting import insert
 from concierge_backend_lib.collections import get_existing_collection
