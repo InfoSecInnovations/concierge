@@ -5,11 +5,8 @@ import os
 from concierge_backend_lib.prompting import load_model, get_context, get_response
 from tqdm import tqdm
 import time
-import asyncio
-import concurrent.futures
 from util.async_generator import asyncify
-
-pool = concurrent.futures.ThreadPoolExecutor()
+from components import collection_selector_ui, collection_selector_server 
 
 def load_config(dir):
     files = os.listdir(Path('prompter_config', dir).as_posix())
@@ -29,27 +26,16 @@ def prompter_ui():
     ]
 
 @module.server
-def prompter_server(input: Inputs, output: Outputs, session: Session, collection, upload_dir):
+def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections):
 
     llm_loaded = reactive.value(False)
     messages = reactive.value([])
 
-    def dummy_generator():
-        for i in range(4):
-            time.sleep(0.5)
-            yield i
+    collection_selector_server("collection_selector", selected_collection, collections)
 
     @reactive.extended_task
     async def load_llm_model():
         print("Checking language model...")
-        dummyp = tqdm(desc="Dummy loading", total=4)
-        with ui.Progress(min=0, max=4) as p:
-            p.set(value=0, message="Loading dummy...")
-            async for i in asyncify(dummy_generator()):
-                dummyp.n = i+1
-                dummyp.refresh()
-                p.set(value=i+1, message=f"{i+1}/4 dummy loading")
-        dummyp.close()
         pbar = None
         with ui.Progress() as p:
             p.set(value=0, message="Loading Language Model...")
@@ -72,7 +58,8 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
         if pbar:
             pbar.close()   
         llm_loaded.set(True) 
-        print("Language model loaded.\n")   
+        print("Language model loaded.\n")
+        ui.notification_show("Language model loaded")  
 
     @reactive.effect
     def init():
@@ -84,7 +71,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, collection
         if loaded:
             return ui.TagList(
                 ui.markdown("TODO: messages"),
-                ui.markdown("TODO: collection selector"),
+                collection_selector_ui("collection_selector"),
                 ui.input_selectize(id="task_select", label="Task", choices=list(tasks), selected=None if 'question' not in tasks else 'question'),
                 ui.input_selectize(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
                 ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True),
