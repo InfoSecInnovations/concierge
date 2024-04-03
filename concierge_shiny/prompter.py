@@ -85,19 +85,23 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     def prompter_ui():
         loaded = llm_loaded.get()
         if loaded:
+            task_list = list(tasks)
+            selected_task = task_list[0] if 'question' not in tasks else 'question'
+            if "task_select" in input and input.task_select() in tasks:
+                selected_task = input.task_select()
             return ui.TagList(
                 ui.output_ui("message_list"),
                 ui.output_ui("current_message_view"),
                 collection_selector_ui("collection_selector"),
                 ui.layout_columns(
-                    ui.input_selectize(id="task_select", label="Task", choices=list(tasks), selected=None if 'question' not in tasks else 'question'),
+                    ui.input_selectize(id="task_select", label="Task", choices=task_list, selected=selected_task),
                     ui.input_selectize(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
                     ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
                 ),
                 ui.input_file(id="prompt_file", label="Source File (optional)"),
                 ui.markdown("Please create a collection and ingest some documents into it first!") if not len(collections.get()) else
                 ui.layout_columns(
-                    ui.input_text(id="chat_input", label=None, placeholder="TODO: get placeholder from current task"),
+                    ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"]),
                     ui.input_task_button(id="chat_submit", label="Chat")
                 )
                 
