@@ -1,11 +1,15 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from concierge_backend_lib.collections import get_collections, init_collection
 
+COLLECTION_PLACEHOLDER = "new_collection_name"
+
 @module.ui
 def collection_create_ui():
     return [
-        ui.input_text(id="new_collection_name", label="Collection Name"),
-        ui.input_action_button(id="create_collection", label="Create Collection"),
+        ui.layout_columns(
+            ui.input_text(id="new_collection_name", label=None, placeholder=COLLECTION_PLACEHOLDER),
+            ui.input_action_button(id="create_collection", label="New Collection")
+        ),
         ui.markdown("Hint: Collection names must contain only letters, numbers, or underscores.")
     ]
 
@@ -21,6 +25,7 @@ def collection_create_server(input: Inputs, output: Outputs, session: Session, s
         print(f"created collection {new_name}")
         collections.set(get_collections())
         selected_collection.set(new_name)
+        ui.update_text(id="new_collection_name", label=None, value="", placeholder=COLLECTION_PLACEHOLDER)
 
 @module.ui
 def collection_selector_ui():
@@ -35,11 +40,15 @@ def collection_selector_server(input: Inputs, output: Outputs, session: Session,
 
     @render.ui
     def collection_selector():
-        req(collections.get())
         return ui.TagList(
-            ui.input_selectize(id="internal_selected_collection", label="Select Collection", choices=collections.get(), selected=selected_collection.get()),
+            ui.output_ui("select_dropdown"),
             collection_create_ui("create_collection")
         )
+    
+    @render.ui
+    def select_dropdown():
+        req(collections.get())
+        return ui.input_selectize(id="internal_selected_collection", label="Select Collection", choices=collections.get(), selected=selected_collection.get())
     
     @reactive.effect
     def update_selection():
