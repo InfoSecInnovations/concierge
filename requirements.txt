@@ -15,3 +15,4 @@ stqdm
 streamlit
 streamlit-option-menu
 shiny
+shinyswatch

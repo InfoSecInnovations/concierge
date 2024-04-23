@@ -22,7 +22,7 @@ def loader_ui():
 def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections):
 
     file_input_trigger = reactive.value(0)
-    urls = reactive.value([])
+    url_input_ids = reactive.value(["url_input_0"])
 
     collection_selector_server("collection_selector", selected_collection, collections)
 
@@ -30,25 +30,32 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
     def url_inputs():
         return ui.TagList(
             ui.markdown("### URLs"),
-            *[ui.input_text(f"url_input_{index}", None, url) for index, url in enumerate(urls.get())],
-            ui.input_text(f"url_input_{len(urls.get())}", None, "")
+            ui.div(
+                ui.input_text("url_input_0", None),
+                id="url_input_list"
+            )
         )
     
+    @reactive.calc
+    def url_values():
+        return [input[id]() for id in url_input_ids.get()]
+    
     @reactive.effect
-    def url_backend():
-        urls_value = urls.get()
-        changed = False
-        for index, url in enumerate(urls_value):
-            new_url = input[f"url_input_{index}"]()
-            if new_url != url:
-                urls_value[index] = new_url
-                changed = True
-        new_url = input[f"url_input_{len(urls_value)}"]()
-        if new_url:
-            urls_value.append(new_url)
-            changed = True
-        if changed:
-            urls.set([*urls_value])
+    @reactive.event(url_values)
+    def add_url_input():
+        
+        idx = len(url_values())
+        if not all([len(x) > 0 for x in url_values()]):
+            return
+
+        new_id = f"url_input_{idx}"
+        
+        url_input_ids.set([*url_input_ids.get(), new_id])
+        
+        ui.insert_ui(
+            ui.input_text(new_id, None),
+            selector="#url_input_list"
+        )
 
     @render.ui
     @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)

@@ -2,35 +2,35 @@ from shiny import App, ui, Inputs, Outputs, Session, render, reactive
 
 app_ui = ui.page_auto(
     ui.markdown("# Testing"),
-    ui.output_ui("output_area")
+    ui.div(
+        ui.input_text("test_0", "Test 0"),
+        id="input_test_list"
+    )
 )
 
 def server(input: Inputs, output: Outputs, session: Session):
     
-    values = reactive.value([])
+    test_ids = reactive.value(["test_0"])
 
-    @render.ui
-    def output_area():
-        return ui.TagList(
-            *[ui.input_text(f"input_test_{index}", "Test", value) for index, value in enumerate(values.get())],
-            ui.input_text(f"input_test_{len(values.get())}", "Test")
-        )
+    
+    @reactive.calc
+    def test_values():
+        return [input[id]() for id in test_ids.get()]
 
     @reactive.effect
-    def values_backend():
-        values_value = values.get()
-        changed = False
-        for index, url in enumerate(values_value):
-            new_url = input[f"input_test_{index}"]()
-            if new_url != url:
-                values_value[index] = new_url
-                changed = True
-        new_url = input[f"input_test_{len(values_value)}"]()
-        if new_url:
-            values_value.append(new_url)
-            changed = True
-        if changed:
-            values.set([*values_value])
+    @reactive.event(test_values)
+    def _():
+        if not all([len(x) > 0 for x in test_values()]):
+            return
 
+        idx = len(test_values())
+        new_id = f"test_{idx}"
+        
+        test_ids.set([*test_ids.get(), new_id])
+        
+        ui.insert_ui(
+            ui.input_text(new_id, f"Test {idx}"),
+            selector="#input_test_list"
+        )
 
 app = App(app_ui, server)
