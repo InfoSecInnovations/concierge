@@ -66,7 +66,7 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
     def file_input():
         return ui.input_file(
             id="loader_files",
-            label="Documents",
+            label=None,
             multiple=True
         )
 
