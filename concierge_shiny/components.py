@@ -36,19 +36,14 @@ def collection_selector_ui():
 @module.server
 def collection_selector_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections):
 
-    collection_create_server("create_collection", selected_collection, collections)
-
     @render.ui
     def collection_selector():
-        return ui.TagList(
-            ui.output_ui("select_dropdown"),
-            collection_create_ui("create_collection")
-        )
+        return ui.output_ui("select_dropdown")
     
     @render.ui
     def select_dropdown():
         req(collections.get())
-        return ui.input_selectize(id="internal_selected_collection", label="Select Collection", choices=collections.get(), selected=selected_collection.get())
+        return ui.input_select(id="internal_selected_collection", label="Select Collection", choices=collections.get(), selected=selected_collection.get())
     
     @reactive.effect
     def update_selection():

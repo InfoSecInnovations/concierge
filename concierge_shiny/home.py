@@ -13,7 +13,7 @@ def home_ui():
         how you use data.
 
         #### Getting started:  
-        1. Create a collecion with Collection Manager  
+        1. Create a collection with Collection Management  
         2. Load PDF or web data into the collection with the Loader  
         3. Use Prompter to work with Concierge.
 

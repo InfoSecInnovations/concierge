@@ -29,7 +29,8 @@ def message_server(input: Inputs, output: Outputs, session: Session, message):
     @render.ui
     def message_content():
         return ui.card(
-            ui.markdown(message["content"])
+            ui.markdown(message["content"]),
+            class_="text-primary" if message["role"] == "assistant" else None
         )
 
 @module.ui
@@ -92,19 +93,18 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
             return ui.TagList(
                 ui.output_ui("message_list"),
                 ui.output_ui("current_message_view"),
+                ui.markdown("Please create a collection and ingest some documents into it first!") if not len(collections.get()) else
+                ui.row(
+                    ui.column(9, ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"], width="100%")),
+                    ui.column(3, ui.input_task_button(id="chat_submit", label="Chat"))
+                ),
                 collection_selector_ui("collection_selector"),
                 ui.layout_columns(
-                    ui.input_selectize(id="task_select", label="Task", choices=task_list, selected=selected_task),
-                    ui.input_selectize(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
-                    ui.input_selectize(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
+                    ui.input_select(id="task_select", label="Task", choices=task_list, selected=selected_task),
+                    ui.input_select(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
+                    ui.input_select(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
                 ),
-                ui.input_file(id="prompt_file", label="Source File (optional)"),
-                ui.markdown("Please create a collection and ingest some documents into it first!") if not len(collections.get()) else
-                ui.layout_columns(
-                    ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"]),
-                    ui.input_task_button(id="chat_submit", label="Chat")
-                )
-                
+                ui.input_file(id="prompt_file", label="Source File (optional)")                
             )
         else:
             return ui.markdown("Loading Language Model, please wait...")

@@ -4,6 +4,7 @@ from loader import loader_ui, loader_server
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
 from concierge_backend_lib.collections import get_collections
+import os
 import shinyswatch
 
 UPLOADS_DIR = "uploads"
@@ -33,5 +34,9 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     shinyswatch.theme_picker_server()
 
-app = App(app_ui, server)
+app = App(
+    app_ui, 
+    server, 
+    static_assets={f"/{UPLOADS_DIR}": os.path.abspath(os.path.join(os.path.dirname(__file__), '..', UPLOADS_DIR))}
+)
 
