@@ -4,8 +4,7 @@ from loader import loader_ui, loader_server
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
 from concierge_backend_lib.collections import get_collections
-from shinyswatch._bsw5 import bsw5_themes
-from shinyswatch import theme
+import shinyswatch
 
 UPLOADS_DIR = "uploads"
 
@@ -15,21 +14,16 @@ app_ui = ui.page_auto(
         ui.nav_panel("Loader", loader_ui("loader")),
         ui.nav_panel("Prompter", prompter_ui("prompter")),
         ui.nav_panel("Collection Management", collection_management_ui("collection_management")),
+        ui.nav_spacer(),
+        ui.nav_control(
+            shinyswatch.theme_picker_ui(default="pulse")
+        ),
         id="navbar"
-    ), 
-    ui.output_ui("theme_selector")  
+    ),
+    
 )
 
 def server(input: Inputs, output: Outputs, session: Session):
-
-    selected_theme = reactive.value("cerulean")
-
-    @render.ui
-    def theme_selector():
-        return ui.TagList(
-            ui.input_select("selected_theme", "Theme", choices=bsw5_themes),
-            theme.cerulean
-        )
 
     selected_collection = reactive.value("")
     collections = reactive.value(get_collections())
@@ -37,6 +31,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     prompter_server("prompter", UPLOADS_DIR, selected_collection, collections)
     collection_management_server("collection_management", UPLOADS_DIR, selected_collection, collections)  
 
+    shinyswatch.theme_picker_server()
 
 app = App(app_ui, server)
 
