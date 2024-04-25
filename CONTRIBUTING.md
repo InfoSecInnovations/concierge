@@ -25,7 +25,7 @@ Additionally, the imperative style should be used. Rather than `added X, modifie
 
 ## Coding style
 
-Please folloe the [PEP 8](https://peps.python.org/pep-0008/) style guide.
+Please follow the [PEP 8](https://peps.python.org/pep-0008/) style guide.
 
 ## Pull Requests
 
