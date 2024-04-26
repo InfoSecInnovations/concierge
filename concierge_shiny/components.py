@@ -8,7 +8,8 @@ def collection_create_ui():
     return [
         ui.layout_columns(
             ui.input_text(id="new_collection_name", label=None, placeholder=COLLECTION_PLACEHOLDER),
-            ui.input_action_button(id="create_collection", label="New Collection")
+            ui.input_action_button(id="create_collection", label="New Collection"),
+            col_widths=[8, 4]
         ),
         ui.markdown("Hint: Collection names must contain only letters, numbers, or underscores.")
     ]

@@ -13,17 +13,11 @@ from components import collection_selector_ui, collection_selector_server, colle
 def loader_ui():
     return [
         ui.markdown("# Loader"),
-        collection_selector_ui("collection_selector"),
-        collection_create_ui("collection_creator"),
-        ui.markdown("### Documents"),
-        ui.output_ui("file_input"),
-        ui.markdown("### URLs"),
-        ui.div(ui.div(id="url_input_list"), id="url_input_list_container"),
-        ui.input_task_button(id="ingest", label="Ingest")
+        ui.output_ui("loader_content")
     ]
 
 @module.server
-def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections):
+def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, milvus_status):
 
     file_input_trigger = reactive.value(0)
     url_input_ids = reactive.value([])
@@ -31,6 +25,21 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
     collection_selector_server("collection_selector", selected_collection, collections)
     collection_create_server("collection_creator", selected_collection, collections)
     
+    @render.ui
+    def loader_content():
+        if milvus_status.get():
+            return ui.TagList(
+                collection_selector_ui("collection_selector"),
+                collection_create_ui("collection_creator"),
+                ui.markdown("### Documents"),
+                ui.output_ui("file_input"),
+                ui.markdown("### URLs"),
+                ui.div(ui.div(id="url_input_list"), id="url_input_list_container"),
+                ui.input_task_button(id="ingest", label="Ingest")
+            )
+        else:
+            return ui.markdown("Milvus is offline!")
+
     @reactive.calc
     def url_values():
         return [input[id]() for id in url_input_ids.get()]

@@ -12,10 +12,10 @@ def collection_item_server(input: Inputs, output: Outputs, session: Session, upl
 
     @render.ui
     def collection_view():
-        return [
+        return ui.card(
             ui.markdown(collection_name),
             ui.input_action_button(id="delete", label="Delete")
-        ]
+        )
     
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
@@ -27,14 +27,23 @@ def collection_item_server(input: Inputs, output: Outputs, session: Session, upl
 def collection_management_ui():
     return [
         ui.markdown("# Collection Management"),
-        collection_create_ui("collection_create"),
-        ui.output_ui("collection_list")
+        ui.output_ui("collection_management_content")
     ]
 
 @module.server
-def collection_management_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections):
+def collection_management_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, milvus_status):
 
     collection_create_server("collection_create", selected_collection, collections)
+
+    @render.ui
+    def collection_management_content():
+        if milvus_status.get():
+            return ui.TagList(
+                collection_create_ui("collection_create"),
+                ui.output_ui("collection_list") 
+            )
+        else:
+            return ui.markdown("Milvus is offline!")
 
     @render.ui
     def collection_list():

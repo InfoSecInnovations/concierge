@@ -7,6 +7,10 @@ from concierge_backend_lib.collections import get_existing_collection
 from tqdm import tqdm
 from util.async_generator import asyncify
 from components import collection_selector_ui, collection_selector_server 
+from markdown_it import MarkdownIt
+from mdit_py_plugins import attrs
+
+md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
 REFERENCE_LIMIT = 5
 
@@ -29,7 +33,7 @@ def message_server(input: Inputs, output: Outputs, session: Session, message):
     @render.ui
     def message_content():
         return ui.card(
-            ui.markdown(message["content"]),
+            ui.markdown(message["content"], render_func=md.render),
             class_="text-primary" if message["role"] == "assistant" else None
         )
 
@@ -37,16 +41,22 @@ def message_server(input: Inputs, output: Outputs, session: Session, message):
 def prompter_ui():
     return [
         ui.markdown("# Prompter"),
-        ui.output_ui("prompter_ui")
+        ui.output_ui("prompter_ui")      
     ]
 
 @module.server
-def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections):
+def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, milvus_status, ollama_status):
 
     llm_loaded = reactive.value(False)
     messages = reactive.value([])
     current_message = reactive.value({})
     message_complete_trigger = reactive.value(0)
+    # We're going to indepedently set the "prompt" when either
+    # * the submit button is pressed
+    # * the Enter button is pressed
+    prompt = reactive.value(None)
+
+    id_enter = module.resolve_id("enter")
 
     collection_selector_server("collection_selector", selected_collection, collections)
 
@@ -80,11 +90,12 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
 
     @reactive.effect
     def init():
-        load_llm_model()
+        if ollama_status.get() and not llm_loaded.get():
+            load_llm_model()
 
     @render.ui
     def prompter_ui():
-        loaded = llm_loaded.get()
+        loaded = llm_loaded.get() and ollama_status.get() and milvus_status.get()
         if loaded:
             task_list = list(tasks)
             selected_task = task_list[0] if 'question' not in tasks else 'question'
@@ -94,9 +105,18 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                 ui.output_ui("message_list"),
                 ui.output_ui("current_message_view"),
                 ui.markdown("Please create a collection and ingest some documents into it first!") if not len(collections.get()) else
-                ui.row(
-                    ui.column(9, ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"], width="100%")),
-                    ui.column(3, ui.input_task_button(id="chat_submit", label="Chat"))
+                ui.div(
+                    ui.row(
+                        ui.column(9, ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"], width="100%")),
+                        ui.column(3, ui.input_task_button(id="chat_submit", label="Chat"))
+                    ),
+                    ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'chat_input.js'))),
+                    {
+                        "class": "chat-text-input",
+                        # We'll use this ID in the JavaScript to report the prompt value
+                        # so the Shiny app can call `input.enter()` inside the module
+                        "data-enter-id": id_enter
+                    }
                 ),
                 collection_selector_ui("collection_selector"),
                 ui.layout_columns(
@@ -107,6 +127,8 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                 ui.input_file(id="prompt_file", label="Source File (optional)")                
             )
         else:
+            if not ollama_status.get() or not milvus_status.get():
+                return ui.markdown("Requirements are not online, see sidebar!")
             return ui.markdown("Loading Language Model, please wait...")
 
     @render.ui
@@ -125,9 +147,9 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
             for source in context["sources"]:
                 metadata = source["metadata"]
                 if source["type"] == "pdf":
-                    yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>)\n\n'
+                    yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>){{target="_blank"}}\n\n'
                 if source["type"] == "web":
-                    yield f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}\n\n'              
+                    yield f'   Web page: <{metadata["source"]}>{{target="_blank"}} scraped {metadata["ingest_date"]}\n\n'              
             if "prompt" in tasks[task]:
                 yield get_response(
                     context["context"], 
@@ -152,10 +174,24 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         message_complete_trigger.set(current_trigger + 1)
 
     @reactive.effect
-    @reactive.event(input.chat_submit, ignore_init=True)
+    @reactive.event(input.chat_submit)
+    def chat_prompt():
+        return prompt.set(input.chat_input())
+
+    @reactive.effect
+    @reactive.event(input.enter)
+    def chat_prompt():
+        # input.enter() reports the value of the text input field
+        # because it's easy for users to press Enter quickly while typing
+        # before input.prompt() has had a chance to update
+        return prompt.set(input.enter())
+
+    @reactive.effect
+    @reactive.event(prompt, ignore_init=True, ignore_none=True)
     def send_chat():
         req(input.chat_input())
         user_input = input.chat_input()
+        ui.update_text("chat_input", value="")
         collection_name = selected_collection.get()
         task = input.task_select()
         persona = input.persona_select()
@@ -176,7 +212,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     @reactive.event(message_complete_trigger, ignore_init=True)
     def add_message():
         messages.set(messages.get() + [current_message.get()])
-        current_message.set("")
+        current_message.set({})
 
     @render.ui
     def message_list():
