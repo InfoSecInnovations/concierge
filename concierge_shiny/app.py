@@ -7,6 +7,7 @@ from concierge_backend_lib.collections import get_collections
 from concierge_backend_lib.status import get_status
 import os
 import shinyswatch
+from util.async_single import asyncify
 
 UPLOADS_DIR = "uploads"
 
@@ -44,15 +45,24 @@ def server(input: Inputs, output: Outputs, session: Session):
         else:
             collections.set([])
 
+    @reactive.extended_task
+    async def get_requirements_status():
+        return await asyncify(get_status)
+
     @reactive.effect
     def set_requirements_status():
-        reactive.invalidate_later(10)
-        status = get_status()
+        status = get_requirements_status.result()
         milvus_status.set(status["milvus"])
         ollama_status.set(status["ollama"])
 
+    @reactive.effect
+    def poll():
+        reactive.invalidate_later(10)
+        get_requirements_status()
+
     @render.ui
     def status_widget():
+        print("status widget")
         return ui.card(
             ui.markdown(f"Milvus: {'Up' if milvus_status.get() else 'Down'}"),
             ui.markdown(f"Ollama: {'Up' if ollama_status.get() else 'Down'}")

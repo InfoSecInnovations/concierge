@@ -6,7 +6,7 @@ from concierge_backend_lib.ingesting import insert
 from concierge_backend_lib.collections import get_existing_collection
 from loaders.pdf import load_pdf
 from loaders.web import load_web
-from util.async_generator import asyncify
+from util.async_generator import asyncify_generator
 from components import collection_selector_ui, collection_selector_server, collection_create_ui, collection_create_server
 
 @module.ui
@@ -83,7 +83,7 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
         page_progress = tqdm(total=len(pages))
         with ui.Progress(1, len(pages)) as p:
             p.set(0, message=f"{label}: loading...")
-            async for x in asyncify(insert(pages, collection)):
+            async for x in asyncify_generator(insert(pages, collection)):
                 p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")
                 page_progress.n = x[0] + 1
                 page_progress.refresh()

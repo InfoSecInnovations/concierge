@@ -5,10 +5,11 @@ import os
 from concierge_backend_lib.prompting import load_model, get_context, get_response
 from concierge_backend_lib.collections import get_existing_collection
 from tqdm import tqdm
-from util.async_generator import asyncify
+from util.async_generator import asyncify_generator
 from components import collection_selector_ui, collection_selector_server 
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs
+import time
 
 md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
@@ -66,7 +67,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         pbar = None
         with ui.Progress() as p:
             p.set(value=0, message="Loading Language Model...")
-            async for progress in asyncify(load_model()):
+            async for progress in asyncify_generator(load_model()):
                 if not pbar:
                     pbar = tqdm(
                         unit="B",
@@ -149,7 +150,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                 if source["type"] == "pdf":
                     yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>){{target="_blank"}}\n\n'
                 if source["type"] == "web":
-                    yield f'   Web page: <{metadata["source"]}>{{target="_blank"}} scraped {metadata["ingest_date"]}\n\n'              
+                    yield f'   Web page: <{metadata["source"]}>{{target="_blank"}} scraped {metadata["ingest_date"]}\n\n'
             if "prompt" in tasks[task]:
                 yield get_response(
                     context["context"], 
@@ -167,7 +168,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     async def process_chat(collection_name, user_input, task, persona, selected_enhancers, current_trigger):
         message_text = ""
         current_message.set({})
-        async for x in asyncify(stream_response(collection_name, user_input, task, persona, selected_enhancers)):
+        async for x in asyncify_generator(stream_response(collection_name, user_input, task, persona, selected_enhancers)):
             print(f"chat output: {x}")
             message_text += x
             current_message.set({"role": "assistant", "content": message_text})

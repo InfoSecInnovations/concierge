@@ -1,7 +1,7 @@
 import concurrent.futures
 import asyncio
 
-async def asyncify(gen):
+async def asyncify_generator(gen):
 
     pool = concurrent.futures.ThreadPoolExecutor()
     loop = asyncio.get_event_loop()
