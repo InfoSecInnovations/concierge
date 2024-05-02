@@ -80,8 +80,8 @@ def status_server(input: Inputs, output: Outputs, session: Session):
     @render.ui
     def status_widget():
         return ui.card(
-            ui.markdown(f"Milvus: {'Up' if milvus_status.get() else 'Down'}"),
-            ui.markdown(f"Ollama: {'Up' if ollama_status.get() else 'Down'}")
+            ui.markdown(f"{'🟢' if milvus_status.get() else '🔴'} Milvus"),
+            ui.markdown(f"{'🟢' if ollama_status.get() else '🔴'} Ollama")
         )
     
     @reactive.calc
