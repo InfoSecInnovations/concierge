@@ -8,6 +8,7 @@ from concierge_backend_lib.status import get_status
 import os
 import shinyswatch
 from util.async_single import asyncify
+from components import status_ui, status_server
 
 UPLOADS_DIR = "uploads"
 
@@ -18,9 +19,7 @@ app_ui = ui.page_auto(
         ui.nav_panel("Prompter", prompter_ui("prompter")),
         ui.nav_panel("Collection Management", collection_management_ui("collection_management")),
         ui.nav_control(
-            ui.output_ui("status_widget")
-        ),
-        ui.nav_control(
+            status_ui("status_widget"),
             shinyswatch.theme_picker_ui(default="pulse")
         ),
         id="navbar"
@@ -36,6 +35,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     loader_server("loader", UPLOADS_DIR, selected_collection, collections, milvus_status)
     prompter_server("prompter", UPLOADS_DIR, selected_collection, collections, milvus_status, ollama_status)
     collection_management_server("collection_management", UPLOADS_DIR, selected_collection, collections, milvus_status)
+    status = status_server("status_widget")
     shinyswatch.theme_picker_server()
 
     @reactive.effect
@@ -45,28 +45,11 @@ def server(input: Inputs, output: Outputs, session: Session):
         else:
             collections.set([])
 
-    @reactive.extended_task
-    async def get_requirements_status():
-        return await asyncify(get_status)
-
     @reactive.effect
-    def set_requirements_status():
-        status = get_requirements_status.result()
-        milvus_status.set(status["milvus"])
-        ollama_status.set(status["ollama"])
-
-    @reactive.effect
-    def poll():
-        reactive.invalidate_later(10)
-        get_requirements_status()
-
-    @render.ui
-    def status_widget():
-        print("status widget")
-        return ui.card(
-            ui.markdown(f"Milvus: {'Up' if milvus_status.get() else 'Down'}"),
-            ui.markdown(f"Ollama: {'Up' if ollama_status.get() else 'Down'}")
-        )
+    def update_status():
+        current_status = status()
+        milvus_status.set(current_status["milvus"])
+        ollama_status.set(current_status["ollama"])
 
 app = App(
     app_ui, 

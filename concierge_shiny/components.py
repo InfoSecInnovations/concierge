@@ -1,5 +1,7 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from concierge_backend_lib.collections import get_collections, init_collection
+from concierge_backend_lib.status import get_status
+from util.async_single import asyncify
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
@@ -49,3 +51,41 @@ def collection_selector_server(input: Inputs, output: Outputs, session: Session,
     @reactive.effect
     def update_selection():
         selected_collection.set(input.internal_selected_collection())
+
+@module.ui
+def status_ui():
+    return ui.output_ui("status_widget")
+
+@module.server
+def status_server(input: Inputs, output: Outputs, session: Session):
+
+    milvus_status = reactive.value(False)
+    ollama_status = reactive.value(False)
+
+    @reactive.extended_task
+    async def get_requirements_status():
+        return await asyncify(get_status)
+
+    @reactive.effect
+    def set_requirements_status():
+        status = get_requirements_status.result()
+        milvus_status.set(status["milvus"])
+        ollama_status.set(status["ollama"])
+
+    @reactive.effect
+    def poll():
+        reactive.invalidate_later(10)
+        get_requirements_status()
+
+    @render.ui
+    def status_widget():
+        return ui.card(
+            ui.markdown(f"Milvus: {'Up' if milvus_status.get() else 'Down'}"),
+            ui.markdown(f"Ollama: {'Up' if ollama_status.get() else 'Down'}")
+        )
+    
+    @reactive.calc
+    def result():
+        return { "milvus": milvus_status.get(), "ollama": ollama_status.get()}
+    
+    return result
