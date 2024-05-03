@@ -92,7 +92,7 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
     async def ingest_files(files, collection):
         for file in files:
             print(file["name"])
-            ui.notification_show(f"Processing {file["name"]}")
+            ui.notification_show(f"Processing {file['name']}")
             shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
             if file["type"] == 'application/pdf':
                 pages = load_pdf(upload_dir, file["name"])
