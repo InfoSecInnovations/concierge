@@ -51,7 +51,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     llm_loaded = reactive.value(False)
     messages = reactive.value([])
     current_message = reactive.value({})
-    message_complete_trigger = reactive.value(0)
+    processing = reactive.value(False)
     # We're going to indepedently set the "prompt" when either
     # * the submit button is pressed
     # * the Enter button is pressed
@@ -110,8 +110,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                     ui.row(
                         ui.column(9, ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"], width="100%")),
                         ui.column(3, ui.input_task_button(id="chat_submit", label="Chat"))
-                    ),
-                    ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'chat_input.js'))),
+                    ),                   
                     {
                         "class": "chat-text-input",
                         # We'll use this ID in the JavaScript to report the prompt value
@@ -125,7 +124,8 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                     ui.input_select(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
                     ui.input_select(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
                 ),
-                ui.input_file(id="prompt_file", label="Source File (optional)")                
+                ui.input_file(id="prompt_file", label="Source File (optional)"),
+                ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'chat_input.js')), method='inline'),              
             )
         else:
             if not ollama_status.get() or not milvus_status.get():
@@ -165,33 +165,43 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
 
     @ui.bind_task_button(button_id="chat_submit")
     @reactive.extended_task
-    async def process_chat(collection_name, user_input, task, persona, selected_enhancers, current_trigger):
-        message_text = ""
-        current_message.set({})
-        async for x in asyncify_generator(stream_response(collection_name, user_input, task, persona, selected_enhancers)):
-            print(f"chat output: {x}")
-            message_text += x
-            current_message.set({"role": "assistant", "content": message_text})
-        message_complete_trigger.set(current_trigger + 1)
+    async def process_chat(collection_name, user_input, task, persona, selected_enhancers):       
+            message_text = ""
+            current_message.set({})
+            async for x in asyncify_generator(stream_response(collection_name, user_input, task, persona, selected_enhancers)):
+                print(f"chat output: {x}")
+                message_text += x
+                async with reactive.lock():
+                    current_message.set({"role": "assistant", "content": message_text})
+                    await reactive.flush()
+            processing.set(False)
 
+    # on click chat submit
     @reactive.effect
     @reactive.event(input.chat_submit)
     def chat_prompt():
-        return prompt.set(input.chat_input())
+        prompt.set(input.chat_input())
 
+    # on press enter in chat box
     @reactive.effect
     @reactive.event(input.enter)
     def chat_prompt():
+        # only submit message if processing is done
+        if processing.get():
+            return
         # input.enter() reports the value of the text input field
         # because it's easy for users to press Enter quickly while typing
-        # before input.prompt() has had a chance to update
-        return prompt.set(input.enter())
+        # before input.chat_input() has had a chance to update
+        prompt.set(input.enter())
 
     @reactive.effect
     @reactive.event(prompt, ignore_init=True, ignore_none=True)
     def send_chat():
-        req(input.chat_input())
-        user_input = input.chat_input()
+        user_input = prompt.get()
+        # for some reason ignore_none isn't always catching this, maybe because the value is ""?
+        if not user_input:
+            return
+        processing.set(True)
         ui.update_text("chat_input", value="")
         collection_name = selected_collection.get()
         task = input.task_select()
@@ -207,13 +217,18 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         full_message += f'.\n\nCollection: {collection_name}'
         full_message += f'\n\nInput: {user_input}'
         messages.set(messages.get() + [{"role": "user", "content": full_message}])
-        process_chat(collection_name, user_input, task, persona, selected_enhancers, message_complete_trigger.get())
+        process_chat(collection_name, user_input, task, persona, selected_enhancers)
 
     @reactive.effect
-    @reactive.event(message_complete_trigger, ignore_init=True)
+    @reactive.event(processing, ignore_none=False, ignore_init=True)
     def add_message():
+        # only add message if processing is done
+        if processing.get():
+            return
         messages.set(messages.get() + [current_message.get()])
         current_message.set({})
+        # we do this to allow the user to sumbit the same prompt twice
+        prompt.set(None)
 
     @render.ui
     def message_list():
