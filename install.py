@@ -85,7 +85,7 @@ argument_processor.prompt_for_parameters()
 print("Concierge setup is almost complete.\n")
 print("If you want to speed up the deployment of future Concierge instances with these exact options, save the command below.\n")
 print("After git clone or unzipping, run this command and you can skip all these questions!\n\n")
-print("\ninstall.py" + argument_processor.get_command_parameters() + "\n\n\n")
+print("\npython install.py" + argument_processor.get_command_parameters() + "\n\n\n")
 
 print("About to make changes to your system.\n")
 # TODO make a download size variable & update based on findings

@@ -55,8 +55,6 @@ copy `.env.example` into a file named `.env` and set the folder on your computer
 
 ## Usage: launch script
 
-TODO: make launch.py work with Shiny!
-
 From the cloned project directory simply run `launch.py`.
 
 If the Docker container dependencies aren't found, you will be given the option to launch with CPU or GPU.
