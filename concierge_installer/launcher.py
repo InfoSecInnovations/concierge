@@ -1,7 +1,7 @@
 # this makes the parent directory be detected in Linux
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import subprocess
 from script_builder.util import get_venv_executable
