@@ -1,7 +1,10 @@
+# this makes the parent directory be detected in Linux
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 import subprocess
 from script_builder.util import get_venv_executable
-
-# TODO: these imports seem to mess up the venv
 from concierge_backend_lib.status import get_status
 from concierge_installer.functions import docker_compose_helper
 
