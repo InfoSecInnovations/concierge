@@ -118,7 +118,7 @@ if ready_to_rock.upper() == "YES":
         exit()
 
     # ollama model load
-    returncode = subprocess.run(["docker", "exec", "-it", "ollama", "ollama", "run", argument_processor.parameters["language_model"]])
+    returncode = subprocess.run(["docker", "exec", "-it", "ollama", "ollama", "pull", argument_processor.parameters["language_model"]])
 
 else:
     print("Install cancelled. No changes were made. Have a nice day! :-)\n\n")

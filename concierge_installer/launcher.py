@@ -17,4 +17,4 @@ if not status["ollama"] or not status["milvus"]:
         docker_compose_helper('CPU')
 
 
-subprocess.run([get_venv_executable(), '-m', 'streamlit', 'run', 'Concierge.py'])
+subprocess.run([get_venv_executable(), '-m', 'shiny', 'run', '--launch-browser', 'concierge_shiny/app.py'])
