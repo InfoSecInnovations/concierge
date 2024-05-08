@@ -89,3 +89,54 @@ def status_server(input: Inputs, output: Outputs, session: Session):
         return { "milvus": milvus_status.get(), "ollama": ollama_status.get()}
     
     return result
+
+@module.ui
+def text_list_ui():
+    return ui.div(
+        ui.div(
+            ui.input_text("input_0", None),
+            id="input_list"), 
+        id="input_list_container"
+    )
+
+@module.server
+def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger):
+    input_ids = reactive.value(["input_0"])
+
+    @reactive.calc
+    def input_values():
+        return [input[id]() for id in input_ids.get()]
+    
+    @reactive.effect
+    @reactive.event(input_values, ignore_none=False, ignore_init=False)
+    def handle_inputs():
+        # if IDs were deleted, remake the whole input list  
+        if not len(input_ids.get()):
+            ui.remove_ui(selector="#input_list_container *", multiple=True, immediate=True)
+            ui.insert_ui(
+                ui.div(id="input_list"),
+                selector="#input_list_container",
+                immediate=True
+            )
+
+        # if there's already an empty input we don't need more
+        if not all([len(x) > 0 for x in input_values()]):
+            return
+
+        # insert new ID and corresponding element if all existing ones have values
+        idx = len(input_values())
+        new_id = f"input_{idx}"       
+        input_ids.set([*input_ids.get(), new_id])
+        ui.insert_ui(
+            ui.input_text(new_id, None),
+            selector="#input_list"
+        )
+
+    @reactive.effect
+    @reactive.event(clear_trigger, ignore_init=True)
+    def clear_inputs():
+        for id in input_ids.get():
+            del input[id]   
+            input_ids.set([])
+
+    return input_values
