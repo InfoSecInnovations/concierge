@@ -96,7 +96,7 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
             await ingest_urls(urls, collection)
 
     @reactive.effect
-    @reactive.event(input.ingest, ignore_none=False)
+    @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
     def handle_click():
         urls = list(filter(None, url_values()))
         files = None

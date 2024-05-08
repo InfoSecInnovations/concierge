@@ -92,16 +92,20 @@ def status_server(input: Inputs, output: Outputs, session: Session):
 
 @module.ui
 def text_list_ui():
+    container_id = module.resolve_id("input_list_container")
+    list_id = module.resolve_id("input_list")
     return ui.div(
         ui.div(
             ui.input_text("input_0", None),
-            id="input_list"), 
-        id="input_list_container"
+            id=list_id), 
+        id=container_id
     )
 
 @module.server
 def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger):
     input_ids = reactive.value(["input_0"])
+    container_id = module.resolve_id("input_list_container")
+    list_id = module.resolve_id("input_list")
 
     @reactive.calc
     def input_values():
@@ -112,10 +116,13 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
     def handle_inputs():
         # if IDs were deleted, remake the whole input list  
         if not len(input_ids.get()):
-            ui.remove_ui(selector="#input_list_container *", multiple=True, immediate=True)
+            ui.remove_ui(selector=f"#{container_id} *", multiple=True, immediate=True)
             ui.insert_ui(
-                ui.div(id="input_list"),
-                selector="#input_list_container",
+                ui.div(
+                    ui.input_text("input_0", None),
+                    id=list_id
+                ),
+                selector=f"#{container_id}",
                 immediate=True
             )
 
@@ -129,7 +136,7 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
         input_ids.set([*input_ids.get(), new_id])
         ui.insert_ui(
             ui.input_text(new_id, None),
-            selector="#input_list"
+            selector=f"#{list_id}"
         )
 
     @reactive.effect
@@ -137,6 +144,6 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
     def clear_inputs():
         for id in input_ids.get():
             del input[id]   
-            input_ids.set([])
+        input_ids.set(["input_0"])
 
     return input_values
