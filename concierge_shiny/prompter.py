@@ -124,7 +124,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                     ui.input_select(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
                     ui.input_select(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
                 ),
-                ui.input_file(id="prompt_file", label="Source File (optional)"),
+                ui.output_ui("file_input"),
                 ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'chat_input.js')), method='inline'),              
             )
         else:
@@ -140,7 +140,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         message_server("current_message", message_value)
         return message_ui("current_message")
 
-    def stream_response(collection_name, user_input, task, persona, selected_enhancers):
+    def stream_response(collection_name, user_input, task, persona, selected_enhancers, source_file):
         collection = get_existing_collection(collection_name)
         context = get_context(collection, REFERENCE_LIMIT, user_input)
         if len(context["sources"]):
@@ -158,17 +158,17 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                     user_input,
                     None if not persona or persona == 'None' else personas[persona]["prompt"],
                     None if not selected_enhancers else [enhancers[enhancer]["prompt"] for enhancer in selected_enhancers],
-                    # None if not source_file else source_file.getvalue().decode()
+                    source_file
                 )
         else:
             yield "No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."
 
     @ui.bind_task_button(button_id="chat_submit")
     @reactive.extended_task
-    async def process_chat(collection_name, user_input, task, persona, selected_enhancers):       
+    async def process_chat(collection_name, user_input, task, persona, selected_enhancers, source_file):       
             message_text = ""
             current_message.set({})
-            async for x in asyncify_generator(stream_response(collection_name, user_input, task, persona, selected_enhancers)):
+            async for x in asyncify_generator(stream_response(collection_name, user_input, task, persona, selected_enhancers, source_file)):
                 print(f"chat output: {x}")
                 message_text += x
                 async with reactive.lock():
@@ -215,9 +215,17 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         if selected_enhancers and len(selected_enhancers):
             full_message += f', Enhancers: {selected_enhancers}'
         full_message += f'.\n\nCollection: {collection_name}'
+
+
+        input_files = input.prompt_file()
+        file_contents = None
+        if input_files and len(input_files):
+            with open(input_files[0]["datapath"], "r") as file:
+                file_contents = file.read()
+            full_message += f'\n\nFile: {input_files[0]["name"]}'
         full_message += f'\n\nInput: {user_input}'
         messages.set(messages.get() + [{"role": "user", "content": full_message}])
-        process_chat(collection_name, user_input, task, persona, selected_enhancers)
+        process_chat(collection_name, user_input, task, persona, selected_enhancers, file_contents)
 
     @reactive.effect
     @reactive.event(processing, ignore_none=False, ignore_init=True)
@@ -229,6 +237,14 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         current_message.set({})
         # we do this to allow the user to sumbit the same prompt twice
         prompt.set(None)
+
+    @render.ui
+    @reactive.event(processing, ignore_none=False, ignore_init=False)
+    def file_input():
+        # only update file input if processing is done
+        if processing.get():
+            return
+        return ui.input_file(id="prompt_file", label="Source File (optional)")
 
     @render.ui
     def message_list():
