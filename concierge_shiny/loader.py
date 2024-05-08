@@ -67,6 +67,7 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
         page_progress.close()
 
     async def ingest_files(files, collection):
+        os.makedirs(upload_dir, exist_ok=True) # ensure the upload directory exists!
         for file in files:
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
