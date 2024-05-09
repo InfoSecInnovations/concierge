@@ -56,6 +56,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     # * the submit button is pressed
     # * the Enter button is pressed
     prompt = reactive.value(None)
+    current_file_id = reactive.value(0)
 
     id_enter = module.resolve_id("enter")
 
@@ -217,7 +218,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         full_message += f'.\n\nCollection: {collection_name}'
 
 
-        input_files = input.prompt_file()
+        input_files = input[f"prompt_file_{current_file_id.get()}"]()
         file_contents = None
         if input_files and len(input_files):
             with open(input_files[0]["datapath"], "r") as file:
@@ -237,14 +238,13 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         current_message.set({})
         # we do this to allow the user to sumbit the same prompt twice
         prompt.set(None)
+        # this will clear the file input
+        current_file_id.set(current_file_id.get() + 1)
 
     @render.ui
-    @reactive.event(processing, ignore_none=False, ignore_init=False)
+    @reactive.event(current_file_id, ignore_none=False, ignore_init=False)
     def file_input():
-        # only update file input if processing is done
-        if processing.get():
-            return
-        return ui.input_file(id="prompt_file", label="Source File (optional)")
+        return ui.input_file(id=f"prompt_file_{current_file_id.get()}", label="Source File (optional)")
 
     @render.ui
     def message_list():
