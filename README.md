@@ -68,11 +68,11 @@ Windows PowerShell: `.\Scripts\Activate.ps1`
 
 To start the web UI, run the following command:
 
-`shiny run --launch-browser concierge_shiny/app.py`
+`python -m shiny run --launch-browser concierge_shiny/app.py`
 
 If running for development you can use this command instead:
 
-`shiny run --reload --launch-browser concierge_shiny/app.py`
+`python -m shiny run --reload --launch-browser concierge_shiny/app.py`
 
 or use the Shiny for Python VSCode extension running from `concierge_shiny/app.py`. At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
 

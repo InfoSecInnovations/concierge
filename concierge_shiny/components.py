@@ -2,6 +2,7 @@ from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from concierge_backend_lib.collections import get_collections, init_collection
 from concierge_backend_lib.status import get_status
 from util.async_single import asyncify
+import uuid
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
@@ -89,3 +90,58 @@ def status_server(input: Inputs, output: Outputs, session: Session):
         return { "milvus": milvus_status.get(), "ollama": ollama_status.get()}
     
     return result
+
+@module.ui
+def text_list_ui():
+    container_id = module.resolve_id("input_list_container")
+    list_id = module.resolve_id("input_list")
+    return ui.div(
+        ui.div(
+            ui.input_text("input_0", None),
+            id=list_id), 
+        id=container_id
+    )
+
+@module.server
+def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger):
+    input_ids = reactive.value(["input_0"])
+    container_id = module.resolve_id("input_list_container")
+    list_id = module.resolve_id("input_list")
+
+    @reactive.calc
+    def input_values():
+        return [input[id]() for id in input_ids.get()]
+    
+    @reactive.effect
+    @reactive.event(input_values, ignore_none=False, ignore_init=False)
+    def handle_inputs():
+        # if IDs were deleted, remake the whole input list  
+        if not len(input_ids.get()):
+            ui.remove_ui(selector=f"#{container_id} *", multiple=True, immediate=True)
+            ui.insert_ui(
+                ui.div(id=list_id),
+                selector=f"#{container_id}",
+                immediate=True
+            )
+
+        # if there's already an empty input we don't need more
+        if not all([len(x) > 0 for x in input_values()]):
+            return
+
+        # insert new ID and corresponding element if all existing ones have values
+        idx = uuid.uuid4().int
+        new_id = f"input_{idx}"       
+        input_ids.set([*input_ids.get(), new_id])
+        ui.insert_ui(
+            ui.input_text(new_id, None),
+            selector=f"#{list_id}"
+        )
+
+    @reactive.effect
+    @reactive.event(clear_trigger, ignore_init=True)
+    def clear_inputs():
+        for id in input_ids.get():
+            del input[id]   
+        input_ids.set([])
+
+    return input_values
