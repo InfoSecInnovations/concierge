@@ -107,5 +107,6 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
         collection_name = selected_collection.get()
         print(f"ingesting documents into collection {collection_name}")
         collection = get_existing_collection(collection_name)
+        del input.loader_files
         file_input_trigger.set(file_input_trigger.get() + 1) 
         ingest(files, urls, collection)

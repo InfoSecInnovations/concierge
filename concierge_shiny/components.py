@@ -2,6 +2,7 @@ from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from concierge_backend_lib.collections import get_collections, init_collection
 from concierge_backend_lib.status import get_status
 from util.async_single import asyncify
+import uuid
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
@@ -118,10 +119,7 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
         if not len(input_ids.get()):
             ui.remove_ui(selector=f"#{container_id} *", multiple=True, immediate=True)
             ui.insert_ui(
-                ui.div(
-                    ui.input_text("input_0", None),
-                    id=list_id
-                ),
+                ui.div(id=list_id),
                 selector=f"#{container_id}",
                 immediate=True
             )
@@ -131,7 +129,7 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
             return
 
         # insert new ID and corresponding element if all existing ones have values
-        idx = len(input_values())
+        idx = uuid.uuid4().int
         new_id = f"input_{idx}"       
         input_ids.set([*input_ids.get(), new_id])
         ui.insert_ui(
@@ -144,6 +142,6 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
     def clear_inputs():
         for id in input_ids.get():
             del input[id]   
-        input_ids.set(["input_0"])
+        input_ids.set([])
 
     return input_values
