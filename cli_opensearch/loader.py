@@ -1,28 +1,28 @@
-import platform
 import sys
 import os
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import os
 from loaders.pdf import load_pdf
-from concierge_backend_lib.collections import init_collection
-from concierge_backend_lib.ingesting import insert_with_tqdm
 import argparse
 import shutil
+from concierge_backend_lib.opensearch import get_client, ensure_index, insert_with_tqdm
 
 upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'uploads'))
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-s", "--source", required=True, 
                     help="Path of the directory containing the files to ingest.")
-parser.add_argument("-c", "--collection", required=True,
-                    help="Milvus collection containing the vectorized data.")
+parser.add_argument("-i", "--index", required=True,
+                    help="OpenSearch index containing the vectorized data.")
 args = parser.parse_args()
 source_path = args.source
+index = args.index
 
 source_files = os.listdir(source_path)
-collection = init_collection(args.collection)
+
+client = get_client()
+ensure_index(client, index)
 
 for file in source_files:
     shutil.copyfile(os.path.join(source_path, file), os.path.join(upload_dir, file))
@@ -31,6 +31,4 @@ for file in source_files:
     if file.endswith(".pdf"):
         pages = load_pdf(upload_dir, file)
     if pages:
-        insert_with_tqdm(pages, collection)
-
-collection.flush() # if we don't flush, the Web UI won't be able to grab recent changes
+        insert_with_tqdm(client, index, pages)

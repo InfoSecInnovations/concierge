@@ -13,3 +13,4 @@ pympler
 configobj
 shiny
 shinyswatch
+opensearch-py

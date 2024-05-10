@@ -20,6 +20,7 @@ services:
         hard: 65536
     volumes:
       - opensearch-data1:/usr/share/opensearch/data # Creates volume called opensearch-data1 and mounts it to the container
+    restart: unless-stopped
     ports:
       - 9200:9200 # REST API
       - 9600:9600 # Performance Analyzer
@@ -28,6 +29,7 @@ services:
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:latest # Make sure the version of opensearch-dashboards matches the version of opensearch installed on other nodes
     container_name: opensearch-dashboards
+    restart: unless-stopped
     ports:
       - 5601:5601 # Map host port 5601 to container port 5601
     expose:
@@ -36,9 +38,3 @@ services:
       OPENSEARCH_HOSTS: '["https://opensearch-node1:9200"]' # Define the OpenSearch nodes that OpenSearch Dashboards will query
     networks:
       - opensearch-net
-
-volumes:
-  opensearch-data1:
-
-networks:
-  opensearch-net:

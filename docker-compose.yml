@@ -72,6 +72,20 @@ services:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
     restart: unless-stopped
 
+  opensearch-node1:
+    extends:
+      file: docker-compose-opensearch.yml
+      service: opensearch-node1
+
+  opensearch-dashboards:
+    extends:
+      file: docker-compose-opensearch.yml
+      service: opensearch-dashboards
+
+volumes:
+  opensearch-data1:
+
 networks:
   default:
     name: concierge
+  opensearch-net:

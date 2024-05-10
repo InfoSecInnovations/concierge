@@ -81,6 +81,20 @@ services:
               count: 1
               capabilities: [gpu]
 
+  opensearch-node1:
+    extends:
+      file: docker-compose-opensearch.yml
+      service: opensearch-node1
+
+  opensearch-dashboards:
+    extends:
+      file: docker-compose-opensearch.yml
+      service: opensearch-dashboards
+
+volumes:
+  opensearch-data1:
+
 networks:
   default:
     name: concierge
+  opensearch-net:
