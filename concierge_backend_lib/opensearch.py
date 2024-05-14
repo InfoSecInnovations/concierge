@@ -5,14 +5,12 @@ from pympler.asizeof import asizeof
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-import json
 
 load_dotenv()
 OPENSEARCH_INITIAL_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
 
 chunk_size = 200
 chunk_overlap = 25
-max_batch_size = 60000000 # 67108864 is the true value but we're leaving a safety margin
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 
@@ -52,6 +50,31 @@ def ensure_index(client, index_name):
                         "engine": "nmslib",
                         "parameters": {}
                     }
+                },
+                "metadata": {
+                    "properties": {
+                        "page": {
+                            "type": "unsigned_long"
+                        },
+                        "filename": {
+                            "type": "keyword"
+                        },
+                        "source": {
+                            "type": "keyword"
+                        },
+                        "title": {
+                            "type": "keyword"
+                        },
+                        "language": {
+                            "type": "keyword"
+                        },
+                        "ingest_date": {
+                            "type": "date"
+                        }
+                    }
+                },
+                "metadata_type": {
+                    "type": "keyword"
                 }
             }
         }
@@ -116,6 +139,6 @@ def get_context(client, index_name, reference_limit, user_input):
         "context": "\n".join([hit["text"] for hit in hits]),
         "sources": [{
             "type": hit["metadata_type"],
-            "metadata": json.loads(hit["metadata"])
+            "metadata": hit["metadata"]
         } for hit in hits]
     }
