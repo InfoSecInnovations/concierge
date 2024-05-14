@@ -5,6 +5,7 @@ from pympler.asizeof import asizeof
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+import json
 
 load_dotenv()
 OPENSEARCH_INITIAL_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
@@ -86,3 +87,35 @@ def insert_with_tqdm (client, index_name, pages):
         page_progress.n = x[0] + 1
         page_progress.refresh()
     page_progress.close()
+
+def get_context(client, index_name, reference_limit, user_input):
+    query = {
+    'size': reference_limit,
+        "query": {
+            "knn": {
+                "vector": {
+                    "vector": stransform.encode(user_input),
+                    "k": reference_limit
+                }
+            }
+        },
+        "_source": {
+            "includes": ["metadata_type", "metadata", "text"]
+        },
+        "min_score": 0.7 # this is a very magic number!
+    }
+
+    response = client.search(
+        body = query,
+        index = index_name
+    )
+
+    hits = [hit["_source"] for hit in response["hits"]["hits"]]
+
+    return {
+        "context": "\n".join([hit["text"] for hit in hits]),
+        "sources": [{
+            "type": hit["metadata_type"],
+            "metadata": json.loads(hit["metadata"])
+        } for hit in hits]
+    }
