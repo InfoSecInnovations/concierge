@@ -89,6 +89,7 @@ def ensure_index(client, index_name):
 def insert (client, index_name, pages):
     entries = []
     total = len(pages)
+
     for index, page in enumerate(pages):      
         chunks = splitter.split_text(page["content"])
         for chunk in chunks:
@@ -113,7 +114,7 @@ def insert_with_tqdm (client, index_name, pages):
 
 def get_context(client, index_name, reference_limit, user_input):
     query = {
-    'size': reference_limit,
+        'size': reference_limit,
         "query": {
             "knn": {
                 "vector": {
@@ -142,3 +143,44 @@ def get_context(client, index_name, reference_limit, user_input):
             "metadata": hit["metadata"]
         } for hit in hits]
     }
+
+def get_indices(client):
+    response = client.indices.get("*")
+    # TODO: we must be able to do this in OpenSearch somehow?
+    response = {k: v for k, v in response.items() if "vector" in v["mappings"]["properties"] and v["mappings"]["properties"]["vector"]["type"] == "knn_vector"}
+    return list(response.keys())
+
+def delete_index(client, index_name):
+    response = client.indices.delete(
+        index = index_name
+    )
+    return response["acknowledged"]
+
+def get_documents(client, index_name):
+    query = {
+        "size": 0,
+        "aggs": {
+            "documents": {
+                "multi_terms": {
+                    "size": 100000,
+                    "terms": [
+                        {
+                            "field": "metadata_type"
+                        },
+                        {
+                            "field": "metadata.source",
+                        }
+                    ]
+                }
+            }
+        }
+    }
+
+    response = client.search(
+        body = query,
+        index = index_name
+    )
+
+    print(response["aggregations"]["documents"]["buckets"])
+
+    return [{"type": bucket["key"][0], "source": bucket["key"][1], "chunk_count": bucket["doc_count"]} for bucket in response["aggregations"]["documents"]["buckets"]]

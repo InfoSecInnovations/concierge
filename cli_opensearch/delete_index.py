@@ -4,7 +4,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import argparse
-from concierge_backend_lib.opensearch import get_client
+from concierge_backend_lib.opensearch import get_client, delete_index
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--index", required=True,
@@ -12,9 +12,6 @@ parser.add_argument("-i", "--index", required=True,
 args = parser.parse_args()
 
 index_name = args.index
-client = get_client()
-response = client.indices.delete(
-    index = index_name
-)
 
-print(response)
+client = get_client()
+print(delete_index(client, index_name))
