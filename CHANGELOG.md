@@ -1,6 +1,17 @@
 # Changelog
 
-## 0.1.1 - 2024-03-14
+## 0.2.0 - 2024-05-15
+
+### Changes
+
+- Web GUI ported from Streamlit to Shiny for Python: we have found Shiny to be much more robust, especially with handling long tasks such as ingesting documents.
+- `launch.py` and `install.py` improved to (hopefully) work on more Operating Systems.
+
+### Added
+
+- Theme selector for Web GUI
+
+## 0.1.3 - 2024-03-14
 
 ### Added
 
