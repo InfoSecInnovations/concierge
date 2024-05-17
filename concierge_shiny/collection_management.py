@@ -1,14 +1,17 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session
 from components import collection_create_ui, collection_create_server
-from concierge_backend_lib.collections import get_collections
-from pymilvus import utility
+from concierge_backend_lib.opensearch import get_indices, delete_index
+
+# --------
+# COLLECTION ITEM
+# --------
 
 @module.ui
 def collection_item_ui():
     return ui.output_ui("collection_view")
 
 @module.server
-def collection_item_server(input: Inputs, output: Outputs, session: Session, upload_dir, collection_name, collections):
+def collection_item_server(input: Inputs, output: Outputs, session: Session, upload_dir, collection_name, collections, client):
 
     @render.ui
     def collection_view():
@@ -20,8 +23,12 @@ def collection_item_server(input: Inputs, output: Outputs, session: Session, upl
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
     def on_delete():
-        utility.drop_collection(collection_name)
-        collections.set(get_collections())
+        delete_index(client, collection_name)
+        collections.set(get_indices(client))
+
+# --------
+# MAIN
+# --------
 
 @module.ui
 def collection_management_ui():
@@ -31,13 +38,13 @@ def collection_management_ui():
     ]
 
 @module.server
-def collection_management_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, milvus_status):
+def collection_management_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, opensearch_status, client):
 
-    collection_create_server("collection_create", selected_collection, collections)
+    collection_create_server("collection_create", selected_collection, collections, client)
 
     @render.ui
     def collection_management_content():
-        if milvus_status.get():
+        if opensearch_status.get():
             return ui.TagList(
                 collection_create_ui("collection_create"),
                 ui.output_ui("collection_list") 
@@ -52,4 +59,4 @@ def collection_management_server(input: Inputs, output: Outputs, session: Sessio
     @reactive.effect
     def collection_item_servers():
         for collection in collections.get():
-            collection_item_server(f"collection_item_{collection}", upload_dir, collection, collections)
+            collection_item_server(f"collection_item_{collection}", upload_dir, collection, collections, client)

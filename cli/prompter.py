@@ -1,25 +1,20 @@
-import platform
 import sys
-
-my_platform = platform.system()
-
-if my_platform == "Linux": # relative imports don't work the same on Windows and Linux!
-    sys.path.append('..')
-# TODO: check MacOS
-
 import os
+# on Linux the parent directory isn't automatically included for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
-from concierge_backend_lib.collections import get_existing_collection
-from concierge_backend_lib.prompting import load_model, get_context, get_response
+from concierge_backend_lib.prompting import load_model, get_response
+from concierge_backend_lib.opensearch import get_client, get_context
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-t", "--task", required=True,
                     help="Required: What you want Concierge to do.")
-parser.add_argument("-c", "--collection", required=True,
-                    help="Milvus collection containing the vectorized data.")
+parser.add_argument("-i", "--index", required=True,
+                    help="OpenSearch index containing the vectorized data.")
 parser.add_argument("-p", "--persona",
                     help="What personality or tone you want as the response.")
 parser.add_argument("-e", "--enhancers", nargs="*",
@@ -28,7 +23,7 @@ parser.add_argument("-f", "--file",
                     help="file to be used in prompt to Concierge.")
 args = parser.parse_args()
 
-config_dir = os.path.join('..', 'prompter_config')
+config_dir =  os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'prompter_config'))
 
 task = ConfigObj(os.path.join(config_dir, 'tasks', f'{args.task}.concierge'), list_values=False)
 
@@ -47,6 +42,7 @@ if args.file:
     else:
         source_file = open(args.file, 'r')
 
+index_name = args.index
 
 ### VARs ###
 # TODO will want to make this a select later
@@ -70,20 +66,20 @@ if pbar:
     pbar.close()
 
 stransform = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-collection = get_existing_collection(args.collection)
+client = get_client()
 
 while True:
 
     print(task['greeting'])
     user_input = input()
 
-    context = get_context(collection, references, user_input)
+    context = get_context(client, index_name, references, user_input)
 
     print('\nResponding based on the following sources:')
     for source in context["sources"]:
         metadata = source["metadata"]
         if source["type"] == "pdf":
-            print(f'   PDF File: page {metadata["page"]} of {metadata["filename"]} located at {metadata["path"]}')
+            print(f'   PDF File: page {metadata["page"]} of {metadata["source"]}')
         if source["type"] == "web":
             print(f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}')
     print("\n\n")

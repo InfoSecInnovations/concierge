@@ -1,8 +1,12 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
-from concierge_backend_lib.collections import get_collections, init_collection
-from concierge_backend_lib.status import get_status
+from concierge_backend_lib.status import check_ollama, check_opensearch
+from concierge_backend_lib.opensearch import get_indices, ensure_index
 from util.async_single import asyncify
 import uuid
+
+# --------
+# COLLECTION CREATOR
+# --------
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
@@ -18,18 +22,22 @@ def collection_create_ui():
     ]
 
 @module.server
-def collection_create_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections):
+def collection_create_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections, client):
     
     @reactive.effect
     @reactive.event(input.create_collection, ignore_none=False, ignore_init=True)
     def create_new_collection():
         req(input.new_collection_name())
         new_name = input.new_collection_name()
-        init_collection(new_name)
+        ensure_index(client, new_name)
         print(f"created collection {new_name}")
-        collections.set(get_collections())
+        collections.set(get_indices(client))
         selected_collection.set(new_name)
         ui.update_text(id="new_collection_name", label=None, value="", placeholder=COLLECTION_PLACEHOLDER)
+
+# --------
+# COLLECTION SELECTOR
+# --------
 
 @module.ui
 def collection_selector_ui():
@@ -53,6 +61,10 @@ def collection_selector_server(input: Inputs, output: Outputs, session: Session,
     def update_selection():
         selected_collection.set(input.internal_selected_collection())
 
+# --------
+# STATUS
+# --------
+
 @module.ui
 def status_ui():
     return ui.output_ui("status_widget")
@@ -60,36 +72,47 @@ def status_ui():
 @module.server
 def status_server(input: Inputs, output: Outputs, session: Session):
 
-    milvus_status = reactive.value(False)
+    opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
 
     @reactive.extended_task
-    async def get_requirements_status():
-        return await asyncify(get_status)
+    async def get_ollama_status():
+        return await asyncify(check_ollama)
+    
+    @reactive.extended_task
+    async def get_opensearch_status():
+        return await asyncify(check_opensearch)
 
     @reactive.effect
-    def set_requirements_status():
-        status = get_requirements_status.result()
-        milvus_status.set(status["milvus"])
-        ollama_status.set(status["ollama"])
+    def set_ollama_status():
+        ollama_status.set(get_ollama_status.result())
+
+    @reactive.effect
+    def set_opensearch_status():
+        opensearch_status.set(get_opensearch_status.result())
 
     @reactive.effect
     def poll():
         reactive.invalidate_later(10)
-        get_requirements_status()
+        get_ollama_status()
+        get_opensearch_status()
 
     @render.ui
     def status_widget():
         return ui.card(
-            ui.markdown(f"{'🟢' if milvus_status.get() else '🔴'} Milvus"),
+            ui.markdown(f"{'🟢' if opensearch_status.get() else '🔴'} OpenSearch"),
             ui.markdown(f"{'🟢' if ollama_status.get() else '🔴'} Ollama")
         )
     
     @reactive.calc
     def result():
-        return { "milvus": milvus_status.get(), "ollama": ollama_status.get()}
+        return { "opensearch": opensearch_status.get(), "ollama": ollama_status.get()}
     
     return result
+
+# --------
+# TEXT INPUT LIST
+# --------
 
 @module.ui
 def text_list_ui():

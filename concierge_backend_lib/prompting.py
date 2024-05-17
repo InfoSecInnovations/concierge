@@ -1,7 +1,5 @@
 import json
 import requests
-# line below commented; future feature.
-# import antigravity
 from sentence_transformers import SentenceTransformer
 
 def load_model():
@@ -27,30 +25,6 @@ search_params = {
     "metric_type": "COSINE",
     "params": {"radius": 0.5} # -1.0 to 1.0, positive values indicate similarity, negative values indicate difference
 }
-
-def get_context(collection, reference_limit, user_input):
-    response = collection.search(
-        data=[stransform.encode(user_input)],
-        anns_field="vector",
-        param=search_params,
-        limit=reference_limit,
-        output_fields=["metadata_type", "metadata", "text"]
-    )
-
-    context = ""
-    sources = []
-    for resp in response:
-        for hit in resp:
-            context = context + hit.entity.get("text")
-            sources.append({
-               "type": hit.entity.get("metadata_type"),
-                "metadata": json.loads(hit.entity.get("metadata"))
-            })
-
-    return {
-        "context": context,
-        "sources": sources
-    }
 
 def prepare_prompt(context, task_prompt, user_input, persona_prompt = None, enhancer_prompts = None, source_file_contents = None):
     prompt = task_prompt

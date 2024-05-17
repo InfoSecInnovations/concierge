@@ -2,14 +2,13 @@ from shiny import ui, Inputs, Outputs, Session, module, reactive, render, req
 from configobj import ConfigObj
 from pathlib import Path
 import os
-from concierge_backend_lib.prompting import load_model, get_context, get_response
-from concierge_backend_lib.collections import get_existing_collection
+from concierge_backend_lib.prompting import load_model, get_response
+from concierge_backend_lib.opensearch import get_context
 from tqdm import tqdm
 from util.async_generator import asyncify_generator
 from components import collection_selector_ui, collection_selector_server 
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs
-import time
 
 md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
@@ -46,7 +45,7 @@ def prompter_ui():
     ]
 
 @module.server
-def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, milvus_status, ollama_status):
+def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, opensearch_status, client, ollama_status):
 
     llm_loaded = reactive.value(False)
     messages = reactive.value([])
@@ -97,7 +96,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
 
     @render.ui
     def prompter_ui():
-        loaded = llm_loaded.get() and ollama_status.get() and milvus_status.get()
+        loaded = llm_loaded.get() and ollama_status.get() and opensearch_status.get()
         if loaded:
             task_list = list(tasks)
             selected_task = task_list[0] if 'question' not in tasks else 'question'
@@ -129,7 +128,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                 ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'chat_input.js')), method='inline'),              
             )
         else:
-            if not ollama_status.get() or not milvus_status.get():
+            if not ollama_status.get() or not opensearch_status.get():
                 return ui.markdown("Requirements are not online, see sidebar!")
             return ui.markdown("Loading Language Model, please wait...")
 
@@ -142,8 +141,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         return message_ui("current_message")
 
     def stream_response(collection_name, user_input, task, persona, selected_enhancers, source_file):
-        collection = get_existing_collection(collection_name)
-        context = get_context(collection, REFERENCE_LIMIT, user_input)
+        context = get_context(client, collection_name, REFERENCE_LIMIT, user_input)
         if len(context["sources"]):
             yield 'Responding based on the following sources:\n\n'
             for source in context["sources"]:

@@ -1,13 +1,11 @@
-from shiny import App, ui, Inputs, Outputs, Session, reactive, render
+from shiny import App, ui, Inputs, Outputs, Session, reactive
 from home import home_ui
 from loader import loader_ui, loader_server
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
-from concierge_backend_lib.collections import get_collections
-from concierge_backend_lib.status import get_status
+from concierge_backend_lib.opensearch import get_indices, get_client
 import os
 import shinyswatch
-from util.async_single import asyncify
 from components import status_ui, status_server
 
 UPLOADS_DIR = "uploads"
@@ -28,27 +26,28 @@ app_ui = ui.page_auto(
 
 def server(input: Inputs, output: Outputs, session: Session):
 
-    milvus_status = reactive.value(False)
+    opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections = reactive.value([])
-    loader_server("loader", UPLOADS_DIR, selected_collection, collections, milvus_status)
-    prompter_server("prompter", UPLOADS_DIR, selected_collection, collections, milvus_status, ollama_status)
-    collection_management_server("collection_management", UPLOADS_DIR, selected_collection, collections, milvus_status)
+    client = get_client()
+    loader_server("loader", UPLOADS_DIR, selected_collection, collections, opensearch_status, client)
+    prompter_server("prompter", UPLOADS_DIR, selected_collection, collections, opensearch_status, client, ollama_status)
+    collection_management_server("collection_management", UPLOADS_DIR, selected_collection, collections, opensearch_status, client)
     status = status_server("status_widget")
     shinyswatch.theme_picker_server()
 
     @reactive.effect
     def set_collections():
-        if milvus_status.get():
-            collections.set(get_collections())
+        if opensearch_status.get():
+            collections.set(get_indices(client))
         else:
             collections.set([])
 
     @reactive.effect
     def update_status():
         current_status = status()
-        milvus_status.set(current_status["milvus"])
+        opensearch_status.set(current_status["opensearch"])
         ollama_status.set(current_status["ollama"])
 
 app = App(

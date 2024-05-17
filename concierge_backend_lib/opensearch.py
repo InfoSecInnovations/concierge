@@ -41,13 +41,13 @@ def ensure_index(client, index_name):
         },
         "mappings": {
             "properties": {
-                "vector": {
+                "document_vector": {
                     "type": "knn_vector",
                     "dimension": 384,
                     "method": {
                         "name": "hnsw",
                         "space_type": "cosinesimil",
-                        "engine": "nmslib",
+                        "engine": "lucene",
                         "parameters": {}
                     }
                 },
@@ -99,7 +99,7 @@ def insert (client, index_name, pages):
                 "metadata_type":page["metadata_type"],
                 "metadata":page["metadata"],
                 "text":chunk,
-                "vector":vect
+                "document_vector":vect
             }
             entries.append(entry)
         yield (index, total)
@@ -117,16 +117,15 @@ def get_context(client, index_name, reference_limit, user_input):
         'size': reference_limit,
         "query": {
             "knn": {
-                "vector": {
+                "document_vector": {
                     "vector": stransform.encode(user_input),
-                    "k": reference_limit
+                    "min_score": 0.8 # this is quite a magic number, tweak as needed!
                 }
             }
         },
         "_source": {
             "includes": ["metadata_type", "metadata", "text"]
-        },
-        "min_score": 0.7 # this is a very magic number!
+        }
     }
 
     response = client.search(
@@ -147,7 +146,7 @@ def get_context(client, index_name, reference_limit, user_input):
 def get_indices(client):
     response = client.indices.get("*")
     # TODO: we must be able to do this in OpenSearch somehow?
-    response = {k: v for k, v in response.items() if "vector" in v["mappings"]["properties"] and v["mappings"]["properties"]["vector"]["type"] == "knn_vector"}
+    response = {k: v for k, v in response.items() if "document_vector" in v["mappings"]["properties"] and v["mappings"]["properties"]["document_vector"]["type"] == "knn_vector"}
     return list(response.keys())
 
 def delete_index(client, index_name):

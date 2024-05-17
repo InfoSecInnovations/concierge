@@ -8,7 +8,6 @@ langchain-community
 pypdf
 protobuf
 grpcio-tools
-pymilvus==2.3.6
 pympler
 configobj
 shiny
