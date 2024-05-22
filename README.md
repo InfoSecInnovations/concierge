@@ -28,6 +28,14 @@ https://docs.docker.com/desktop/gpu/
 
 Refer to the documentation from NVIDIA for information on how to do this for your OS.
 
+## System Requirements ##
+
+It is unlikely you'll be able to run Concierge with less than 8GB RAM, at least 16GB is desirable.
+
+If you're using Docker Desktop you need to make sure at least 4GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 8GB RAM and haven't modified your configuration it's likely you don't need to do anything.
+
+You can get more tips for optimizing your installation here: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, however we have found that Concierge still runs without performing those modifications.
+
 ## Setup: quick install ##
 git clone repo or extract zip. 
 
@@ -35,7 +43,7 @@ git clone repo or extract zip.
 
 `python install.py` to launch the installer.  
 Answer the questions and then the installer will ask if you are ready to make changes to the system.  
-Answer "Y" and let the downloading begin!
+Answer "yes" and let the downloading begin!
 
 
 ## Setup: manual ##
@@ -47,7 +55,9 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 
 `pip install -r requirements.txt` install all dependencies.
 
-copy `.env.example` into a file named `.env` and set the folder on your computer that will contain the concierge data.
+Copy `.env.example` into a file named `.env` and set the folder on your computer that will contain the concierge data.
+
+Set `OPENSEARCH_INITIAL_ADMIN_PASSWORD` to a strong password of your choice. You can evaluate password strength using https://lowe.github.io/tryzxcvbn/. Please note that in the current version of Concierge this isn't actually very secure due to it being stored in plaintext in the `.env` file! We will introduce better credential handling in future versions, the current way will become "dev/demo mode" for getting Concierge running quickly without proper security measures in place.
 
 `docker compose up -d` will load the docker dependencies.
 
@@ -75,6 +85,24 @@ If running for development you can use this command instead:
 `python -m shiny run --reload --launch-browser concierge_shiny/app.py`
 
 or use the Shiny for Python VSCode extension running from `concierge_shiny/app.py`. At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
+
+## CLI ##
+
+While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.
+
+To use them you can navigate to the `cli` subdirectory or append `cli.` to the script name from the parent directory.
+
+Make sure you are running inside the venv.
+
+Call commands like this: `python -m <script_name> <options>`. Use the `-h` or `--help` option to see what the options are.
+
+Available commands:
+- `loader`
+- `web_loader`
+- `prompter`
+- `list_indices`
+- `documents`
+- `delete_index`
 
 ## Known issues
 
