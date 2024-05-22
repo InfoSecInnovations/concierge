@@ -16,41 +16,38 @@ from components import(
 )
 
 @module.ui
-def loader_ui():
-    return [
-        ui.markdown("# Loader"),
-        ui.output_ui("loader_content")
-    ]
+def ingester_ui():
+    return ui.output_ui("ingester_content")
 
 @module.server
-def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, opensearch_status, client):
+def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, client):
 
     file_input_trigger = reactive.value(0)
+    ingesting_done = reactive.value(0)
 
     collection_selector_server("collection_selector", selected_collection, collections)
     collection_create_server("collection_creator", selected_collection, collections, client)
     url_values = text_list_server("url_input_list", file_input_trigger)
     
     @render.ui
-    def loader_content():
-        if opensearch_status.get():
-            return ui.TagList(
-                collection_selector_ui("collection_selector"),
-                collection_create_ui("collection_creator"),
-                ui.markdown("### Documents"),
-                ui.output_ui("file_input"),
-                ui.markdown("### URLs"),
-                text_list_ui("url_input_list"),
-                ui.input_task_button(id="ingest", label="Ingest")
-            )
-        else:
-            return ui.markdown("Milvus is offline!")
+    def ingester_content():
+        return ui.card(
+            ui.card_header(
+                ui.markdown("### Ingest Documents")
+            ),
+            ui.markdown("#### Files"),
+            ui.output_ui("file_input"),
+            ui.markdown("#### URLs"),
+            text_list_ui("url_input_list"),
+            ui.input_task_button(id="ingest", label="Ingest")
+            
+        )
 
     @render.ui
     @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)
     def file_input():
         return ui.input_file(
-            id="loader_files",
+            id="ingester_files",
             label=None,
             multiple=True
         )
@@ -88,23 +85,27 @@ def loader_server(input: Inputs, output: Outputs, session: Session, upload_dir, 
 
     @ui.bind_task_button(button_id="ingest")
     @reactive.extended_task
-    async def ingest(files, urls, collection_name):
+    async def ingest(files, urls, collection_name, ingesting_index):
         if files and len(files):
             await ingest_files(files, collection_name)
         if urls and len(urls):
             await ingest_urls(urls, collection_name)
+        ingesting_done.set(ingesting_index + 1)
 
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
     def handle_click():
         urls = list(filter(None, url_values()))
         files = None
-        if "loader_files" in input:
-            files = input.loader_files()
+        if "ingester_files" in input:
+            files = input.ingester_files()
         if (not urls or not len(urls)) and (not files or not len(files)):
             return
         collection_name = selected_collection.get()
         print(f"ingesting documents into collection {collection_name}")
-        del input.loader_files
+        del input.ingester_files
         file_input_trigger.set(file_input_trigger.get() + 1) 
-        ingest(files, urls, collection_name)
+        # we have to pass reactive reads into an async function rather than calling from within
+        ingest(files, urls, collection_name, ingesting_done.get())
+
+    return ingesting_done

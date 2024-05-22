@@ -180,6 +180,4 @@ def get_documents(client, index_name):
         index = index_name
     )
 
-    print(response["aggregations"]["documents"]["buckets"])
-
     return [{"type": bucket["key"][0], "source": bucket["key"][1], "chunk_count": bucket["doc_count"]} for bucket in response["aggregations"]["documents"]["buckets"]]
