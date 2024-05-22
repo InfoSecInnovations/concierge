@@ -108,6 +108,7 @@ Available commands:
 
 - `unknown shorthand flag: 'd' in -d` and/or you have the `docker-compose` command instead of `docker compose`. This indicates that you're using an older version of Docker than we support. The best course of action would be to install the latest version following instructions from here: https://docs.docker.com/engine/install/. However if you're unable to do this, you may be able to get the Concierge Docker requirements running using `docker-compose --file ./docker-compose.yml up`.
 - on MacOS urllib3 gives a `NotOpenSSLWarning`, as far as we aware you can ignore this warning without issue.
+- Using Docker Desktop, Ollama can become unresponsive after a certain amount of time, this may be due to the Resource Saver mode being enabled, you can find this in Docker Desktop -> Settings -> Resources.
 
 ## Want to get involved? ##
 
