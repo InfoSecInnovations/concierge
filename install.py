@@ -1,4 +1,4 @@
-from script_builder.util import require_admin, pip_loader
+from script_builder.util import require_admin, pip_loader, get_lines
 from script_builder.argument_processor import ArgumentProcessor
 from concierge_installer.arguments import install_arguments
 from concierge_installer.functions import docker_compose_helper
@@ -54,27 +54,25 @@ if os.path.isfile(".env"):
         if approve_to_delete == "yes":
             shutil.rmtree(concierge_volumes)
 
-        # check docker containers
-        print("The following docker containers were discovered:")
-        subprocess.run(["docker", "container", "ls", "--all", "--format", "{{.Names}}"])
+        def check_dependencies(check_command, label, remove_command):
+            result = get_lines(check_command)
+            if result:
+                print(f"The following docker {label} were discovered:")
+                print(" ".join(result))
 
-        print("\nWould you like to have the installer remove any for you?")
-        containers_to_remove = input("Please give a space separated list of the containers you would like removed or press enter to skip: ")
-        print("\n")
+                print("\nWould you like to have the installer remove any for you?")
+                to_remove = input(f"Please give a space separated list of the {label} you would like removed or press enter to skip: ")
+                print("\n")
 
-        if containers_to_remove != "":
-            subprocess.run(["docker", "container", "rm", containers_to_remove], stdout = subprocess.DEVNULL)
+                if to_remove != "":
+                    subprocess.run([*remove_command, to_remove], stdout = subprocess.DEVNULL)
+            else:
+                print(f"No existing docker {label} were found.\n")
 
-        # check docker networks
-        print("The following docker networks were discovered:")
-        subprocess.run(["docker", "network", "ls", "--format", "{{.Name}}"])
-
-        print("\nWould you like to have the installer remove any for you?")
-        networks_to_remove = input("Please give a space separated list of the networks you would like removed or press enter to skip: ")
-        print("\n")
-
-        if networks_to_remove != "":
-            subprocess.run(["docker", "network", "rm", networks_to_remove], stdout = subprocess.DEVNULL)
+        # docker containers
+        check_dependencies(["docker", "container", "ls", "--all", "--format", "{{.Names}}"], "containers", ["docker", "container", "rm"])
+        # docker networks
+        check_dependencies(["docker", "network", "ls", "--format", "{{.Name}}"], "networks", ["docker", "network", "rm"])
 
 print("Welcome to the Concierge installer.")
 print("Just a few configuration questions and then some download scripts will run.")
@@ -92,34 +90,46 @@ print("About to make changes to your system.\n")
 #print("Based on your selections, you will be downloading aproximately X of data")
 #print("Depending on network speed, this may take a while")
 print("No changes have yet been made to your system. If you stop now or answer \"no\", nothing will have changed.")
-ready_to_rock = input("Ready to apply settings and start downloading? Please type \"yes\" to continue. (yes/[no]): ")
 
-if ready_to_rock.upper() == "YES":
-    # no further input is needed. Let's get to work.
-    print("installing...")
+def start_install():
+    ready_to_rock = input("Ready to apply settings and start downloading? Please type \"yes\" to continue. (yes/[no]): ").upper()
 
-    # setup .env (needed for docker compose files)
-    env_file = open(".env", "w")
-    # write .env info needed
-    env_file.write("DOCKER_VOLUME_DIRECTORY=" + argument_processor.parameters["docker_volumes"])
-    env_file.close()
+    if ready_to_rock == "YES":
+        # no further input is needed. Let's get to work.
+        print("installing...")
 
-    pip_loader()
+        # setup .env (needed for docker compose files)
+        with open(".env", "w") as env_file:
+            # write .env info needed
+            env_file.writelines("\n".join([
+                "DOCKER_VOLUME_DIRECTORY=" + argument_processor.parameters["docker_volumes"],
+                "OPENSEARCH_INITIAL_ADMIN_PASSWORD=" + argument_processor.parameters["opensearch_password"]
+            ]))
 
-    # docker compose
-    if argument_processor.parameters["compute_method"] == "GPU":
-        docker_compose_helper("GPU")
-    elif argument_processor.parameters["compute_method"] == "CPU":
-        docker_compose_helper("CPU")
-    else:
-        #need to do input check to prevent this condition (and others like it)
-        print("You have selected an unknown/unexpected compute method.")
-        print("you will need to run the docker compose file manually")
+        pip_loader()
+
+        # docker compose
+        if argument_processor.parameters["compute_method"] == "GPU":
+            docker_compose_helper("GPU")
+        elif argument_processor.parameters["compute_method"] == "CPU":
+            docker_compose_helper("CPU")
+        else:
+            #need to do input check to prevent this condition (and others like it)
+            print("You have selected an unknown/unexpected compute method.")
+            print("you will need to run the docker compose file manually")
+            exit()
+
+        # ollama model load
+        returncode = subprocess.run(["docker", "exec", "-it", "ollama", "ollama", "pull", argument_processor.parameters["language_model"]])
+        print("\nInstall completed. To start Concierge use the following command: python launch.py\n\n")
+        return True
+
+    elif ready_to_rock == "NO":
+        print("Install cancelled. No changes were made. Have a nice day! :-)\n\n")
         exit()
 
-    # ollama model load
-    returncode = subprocess.run(["docker", "exec", "-it", "ollama", "ollama", "pull", argument_processor.parameters["language_model"]])
+    else:
+        return False
 
-else:
-    print("Install cancelled. No changes were made. Have a nice day! :-)\n\n")
-    exit()
+while not start_install():
+    print("Answer needs to be yes or no!\n")

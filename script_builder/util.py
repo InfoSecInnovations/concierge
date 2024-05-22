@@ -51,3 +51,13 @@ def pip_loader():
     venv.create(working_dir, with_pip=True)
     # pip install command
     subprocess.run([get_venv_executable(), "-m", "pip", "install", "-r", os.path.abspath("requirements.txt")], cwd=working_dir)
+
+def get_lines(command):
+    return list(filter(
+        None, 
+        subprocess.run(
+            command, 
+            capture_output=True, 
+            text=True
+        ).stdout.split("\n")
+    ))

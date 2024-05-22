@@ -7,7 +7,7 @@ from collections.abc import Callable
 class ArgumentData:
     @dataclass
     class InputData:
-        default: str | Callable[[ArgumentProcessor], str]
+        default: str | Callable[[ArgumentProcessor], str] | None = None
         prompt: str | None = None
         options: list[str] | None = None
 
@@ -32,7 +32,7 @@ class ArgumentProcessor:
             input_text += input_data.prompt + " "
         if input_data.options:
             input_text += " or ".join([f"[{input_option}]" if input_option == input_default else input_option for input_option in input_data.options])
-        else:
+        elif input_default:
             input_text += f"[{input_default}]"
         input_text += ": "
         return input(input_text).strip() or input_default

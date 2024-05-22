@@ -64,6 +64,20 @@ install_arguments = [
         )
     ),
     ArgumentData(
+        key="opensearch_password",
+        help="Admin password for the OpenSearch instance",
+        description=[
+            "Please pick the admin password for your OpenSearch instance.",
+            "You must pick a strong password otherwise the OpenSearch container will shut down.",
+            "Visit https://lowe.github.io/tryzxcvbn/ to evaluate password strength.",
+            "Please note that in the current version of Concierge this is stored in plaintext in the .env file, so it isn't actually secure!",
+            "We will be introducing proper credential handling in future versions."
+        ],
+        input=ArgumentData.InputData(
+            prompt="OpenSearch admin password?"
+        )
+    ),
+    ArgumentData(
         key="activity_logging",
         help="Will this Concierge instance log activity? Strongly suggest setting this!",
         description=[
