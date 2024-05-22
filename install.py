@@ -92,7 +92,7 @@ print("About to make changes to your system.\n")
 print("No changes have yet been made to your system. If you stop now or answer \"no\", nothing will have changed.")
 
 def start_install():
-    ready_to_rock = input("Ready to apply settings and start downloading? Please type \"yes\" to continue. (yes/[no]): ").upper()
+    ready_to_rock = input("Ready to apply settings and start downloading? Please type \"yes\" to continue. (yes/no): ").upper()
 
     if ready_to_rock == "YES":
         # no further input is needed. Let's get to work.
