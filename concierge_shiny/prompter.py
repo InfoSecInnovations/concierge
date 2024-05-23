@@ -6,7 +6,7 @@ from concierge_backend_lib.prompting import load_model, get_response
 from concierge_backend_lib.opensearch import get_context
 from tqdm import tqdm
 from util.async_generator import asyncify_generator
-from components import collection_selector_ui, collection_selector_server 
+from components import collection_selector_ui, collection_selector_server, text_input_enter_ui, text_input_enter_server
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs
 
@@ -41,16 +41,16 @@ def message_server(input: Inputs, output: Outputs, session: Session, message):
             class_="text-primary" if message["role"] == "assistant" else None
         )
 
+# --------
+# MAIN
+# --------
+
 @module.ui
 def prompter_ui():
     return [
         ui.markdown("# Prompter"),
         ui.output_ui("prompter_ui")      
     ]
-
-# --------
-# MAIN
-# --------
 
 @module.server
 def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, opensearch_status, client, ollama_status):
@@ -59,15 +59,11 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     messages = reactive.value([])
     current_message = reactive.value({})
     processing = reactive.value(False)
-    # We're going to indepedently set the "prompt" when either
-    # * the submit button is pressed
-    # * the Enter button is pressed
-    prompt = reactive.value(None)
+
     current_file_id = reactive.value(0)
 
-    id_enter = module.resolve_id("enter")
-
     collection_selector_server("collection_selector", selected_collection, collections)
+    prompt = text_input_enter_server("chat_input", processing)
 
     @reactive.extended_task
     async def load_llm_model():
@@ -114,26 +110,14 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                 ui.output_ui("message_list"),
                 ui.output_ui("current_message_view"),
                 ui.markdown("Please create a collection and ingest some documents into it first!") if not len(collections.get()) else
-                ui.div(
-                    ui.row(
-                        ui.column(9, ui.input_text(id="chat_input", label=None, placeholder=tasks[selected_task]["greeting"], width="100%")),
-                        ui.column(3, ui.input_task_button(id="chat_submit", label="Chat"))
-                    ),                   
-                    {
-                        "class": "chat-text-input",
-                        # We'll use this ID in the JavaScript to report the prompt value
-                        # so the Shiny app can call `input.enter()` inside the module
-                        "data-enter-id": id_enter
-                    }
-                ),
+                text_input_enter_ui("chat_input", "Chat", tasks[selected_task]["greeting"]),
                 collection_selector_ui("collection_selector"),
                 ui.layout_columns(
                     ui.input_select(id="task_select", label="Task", choices=task_list, selected=selected_task),
                     ui.input_select(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
                     ui.input_select(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
                 ),
-                ui.output_ui("file_input"),
-                ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'chat_input.js')), method='inline'),              
+                ui.output_ui("file_input")
             )
         else:
             if not ollama_status.get() or not opensearch_status.get():
@@ -183,30 +167,12 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
                     await reactive.flush()
             processing.set(False)
 
-    # on click chat submit
-    @reactive.effect
-    @reactive.event(input.chat_submit)
-    def chat_prompt():
-        prompt.set(input.chat_input())
-
-    # on press enter in chat box
-    @reactive.effect
-    @reactive.event(input.enter)
-    def chat_prompt():
-        # only submit message if processing is done
-        if processing.get():
-            return
-        # input.enter() reports the value of the text input field
-        # because it's easy for users to press Enter quickly while typing
-        # before input.chat_input() has had a chance to update
-        prompt.set(input.enter())
-
     @reactive.effect
     @reactive.event(prompt, ignore_init=True, ignore_none=True)
     def send_chat():
         user_input = prompt.get()
         # for some reason ignore_none isn't always catching this, maybe because the value is ""?
-        if not user_input:
+        if not user_input or processing.get():
             return
         processing.set(True)
         ui.update_text("chat_input", value="")

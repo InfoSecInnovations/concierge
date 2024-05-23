@@ -1,8 +1,9 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
+from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_backend_lib.opensearch import get_indices, ensure_index
 from util.async_single import asyncify
-import uuid
+import os
 
 # --------
 # COLLECTION CREATOR
@@ -152,7 +153,7 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
             return
 
         # insert new ID and corresponding element if all existing ones have values
-        idx = uuid.uuid4().int
+        idx = rand_hex(4)
         new_id = f"input_{idx}"       
         input_ids.set([*input_ids.get(), new_id])
         ui.insert_ui(
@@ -168,3 +169,54 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
         input_ids.set([])
 
     return input_values
+
+# --------
+# TEXT INPUT ENTER
+# --------
+
+@module.ui
+def text_input_enter_ui(label, placeholder):
+    id_enter = module.resolve_id("enter")
+    return [
+        ui.div(
+            ui.row(
+                ui.column(9, ui.input_text(id="text_input_enter", label=None, placeholder=placeholder, width="100%")),
+                ui.column(3, ui.input_task_button(id="text_input_submit", label=label))
+            ),                   
+            {
+                "class": "text-input-enter",
+                # We'll use this ID in the JavaScript to report the value value
+                # so the Shiny app can call `input.enter()` inside the module
+                "data-enter-id": id_enter
+            }
+        ),
+        ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'text_input_enter.js')), method='inline'),              
+    ]
+
+@module.server
+def text_input_enter_server(input: Inputs, output: Outputs, session: Session, processing):
+
+    # We're going to indepedently set the value when either
+    # * the submit button is pressed
+    # * the Enter button is pressed
+    value = reactive.value(None)
+
+    @reactive.effect
+    @reactive.event(input.chat_submit)
+    def on_click_submit():
+        value.set(input.text_input_enter())
+
+    @reactive.effect
+    @reactive.event(input.enter)
+    def on_press_enter():
+        # input.enter() reports the value of the text input field
+        # because it's easy for users to press Enter quickly while typing
+        # before input.text_input_enter() has had a chance to update
+        value.set(input.enter())
+
+    @reactive.effect
+    @reactive.event(processing)
+    def on_processing_change():
+        ui.update_task_button(id="text_input_submit", state="busy" if processing.get() else "ready")
+
+    return value
