@@ -29,17 +29,11 @@ enhancers = load_config('enhancers')
 # --------
 
 @module.ui
-def message_ui():
-    return ui.output_ui("message_content")
-
-@module.server
-def message_server(input: Inputs, output: Outputs, session: Session, message):
-    @render.ui
-    def message_content():
-        return ui.card(
-            ui.markdown(message["content"], render_func=md.render),
-            class_="text-primary" if message["role"] == "assistant" else None
-        )
+def message_ui(message):
+    return ui.card(
+        ui.markdown(message["content"], render_func=md.render),
+        class_="text-primary" if message["role"] == "assistant" else None
+    )
 
 # --------
 # MAIN
@@ -129,8 +123,7 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         message_value = current_message.get()
         if not len(message_value):
             return None
-        message_server("current_message", message_value)
-        return message_ui("current_message")
+        return message_ui("current_message", message_value)
 
     def stream_response(collection_name, user_input, task, persona, selected_enhancers, source_file):
         context = get_context(client, collection_name, REFERENCE_LIMIT, user_input)
@@ -154,7 +147,6 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         else:
             yield "No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."
 
-    @ui.bind_task_button(button_id="chat_submit")
     @reactive.extended_task
     async def process_chat(collection_name, user_input, task, persona, selected_enhancers, source_file):       
             message_text = ""
@@ -220,9 +212,4 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
 
     @render.ui
     def message_list():
-        return [message_ui(f"message_{i}") for i, message in enumerate(messages.get())]
-    
-    @reactive.effect
-    def message_servers():
-        for i, message in enumerate(messages.get()):
-            message_server(f"message_{i}", message)
+        return [message_ui(f"message_{i}", message) for i, message in enumerate(messages.get())]
