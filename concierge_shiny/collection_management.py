@@ -72,15 +72,14 @@ def collection_management_server(input: Inputs, output: Outputs, session: Sessio
     @render.ui
     def collection_view():
         if selected_collection.get():
-            return ui.TagList(
-                ui.card(
-                    ui.card_header(
-                        ui.markdown("### Manage")                        
-                    ),
+            return ui.accordion(
+                ingester_ui("ingester"),
+                ui.accordion_panel(
+                    ui.markdown("#### Manage Documents"),
                     *[document_ui(doc["id"], doc) for doc in current_docs.get()],
                     ui.input_action_button(id="delete", label="Delete Collection")
                 ),
-                ingester_ui("ingester")
+                id="collection_management_accordion"
             )
         return ui.markdown("Please create a collection first!")
     

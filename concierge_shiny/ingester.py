@@ -17,7 +17,10 @@ from components import(
 
 @module.ui
 def ingester_ui():
-    return ui.output_ui("ingester_content")
+    return ui.accordion_panel(
+        ui.markdown("#### Ingest Documents"),
+        ui.output_ui("ingester_content")
+    )
 
 @module.server
 def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, client):
@@ -31,10 +34,7 @@ def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir
     
     @render.ui
     def ingester_content():
-        return ui.card(
-            ui.card_header(
-                ui.markdown("### Ingest Documents")
-            ),
+        return ui.TagList(
             ui.markdown("#### Files"),
             ui.output_ui("file_input"),
             ui.markdown("#### URLs"),

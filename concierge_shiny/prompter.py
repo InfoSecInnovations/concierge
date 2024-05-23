@@ -24,6 +24,10 @@ tasks = load_config('tasks')
 personas = load_config('personas')
 enhancers = load_config('enhancers') 
 
+# --------
+# MESSAGE ITEM
+# --------
+
 @module.ui
 def message_ui():
     return ui.output_ui("message_content")
@@ -43,6 +47,10 @@ def prompter_ui():
         ui.markdown("# Prompter"),
         ui.output_ui("prompter_ui")      
     ]
+
+# --------
+# MAIN
+# --------
 
 @module.server
 def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, opensearch_status, client, ollama_status):
