@@ -180,4 +180,22 @@ def get_documents(client, index_name):
         index = index_name
     )
 
-    return [{"type": bucket["key"][0], "source": bucket["key"][1], "chunk_count": bucket["doc_count"]} for bucket in response["aggregations"]["documents"]["buckets"]]
+    return [{"type": bucket["key"][0], "source": bucket["key"][1], "vector_count": bucket["doc_count"]} for bucket in response["aggregations"]["documents"]["buckets"]]
+
+def delete_document(client, index_name, type, source):
+    query = {
+        "query": {
+            "bool": {
+                "filter": [ 
+                    { "term": { "metadata_type": type }},
+                    { "term": { "metadata.source": source }}
+                ]
+            }
+        }
+    }
+    response = client.delete_by_query(
+        body = query,
+        index = index_name
+    )
+
+    return response["deleted"]

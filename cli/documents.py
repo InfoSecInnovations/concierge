@@ -17,5 +17,5 @@ client = get_client()
 documents = get_documents(client, index_name)
 
 for document in documents:
-    print(f"source: {document['source']}, type: {document['type']}, chunks: {document['chunk_count']})")
+    print(f"source: {document['source']}, type: {document['type']}, vectors: {document['vector_count']})")
 
