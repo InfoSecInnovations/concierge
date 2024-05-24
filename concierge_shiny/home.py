@@ -1,5 +1,6 @@
 from shiny import ui, module
 
+
 @module.ui
 def home_ui():
     return ui.markdown(
@@ -29,4 +30,5 @@ def home_ui():
         - Add enhancer files to have parting thoughts
         - Build a loader to allow new data in Concierge
         - Review our github issues, we would love your input
-    """)
+    """
+    )

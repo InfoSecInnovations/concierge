@@ -1,8 +1,8 @@
 import concurrent.futures
 import asyncio
 
-async def asyncify_generator(gen):
 
+async def asyncify_generator(gen):
     pool = concurrent.futures.ThreadPoolExecutor()
     loop = asyncio.get_event_loop()
 
@@ -10,7 +10,7 @@ async def asyncify_generator(gen):
         for x in gen:
             yield x
         raise StopAsyncIteration
-    
+
     iter = wrapped()
 
     while True:
@@ -20,5 +20,3 @@ async def asyncify_generator(gen):
         except StopAsyncIteration:
             pool.shutdown()
             return
-
-    

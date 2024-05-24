@@ -6,30 +6,40 @@ from concierge_backend_lib.opensearch import insert
 from loaders.pdf import load_pdf
 from loaders.web import load_web
 from util.async_generator import asyncify_generator
-from components import(
-    collection_selector_server, 
+from components import (
+    collection_selector_server,
     collection_create_server,
     text_list_ui,
-    text_list_server
+    text_list_server,
 )
+
 
 @module.ui
 def ingester_ui():
     return ui.accordion_panel(
-        ui.markdown("#### Ingest Documents"),
-        ui.output_ui("ingester_content")
+        ui.markdown("#### Ingest Documents"), ui.output_ui("ingester_content")
     )
 
-@module.server
-def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir, selected_collection, collections, client):
 
+@module.server
+def ingester_server(
+    input: Inputs,
+    output: Outputs,
+    session: Session,
+    upload_dir,
+    selected_collection,
+    collections,
+    client,
+):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
 
     collection_selector_server("collection_selector", selected_collection, collections)
-    collection_create_server("collection_creator", selected_collection, collections, client)
+    collection_create_server(
+        "collection_creator", selected_collection, collections, client
+    )
     url_values = text_list_server("url_input_list", file_input_trigger)
-    
+
     @render.ui
     def ingester_content():
         return ui.TagList(
@@ -37,18 +47,13 @@ def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir
             ui.output_ui("file_input"),
             ui.markdown("#### URLs"),
             text_list_ui("url_input_list"),
-            ui.input_task_button(id="ingest", label="Ingest")
-            
+            ui.input_task_button(id="ingest", label="Ingest"),
         )
 
     @render.ui
     @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)
     def file_input():
-        return ui.input_file(
-            id="ingester_files",
-            label=None,
-            multiple=True
-        )
+        return ui.input_file(id="ingester_files", label=None, multiple=True)
 
     async def load_pages(pages, collection_name, label):
         page_progress = tqdm(total=len(pages))
@@ -61,12 +66,12 @@ def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir
         page_progress.close()
 
     async def ingest_files(files, collection_name):
-        os.makedirs(upload_dir, exist_ok=True) # ensure the upload directory exists!
+        os.makedirs(upload_dir, exist_ok=True)  # ensure the upload directory exists!
         for file in files:
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
             shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
-            if file["type"] == 'application/pdf':
+            if file["type"] == "application/pdf":
                 pages = load_pdf(upload_dir, file["name"])
                 await load_pages(pages, collection_name, file["name"])
         ui.notification_show("Finished ingesting files!")
@@ -102,7 +107,7 @@ def ingester_server(input: Inputs, output: Outputs, session: Session, upload_dir
         collection_name = selected_collection.get()
         print(f"ingesting documents into collection {collection_name}")
         del input.ingester_files
-        file_input_trigger.set(file_input_trigger.get() + 1) 
+        file_input_trigger.set(file_input_trigger.get() + 1)
         # we have to pass reactive reads into an async function rather than calling from within
         ingest(files, urls, collection_name, ingesting_done.get())
 

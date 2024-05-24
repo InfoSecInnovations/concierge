@@ -9,46 +9,54 @@ import os
 # COLLECTION SELECTOR
 # --------
 
+
 @module.ui
 def collection_selector_ui():
-    return [
-        ui.output_ui("collection_selector")
-    ]
+    return [ui.output_ui("collection_selector")]
+
 
 @module.server
-def collection_selector_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections):
-
+def collection_selector_server(
+    input: Inputs, output: Outputs, session: Session, selected_collection, collections
+):
     @render.ui
     def collection_selector():
         return ui.output_ui("select_dropdown")
-    
+
     @render.ui
     def select_dropdown():
         req(collections.get())
-        return ui.input_select(id="internal_selected_collection", label="Select Collection", choices=collections.get(), selected=selected_collection.get())
-    
+        return ui.input_select(
+            id="internal_selected_collection",
+            label="Select Collection",
+            choices=collections.get(),
+            selected=selected_collection.get(),
+        )
+
     @reactive.effect
     def update_selection():
         selected_collection.set(input.internal_selected_collection())
+
 
 # --------
 # STATUS
 # --------
 
+
 @module.ui
 def status_ui():
     return ui.output_ui("status_widget")
 
+
 @module.server
 def status_server(input: Inputs, output: Outputs, session: Session):
-
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
 
     @reactive.extended_task
     async def get_ollama_status():
         return await asyncify(check_ollama)
-    
+
     @reactive.extended_task
     async def get_opensearch_status():
         return await asyncify(check_opensearch)
@@ -71,29 +79,27 @@ def status_server(input: Inputs, output: Outputs, session: Session):
     def status_widget():
         return ui.card(
             ui.markdown(f"{'🟢' if opensearch_status.get() else '🔴'} OpenSearch"),
-            ui.markdown(f"{'🟢' if ollama_status.get() else '🔴'} Ollama")
+            ui.markdown(f"{'🟢' if ollama_status.get() else '🔴'} Ollama"),
         )
-    
+
     @reactive.calc
     def result():
-        return { "opensearch": opensearch_status.get(), "ollama": ollama_status.get()}
-    
+        return {"opensearch": opensearch_status.get(), "ollama": ollama_status.get()}
+
     return result
+
 
 # --------
 # TEXT INPUT LIST
 # --------
 
+
 @module.ui
 def text_list_ui():
     container_id = module.resolve_id("input_list_container")
     list_id = module.resolve_id("input_list")
-    return ui.div(
-        ui.div(
-            ui.input_text("input_0", None),
-            id=list_id), 
-        id=container_id
-    )
+    return ui.div(ui.div(ui.input_text("input_0", None), id=list_id), id=container_id)
+
 
 @module.server
 def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger):
@@ -104,17 +110,15 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
     @reactive.calc
     def input_values():
         return [input[id]() for id in input_ids.get()]
-    
+
     @reactive.effect
     @reactive.event(input_values, ignore_none=False, ignore_init=False)
     def handle_inputs():
-        # if IDs were deleted, remake the whole input list  
+        # if IDs were deleted, remake the whole input list
         if not len(input_ids.get()):
             ui.remove_ui(selector=f"#{container_id} *", multiple=True, immediate=True)
             ui.insert_ui(
-                ui.div(id=list_id),
-                selector=f"#{container_id}",
-                immediate=True
+                ui.div(id=list_id), selector=f"#{container_id}", immediate=True
             )
 
         # if there's already an empty input we don't need more
@@ -123,25 +127,24 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
 
         # insert new ID and corresponding element if all existing ones have values
         idx = rand_hex(4)
-        new_id = f"input_{idx}"       
+        new_id = f"input_{idx}"
         input_ids.set([*input_ids.get(), new_id])
-        ui.insert_ui(
-            ui.input_text(new_id, None),
-            selector=f"#{list_id}"
-        )
+        ui.insert_ui(ui.input_text(new_id, None), selector=f"#{list_id}")
 
     @reactive.effect
     @reactive.event(clear_trigger, ignore_init=True)
     def clear_inputs():
         for id in input_ids.get():
-            del input[id]   
+            del input[id]
         input_ids.set([])
 
     return input_values
 
+
 # --------
 # TEXT INPUT ENTER
 # --------
+
 
 @module.ui
 def text_input_enter_ui(label, placeholder):
@@ -151,7 +154,7 @@ def text_input_enter_ui(label, placeholder):
         ui.div(
             ui.div(
                 ui.tags.input(
-                    id= id_input,
+                    id=id_input,
                     type="text",
                     class_="form-control",
                     placeholder=placeholder,
@@ -159,20 +162,27 @@ def text_input_enter_ui(label, placeholder):
                 ),
                 ui.input_task_button(id="text_input_submit", label=label),
                 class_="input-group",
-            ),                   
+            ),
             {
                 "class": "text-input-enter",
                 # We'll use this ID in the JavaScript to report the value
                 # so the Shiny app can call `input.enter()` inside the module
-                "data-enter-id": id_enter
-            }
+                "data-enter-id": id_enter,
+            },
         ),
-        ui.include_js(os.path.abspath(os.path.join(os.path.dirname(__file__), 'js', 'text_input_enter.js')), method='inline'),              
+        ui.include_js(
+            os.path.abspath(
+                os.path.join(os.path.dirname(__file__), "js", "text_input_enter.js")
+            ),
+            method="inline",
+        ),
     ]
 
-@module.server
-def text_input_enter_server(input: Inputs, output: Outputs, session: Session, processing):
 
+@module.server
+def text_input_enter_server(
+    input: Inputs, output: Outputs, session: Session, processing
+):
     # We're going to indepedently set the value when either
     # * the submit button is pressed
     # * the Enter button is pressed
@@ -194,9 +204,12 @@ def text_input_enter_server(input: Inputs, output: Outputs, session: Session, pr
     @reactive.effect
     @reactive.event(processing)
     def on_processing_change():
-        ui.update_task_button(id="text_input_submit", state="busy" if processing.get() else "ready")
+        ui.update_task_button(
+            id="text_input_submit", state="busy" if processing.get() else "ready"
+        )
 
     return value
+
 
 # --------
 # COLLECTION CREATOR
@@ -204,16 +217,26 @@ def text_input_enter_server(input: Inputs, output: Outputs, session: Session, pr
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
+
 @module.ui
 def collection_create_ui():
     return [
         text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER),
-        ui.markdown("Hint: Collection names must contain only letters, numbers, or underscores.")
+        ui.markdown(
+            "Hint: Collection names must contain only letters, numbers, or underscores."
+        ),
     ]
 
+
 @module.server
-def collection_create_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections, client):
-    
+def collection_create_server(
+    input: Inputs,
+    output: Outputs,
+    session: Session,
+    selected_collection,
+    collections,
+    client,
+):
     creating = reactive.value(False)
     new_collection_name = text_input_enter_server("new_collection", creating)
 
@@ -240,4 +263,9 @@ def collection_create_server(input: Inputs, output: Outputs, session: Session, s
             new_collection_name.set("")
             print(f"created collection {selected_collection.get()}")
             collections.set(get_indices(client))
-            ui.update_text(id="new_collection_name", label=None, value="", placeholder=COLLECTION_PLACEHOLDER)
+            ui.update_text(
+                id="new_collection_name",
+                label=None,
+                value="",
+                placeholder=COLLECTION_PLACEHOLDER,
+            )

@@ -3,6 +3,7 @@ import argparse
 from dataclasses import dataclass
 from collections.abc import Callable
 
+
 @dataclass
 class ArgumentData:
     @dataclass
@@ -16,6 +17,7 @@ class ArgumentData:
     description: list[str]
     input: InputData
     condition: Callable[[ArgumentProcessor], bool] | None = None
+
 
 class ArgumentProcessor:
     def __init__(self, arguments: list[ArgumentData]) -> None:
@@ -31,7 +33,14 @@ class ArgumentProcessor:
         if input_data.prompt:
             input_text += input_data.prompt + " "
         if input_data.options:
-            input_text += " or ".join([f"[{input_option}]" if input_option == input_default else input_option for input_option in input_data.options])
+            input_text += " or ".join(
+                [
+                    f"[{input_option}]"
+                    if input_option == input_default
+                    else input_option
+                    for input_option in input_data.options
+                ]
+            )
         elif input_default:
             input_text += f"[{input_default}]"
         input_text += ": "
@@ -59,4 +68,9 @@ class ArgumentProcessor:
             print("\n")
 
     def get_command_parameters(self):
-        return " " + " ".join([f"--{argument.key}={self.parameters[argument.key]}" for argument in self.arguments])
+        return " " + " ".join(
+            [
+                f"--{argument.key}={self.parameters[argument.key]}"
+                for argument in self.arguments
+            ]
+        )
