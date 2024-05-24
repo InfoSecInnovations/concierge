@@ -103,7 +103,7 @@ def insert (client, index_name, pages):
             }
             entries.append(entry)
         yield (index, total)
-    helpers.bulk(client, entries)
+    helpers.bulk(client, entries, refresh=True)
 
 def insert_with_tqdm (client, index_name, pages):
     page_progress = tqdm(total=len(pages))
