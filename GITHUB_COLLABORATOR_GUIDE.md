@@ -2,6 +2,10 @@
 
 This is for internal use for those who have permissions to manage the repository, but is published here for transparency and easy access by ourselves.
 
+## Linting
+
+We have the ruff linter configured to catch common errors and formatting issues. After installing dependencies please run `pre-commit install` inside the venv to configure the pre-commit linting hook.
+
 ## Versioning
 
 We will be using [semver](https://semver.org/) to number releases, i.e. MAJOR.MINOR.PATCH. While still in Alpha and Beta phases versions will be 0.x.x. To clarify that we expect bugs and other issues we prefix the release names with "Alpha" during initial development phase, and "Beta" when we feel we're close to 1.0.0 but not quite able to call it production ready.
