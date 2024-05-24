@@ -13,3 +13,4 @@ configobj
 shiny
 shinyswatch
 opensearch-py
+ruff

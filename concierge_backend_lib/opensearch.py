@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch, helpers
-from pympler.asizeof import asizeof
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm

@@ -1,4 +1,4 @@
-from shiny import ui, Inputs, Outputs, Session, module, reactive, render, req
+from shiny import ui, Inputs, Outputs, Session, module, reactive, render
 from configobj import ConfigObj
 from pathlib import Path
 import os

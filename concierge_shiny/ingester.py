@@ -7,9 +7,7 @@ from loaders.pdf import load_pdf
 from loaders.web import load_web
 from util.async_generator import asyncify_generator
 from components import(
-    collection_selector_ui, 
     collection_selector_server, 
-    collection_create_ui, 
     collection_create_server,
     text_list_ui,
     text_list_server

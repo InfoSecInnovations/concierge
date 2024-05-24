@@ -9,7 +9,6 @@ from util.async_single import asyncify
 from concierge_backend_lib.opensearch import get_indices, delete_index, get_documents, delete_document
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-import asyncio
 
 # --------
 # DOCUMENT
