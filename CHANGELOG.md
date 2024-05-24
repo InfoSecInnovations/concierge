@@ -6,12 +6,16 @@
 
 - Vector Database backend now uses OpenSearch instead of Milvus. This will give us many more options with managing metadata from the ingested documents as well as strong RBAC features.
 - `install.py` should be a little more intuitive to use now.
+- Loader page has been merged into Collection Management
 
 ### Added
 
 - `delete_index` command
 - `documents` command
 - `list_indices` command
+- `delete_document` command
+- Ability to view documents in collection
+- Ability to delete documents from collection
 
 ## 0.2.0 - 2024-05-15
 
