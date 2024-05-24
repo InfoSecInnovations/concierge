@@ -6,37 +6,6 @@ from util.async_single import asyncify
 import os
 
 # --------
-# COLLECTION CREATOR
-# --------
-
-COLLECTION_PLACEHOLDER = "new_collection_name"
-
-@module.ui
-def collection_create_ui():
-    return [
-        ui.layout_columns(
-            ui.input_text(id="new_collection_name", label=None, placeholder=COLLECTION_PLACEHOLDER),
-            ui.input_action_button(id="create_collection", label="New Collection"),
-            col_widths=[8, 4]
-        ),
-        ui.markdown("Hint: Collection names must contain only letters, numbers, or underscores.")
-    ]
-
-@module.server
-def collection_create_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections, client):
-    
-    @reactive.effect
-    @reactive.event(input.create_collection, ignore_none=False, ignore_init=True)
-    def create_new_collection():
-        req(input.new_collection_name())
-        new_name = input.new_collection_name()
-        ensure_index(client, new_name)
-        print(f"created collection {new_name}")
-        collections.set(get_indices(client))
-        selected_collection.set(new_name)
-        ui.update_text(id="new_collection_name", label=None, value="", placeholder=COLLECTION_PLACEHOLDER)
-
-# --------
 # COLLECTION SELECTOR
 # --------
 
@@ -176,16 +145,24 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
 
 @module.ui
 def text_input_enter_ui(label, placeholder):
+    id_input = module.resolve_id("text_input_enter")
     id_enter = module.resolve_id("enter")
     return [
         ui.div(
-            ui.row(
-                ui.column(9, ui.input_text(id="text_input_enter", label=None, placeholder=placeholder, width="100%")),
-                ui.column(3, ui.input_task_button(id="text_input_submit", label=label))
+            ui.div(
+                ui.tags.input(
+                    id= id_input,
+                    type="text",
+                    class_="form-control",
+                    placeholder=placeholder,
+                    aria_label=placeholder,
+                ),
+                ui.input_task_button(id="text_input_submit", label=label),
+                class_="input-group",
             ),                   
             {
                 "class": "text-input-enter",
-                # We'll use this ID in the JavaScript to report the value value
+                # We'll use this ID in the JavaScript to report the value
                 # so the Shiny app can call `input.enter()` inside the module
                 "data-enter-id": id_enter
             }
@@ -220,3 +197,47 @@ def text_input_enter_server(input: Inputs, output: Outputs, session: Session, pr
         ui.update_task_button(id="text_input_submit", state="busy" if processing.get() else "ready")
 
     return value
+
+# --------
+# COLLECTION CREATOR
+# --------
+
+COLLECTION_PLACEHOLDER = "new_collection_name"
+
+@module.ui
+def collection_create_ui():
+    return [
+        text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER),
+        ui.markdown("Hint: Collection names must contain only letters, numbers, or underscores.")
+    ]
+
+@module.server
+def collection_create_server(input: Inputs, output: Outputs, session: Session, selected_collection, collections, client):
+    
+    creating = reactive.value(False)
+    new_collection_name = text_input_enter_server("new_collection", creating)
+
+    @reactive.extended_task
+    async def create_collection(collection_name):
+        await asyncify(ensure_index, client, collection_name)
+        creating.set(False)
+
+    @reactive.effect
+    @reactive.event(new_collection_name, ignore_none=True, ignore_init=True)
+    def on_create():
+        req(new_collection_name())
+        new_name = new_collection_name()
+        if not new_name:
+            return
+        creating.set(True)
+        create_collection(new_name)
+
+    @reactive.effect
+    @reactive.event(creating, ignore_none=False, ignore_init=True)
+    def on_created():
+        if not creating.get():
+            selected_collection.set(new_collection_name.get())
+            new_collection_name.set("")
+            print(f"created collection {selected_collection.get()}")
+            collections.set(get_indices(client))
+            ui.update_text(id="new_collection_name", label=None, value="", placeholder=COLLECTION_PLACEHOLDER)

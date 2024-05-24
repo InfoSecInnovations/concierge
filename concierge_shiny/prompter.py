@@ -96,27 +96,14 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
     def prompter_ui():
         loaded = llm_loaded.get() and ollama_status.get() and opensearch_status.get()
         if loaded:
-            task_list = list(tasks)
-            selected_task = task_list[0] if 'question' not in tasks else 'question'
-            if "task_select" in input and input.task_select() in tasks:
-                selected_task = input.task_select()
             return ui.TagList(
                 ui.output_ui("message_list"),
                 ui.output_ui("current_message_view"),
-                ui.markdown("Please create a collection and ingest some documents into it first!") if not len(collections.get()) else
-                text_input_enter_ui("chat_input", "Chat", tasks[selected_task]["greeting"]),
-                collection_selector_ui("collection_selector"),
-                ui.layout_columns(
-                    ui.input_select(id="task_select", label="Task", choices=task_list, selected=selected_task),
-                    ui.input_select(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
-                    ui.input_select(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
-                ),
-                ui.output_ui("file_input")
+                ui.output_ui("chat_input_section")
             )
-        else:
-            if not ollama_status.get() or not opensearch_status.get():
-                return ui.markdown("Requirements are not online, see sidebar!")
-            return ui.markdown("Loading Language Model, please wait...")
+        if not ollama_status.get() or not opensearch_status.get():
+            return ui.markdown("Requirements are not online, see sidebar!")
+        return ui.markdown("Loading Language Model, please wait...")
 
     @render.ui
     def current_message_view():
@@ -124,6 +111,25 @@ def prompter_server(input: Inputs, output: Outputs, session: Session, upload_dir
         if not len(message_value):
             return None
         return message_ui("current_message", message_value)
+    
+    @render.ui
+    def chat_input_section():
+        if not len(collections.get()):
+            return ui.markdown("Please create a collection and ingest some documents into it first!")
+        task_list = list(tasks)
+        selected_task = task_list[0] if 'question' not in tasks else 'question'
+        if "task_select" in input and input.task_select() in tasks:
+            selected_task = input.task_select()
+        return ui.TagList(
+            text_input_enter_ui("chat_input", "Chat", tasks[selected_task]["greeting"]),
+            collection_selector_ui("collection_selector"),
+            ui.layout_columns(
+                ui.input_select(id="task_select", label="Task", choices=task_list, selected=selected_task),
+                ui.input_select(id="persona_select", label="Persona", choices=['None', *personas.keys()]),
+                ui.input_select(id="enhancers_select", label="Enhancers", choices=list(enhancers), multiple=True)
+            ),
+            ui.output_ui("file_input")
+        )
 
     def stream_response(collection_name, user_input, task, persona, selected_enhancers, source_file):
         context = get_context(client, collection_name, REFERENCE_LIMIT, user_input)

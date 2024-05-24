@@ -5,9 +5,11 @@ from components import (
     collection_selector_ui, 
     collection_selector_server
 )
+from util.async_single import asyncify
 from concierge_backend_lib.opensearch import get_indices, delete_index, get_documents, delete_document
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
+import asyncio
 
 # --------
 # DOCUMENT
@@ -21,17 +23,31 @@ def document_ui(doc):
 
 {doc['vector_count']} vectors
 """),
-        ui.input_action_button("delete_doc", "Delete")
+        ui.input_task_button("delete_doc", "Delete")
     )
 
 @module.server
 def document_server(input: Inputs, output: Outputs, session: Session, client, collection, doc, deletion_callback):
     
+    deleting = reactive.value(False)
+    
+    @ui.bind_task_button(button_id="delete_doc")
+    @reactive.extended_task
+    async def delete():
+        await asyncify(delete_document, client, collection, doc["type"], doc["source"])
+        deleting.set(False)
+    
     @reactive.effect
     @reactive.event(input.delete_doc, ignore_init=True)
     def on_delete():
-        delete_document(client, collection, doc["type"], doc["source"])
-        deletion_callback()
+        deleting.set(True)
+        delete()
+
+    @reactive.effect
+    @reactive.event(deleting, ignore_none=False, ignore_init=True)
+    def on_delete_done():
+        if (not deleting.get()):
+            deletion_callback()
 
 
 # --------
@@ -54,6 +70,7 @@ def collection_management_server(input: Inputs, output: Outputs, session: Sessio
 
     document_delete_trigger = reactive.value(0)
     current_docs = reactive.value([])
+    fetching_docs = reactive.value(False)
 
     def on_delete_document():
         document_delete_trigger.set(document_delete_trigger.get() + 1)
@@ -72,22 +89,34 @@ def collection_management_server(input: Inputs, output: Outputs, session: Sessio
     @render.ui
     def collection_view():
         if selected_collection.get():
-            return ui.accordion(
-                ingester_ui("ingester"),
-                ui.accordion_panel(
-                    ui.markdown("#### Manage Documents"),
-                    *[document_ui(doc["id"], doc) for doc in current_docs.get()],
-                    ui.input_action_button(id="delete", label="Delete Collection")
+            return ui.TagList(
+                ui.accordion(
+                    ingester_ui("ingester"),
+                    ui.accordion_panel(
+                        ui.markdown("#### Manage Documents"),
+                        ui.output_ui("collection_documents")
+                    ),
+                    id="collection_management_accordion",
+                    class_="mb-3"
                 ),
-                id="collection_management_accordion"
+                ui.input_task_button(id="delete", label="Delete Collection")
             )
         return ui.markdown("Please create a collection first!")
     
-    @reactive.effect
-    @reactive.event(input.delete, ignore_init=True)
-    def on_delete():
-        delete_index(client, selected_collection.get())      
-        new_collections = get_indices(client)
+    @render.ui
+    def collection_documents():
+        if fetching_docs.get():
+            return ui.markdown("#### Fetching documents in collection...")
+        return ui.TagList(
+            ui.markdown(f"#### {len(current_docs.get())} documents in collection"),
+            *[document_ui(doc["id"], doc) for doc in current_docs.get()],
+        )
+    
+    @ui.bind_task_button(button_id="delete")
+    @reactive.extended_task
+    async def delete(collection_name):
+        await asyncify(delete_index, client, collection_name)
+        new_collections = await asyncify(get_indices, client)
         collections.set(new_collections)
         if not new_collections:
             selected_collection.set(None)
@@ -95,9 +124,21 @@ def collection_management_server(input: Inputs, output: Outputs, session: Sessio
             selected_collection.set(new_collections[0])
 
     @reactive.effect
+    @reactive.event(input.delete, ignore_init=True)
+    def on_delete():
+        delete(selected_collection.get())
+
+    @reactive.extended_task
+    async def get_documents_task(collection_name):
+        docs = await asyncify(get_documents, client, collection_name)
+        fetching_docs.set(False)
+        current_docs.set([{**doc, "id": rand_hex(4)} for doc in docs])
+
+    @reactive.effect
     @reactive.event(selected_collection, ingestion_done_trigger, document_delete_trigger, ignore_none=False)
     def on_collection_change():
-        current_docs.set([{**doc, "id": rand_hex(4)} for doc in get_documents(client, selected_collection.get())])
+        fetching_docs.set(True)
+        get_documents_task(selected_collection.get())
 
     @reactive.effect
     def document_servers():

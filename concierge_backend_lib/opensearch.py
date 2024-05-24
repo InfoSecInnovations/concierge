@@ -195,7 +195,8 @@ def delete_document(client, index_name, type, source):
     }
     response = client.delete_by_query(
         body = query,
-        index = index_name
+        index = index_name,
+        refresh = True
     )
 
     return response["deleted"]
