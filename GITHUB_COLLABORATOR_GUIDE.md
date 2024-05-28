@@ -2,9 +2,7 @@
 
 This is for internal use for those who have permissions to manage the repository, but is published here for transparency and easy access by ourselves.
 
-## Linting
-
-We have the ruff linter configured to catch common errors and formatting issues. After installing dependencies please run `pre-commit install` inside the venv to configure the pre-commit linting hook.
+Please also make sure to have read the [Contribution Guidelines](CONTRIBUTING.md) thoroughly.
 
 ## Versioning
 

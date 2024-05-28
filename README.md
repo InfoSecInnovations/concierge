@@ -13,10 +13,12 @@ Built with simplicy and security in mind, it has some features we love -- and ho
 * Tasks: you can change what the AI can do for you via dropdowns
 
 ## Dependencies ##  
-Concierge requires the following to be available:
-1. `python` (note: for all commands in documentation we will call the executable `python`. On your system you may need to use `python3`)
-2. Docker (currently the vector database and natural language response engine are running in docker containers)
-3. Docker compose (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup)  
+
+These versions are currently being used to develop Concierge, lower versions may work but are untested. See [Known Issues](#known-issues) for an older Docker Compose command which might work for you if you're unable to upgrade.
+
+- **Python >= 3.12** (note: for all commands in documentation we will call the executable `python`. On your system you may need to use `python3`, you can use the `python-is-python3` package to configure the `python` command on Linux). Check with `python --version`.
+- **Docker >= 25.0.3** (currently the vector database and natural language response engine are running in docker containers). Check with `docker --version`.
+- **Docker Compose >= 2.24.6** (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup). Check with `docker compose version`.  
    
 Optional:  
 If you want to use GPU acceleration (Concierge does NOT require this, but it will make responses dramatically faster), you must have the 
@@ -37,11 +39,13 @@ If you're using Docker Desktop you need to make sure at least 4GB RAM is assigne
 You can get more tips for optimizing your installation here: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, however we have found that Concierge still runs without performing those modifications.
 
 ## Setup: quick install ##
+
 git clone repo or extract zip. 
 
 `cd concierge` go into the cloned project directory.
 
-`python install.py` to launch the installer.  
+`python install.py` to launch the installer. If you wish to contribute to Concierge development, use `python install_dev.py` instead to install the development dependencies as well.
+
 Answer the questions and then the installer will ask if you are ready to make changes to the system.  
 Answer "yes" and let the downloading begin!
 
@@ -62,6 +66,16 @@ Set `OPENSEARCH_INITIAL_ADMIN_PASSWORD` to a strong password of your choice. You
 `docker compose up -d` will load the docker dependencies.
 
 `docker compose -f docker-compose-gpu.yml up -d` will load the docker dependencies and use the GPU.
+
+### Additional steps to enable development environment
+
+Set `ENVIRONMENT` to `development` in `.env` file
+
+`pip install -r dev_requirements.txt` install all development dependencies (this needs to be run in addition to the base requirements file).
+
+`docker compose -f docker-compose-dev.yml up -d` will load the docker dependencies for developers.
+
+`docker compose -f docker-compose-dev-gpu.yml up -d` will load the docker dependencies for developers and use the GPU.
 
 ## Usage: launch script
 

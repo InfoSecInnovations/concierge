@@ -166,17 +166,6 @@ def do_install(argument_processor, environment):
 
         pip_loader()
 
-        # docker compose
-        if argument_processor.parameters["compute_method"] == "GPU":
-            docker_compose_helper(environment, "GPU")
-        elif argument_processor.parameters["compute_method"] == "CPU":
-            docker_compose_helper(environment, "CPU")
-        else:
-            # need to do input check to prevent this condition (and others like it)
-            print("You have selected an unknown/unexpected compute method.")
-            print("you will need to run the docker compose file manually")
-            exit()
-
         return True
 
     elif ready_to_rock == "NO":
@@ -187,7 +176,17 @@ def do_install(argument_processor, environment):
         return False
 
 
-def finish_install(argument_processor):
+def finish_install(argument_processor, environment="production"):
+    # docker compose
+    if argument_processor.parameters["compute_method"] == "GPU":
+        docker_compose_helper(environment, "GPU")
+    elif argument_processor.parameters["compute_method"] == "CPU":
+        docker_compose_helper(environment, "CPU")
+    else:
+        # need to do input check to prevent this condition (and others like it)
+        print("You have selected an unknown/unexpected compute method.")
+        print("you will need to run the docker compose file manually")
+        exit()
     # ollama model load
     subprocess.run(
         [

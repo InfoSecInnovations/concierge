@@ -35,4 +35,4 @@ subprocess.run(
     cwd=working_dir,
 )
 
-finish_install(argument_processor)
+finish_install(argument_processor, "development")
