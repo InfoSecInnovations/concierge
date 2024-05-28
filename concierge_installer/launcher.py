@@ -8,6 +8,10 @@ import subprocess
 from script_builder.util import get_venv_executable
 from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_installer.functions import docker_compose_helper
+from dotenv import load_dotenv
+
+load_dotenv()
+environment = os.getenv("ENVIRONMENT")
 
 print("Checking Docker container status...\n")
 requirements_met = False
@@ -28,9 +32,9 @@ if not requirements_met:
         input("Start docker containers with CPU or GPU? [CPU] or GPU:") or "CPU"
     )
     if compute_method == "GPU":
-        docker_compose_helper("GPU")
+        docker_compose_helper(environment, "GPU")
     else:
-        docker_compose_helper("CPU")
+        docker_compose_helper(environment, "CPU")
 
 
 subprocess.run(
@@ -39,6 +43,7 @@ subprocess.run(
         "-m",
         "shiny",
         "run",
+        *(["--reload"] if environment == "development" else []),
         "--launch-browser",
         "concierge_shiny/app.py",
     ]
