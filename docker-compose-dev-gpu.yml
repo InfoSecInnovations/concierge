@@ -4,11 +4,15 @@ services:
   ollama:
     extends:
       file: docker-compose-ollama.yml
-      service: ollama
+      service: ollama-gpu
   opensearch-node1:
     extends:
       file: docker-compose-opensearch.yml
       service: opensearch-node1
+  opensearch-dashboards:
+    extends:
+      file: docker-compose-opensearch.yml
+      service: opensearch-dashboards
 
 volumes:
   opensearch-data1:

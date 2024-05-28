@@ -1,0 +1,3 @@
+[lint]
+# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default. Enable pep8-naming (`N`)
+select = ["E4", "E7", "E9", "F", "N"]

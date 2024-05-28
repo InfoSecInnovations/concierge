@@ -2,28 +2,13 @@ version: '3.5'
 
 services:
   ollama:
-    container_name: ollama
-    image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
-    volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
-    restart: unless-stopped
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    extends:
+      file: docker-compose-ollama.yml
+      service: ollama-gpu
   opensearch-node1:
     extends:
       file: docker-compose-opensearch.yml
       service: opensearch-node1
-  opensearch-dashboards:
-    extends:
-      file: docker-compose-opensearch.yml
-      service: opensearch-dashboards
 
 volumes:
   opensearch-data1:
