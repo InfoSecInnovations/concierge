@@ -1,0 +1,26 @@
+version: '3.5'
+
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
+    restart: unless-stopped
+  ollama-gpu:
+    container_name: ollama
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

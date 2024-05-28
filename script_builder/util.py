@@ -43,12 +43,14 @@ def get_default_directory(is_standalone: bool):
         return r"C:\ProgramData"
 
 
-def get_venv_executable():
+def get_venv_path():
     if is_unix:
-        path = "bin"
-    elif my_platform == "Windows":
-        path = "Scripts"
-    return os.path.join(path, "python")
+        return "bin"
+    return "Scripts"
+
+
+def get_venv_executable():
+    return os.path.join(get_venv_path(), "python")
 
 
 def pip_loader():

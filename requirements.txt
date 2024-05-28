@@ -6,12 +6,8 @@ tqdm
 requests
 langchain-community
 pypdf
-protobuf
-grpcio-tools
 pympler
 configobj
 shiny
 shinyswatch
 opensearch-py
-ruff
-pre-commit
