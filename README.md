@@ -104,7 +104,7 @@ or use the Shiny for Python VSCode extension running from `concierge_shiny/app.p
 
 `docker build -t concierge:latest .`
 
-`docker run --env-file .env -e OPENSEARCH_HOST=opensearch-node1 -e OLLAMA_HOST=ollama -dp 127.0.0.1:8000:8000 --network concierge concierge`
+`docker run --env-file .env -e OPENSEARCH_HOST='opensearch-node1' -e OLLAMA_HOST='ollama' -v /uploads -dp 127.0.0.1:8000:8000 --network concierge concierge`
 
 ## CLI ##
 
