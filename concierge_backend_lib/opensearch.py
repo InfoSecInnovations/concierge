@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 load_dotenv()
 OPENSEARCH_INITIAL_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
+HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
 
 chunk_size = 200
 chunk_overlap = 25
@@ -19,7 +20,7 @@ splitter = RecursiveCharacterTextSplitter(
 
 
 def get_client():
-    host = "localhost"
+    host = HOST
     port = 9200
     auth = ("admin", OPENSEARCH_INITIAL_ADMIN_PASSWORD)
 
