@@ -100,6 +100,12 @@ If running for development you can use this command instead:
 
 or use the Shiny for Python VSCode extension running from `concierge_shiny/app.py`. At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
 
+## Run in Docker (WIP)
+
+`docker build -t concierge:latest .`
+
+`docker run --env-file .env -e OPENSEARCH_HOST=opensearch-node1 -e OLLAMA_HOST=ollama -dp 127.0.0.1:8000:8000 --network concierge concierge`
+
 ## CLI ##
 
 While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.

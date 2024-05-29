@@ -1,0 +1,34 @@
+# .env file used to set local paths for Docker and scripts
+.env
+
+# directory used by web server to store uploaded files
+uploads
+
+# files that appear to be due to installing dependencies, try un-ignoring these if needed
+share
+etc
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+.Python
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
+.venv
+pip-selfcheck.json
+
+# dev dependencies
+.ruff_cache
+.vscode
+
+# compose files
+docker-compose*

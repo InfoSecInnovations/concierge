@@ -1,19 +1,22 @@
 import json
 import requests
+import os
 from sentence_transformers import SentenceTransformer
+
+HOST = os.getenv("OLLAMA_HOST") or "localhost"
 
 
 def load_model():
     # TODO several revs in the future... allow users to pick model.
     # very much low priority atm
-    models = requests.get("http://localhost:11434/api/tags")
+    models = requests.get(f"http://{HOST}:11434/api/tags")
     model_list = json.loads(models.text)["models"]
     if not next(
         filter(lambda x: x["name"].split(":")[0] == "mistral", model_list), None
     ):
         print("mistral model not found. Please wait while it loads.")
         request = requests.post(
-            "http://localhost:11434/api/pull",
+            f"http://{HOST}:11434/api/pull",
             data=json.dumps({"name": "mistral"}),
             stream=True,
         )
@@ -81,9 +84,7 @@ def get_response(
 
     data = {"model": "mistral", "prompt": prompt, "stream": False}
 
-    response = requests.post(
-        "http://127.0.0.1:11434/api/generate", data=json.dumps(data)
-    )
+    response = requests.post(f"http://{HOST}:11434/api/generate", data=json.dumps(data))
 
     print(f"Response: {response}")
 
@@ -112,9 +113,7 @@ def stream_response(
 
     data = {"model": "mistral", "prompt": prompt, "stream": True}
 
-    response = requests.post(
-        "http://127.0.0.1:11434/api/generate", data=json.dumps(data)
-    )
+    response = requests.post(f"http://{HOST}:11434/api/generate", data=json.dumps(data))
 
     for item in response.iter_lines():
         if item:

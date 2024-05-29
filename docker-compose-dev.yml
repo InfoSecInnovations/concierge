@@ -20,4 +20,3 @@ volumes:
 networks:
   default:
     name: concierge
-  opensearch-net:
