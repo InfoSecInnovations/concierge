@@ -1,0 +1,15 @@
+version: '3.5'
+
+services:
+  concierge:
+    build: .
+    container_name: concierge
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/file_uploads:/uploads
+    environment:
+      - OPENSEARCH_HOST=opensearch-node1
+      - OLLAMA_HOST=ollama
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+    ports:
+      - 8000:8000
+    restart: unless-stopped

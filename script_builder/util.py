@@ -53,10 +53,7 @@ def get_venv_executable():
     return os.path.join(get_venv_path(), "python")
 
 
-def pip_loader():
-    working_dir = os.getcwd()
-    venv.create(working_dir, with_pip=True)
-    # pip install command
+def install_requirements(filename="requirements.txt"):
     subprocess.run(
         [
             get_venv_executable(),
@@ -64,10 +61,15 @@ def pip_loader():
             "pip",
             "install",
             "-r",
-            os.path.abspath("requirements.txt"),
-        ],
-        cwd=working_dir,
+            os.path.abspath(filename),
+        ]
     )
+
+
+def setup_pip():
+    working_dir = os.getcwd()
+    venv.create(working_dir, with_pip=True)
+    install_requirements()
 
 
 def get_lines(command):
@@ -77,3 +79,26 @@ def get_lines(command):
             subprocess.run(command, capture_output=True, text=True).stdout.split("\n"),
         )
     )
+
+
+def get_install_status(apply_message, cancel_message):
+    ready_to_rock = input(
+        f'{apply_message} Please type "yes" to continue. (yes/no): '
+    ).upper()
+
+    if ready_to_rock == "YES":
+        # no further input is needed. Let's get to work.
+        print("installing...")
+        return True
+
+    elif ready_to_rock == "NO":
+        print(f"{cancel_message}\n\n")
+        exit()
+
+    else:
+        return False
+
+
+def prompt_install(apply_message, cancel_message):
+    while not get_install_status(apply_message, cancel_message):
+        print("Answer needs to be yes or no!\n")

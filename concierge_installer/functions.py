@@ -1,7 +1,7 @@
 import subprocess
 import os
 import shutil
-from script_builder.util import require_admin, pip_loader, get_lines
+from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
 
 
@@ -140,43 +140,28 @@ def docker_compose_helper(environment, compute_method):
     )
 
 
-def do_install(argument_processor, environment):
-    ready_to_rock = input(
-        'Ready to apply settings and start downloading? Please type "yes" to continue. (yes/no): '
-    ).upper()
+def prompt_concierge_install():
+    prompt_install(
+        "Ready to apply settings and start downloading?",
+        "Install cancelled. No changes were made. Have a nice day! :-)",
+    )
 
-    if ready_to_rock == "YES":
-        # no further input is needed. Let's get to work.
-        print("installing...")
 
-        # setup .env (needed for docker compose files)
-        with open(".env", "w") as env_file:
-            # write .env info needed
-            env_file.writelines(
-                "\n".join(
-                    [
-                        "DOCKER_VOLUME_DIRECTORY="
-                        + argument_processor.parameters["docker_volumes"],
-                        "OPENSEARCH_INITIAL_ADMIN_PASSWORD="
-                        + argument_processor.parameters["opensearch_password"],
-                        "ENVIRONMENT=" + environment,
-                    ]
-                )
+def install_docker(argument_processor, environment="production"):
+    # setup .env (needed for docker compose files)
+    with open(".env", "w") as env_file:
+        # write .env info needed
+        env_file.writelines(
+            "\n".join(
+                [
+                    "DOCKER_VOLUME_DIRECTORY="
+                    + argument_processor.parameters["docker_volumes"],
+                    "OPENSEARCH_INITIAL_ADMIN_PASSWORD="
+                    + argument_processor.parameters["opensearch_password"],
+                    "ENVIRONMENT=" + environment,
+                ]
             )
-
-        pip_loader()
-
-        return True
-
-    elif ready_to_rock == "NO":
-        print("Install cancelled. No changes were made. Have a nice day! :-)\n\n")
-        exit()
-
-    else:
-        return False
-
-
-def finish_install(argument_processor, environment="production"):
+        )
     # docker compose
     if argument_processor.parameters["compute_method"] == "GPU":
         docker_compose_helper(environment, "GPU")
@@ -199,11 +184,3 @@ def finish_install(argument_processor, environment="production"):
             argument_processor.parameters["language_model"],
         ]
     )
-    print(
-        "\nInstall completed. To start Concierge use the following command: python launch.py\n\n"
-    )
-
-
-def start_install(argument_processor, environment="production"):
-    while not do_install(argument_processor, environment):
-        print("Answer needs to be yes or no!\n")

@@ -9,6 +9,10 @@ services:
     extends:
       file: docker-compose-opensearch.yml
       service: opensearch-node1
+  concierge:
+    extends:
+      file: docker-compose-concierge.yml
+      service: concierge
 
 volumes:
   opensearch-data1:

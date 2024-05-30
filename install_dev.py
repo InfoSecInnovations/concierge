@@ -1,38 +1,28 @@
+# The dev install script configures the Docker environment and containers
+
 from concierge_installer.arguments import install_arguments
 from concierge_installer.functions import (
     init_arguments,
     clean_up_existing,
     prompt_for_parameters,
-    start_install,
-    finish_install,
+    prompt_concierge_install,
+    install_docker,
 )
 import subprocess
-from script_builder.util import get_venv_executable, get_venv_path
+from script_builder.util import get_venv_path, setup_pip, install_requirements
 import os
 
 argument_processor = init_arguments(install_arguments)
 clean_up_existing()
 prompt_for_parameters(argument_processor)
-start_install(argument_processor, "development")
-
-# install dev requirements
-working_dir = os.getcwd()
-subprocess.run(
-    [
-        get_venv_executable(),
-        "-m",
-        "pip",
-        "install",
-        "-r",
-        os.path.abspath("dev_requirements.txt"),
-    ],
-    cwd=working_dir,
-)
+prompt_concierge_install()
+setup_pip()
+install_requirements("dev_requirements.txt")
 
 # install git commit linter hook
-subprocess.run(
-    [os.path.join(get_venv_path(), "pre-commit"), "install"],
-    cwd=working_dir,
-)
+subprocess.run([os.path.join(get_venv_path(), "pre-commit"), "install"])
 
-finish_install(argument_processor, "development")
+install_docker(argument_processor, "development")
+print(
+    "\nInstall completed. To start Concierge use the following command: python launch_dev.py\n\n"
+)

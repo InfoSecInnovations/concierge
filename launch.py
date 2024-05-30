@@ -1,4 +1,9 @@
-import subprocess
-from script_builder.util import get_venv_executable
+from concierge_installer.functions import docker_compose_helper
 
-subprocess.run([get_venv_executable(), "concierge_installer/launcher.py"])
+compute_method = (
+    input("Start docker containers with CPU or GPU? [CPU] or GPU:") or "CPU"
+)
+if compute_method == "GPU":
+    docker_compose_helper("production", "GPU")
+else:
+    docker_compose_helper("production", "CPU")
