@@ -38,13 +38,32 @@ If you're using Docker Desktop you need to make sure at least 4GB RAM is assigne
 
 You can get more tips for optimizing your installation here: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, however we have found that Concierge still runs without performing those modifications.
 
+## Setup
+
+### Quick install
+
+git clone repo or extract zip. 
+
+`cd concierge` go into the cloned project directory.
+
+`python install.py` to launch the installer.
+
+Answer the questions and then the installer will ask if you are ready to make changes to the system.  
+Answer "yes" and let the downloading begin!
+
+### Manual install
+
+If `install.py` did not work, follow these steps to setup your system. 
+
+## Setup: development environment
+
 ## Setup: quick install ##
 
 git clone repo or extract zip. 
 
 `cd concierge` go into the cloned project directory.
 
-`python install.py` to launch the installer. If you wish to contribute to Concierge development, use `python install_dev.py` instead to install the development dependencies as well.
+`python install.py` to launch the installer. If you wish to contribute to Concierge development, use `python install_dev.py` instead to install the development environment.
 
 Answer the questions and then the installer will ask if you are ready to make changes to the system.  
 Answer "yes" and let the downloading begin!
