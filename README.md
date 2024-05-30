@@ -55,69 +55,75 @@ Answer "yes" and let the downloading begin!
 
 If `install.py` did not work, follow these steps to setup your system. 
 
+Copy `.env.example` into a file named `.env`
+
+Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Concierge data to be stored
+
+Set `OPENSEARCH_INITIAL_ADMIN_PASSWORD` to a strong password of your choice. You can evaluate password strength using https://lowe.github.io/tryzxcvbn/. Please note that in the current version of Concierge this isn't actually very secure due to it being stored in plaintext in the `.env` file! We will introduce better credential handling in future versions, the current way will become "dev/demo mode" for getting Concierge running quickly without proper security measures in place.
+
+`docker compose up -d` will start Concierge and its dependencies in Docker.
+
+`docker compose -f docker-compose-gpu.yml up -d` will start Concierge and its dependencies in Docker and use the GPU.
+
+## Usage
+
+Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:8000. It can take a couple of minutes for the containers to be ready after install or relaunch.
+
+If the containers aren't running properly you can try using `python launch.py` to launch them again.
+
 ## Setup: development environment
 
-## Setup: quick install ##
+### Quick install
 
-git clone repo or extract zip. 
+Follow the same instructions as for production, except use `install_dev.py` instead of `install.py`
 
-`cd concierge` go into the cloned project directory.
+### Manual install
 
-`python install.py` to launch the installer. If you wish to contribute to Concierge development, use `python install_dev.py` instead to install the development environment.
+Configure the `.env` file as above.
 
-Answer the questions and then the installer will ask if you are ready to make changes to the system.  
-Answer "yes" and let the downloading begin!
-
-
-## Setup: manual ##
-If `install.py` did not work, follow these steps to setup your system. 
+Set `ENVIRONMENT` to `development`
 
 `python -m venv .` create a python virtual environment in the current directory.
 
 Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` enter into the virtual environment.
 
-`pip install -r requirements.txt` install all dependencies.
-
-Copy `.env.example` into a file named `.env` and set the folder on your computer that will contain the concierge data.
-
-Set `OPENSEARCH_INITIAL_ADMIN_PASSWORD` to a strong password of your choice. You can evaluate password strength using https://lowe.github.io/tryzxcvbn/. Please note that in the current version of Concierge this isn't actually very secure due to it being stored in plaintext in the `.env` file! We will introduce better credential handling in future versions, the current way will become "dev/demo mode" for getting Concierge running quickly without proper security measures in place.
-
-`docker compose up -d` will load the docker dependencies.
-
-`docker compose -f docker-compose-gpu.yml up -d` will load the docker dependencies and use the GPU.
-
-### Additional steps to enable development environment
-
-Set `ENVIRONMENT` to `development` in `.env` file
-
-`pip install -r dev_requirements.txt` install all development dependencies (this needs to be run in addition to the base requirements file).
+`pip install -r requirements.txt -r dev_requirements.txt` install all dependencies.
 
 `docker compose -f docker-compose-dev.yml up -d` will load the docker dependencies for developers.
 
 `docker compose -f docker-compose-dev-gpu.yml up -d` will load the docker dependencies for developers and use the GPU.
 
-## Usage: launch script
+## Usage: development environment
 
-From the cloned project directory simply run `launch.py`.
+Complete one of the installation methods above
+
+### Visual Studio Code
+
+Install Shiny for Python VSCode extension.
+
+Run Shiny for Python VSCode extension from `concierge_shiny/app.py`. 
+
+At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
+
+You can also access the URL by pasting it into another browser.
+
+### Launch script
+
+From the cloned project directory simply run `launch_dev.py`.
 
 If the Docker container dependencies aren't found, you will be given the option to launch with CPU or GPU.
 
-## Usage: manual ##
-If `launch.py` did not work:
+### Manual launch
+
+If the above methods did not work:
 
 If you are not in the python virtual environment, please enter it by the correct method:  
-Linux: `source ./bin/activate`  
+Linux and MacOS: `source ./bin/activate`  
 Windows PowerShell: `.\Scripts\Activate.ps1`
 
 To start the web UI, run the following command:
 
-`python -m shiny run --launch-browser concierge_shiny/app.py`
-
-If running for development you can use this command instead:
-
 `python -m shiny run --reload --launch-browser concierge_shiny/app.py`
-
-or use the Shiny for Python VSCode extension running from `concierge_shiny/app.py`. At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
 
 ## CLI ##
 
@@ -140,7 +146,7 @@ Available commands:
 ## Known issues
 
 - `unknown shorthand flag: 'd' in -d` and/or you have the `docker-compose` command instead of `docker compose`. This indicates that you're using an older version of Docker than we support. The best course of action would be to install the latest version following instructions from here: https://docs.docker.com/engine/install/. However if you're unable to do this, you may be able to get the Concierge Docker requirements running using `docker-compose --file ./docker-compose.yml up`.
-- on MacOS urllib3 gives a `NotOpenSSLWarning`, as far as we aware you can ignore this warning without issue.
+- on MacOS urllib3 gives a `NotOpenSSLWarning`, as far as we aware you can ignore this warning without issue. This should only be present when using the development environment
 
 ## Want to get involved? ##
 
