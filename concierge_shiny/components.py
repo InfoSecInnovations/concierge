@@ -189,7 +189,7 @@ def text_input_enter_server(
     value = reactive.value(None)
 
     @reactive.effect
-    @reactive.event(input.chat_submit)
+    @reactive.event(input.text_input_submit)
     def on_click_submit():
         value.set(input.text_input_enter())
 
