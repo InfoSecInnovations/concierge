@@ -14,6 +14,7 @@ from components import (
 )
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs
+from functions import chunk_link
 
 md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
@@ -177,11 +178,7 @@ def prompter_server(
         if len(context["sources"]):
             yield "Responding based on the following sources:\n\n"
             for source in context["sources"]:
-                metadata = source["metadata"]
-                if source["type"] == "pdf":
-                    yield f'   PDF File: [page {metadata["page"]} of {metadata["filename"]}](<uploads/{metadata["filename"]}#page={metadata["page"]}>){{target="_blank"}}\n\n'
-                if source["type"] == "web":
-                    yield f'   Web page: <{metadata["source"]}>{{target="_blank"}} scraped {metadata["ingest_date"]}\n\n'
+                yield f"{chunk_link(upload_dir, source)}\n\n"
             if "prompt" in tasks[task]:
                 yield get_response(
                     context["context"],

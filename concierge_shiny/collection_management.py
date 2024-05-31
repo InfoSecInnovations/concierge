@@ -14,6 +14,11 @@ from concierge_backend_lib.opensearch import (
 )
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
+from functions import doc_link
+from markdown_it import MarkdownIt
+from mdit_py_plugins import attrs
+
+md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
 # --------
 # DOCUMENT
@@ -21,13 +26,16 @@ from shiny._utils import rand_hex
 
 
 @module.ui
-def document_ui(doc):
+def document_ui(upload_dir, doc):
     return ui.card(
-        ui.markdown(f"""
-{doc['type']}: {doc['source']}
+        ui.markdown(
+            f"""
+{doc_link(upload_dir, doc)}
 
 {doc['vector_count']} vectors
-"""),
+""",
+            render_func=md.render,
+        ),
         ui.input_task_button("delete_doc", "Delete"),
     )
 
@@ -117,11 +125,18 @@ def collection_management_server(
     def collection_view():
         if selected_collection.get():
             return ui.TagList(
+                ui.markdown(f"### Selected collection: {selected_collection.get()}"),
                 ui.accordion(
                     ingester_ui("ingester"),
                     ui.accordion_panel(
-                        ui.markdown("#### Manage Documents"),
+                        ui.div(
+                            ui.markdown("#### Manage Documents"),
+                            ui.markdown(
+                                f"({len(current_docs.get())} documents in collection)"
+                            ),
+                        ),
                         ui.output_ui("collection_documents"),
+                        value="manage_documents",
                     ),
                     id="collection_management_accordion",
                     class_="mb-3",
@@ -136,7 +151,7 @@ def collection_management_server(
             return ui.markdown("#### Fetching documents in collection...")
         return ui.TagList(
             ui.markdown(f"#### {len(current_docs.get())} documents in collection"),
-            *[document_ui(doc["id"], doc) for doc in current_docs.get()],
+            *[document_ui(doc["id"], upload_dir, doc) for doc in current_docs.get()],
         )
 
     @ui.bind_task_button(button_id="delete")
