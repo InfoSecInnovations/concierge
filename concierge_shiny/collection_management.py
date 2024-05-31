@@ -150,7 +150,6 @@ def collection_management_server(
         if fetching_docs.get():
             return ui.markdown("#### Fetching documents in collection...")
         return ui.TagList(
-            ui.markdown(f"#### {len(current_docs.get())} documents in collection"),
             *[document_ui(doc["id"], upload_dir, doc) for doc in current_docs.get()],
         )
 
