@@ -270,8 +270,6 @@ def prompter_server(
             return
         messages.set(messages.get() + [current_message.get()])
         current_message.set({})
-        # we do this to allow the user to sumbit the same prompt twice
-        prompt.set(None)
         # this will clear the file input
         current_file_id.set(current_file_id.get() + 1)
 

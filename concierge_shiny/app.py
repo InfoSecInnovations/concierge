@@ -6,6 +6,7 @@ from concierge_backend_lib.opensearch import get_indices, get_client
 import os
 import shinyswatch
 from components import status_ui, status_server
+from util.async_single import asyncify
 
 UPLOADS_DIR = "uploads"
 
@@ -50,10 +51,14 @@ def server(input: Inputs, output: Outputs, session: Session):
     status = status_server("status_widget")
     shinyswatch.theme_picker_server()
 
+    @reactive.extended_task
+    async def set_collections():
+        collections.set(await asyncify(get_indices, client))
+
     @reactive.effect
-    def set_collections():
+    def update_collections():
         if opensearch_status.get():
-            collections.set(get_indices(client))
+            set_collections()
         else:
             collections.set([])
 

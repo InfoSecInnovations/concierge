@@ -207,6 +207,9 @@ def text_input_enter_server(
         ui.update_task_button(
             id="text_input_submit", state="busy" if processing.get() else "ready"
         )
+        # clearing the value means that you can resubmit the same text and it will trigger the reactivity again
+        if not processing.get():
+            value.set(None)
 
     return value
 
@@ -243,6 +246,9 @@ def collection_create_server(
     @reactive.extended_task
     async def create_collection(collection_name):
         await asyncify(ensure_index, client, collection_name)
+        selected_collection.set(collection_name)
+        print(f"created collection {collection_name}")
+        collections.set(await asyncify(get_indices, client))
         creating.set(False)
 
     @reactive.effect
@@ -254,18 +260,3 @@ def collection_create_server(
             return
         creating.set(True)
         create_collection(new_name)
-
-    @reactive.effect
-    @reactive.event(creating, ignore_none=False, ignore_init=True)
-    def on_created():
-        if not creating.get():
-            selected_collection.set(new_collection_name.get())
-            new_collection_name.set("")
-            print(f"created collection {selected_collection.get()}")
-            collections.set(get_indices(client))
-            ui.update_text(
-                id="new_collection_name",
-                label=None,
-                value="",
-                placeholder=COLLECTION_PLACEHOLDER,
-            )
