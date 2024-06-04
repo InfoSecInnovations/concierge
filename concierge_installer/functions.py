@@ -122,12 +122,21 @@ def prompt_for_parameters(argument_processor):
     )
 
 
-def docker_compose_helper(environment, compute_method):
+def docker_compose_helper(environment, compute_method, rebuild=False):
     filename = "docker-compose"
     if environment == "development":
         filename = f"{filename}-dev"
     if compute_method == "GPU":
         filename = f"{filename}-gpu"
+    if rebuild:
+        # pull latest versions
+        subprocess.run(
+            ["docker", "compose", "-f", os.path.abspath(f"{filename}.yml"), "pull"]
+        )
+        # build local concierge image
+        subprocess.run(
+            ["docker", "compose", "-f", os.path.abspath(f"{filename}.yml"), "build"]
+        )
     subprocess.run(
         [
             "docker",
@@ -164,9 +173,9 @@ def install_docker(argument_processor, environment="production"):
         )
     # docker compose
     if argument_processor.parameters["compute_method"] == "GPU":
-        docker_compose_helper(environment, "GPU")
+        docker_compose_helper(environment, "GPU", True)
     elif argument_processor.parameters["compute_method"] == "CPU":
-        docker_compose_helper(environment, "CPU")
+        docker_compose_helper(environment, "CPU", True)
     else:
         # need to do input check to prevent this condition (and others like it)
         print("You have selected an unknown/unexpected compute method.")

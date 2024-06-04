@@ -71,6 +71,26 @@ Once you have set up the Docker containers using one of the methods above, Conci
 
 If the containers aren't running properly you can try using `python launch.py` to launch them again.
 
+## Update to new release
+
+Pull or download the latest version of the repository.
+
+### Quick install
+
+Running `install.py` should be able to take care of upgrading your configuration.
+
+Note that if you have an existing installation you must either remove the Concierge volume or keep the same OpenSearch admin password otherwise the OpenSearch container won't function.
+
+If you already have a language model downloaded and you didn't remove the Concierge volume you can use ctrl+C to skip the model pull in the last stage of the install (although you may want to get the latest version).
+
+### Manual update
+
+`docker compose pull -f <docker-compose-file.yml>` will grab the latest versions of the Docker containers.
+
+`docker compose build -f <docker-compose-file.yml>` will rebuild the Docker container with the latest version of Concierge.
+
+Now you can reconfigure the `.env` file and relaunch the containers like in the Manual install step.
+
 ## Setup: development environment
 
 ### Quick install
@@ -125,6 +145,18 @@ To start the web UI, run the following command:
 
 `python -m shiny run --reload --launch-browser concierge_shiny/app.py`
 
+## Update to new release: development environment
+
+### Quick install
+
+Follow the same instructions as for production, except use `install_dev.py` instead of `install.py`
+
+### Manual update
+
+Use `docker compose pull -f <docker-compose-file.yml>` to update the Docker containers.
+
+Follow Manual install steps above.
+
 ## CLI ##
 
 While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.
@@ -146,7 +178,7 @@ Available commands:
 ## Known issues
 
 - `unknown shorthand flag: 'd' in -d` and/or you have the `docker-compose` command instead of `docker compose`. This indicates that you're using an older version of Docker than we support. The best course of action would be to install the latest version following instructions from here: https://docs.docker.com/engine/install/. However if you're unable to do this, you may be able to get the Concierge Docker requirements running using `docker-compose --file ./docker-compose.yml up`.
-- on MacOS urllib3 gives a `NotOpenSSLWarning`, as far as we aware you can ignore this warning without issue. This should only be present when using the development environment
+- on MacOS urllib3 gives a `NotOpenSSLWarning`, as far as we aware you can ignore this warning without issue. This should only be present when using the development environment.
 
 ## Want to get involved? ##
 
