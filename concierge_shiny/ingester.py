@@ -12,6 +12,7 @@ from components import (
     text_list_ui,
     text_list_server,
 )
+from functions import load_llm_model
 
 
 @module.ui
@@ -29,10 +30,12 @@ def ingester_server(
     upload_dir,
     selected_collection,
     collections,
+    ollama_status,
     client,
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
+    llm_loaded = reactive.value(False)
 
     collection_selector_server("collection_selector", selected_collection, collections)
     collection_create_server(
@@ -40,15 +43,30 @@ def ingester_server(
     )
     url_values = text_list_server("url_input_list", file_input_trigger)
 
+    @reactive.extended_task
+    async def load_ingesting_llm_model(model_name):
+        await load_llm_model(model_name)
+        llm_loaded.set(True)
+
+    @reactive.effect
+    def init():
+        if ollama_status.get() and not llm_loaded.get():
+            load_ingesting_llm_model("all-minilm")
+
     @render.ui
     def ingester_content():
-        return ui.TagList(
-            ui.markdown("#### Files"),
-            ui.output_ui("file_input"),
-            ui.markdown("#### URLs"),
-            text_list_ui("url_input_list"),
-            ui.input_task_button(id="ingest", label="Ingest"),
-        )
+        loaded = llm_loaded.get() and ollama_status.get()
+        if loaded:
+            return ui.TagList(
+                ui.markdown("#### Files"),
+                ui.output_ui("file_input"),
+                ui.markdown("#### URLs"),
+                text_list_ui("url_input_list"),
+                ui.input_task_button(id="ingest", label="Ingest"),
+            )
+        if not ollama_status.get():
+            return ui.markdown("Requirements are not online, see sidebar!")
+        return ui.markdown("Loading Language Model, please wait...")
 
     @render.ui
     @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)

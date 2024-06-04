@@ -1,43 +1,8 @@
 import json
 import requests
 import os
-from sentence_transformers import SentenceTransformer
 
 HOST = os.getenv("OLLAMA_HOST") or "localhost"
-
-
-def load_model():
-    # TODO several revs in the future... allow users to pick model.
-    # very much low priority atm
-    models = requests.get(f"http://{HOST}:11434/api/tags")
-    model_list = json.loads(models.text)["models"]
-    if not next(
-        filter(lambda x: x["name"].split(":")[0] == "mistral", model_list), None
-    ):
-        print("mistral model not found. Please wait while it loads.")
-        request = requests.post(
-            f"http://{HOST}:11434/api/pull",
-            data=json.dumps({"name": "mistral"}),
-            stream=True,
-        )
-        current = 0
-        for item in request.iter_lines():
-            if item:
-                value = json.loads(item)
-                # TODO: display statuses
-                if "total" in value:
-                    if "completed" in value:
-                        current = value["completed"]
-                    yield (current, value["total"])
-
-
-stransform = SentenceTransformer("paraphrase-MiniLM-L6-v2")
-search_params = {
-    "metric_type": "COSINE",
-    "params": {
-        "radius": 0.5
-    },  # -1.0 to 1.0, positive values indicate similarity, negative values indicate difference
-}
 
 
 def prepare_prompt(

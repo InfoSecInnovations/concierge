@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch, helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
+from concierge_backend_lib.ollama import create_embeddings
 
 load_dotenv()
 OPENSEARCH_INITIAL_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
@@ -11,8 +11,6 @@ HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
 
 chunk_size = 200
 chunk_overlap = 25
-
-stransform = SentenceTransformer("paraphrase-MiniLM-L6-v2")
 
 splitter = RecursiveCharacterTextSplitter(
     chunk_size=chunk_size, chunk_overlap=chunk_overlap
@@ -74,7 +72,7 @@ def insert(client, index_name, pages):
     for index, page in enumerate(pages):
         chunks = splitter.split_text(page["content"])
         for chunk in chunks:
-            vect = stransform.encode(chunk)
+            vect = create_embeddings(chunk)
             entry = {
                 "_index": index_name,
                 "metadata_type": page["metadata_type"],
@@ -101,7 +99,7 @@ def get_context(client, index_name, reference_limit, user_input):
         "query": {
             "knn": {
                 "document_vector": {
-                    "vector": stransform.encode(user_input),
+                    "vector": create_embeddings(user_input),
                     "min_score": 0.8,  # this is quite a magic number, tweak as needed!
                 }
             }

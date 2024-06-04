@@ -46,6 +46,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         selected_collection,
         collections,
         opensearch_status,
+        ollama_status,
         client,
     )
     status = status_server("status_widget")

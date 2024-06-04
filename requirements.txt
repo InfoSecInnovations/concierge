@@ -1,6 +1,5 @@
 bs4
 langchain
-sentence-transformers
 python-dotenv
 tqdm
 requests

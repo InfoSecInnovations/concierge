@@ -4,11 +4,11 @@ import os
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from sentence_transformers import SentenceTransformer
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
-from concierge_backend_lib.prompting import load_model, get_response
+from concierge_backend_lib.prompting import get_response
+from concierge_backend_lib.ollama import load_model
 from concierge_backend_lib.opensearch import get_client, get_context
 
 parser = argparse.ArgumentParser()
@@ -68,20 +68,30 @@ index_name = args.index
 # TODO will want to make this a select later
 references = 5
 
-pbar = None
-for progress in load_model():
-    if not pbar:
-        pbar = tqdm(unit="B", unit_scale=True, unit_divisor=1024)
-    # slight hackiness to set the initial value if resuming a download or switching files
-    if pbar.initial == 0 or pbar.initial > progress[0]:
-        pbar.initial = progress[0]
-    pbar.total = progress[1]
-    pbar.n = progress[0]
-    pbar.refresh()
-if pbar:
-    pbar.close()
 
-stransform = SentenceTransformer("paraphrase-MiniLM-L6-v2")
+def load_model_with_progress(model_name):
+    pbar = None
+    for progress in load_model(model_name):
+        if not pbar:
+            pbar = tqdm(
+                desc=f"Loading {model_name} model",
+                unit="B",
+                unit_scale=True,
+                unit_divisor=1024,
+            )
+        # slight hackiness to set the initial value if resuming a download or switching files
+        if pbar.initial == 0 or pbar.initial > progress[0]:
+            pbar.initial = progress[0]
+        pbar.total = progress[1]
+        pbar.n = progress[0]
+        pbar.refresh()
+    if pbar:
+        pbar.close()
+
+
+load_model_with_progress("mistral")
+load_model_with_progress("all-minilm")
+
 client = get_client()
 
 while True:

@@ -2,9 +2,8 @@ from shiny import ui, Inputs, Outputs, Session, module, reactive, render
 from configobj import ConfigObj
 from pathlib import Path
 import os
-from concierge_backend_lib.prompting import load_model, get_response
+from concierge_backend_lib.prompting import get_response
 from concierge_backend_lib.opensearch import get_context
-from tqdm import tqdm
 from util.async_generator import asyncify_generator
 from components import (
     collection_selector_ui,
@@ -14,7 +13,7 @@ from components import (
 )
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs
-from functions import chunk_link
+from functions import chunk_link, load_llm_model
 
 md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
@@ -81,40 +80,14 @@ def prompter_server(
     prompt = text_input_enter_server("chat_input", processing)
 
     @reactive.extended_task
-    async def load_llm_model():
-        print("Checking language model...")
-        pbar = None
-        with ui.Progress() as p:
-            p.set(value=0, message="Loading Language Model...")
-            async for progress in asyncify_generator(load_model()):
-                if not pbar:
-                    pbar = tqdm(
-                        unit="B",
-                        unit_scale=True,
-                        unit_divisor=1024,
-                        desc="Loading Language Model",
-                    )
-                pbar.total = progress[1]
-                p.max = progress[1]
-                # slight hackiness to set the initial value if resuming a download or switching files
-                if pbar.initial == 0 or pbar.initial > progress[0]:
-                    pbar.initial = progress[0]
-                p.set(
-                    value=progress[0],
-                    message=f"Loading Language Model: {progress[0]}/{progress[1]}",
-                )
-                pbar.n = progress[0]
-                pbar.refresh()
-        if pbar:
-            pbar.close()
+    async def load_prompting_llm_model(model_name):
+        await load_llm_model(model_name)
         llm_loaded.set(True)
-        print("Language model loaded.\n")
-        ui.notification_show("Language model loaded")
 
     @reactive.effect
     def init():
         if ollama_status.get() and not llm_loaded.get():
-            load_llm_model()
+            load_prompting_llm_model("mistral")
 
     @render.ui
     def prompter_ui():
