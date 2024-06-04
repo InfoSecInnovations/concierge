@@ -6,7 +6,6 @@ services:
     image: ollama/ollama:latest
     environment:
       - OLLAMA_KEEP_ALIVE=-1
-      - OLLAMA_MAX_LOADED_MODELS=2
     ports:
       - "11434:11434"
     volumes:

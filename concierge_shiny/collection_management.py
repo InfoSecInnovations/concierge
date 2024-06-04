@@ -93,7 +93,6 @@ def collection_management_server(
     selected_collection,
     collections,
     opensearch_status,
-    ollama_status,
     client,
 ):
     collection_create_server(
@@ -101,7 +100,7 @@ def collection_management_server(
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server(
-        "ingester", upload_dir, selected_collection, collections, ollama_status, client
+        "ingester", upload_dir, selected_collection, collections, client
     )
 
     document_delete_trigger = reactive.value(0)

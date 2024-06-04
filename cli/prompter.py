@@ -90,7 +90,6 @@ def load_model_with_progress(model_name):
 
 
 load_model_with_progress("mistral")
-load_model_with_progress("all-minilm")
 
 client = get_client()
 

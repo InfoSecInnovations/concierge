@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from opensearchpy import OpenSearch, helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from tqdm import tqdm
-from concierge_backend_lib.ollama import create_embeddings
+from concierge_backend_lib.embeddings import create_embeddings
 
 load_dotenv()
 OPENSEARCH_INITIAL_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")

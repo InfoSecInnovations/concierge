@@ -10,3 +10,4 @@ configobj
 shiny
 shinyswatch
 opensearch-py
+sentence-transformers
