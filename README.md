@@ -115,7 +115,9 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 
 ## Usage: development environment
 
-Complete one of the installation methods above
+Complete one of the installation methods above.
+
+Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more about coding style enforcement and commit etiquette!
 
 ### Visual Studio Code
 

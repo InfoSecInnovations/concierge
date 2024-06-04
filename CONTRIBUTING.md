@@ -31,6 +31,8 @@ Please follow the [PEP 8](https://peps.python.org/pep-0008/) style guide.
 
 We have the ruff linter configured to catch common errors and formatting issues. Please make sure you installed the development version of Concierge so the linter script will run when committing.
 
+**Don't panic if you see a Failed status while committing!**
+
 Ruff will attempt to fix any errors, if the checks fail but all errors are fixed, you can just add the changes and make your commit again. If there are errors ruff is unable to fix, you will have to manually resolve them and then commit.
 
 ## Pull Requests
