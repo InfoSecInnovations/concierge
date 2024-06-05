@@ -11,6 +11,8 @@ def chunk_link(uploads_dir, chunk):
         return f'PDF File: [page {metadata["page"]} of {metadata["filename"]}](<{uploads_dir}/{metadata["filename"]}#page={metadata["page"]}>){{target="_blank"}}'
     if chunk["type"] == "web":
         return f'Web page: <{metadata["source"]}>{{target="_blank"}} scraped {metadata["ingest_date"]}'
+    if chunk["type"] == "plaintext":
+        return f'{metadata["extension"]} file {metadata["filename"]}'
 
 
 def doc_link(uploads_dir, doc):
@@ -19,6 +21,9 @@ def doc_link(uploads_dir, doc):
         return f'PDF File: [{filename}](<{uploads_dir}/{filename}>){{target="_blank"}}'
     if doc["type"] == "web":
         return f'Web page: <{doc["source"]}>{{target="_blank"}}'
+    if doc["type"] == "plaintext":
+        filename = ntpath.basename(doc["source"])
+        return f'{doc["extension"]} file {filename}'
 
 
 async def load_llm_model(model_name):

@@ -54,6 +54,7 @@ def ensure_index(client, index_name):
                         "title": {"type": "keyword"},
                         "language": {"type": "keyword"},
                         "ingest_date": {"type": "date"},
+                        "extension": {"type": "keyword"},
                     }
                 },
                 "metadata_type": {"type": "keyword"},
@@ -151,6 +152,7 @@ def get_documents(client, index_name):
                         {
                             "field": "metadata.source",
                         },
+                        {"field": "metadata.extension", "missing": "n/a"},
                     ],
                 }
             }
@@ -163,6 +165,7 @@ def get_documents(client, index_name):
         {
             "type": bucket["key"][0],
             "source": bucket["key"][1],
+            "extension": bucket["key"][2],
             "vector_count": bucket["doc_count"],
         }
         for bucket in response["aggregations"]["documents"]["buckets"]
