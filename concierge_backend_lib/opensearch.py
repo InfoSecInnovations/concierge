@@ -71,16 +71,19 @@ def insert(client, index_name, pages):
 
     for index, page in enumerate(pages):
         chunks = splitter.split_text(page["content"])
-        for chunk in chunks:
-            vect = create_embeddings(chunk)
-            entry = {
-                "_index": index_name,
-                "metadata_type": page["metadata_type"],
-                "metadata": page["metadata"],
-                "text": chunk,
-                "document_vector": vect,
-            }
-            entries.append(entry)
+        vects = create_embeddings(chunks)
+        entries.extend(
+            [
+                {
+                    "_index": index_name,
+                    "metadata_type": page["metadata_type"],
+                    "metadata": page["metadata"],
+                    "text": chunks[index],
+                    "document_vector": vect,
+                }
+                for index, vect in enumerate(vects)
+            ]
+        )
         yield (index, total)
     helpers.bulk(client, entries, refresh=True)
 
