@@ -6,7 +6,6 @@ from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
 load_dotenv()
-OPENSEARCH_INITIAL_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
 HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
 
 chunk_size = 200
@@ -22,15 +21,8 @@ splitter = RecursiveCharacterTextSplitter(
 def get_client():
     host = HOST
     port = 9200
-    auth = ("admin", OPENSEARCH_INITIAL_ADMIN_PASSWORD)
 
-    return OpenSearch(
-        hosts=[{"host": host, "port": port}],
-        http_auth=auth,
-        use_ssl=True,
-        verify_certs=False,
-        ssl_show_warn=False,
-    )
+    return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
 
 
 def ensure_index(client, index_name):
