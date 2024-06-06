@@ -151,7 +151,7 @@ Follow the same instructions as for production, except use `install_dev.py` inst
 
 ### Manual update
 
-Use `docker compose pull -f <docker-compose-file.yml>` to update the Docker containers.
+Use `docker compose -f <docker-compose-file.yml> pull` to update the Docker containers.
 
 Follow Manual install steps above.
 
