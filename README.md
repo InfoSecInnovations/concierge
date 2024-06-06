@@ -81,9 +81,9 @@ If you already have a language model downloaded and you didn't remove the Concie
 
 ### Manual update
 
-`docker compose pull -f <docker-compose-file.yml>` will grab the latest versions of the Docker containers.
+`docker compose -f <docker-compose-file.yml> pull` will grab the latest versions of the Docker containers.
 
-`docker compose build -f <docker-compose-file.yml>` will rebuild the Docker container with the latest version of Concierge.
+`docker compose -f <docker-compose-file.yml> build` will rebuild the Docker container with the latest version of Concierge.
 
 Now you can reconfigure the `.env` file and relaunch the containers like in the Manual install step.
 
@@ -151,7 +151,7 @@ Follow the same instructions as for production, except use `install_dev.py` inst
 
 ### Manual update
 
-Use `docker compose pull -f <docker-compose-file.yml>` to update the Docker containers.
+Use `docker compose -f <docker-compose-file.yml> pull` to update the Docker containers.
 
 Follow Manual install steps above.
 
