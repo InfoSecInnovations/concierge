@@ -1,15 +1,13 @@
 import sys
 import os
-from binaryornot.check import is_binary
 
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from loaders.pdf import load_pdf
-from loaders.text import load_text
 import argparse
 import shutil
 from concierge_backend_lib.opensearch import get_client, ensure_index, insert_with_tqdm
+from concierge_backend_lib.loading import load_file
 
 upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
 
@@ -39,14 +37,6 @@ for file in source_files:
     uploaded_path = os.path.join(upload_dir, file)
     shutil.copyfile(os.path.join(source_path, file), uploaded_path)
     print(file)
-    pages = None
-    if file.endswith(".pdf"):
-        pages = load_pdf(upload_dir, file)
-    elif not is_binary(uploaded_path):
-        try:  # generic text loader doesn't always succeed so we should catch the exception
-            pages = load_text(upload_dir, file)
-        except Exception:
-            print(f"{uploaded_path} was unable to be ingested as plaintext")
-            pages = None
+    pages = load_file(upload_dir, file)
     if pages:
         insert_with_tqdm(client, index, pages)

@@ -3,7 +3,7 @@ import shutil
 import os
 from tqdm import tqdm
 from concierge_backend_lib.opensearch import insert
-from loaders.pdf import load_pdf
+from concierge_backend_lib.loading import load_file
 from loaders.web import load_web
 from util.async_generator import asyncify_generator
 from components import (
@@ -71,8 +71,8 @@ def ingester_server(
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
             shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
-            if file["type"] == "application/pdf":
-                pages = load_pdf(upload_dir, file["name"])
+            pages = load_file(upload_dir, file["name"])
+            if pages:
                 await load_pages(pages, collection_name, file["name"])
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
