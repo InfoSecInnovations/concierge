@@ -165,8 +165,6 @@ def install_docker(argument_processor, environment="production"):
                 [
                     "DOCKER_VOLUME_DIRECTORY="
                     + argument_processor.parameters["docker_volumes"],
-                    "OPENSEARCH_INITIAL_ADMIN_PASSWORD="
-                    + argument_processor.parameters["opensearch_password"],
                     "ENVIRONMENT=" + environment,
                 ]
             )
