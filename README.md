@@ -59,8 +59,6 @@ Copy `.env.example` into a file named `.env`
 
 Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Concierge data to be stored
 
-Set `OPENSEARCH_INITIAL_ADMIN_PASSWORD` to a strong password of your choice. You can evaluate password strength using https://lowe.github.io/tryzxcvbn/. Please note that in the current version of Concierge this isn't actually very secure due to it being stored in plaintext in the `.env` file! We will introduce better credential handling in future versions, the current way will become "dev/demo mode" for getting Concierge running quickly without proper security measures in place.
-
 `docker compose up -d` will start Concierge and its dependencies in Docker.
 
 `docker compose -f docker-compose-gpu.yml up -d` will start Concierge and its dependencies in Docker and use the GPU.
@@ -78,8 +76,6 @@ Pull or download the latest version of the repository.
 ### Quick install
 
 Running `install.py` should be able to take care of upgrading your configuration.
-
-Note that if you have an existing installation you must either remove the Concierge volume or keep the same OpenSearch admin password otherwise the OpenSearch container won't function.
 
 If you already have a language model downloaded and you didn't remove the Concierge volume you can use ctrl+C to skip the model pull in the last stage of the install (although you may want to get the latest version).
 
