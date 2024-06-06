@@ -9,6 +9,13 @@ from loaders.pdf import load_pdf
 from loaders.text import load_text
 
 
+class ConciergeDocLoader:
+    # TODO: class checks if it can load file
+
+    # TODO: load function that returns pages
+    pass
+
+
 def load_file(directory, filename):
     full_path = os.path.join(directory, filename)
     if filename.endswith(".pdf"):
@@ -19,3 +26,7 @@ def load_file(directory, filename):
         except Exception:
             print(f"{full_path} was unable to be ingested as plaintext")
             return None
+    print(
+        f"{full_path} was unable to be loaded by any of the current Concierge loading options"
+    )
+    return None
