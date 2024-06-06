@@ -1,24 +1,36 @@
+from __future__ import annotations
 from langchain_community.document_loaders import PyPDFLoader
-import os
 import time
+from loaders.base_loader import ConciergeFileLoader, ConciergeDocument
+from dataclasses import dataclass
+from pathlib import Path
 
-date_time = int(round(time.time() * 1000))
 
+class PDFLoader(ConciergeFileLoader):
+    @dataclass
+    class PDFMetadata(ConciergeDocument.DocumentMetadata):
+        page: int
+        filename: str
 
-def load_pdf(source_path, pdf):
-    source = os.path.join(source_path, pdf)
-    loader = PyPDFLoader(source)
-    pages = loader.load_and_split()
-    return [
-        {
-            "metadata_type": "pdf",
-            "metadata": {
-                "page": x.metadata["page"] + 1,
-                "source": source,
-                "filename": pdf,
-                "ingest_date": date_time,
-            },
-            "content": x.page_content,
-        }
-        for x in pages
-    ]
+    @staticmethod
+    def can_load(full_path: str) -> bool:
+        return full_path.endswith(".pdf")
+
+    @staticmethod
+    def load(full_path: str) -> ConciergeDocument:
+        date_time = int(round(time.time() * 1000))
+        loader = PyPDFLoader(full_path)
+        pages = loader.load_and_split()
+        return [
+            ConciergeDocument(
+                metadata_type="pdf",
+                metadata=PDFLoader.PDFMetadata(
+                    source=full_path,
+                    filename=Path(full_path).name,
+                    page=page.metadata["page"] + 1,
+                    ingest_date=date_time,
+                ),
+                content=page.page_content,
+            )
+            for page in pages
+        ]
