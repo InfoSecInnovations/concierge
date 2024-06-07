@@ -4,6 +4,10 @@ from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_backend_lib.opensearch import get_indices, ensure_index
 from util.async_single import asyncify
 import os
+from markdown_it import MarkdownIt
+from mdit_py_plugins import attrs
+
+md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
 # --------
 # COLLECTION SELECTOR
@@ -226,7 +230,8 @@ def collection_create_ui():
     return [
         text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER),
         ui.markdown(
-            "Hint: Collection names must contain only letters, numbers, or underscores."
+            'Hint: Collection names must be lowercase and may not begin with underscores or hyphens. See [here](https://opensearch.org/docs/latest/api-reference/index-apis/create-index/#index-naming-restrictions){target="_blank"} for the full list of restrictions.',
+            render_func=md.render,
         ),
     ]
 
