@@ -1,7 +1,6 @@
 from __future__ import annotations
 from langchain_community.document_loaders import PyPDFLoader
-import time
-from loaders.base_loader import ConciergeFileLoader, ConciergeDocument
+from loaders.base_loader import ConciergeFileLoader, ConciergeDocument, get_current_time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -18,7 +17,7 @@ class PDFLoader(ConciergeFileLoader):
 
     @staticmethod
     def load(full_path: str) -> ConciergeDocument:
-        date_time = int(round(time.time() * 1000))
+        date_time = get_current_time()
         loader = PyPDFLoader(full_path)
         pages = loader.load_and_split()
         return [

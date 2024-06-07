@@ -1,6 +1,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from abc import ABCMeta, abstractmethod
+import time
+
+
+def get_current_time():
+    return int(round(time.time() * 1000))
 
 
 @dataclass

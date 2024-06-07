@@ -2,9 +2,7 @@ from __future__ import annotations
 from langchain_community.document_loaders import TextLoader
 from binaryornot.check import is_binary
 import os
-import time
-from loaders.base_loader import ConciergeFileLoader, ConciergeDocument
-
+from loaders.base_loader import ConciergeFileLoader, ConciergeDocument, get_current_time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -21,7 +19,7 @@ class TextFileLoader(ConciergeFileLoader):
 
     @staticmethod
     def load(full_path: str) -> ConciergeDocument:
-        date_time = int(round(time.time() * 1000))
+        date_time = get_current_time()
         loader = TextLoader(full_path)
         pages = loader.load()
         return [

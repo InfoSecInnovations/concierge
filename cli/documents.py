@@ -23,5 +23,5 @@ documents = get_documents(client, index_name)
 
 for document in documents:
     print(
-        f"source: {document['source']}, type: {document['type']}, vectors: {document['vector_count']})"
+        f"source: {document['source']}, type: {document['type']}, vectors: {document['vector_count']}"
     )

@@ -4,7 +4,8 @@ import os
 from tqdm import tqdm
 from concierge_backend_lib.opensearch import insert
 from concierge_backend_lib.loading import load_file
-from loaders.web import load_web
+from loaders.web import WebLoader
+from loaders.base_loader import ConciergeDocument
 from util.async_generator import asyncify_generator
 from components import (
     collection_selector_server,
@@ -12,6 +13,7 @@ from components import (
     text_list_ui,
     text_list_server,
 )
+from opensearchpy import OpenSearch
 
 
 @module.ui
@@ -29,7 +31,7 @@ def ingester_server(
     upload_dir,
     selected_collection,
     collections,
-    client,
+    client: OpenSearch,
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
@@ -55,7 +57,9 @@ def ingester_server(
     def file_input():
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
-    async def load_pages(pages, collection_name, label):
+    async def load_pages(
+        pages: list[ConciergeDocument], collection_name: str, label: str
+    ):
         page_progress = tqdm(total=len(pages))
         with ui.Progress(1, len(pages)) as p:
             p.set(0, message=f"{label}: loading...")
@@ -65,7 +69,7 @@ def ingester_server(
                 page_progress.refresh()
         page_progress.close()
 
-    async def ingest_files(files, collection_name):
+    async def ingest_files(files: list[dict], collection_name: str):
         os.makedirs(upload_dir, exist_ok=True)  # ensure the upload directory exists!
         for file in files:
             print(file["name"])
@@ -77,11 +81,11 @@ def ingester_server(
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
-    async def ingest_urls(urls, collection_name):
+    async def ingest_urls(urls: list[str], collection_name: str):
         for url in urls:
             print(url)
             ui.notification_show(f"Processing {url}")
-            pages = load_web(url)
+            pages = WebLoader.load(url)
             await load_pages(pages, collection_name, url)
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")

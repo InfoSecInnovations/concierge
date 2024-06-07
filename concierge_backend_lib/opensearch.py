@@ -4,6 +4,8 @@ from opensearchpy import OpenSearch, helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from tqdm import tqdm
 from concierge_backend_lib.embeddings import create_embeddings
+from loaders.base_loader import ConciergeDocument
+import jsons
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
@@ -58,19 +60,19 @@ def ensure_index(client, index_name):
         client.indices.create(index_name, body=index_body)
 
 
-def insert(client, index_name, pages):
+def insert(client: OpenSearch, index_name: str, pages: list[ConciergeDocument]):
     entries = []
     total = len(pages)
 
     for index, page in enumerate(pages):
-        chunks = splitter.split_text(page["content"])
+        chunks = splitter.split_text(page.content)
         vects = create_embeddings(chunks)
         entries.extend(
             [
                 {
                     "_index": index_name,
-                    "metadata_type": page["metadata_type"],
-                    "metadata": page["metadata"],
+                    "metadata_type": page.metadata_type,
+                    "metadata": jsons.dump(page.metadata),
                     "text": chunks[index],
                     "document_vector": vect,
                 }
@@ -81,7 +83,9 @@ def insert(client, index_name, pages):
     helpers.bulk(client, entries, refresh=True)
 
 
-def insert_with_tqdm(client, index_name, pages):
+def insert_with_tqdm(
+    client: OpenSearch, index_name: str, pages: list[ConciergeDocument]
+):
     page_progress = tqdm(total=len(pages))
     for x in insert(client, index_name, pages):
         page_progress.n = x[0] + 1
@@ -89,7 +93,9 @@ def insert_with_tqdm(client, index_name, pages):
     page_progress.close()
 
 
-def get_context(client, index_name, reference_limit, user_input):
+def get_context(
+    client: OpenSearch, index_name: str, reference_limit: int, user_input: str
+):
     query = {
         "size": reference_limit,
         "query": {
@@ -115,7 +121,7 @@ def get_context(client, index_name, reference_limit, user_input):
     }
 
 
-def get_indices(client):
+def get_indices(client: OpenSearch):
     response = client.indices.get("*")
     # TODO: we must be able to do this in OpenSearch somehow?
     response = {
@@ -127,12 +133,12 @@ def get_indices(client):
     return list(response.keys())
 
 
-def delete_index(client, index_name):
+def delete_index(client: OpenSearch, index_name: str):
     response = client.indices.delete(index=index_name)
     return response["acknowledged"]
 
 
-def get_documents(client, index_name):
+def get_documents(client: OpenSearch, index_name: str):
     query = {
         "size": 0,
         "aggs": {
@@ -164,7 +170,7 @@ def get_documents(client, index_name):
     ]
 
 
-def delete_document(client, index_name, type, source):
+def delete_document(client: OpenSearch, index_name: str, type: str, source: str):
     query = {
         "query": {
             "bool": {
