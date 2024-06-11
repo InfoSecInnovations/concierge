@@ -1,5 +1,3 @@
-version: '3.5'
-
 services:
   ollama:
     container_name: ollama

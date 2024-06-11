@@ -1,7 +1,7 @@
 # The dev install script configures the Docker environment and containers
 
-from concierge_installer.arguments import install_arguments
-from concierge_installer.functions import (
+from user_package.concierge_installer.arguments import install_arguments
+from user_package.concierge_installer.functions import (
     init_arguments,
     clean_up_existing,
     prompt_for_parameters,
@@ -24,5 +24,5 @@ subprocess.run([os.path.join(get_venv_path(), "pre-commit"), "install"])
 
 install_docker(argument_processor, "development")
 print(
-    "\nInstall completed. To start Concierge use the following command: python launch_dev.py\n\n"
+    "\nInstall completed.\nTo start Concierge use the following command: python launch_dev.py\nTo start Concierge in a locally built Docker container use: python launch_local.py\n\n"
 )

@@ -1,17 +1,20 @@
-# this makes the parent directory be detected in Linux
-import sys
-import os
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
 import subprocess
 from script_builder.util import get_venv_executable
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from concierge_installer.functions import docker_compose_helper
-from dotenv import load_dotenv
+from user_package.concierge_installer.functions import docker_compose_helper
+import argparse
 
-load_dotenv()
-environment = os.getenv("ENVIRONMENT")
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-e",
+    "--environment",
+    help="development or [production]",
+)
+args = parser.parse_args()
+
+environment = args.environment
+if environment != "development":
+    environment = "production"
 
 print("Checking Docker container status...\n")
 requirements_met = False
