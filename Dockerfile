@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.12.3-slim
 
 COPY requirements.txt /
 ENV PIP_NO_CACHE_DIR=1
