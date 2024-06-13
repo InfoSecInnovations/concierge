@@ -1,4 +1,4 @@
-from concierge_installer.functions import docker_compose_helper
+from launch_concierge.concierge_installer.functions import docker_compose_helper
 
 
 def relaunch():
@@ -9,3 +9,7 @@ def relaunch():
         docker_compose_helper("production", "GPU")
     else:
         docker_compose_helper("production", "CPU")
+
+
+if __name__ == "__main__":
+    relaunch()

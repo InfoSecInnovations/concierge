@@ -1,7 +1,10 @@
 [project]
 name = "launch-concierge"
-version = "0.3.0"
+version = "0.3.2"
 requires-python = ">=3.12"
+dependencies = [
+    "script-builder"
+]
 
 [project.scripts]
 install_concierge = "launch_concierge.install:install"

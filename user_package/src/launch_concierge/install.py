@@ -22,3 +22,7 @@ def install():
     print(
         "So long as Docker is running the web UI should be available. If you need to relaunch the containers use this command: python relaunch.py\n\n"
     )
+
+
+if __name__ == "__main__":
+    install()
