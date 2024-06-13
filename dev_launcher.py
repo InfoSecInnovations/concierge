@@ -1,7 +1,9 @@
 import subprocess
 from script_builder.util import get_venv_executable
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from user_package.concierge_installer.functions import docker_compose_helper
+from user_package.src.launch_concierge.concierge_installer.functions import (
+    docker_compose_helper,
+)
 import argparse
 
 parser = argparse.ArgumentParser()

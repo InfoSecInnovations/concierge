@@ -1,0 +1,12 @@
+[project]
+name = "launch-concierge"
+version = "0.3.0"
+requires-python = ">=3.12"
+
+[project.scripts]
+install_concierge = "launch_concierge.install:install"
+relaunch_concierge = "relaunch:relaunch"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

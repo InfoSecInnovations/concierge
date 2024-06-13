@@ -1,15 +1,15 @@
 services:
   ollama:
     extends:
-      file: user_package/docker-compose-ollama.yml
+      file: user_package/src/launch_concierge/docker-compose-ollama.yml
       service: ollama
   opensearch-node1:
     extends:
-      file: user_package/docker-compose-opensearch.yml
+      file: user_package/src/launch_concierge/docker-compose-opensearch.yml
       service: opensearch-node1
   opensearch-dashboards:
     extends:
-      file: user_package/docker-compose-opensearch.yml
+      file: user_package/src/launch_concierge/docker-compose-opensearch.yml
       service: opensearch-dashboards
   concierge:
     extends:
