@@ -1,4 +1,4 @@
 ruff
 pre-commit
 -e script_builder_package
--e user_package
+-e launcher_package
