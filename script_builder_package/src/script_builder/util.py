@@ -40,7 +40,7 @@ def get_default_directory(is_standalone: bool):
     if my_platform == "Windows":
         if is_standalone:
             return os.getenv("LOCALAPPDATA")
-        return r"C:\ProgramData"
+        return os.getenv("PROGRAMDATA")
 
 
 def get_venv_path():
