@@ -1,19 +1,21 @@
+name: concierge
+
 services:
   ollama:
     extends:
-      file: user_package/src/launch_concierge/docker-compose-ollama.yml
+      file: launcher_package/src/launch_concierge/docker_compose_dependencies/docker-compose-ollama.yml
       service: ollama-gpu
   opensearch-node1:
     extends:
-      file: user_package/src/launch_concierge/docker-compose-opensearch.yml
+      file: launcher_package/src/launch_concierge/docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node1
   opensearch-dashboards:
     extends:
-      file: user_package/src/launch_concierge/docker-compose-opensearch.yml
+      file: launcher_package/src/launch_concierge/docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-dashboards
   concierge:
     extends:
-      file: docker-compose-concierge-local.yml
+      file: docker_compose_dependencies/docker-compose-concierge-local.yml
       service: concierge
 
 volumes:

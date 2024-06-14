@@ -65,7 +65,7 @@ Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Conc
 
 ## Usage
 
-Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:8000. It can take a couple of minutes for the containers to be ready after install or relaunch.
+Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:15130. It can take a couple of minutes for the containers to be ready after install or relaunch.
 
 If the containers aren't running properly you can try using `python launch.py` to launch them again.
 

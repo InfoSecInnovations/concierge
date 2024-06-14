@@ -17,7 +17,7 @@ def install():
     prompt_concierge_install()
     install_docker(argument_processor, files(), "production")
     print(
-        "\nInstall completed. After a couple of minutes you should be able to access the Concierge Web UI at localhost:8000\n"
+        f"\nInstall completed. After a couple of minutes you should be able to access the Concierge Web UI at localhost:{argument_processor.parameters['port']}\n"
     )
     print(
         "So long as Docker is running the web UI should be available. If you need to relaunch the containers use this command: python relaunch.py\n\n"

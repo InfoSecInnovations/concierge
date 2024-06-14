@@ -37,7 +37,7 @@ install_arguments = [
     ArgumentData(
         key="docker_volumes",
         help="Path where this Concierge instance will store data",
-        description=["Where do you want your Concierge data to perist?"],
+        description=["Where do you want your Concierge data to persist?"],
         input=ArgumentData.InputData(
             default=get_docker_directory, prompt="path for data?"
         ),
@@ -89,5 +89,11 @@ install_arguments = [
         input=ArgumentData.InputData(
             default="90", prompt="how many days should logs be retained?"
         ),
+    ),
+    ArgumentData(
+        key="port",
+        help="Which port should the Concierge web UI be served on?",
+        description=["Which port should the Concierge web UI be served on?"],
+        input=ArgumentData.InputData(default="15130", prompt="port?"),
     ),
 ]

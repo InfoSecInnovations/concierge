@@ -1,6 +1,6 @@
 services:
   concierge:
-    build: .
+    image: infosecinnovations/concierge:latest
     container_name: concierge
     volumes:
       - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/file_uploads:/uploads
@@ -8,5 +8,5 @@ services:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
     ports:
-      - 8000:8000
+      - 15130:15130
     restart: unless-stopped
