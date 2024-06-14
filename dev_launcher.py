@@ -1,10 +1,12 @@
 import subprocess
 from script_builder.util import get_venv_executable
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from user_package.src.launch_concierge.concierge_installer.functions import (
+from launcher_package.src.launch_concierge.concierge_installer.functions import (
     docker_compose_helper,
 )
 import argparse
+import dotenv
+import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -17,6 +19,8 @@ args = parser.parse_args()
 environment = args.environment
 if environment != "development":
     environment = "production"
+
+dotenv.load_dotenv()
 
 print("Checking Docker container status...\n")
 requirements_met = False
@@ -48,6 +52,8 @@ subprocess.run(
         "-m",
         "shiny",
         "run",
+        "--port",
+        os.getenv("WEB_PORT", "15130"),
         *(["--reload"] if environment == "development" else []),
         "--launch-browser",
         "concierge_shiny/app.py",

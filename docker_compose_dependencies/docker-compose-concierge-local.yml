@@ -8,5 +8,5 @@ services:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
     ports:
-      - 15130:15130
+      - ${WEB_PORT:-15130}:15130
     restart: unless-stopped

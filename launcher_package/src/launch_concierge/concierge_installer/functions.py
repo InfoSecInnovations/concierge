@@ -163,6 +163,7 @@ def install_docker(argument_processor, docker_compose_dir, environment="producti
                     "DOCKER_VOLUME_DIRECTORY="
                     + argument_processor.parameters["docker_volumes"],
                     "ENVIRONMENT=" + environment,
+                    "WEB_PORT=" + argument_processor.parameters["port"],
                 ]
             )
         )
