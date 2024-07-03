@@ -1,0 +1,22 @@
+name: concierge
+
+services:
+  ollama:
+    extends:
+      file: docker_compose_dependencies/docker-compose-ollama.yml
+      service: ollama
+  opensearch-node1:
+    extends:
+      file: docker_compose_dependencies/docker-compose-opensearch.yml
+      service: opensearch-node1
+  concierge:
+    extends:
+      file: docker_compose_dependencies/docker-compose-concierge.yml
+      service: concierge
+
+volumes:
+  opensearch-data1:
+
+networks:
+  default:
+    name: concierge

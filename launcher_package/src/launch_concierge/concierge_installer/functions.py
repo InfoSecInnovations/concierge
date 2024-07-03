@@ -122,27 +122,24 @@ def prompt_for_parameters(argument_processor):
     )
 
 
-def docker_compose_helper(environment, compute_method, rebuild=False):
+def docker_compose_helper(environment, compute_method, dir, rebuild=False):
     filename = "docker-compose"
     if environment == "development":
         filename = f"{filename}-dev"
     if compute_method == "GPU":
         filename = f"{filename}-gpu"
+    full_path = os.path.abspath(os.path.join(dir, f"{filename}.yml"))
     if rebuild:
         # pull latest versions
-        subprocess.run(
-            ["docker", "compose", "-f", os.path.abspath(f"{filename}.yml"), "pull"]
-        )
+        subprocess.run(["docker", "compose", "-f", full_path, "pull"])
         # build local concierge image
-        subprocess.run(
-            ["docker", "compose", "-f", os.path.abspath(f"{filename}.yml"), "build"]
-        )
+        subprocess.run(["docker", "compose", "-f", full_path, "build"])
     subprocess.run(
         [
             "docker",
             "compose",
             "-f",
-            os.path.abspath(f"{filename}.yml"),
+            full_path,
             "up",
             "-d",
         ]
@@ -156,7 +153,7 @@ def prompt_concierge_install():
     )
 
 
-def install_docker(argument_processor, environment="production"):
+def install_docker(argument_processor, docker_compose_dir, environment="production"):
     # setup .env (needed for docker compose files)
     with open(".env", "w") as env_file:
         # write .env info needed
@@ -166,14 +163,15 @@ def install_docker(argument_processor, environment="production"):
                     "DOCKER_VOLUME_DIRECTORY="
                     + argument_processor.parameters["docker_volumes"],
                     "ENVIRONMENT=" + environment,
+                    "WEB_PORT=" + argument_processor.parameters["port"],
                 ]
             )
         )
     # docker compose
     if argument_processor.parameters["compute_method"] == "GPU":
-        docker_compose_helper(environment, "GPU", True)
+        docker_compose_helper(environment, "GPU", docker_compose_dir, True)
     elif argument_processor.parameters["compute_method"] == "CPU":
-        docker_compose_helper(environment, "CPU", True)
+        docker_compose_helper(environment, "CPU", docker_compose_dir, True)
     else:
         # need to do input check to prevent this condition (and others like it)
         print("You have selected an unknown/unexpected compute method.")

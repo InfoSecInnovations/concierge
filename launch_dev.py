@@ -1,4 +1,6 @@
 import subprocess
-from script_builder.util import get_venv_executable
+from script_builder_package.src.script_builder.util import get_venv_executable
 
-subprocess.run([get_venv_executable(), "concierge_installer/launcher.py"])
+subprocess.run(
+    [get_venv_executable(), "dev_launcher.py", "--environment", "development"]
+)

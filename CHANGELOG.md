@@ -1,13 +1,15 @@
 # Changelog
 
-## 0.3.0 - TBD
+## 0.3.0 - 2024-07-03
 
 ### Changes
 
 - Vector Database backend now uses OpenSearch instead of Milvus. This will give us many more options with managing metadata from the ingested documents as well as strong RBAC features.
-- `install.py` should be a little more intuitive to use now.
+- install scripts should be a little more intuitive to use now.
 - Loader page has been merged into Collection Management.
 - The production version of Concierge now runs entirely in Docker, this should limit the number of issues relating to Python configurations.
+- The user no longer needs to download the repository from GitHub to install Concierge, it is now done via the PyPI package manager.
+- Default port set to 15130
 
 ### Added
 
@@ -17,6 +19,7 @@
 - `delete_document` command
 - Ability to view documents in collection
 - Ability to delete documents from collection
+- Ability to set web app port in environment variables
 
 ## 0.2.0 - 2024-05-15
 

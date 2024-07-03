@@ -1,17 +1,17 @@
-version: '3.5'
+name: concierge
 
 services:
   ollama:
     extends:
-      file: docker-compose-ollama.yml
+      file: launcher_package/src/launch_concierge/docker_compose_dependencies/docker-compose-ollama.yml
       service: ollama
   opensearch-node1:
     extends:
-      file: docker-compose-opensearch.yml
+      file: launcher_package/src/launch_concierge/docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node1
   opensearch-dashboards:
     extends:
-      file: docker-compose-opensearch.yml
+      file: launcher_package/src/launch_concierge/docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-dashboards
 
 volumes:

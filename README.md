@@ -8,7 +8,7 @@ Data Concierge AI (aka Concierge) is an AI system that works ONLY with the data 
 Concierge is a local and modular RAG framework still in alpha.  
 
 Built with simplicy and security in mind, it has some features we love -- and hope you do too!
-* The quick install method is so easy.  (Note: fast install method is only supported on Linux and Windows. MacOS in development now.) 
+* The quick install method is so easy.
 * Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use
 * Tasks: you can change what the AI can do for you via dropdowns
 
@@ -22,7 +22,7 @@ These versions are currently being used to develop Concierge, lower versions may
    
 Optional:  
 If you want to use GPU acceleration (Concierge does NOT require this, but it will make responses dramatically faster), you must have the 
-NVIDIA drivers correctly setup and running. Concierge will not install or make any adjustmetns to your driver configuration.  
+NVIDIA drivers correctly setup and running. Concierge will not install or make any adjustments to your driver configuration.  
 
 Note: if you want to use GPU acceleration on a Windows host, you must use WSL2.  
 More details here:  
@@ -42,60 +42,85 @@ You can get more tips for optimizing your installation here: https://opensearch.
 
 ### Quick install
 
-git clone repo or extract zip. 
+You no longer need to clone this repository.
 
-`cd concierge` go into the cloned project directory.
+You have a couple of options depending on your preferences.
 
-`python install.py` to launch the installer.
+> [!TIP]
+> Pay attention to the use of dashes and underscores in the commands!
+
+If you're not concerned about using a virtual environment you can just use the 2 commands below in the directory of your choosing:
+
+`python -m pip install launch-concierge`
+
+`python -m launch_concierge.install`
+
+If you prefer to keep things contained in a virtual environment you can use the 4 commands below:
+
+`python -m venv .`
+
+`.\scripts\activate.ps1` or `source bin/activate` depending on your Operating System
+
+`pip install launch-concierge`
+
+`install_concierge`
 
 Answer the questions and then the installer will ask if you are ready to make changes to the system.  
 Answer "yes" and let the downloading begin!
 
+Please note that the package isn't the Concierge app itself, it's just a utility that helps you configure the environment and launch the correct Docker Compose file based on your choices, so it shouldn't be hugely risky to download it without using a virtual environment.
+
 ### Manual install
 
-If `install.py` did not work, follow these steps to setup your system. 
+If you would prefer to configure and launch the app without going through our utility script it is also fairly straightforward:
 
-Copy `.env.example` into a file named `.env`
+Create a file called `.env` following the template of `.env.example` in this repository.
 
-Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Concierge data to be stored
+Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Concierge data to be stored.
 
-`docker compose up -d` will start Concierge and its dependencies in Docker.
+From `launcher_package/src/launch_concierge` copy `docker_compose_dependencies`.
 
-`docker compose -f docker-compose-gpu.yml up -d` will start Concierge and its dependencies in Docker and use the GPU.
+From the same directory, if you wish to use the CPU only, copy `docker-compose.yml`, if you wish to use GPU acceleration where available, copy `docker-compose-gpu.yml` instead.
+
+To launch the CPU compose file use `docker compose up -d`, to launch the GPU version you need to use `docker compose -f docker-compose-gpu.yml up -d`.
 
 ## Usage
 
-Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:8000. It can take a couple of minutes for the containers to be ready after install or relaunch.
-
-If the containers aren't running properly you can try using `python launch.py` to launch them again.
+Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:15130 or the port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
 
 ## Update to new release
 
-Pull or download the latest version of the repository.
+If running a version prior to 0.3.0 you should delete the files you cloned from the repository, remove the related Docker containers and proceed with a fresh install following the instructions above.
 
 ### Quick install
 
-Running `install.py` should be able to take care of upgrading your configuration.
+If using the virtual environment, make sure to activate it before proceeding.
 
-If you already have a language model downloaded and you didn't remove the Concierge volume you can use ctrl+C to skip the model pull in the last stage of the install (although you may want to get the latest version).
+`pip install launch-concierge --upgrade`
 
-### Manual update
-
-`docker compose -f <docker-compose-file.yml> pull` will grab the latest versions of the Docker containers.
-
-`docker compose -f <docker-compose-file.yml> build` will rebuild the Docker container with the latest version of Concierge.
-
-Now you can reconfigure the `.env` file and relaunch the containers like in the Manual install step.
-
-## Setup: development environment
-
-### Quick install
-
-Follow the same instructions as for production, except use `install_dev.py` instead of `install.py`
+Run `python -m launch_concierge.install` again or `install_concierge` if using the virtual environment.
 
 ### Manual install
 
-Configure the `.env` file as above.
+Make sure to grab the latest version of the Docker Compose files.
+
+`docker compose pull` or `docker compose -f docker-compose-gpu.yml pull` will get the latest versions of the containers being used.
+
+Then you can simply launch the containers again using the command from the install step.
+
+## Setup: development environment
+
+git clone repo or extract zip. 
+
+### Quick install
+
+`cd concierge` go into the cloned project directory.
+
+`python install_dev.py` to launch the installer (same steps as the user installer).
+
+### Manual install
+
+Configure the `.env` file like in the user install.
 
 Set `ENVIRONMENT` to `development`
 
@@ -105,9 +130,13 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 
 `pip install -r requirements.txt -r dev_requirements.txt` install all dependencies.
 
+`pre-commit install` install the linting script that hooks into the commit command.
+
 `docker compose -f docker-compose-dev.yml up -d` will load the docker dependencies for developers.
 
 `docker compose -f docker-compose-dev-gpu.yml up -d` will load the docker dependencies for developers and use the GPU.
+
+If you want to build the code to a Docker container to simulate the production environment you can use the `docker-compose.yml` or `docker-compose-gpu.yml` files. On initial launch and when you've made changes to the code you'll need to use `docker compose -f <docker-compose-file.yml> build` to update the container and then launch the compose file again.
 
 ## Usage: development environment
 
@@ -121,7 +150,7 @@ Install Shiny for Python VSCode extension.
 
 Run Shiny for Python VSCode extension from `concierge_shiny/app.py`. 
 
-At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
+At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this if after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
 
 You can also access the URL by pasting it into another browser.
 
@@ -130,6 +159,8 @@ You can also access the URL by pasting it into another browser.
 From the cloned project directory simply run `launch_dev.py`.
 
 If the Docker container dependencies aren't found, you will be given the option to launch with CPU or GPU.
+
+`python launch_local.py` will build and launch the code in a Docker container as if it were the production environment.
 
 ### Manual launch
 
@@ -145,15 +176,17 @@ To start the web UI, run the following command:
 
 ## Update to new release: development environment
 
+Clone the latest version of the repo.
+
 ### Quick install
 
-Follow the same instructions as for production, except use `install_dev.py` instead of `install.py`
+Repeat the process used during install.
 
 ### Manual update
 
 Use `docker compose -f <docker-compose-file.yml> pull` to update the Docker containers.
 
-Follow Manual install steps above.
+Repeat the process used during install.
 
 ## CLI ##
 

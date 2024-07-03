@@ -1,0 +1,12 @@
+services:
+  concierge:
+    build: ..
+    container_name: concierge
+    volumes:
+      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/file_uploads:/uploads
+    environment:
+      - OPENSEARCH_HOST=opensearch-node1
+      - OLLAMA_HOST=ollama
+    ports:
+      - ${WEB_PORT:-15130}:15130
+    restart: unless-stopped
