@@ -7,9 +7,8 @@ from pathlib import Path
 
 class PDFLoader(ConciergeFileLoader):
     @dataclass
-    class PDFMetadata(ConciergeDocument.DocumentMetadata):
+    class PDFPageMetadata(ConciergeDocument.SubDocument.SubDocumentMetadata):
         page: int
-        filename: str
 
     @staticmethod
     def can_load(full_path: str) -> bool:
@@ -20,16 +19,21 @@ class PDFLoader(ConciergeFileLoader):
         date_time = get_current_time()
         loader = PyPDFLoader(full_path)
         pages = loader.load_and_split()
-        return [
-            ConciergeDocument(
-                metadata_type="pdf",
-                metadata=PDFLoader.PDFMetadata(
-                    source=full_path,
-                    filename=Path(full_path).name,
-                    page=page.metadata["page"] + 1,
-                    ingest_date=date_time,
-                ),
-                content=page.page_content,
-            )
-            for page in pages
-        ]
+        sub_docs = {}
+        for page in pages:
+            if page.metadata["page"] + 1 not in sub_docs:
+                sub_docs[page.metadata["page"] + 1] = ConciergeDocument.SubDocument(
+                    metadata=PDFLoader.PDFPageMetadata(page=page.metadata["page"] + 1),
+                    chunks=[],
+                )
+            sub_docs[page.metadata["page"] + 1].chunks.append(page.page_content)
+
+        return ConciergeDocument(
+            metadata_type="pdf",
+            metadata=ConciergeDocument.DocumentMetadata(
+                source=full_path,
+                filename=Path(full_path).name,
+                ingest_date=date_time,
+                sub_docs=sub_docs.values(),
+            ),
+        )

@@ -15,20 +15,34 @@ class ConciergeDocument:
         source: str
         ingest_date: int
 
+    @dataclass
+    class SubDocument:
+        @dataclass
+        class SubDocumentMetadata:
+            pass
+
+        metadata: SubDocumentMetadata
+        chunks: list[str]
+
+    sub_documents: list[SubDocument]
+
     metadata_type: str
     metadata: DocumentMetadata
-    content: str
 
 
 class ConciergeDocLoader(metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
-    def load(full_path: str) -> list[ConciergeDocument]:
+    def load(full_path: str) -> ConciergeDocument:
         # load pages
         pass
 
 
 class ConciergeFileLoader(ConciergeDocLoader):
+    @dataclass
+    class FileMetaData:
+        filename: str
+
     @staticmethod
     @abstractmethod
     def can_load(full_path: str) -> bool:

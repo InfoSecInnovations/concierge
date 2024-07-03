@@ -9,9 +9,8 @@ from pathlib import Path
 
 class TextFileLoader(ConciergeFileLoader):
     @dataclass
-    class TextFileMetadata(ConciergeDocument.DocumentMetadata):
+    class TextFileMetadata(ConciergeFileLoader.FileMetaData):
         extension: str
-        filename: str
 
     @staticmethod
     def can_load(full_path: str) -> bool:
