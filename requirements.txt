@@ -12,3 +12,4 @@ shinyswatch
 opensearch-py
 sentence-transformers
 jsons
+binaryornot
