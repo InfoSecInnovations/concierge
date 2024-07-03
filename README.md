@@ -90,6 +90,8 @@ Once you have set up the Docker containers using one of the methods above, Conci
 
 ## Update to new release
 
+If running a version prior to 0.3.0 you should delete the files you cloned from the repository, remove the related Docker containers and proceed with a fresh install following the instructions above.
+
 ### Quick install
 
 If using the virtual environment, make sure to activate it before proceeding.
@@ -148,7 +150,7 @@ Install Shiny for Python VSCode extension.
 
 Run Shiny for Python VSCode extension from `concierge_shiny/app.py`. 
 
-At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this is after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
+At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this if after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
 
 You can also access the URL by pasting it into another browser.
 
@@ -178,7 +180,7 @@ Clone the latest version of the repo.
 
 ### Quick install
 
-Repeat the process used during install
+Repeat the process used during install.
 
 ### Manual update
 
