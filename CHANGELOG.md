@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 - TBD
+## 0.3.0 - 2024-07-03
 
 ### Changes
 
@@ -9,6 +9,7 @@
 - Loader page has been merged into Collection Management.
 - The production version of Concierge now runs entirely in Docker, this should limit the number of issues relating to Python configurations.
 - The user no longer needs to download the repository from GitHub to install Concierge, it is now done via the PyPI package manager.
+- Default port set to 15130
 
 ### Added
 
@@ -18,6 +19,7 @@
 - `delete_document` command
 - Ability to view documents in collection
 - Ability to delete documents from collection
+- Ability to set web app port in environment variables
 
 ## 0.2.0 - 2024-05-15
 
