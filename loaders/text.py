@@ -21,16 +21,19 @@ class TextFileLoader(ConciergeFileLoader):
         date_time = get_current_time()
         loader = TextLoader(full_path)
         pages = loader.load()
-        return [
-            ConciergeDocument(
-                metadata_type="plaintext",
-                metadata=TextFileLoader.TextFileMetadata(
-                    source=full_path,
-                    filename=Path(full_path).name,
-                    extension=os.path.splitext(full_path)[1],
-                    ingest_date=date_time,
-                ),
-                content=page.page_content,
-            )
-            for page in pages
-        ]
+        return ConciergeDocument(
+            metadata=TextFileLoader.TextFileMetadata(
+                source=full_path,
+                filename=Path(full_path).name,
+                extension=os.path.splitext(full_path)[1],
+                ingest_date=date_time,
+                type="plaintext",
+            ),
+            pages=[  # we just load the whole file into a single sub document
+                ConciergeDocument.ConciergePage(
+                    metadata=ConciergeDocument.ConciergePage.ConciergePageMetadata(),
+                    content=page.page_content,
+                )
+                for page in pages
+            ],
+        )

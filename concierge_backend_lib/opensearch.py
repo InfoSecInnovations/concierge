@@ -5,7 +5,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from tqdm import tqdm
 from concierge_backend_lib.embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument
-import jsons
+from dataclasses import fields
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
@@ -25,54 +25,71 @@ def get_client():
     return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
 
 
-def ensure_index(client, index_name):
-    index_body = {
-        "settings": {"index": {"knn": True}},
-        "mappings": {
-            "properties": {
-                "document_vector": {
-                    "type": "knn_vector",
-                    "dimension": 384,
-                    "method": {
-                        "name": "hnsw",
-                        "space_type": "cosinesimil",
-                        "engine": "lucene",
-                        "parameters": {},
-                    },
-                },
-                "metadata": {
-                    "properties": {
-                        "page": {"type": "unsigned_long"},
-                        "filename": {"type": "keyword"},
-                        "source": {"type": "keyword"},
-                        "title": {"type": "keyword"},
-                        "language": {"type": "keyword"},
-                        "ingest_date": {"type": "date"},
-                        "extension": {"type": "keyword"},
-                    }
-                },
-                "metadata_type": {"type": "keyword"},
-            }
-        },
-    }
-
+def ensure_index(client: OpenSearch, index_name: str):
     if not client.indices.exists(index_name):
+        index_body = {
+            "settings": {"index": {"knn": True}},
+            "mappings": {
+                "properties": {
+                    "document_vector": {
+                        "type": "knn_vector",
+                        "dimension": 384,
+                        "method": {
+                            "name": "hnsw",
+                            "space_type": "cosinesimil",
+                            "engine": "lucene",
+                            "parameters": {},
+                        },
+                    },
+                    "parent_index": {"type": "keyword"},
+                    "parent_id": {"type": "keyword"},
+                }
+            },
+        }
         client.indices.create(index_name, body=index_body)
 
 
-def insert(client: OpenSearch, index_name: str, pages: list[ConciergeDocument]):
-    entries = []
-    total = len(pages)
+def get_field_type(python_type):
+    if python_type == "int":
+        return "integer"
+    if python_type == "float":
+        return "float"
+    if python_type == "bool":
+        return "boolean"
+    return "keyword"
 
-    for index, page in enumerate(pages):
+
+def insert(client: OpenSearch, collection_name: str, document: ConciergeDocument):
+    entries = []
+
+    metadata_index_name = f"{collection_name}.{document.metadata.type}"
+    if not client.indices.exists(metadata_index_name):
+        index_body = {
+            "mappings": {
+                "properties": {
+                    "collection": {"type": "keyword"},
+                    **{
+                        field.name: {"type": get_field_type(field.type)}
+                        for field in fields(document.metadata)
+                    },
+                }
+            }
+        }
+        print(index_body)
+        client.indices.create(metadata_index_name, body=index_body)
+    # TODO: insert document and get ID
+
+    total = len(document.pages)
+
+    for index, page in enumerate(document.pages):
+        # TODO: ensure index using metadata type + pages
+        # TODO: insert page and get ID
         chunks = splitter.split_text(page.content)
         vects = create_embeddings(chunks)
         entries.extend(
             [
                 {
-                    "_index": index_name,
-                    "metadata_type": page.metadata_type,
-                    "metadata": jsons.dump(page.metadata),
+                    "_index": collection_name,
                     "text": chunks[index],
                     "document_vector": vect,
                 }
@@ -81,6 +98,29 @@ def insert(client: OpenSearch, index_name: str, pages: list[ConciergeDocument]):
         )
         yield (index, total)
     helpers.bulk(client, entries, refresh=True)
+
+
+# def insert(client: OpenSearch, index_name: str, pages: list[ConciergeDocument]):
+#     entries = []
+#     total = len(pages)
+
+#     for index, page in enumerate(pages):
+#         chunks = splitter.split_text(page.content)
+#         vects = create_embeddings(chunks)
+#         entries.extend(
+#             [
+#                 {
+#                     "_index": index_name,
+#                     "metadata_type": page.metadata_type,
+#                     "metadata": jsons.dump(page.metadata),
+#                     "text": chunks[index],
+#                     "document_vector": vect,
+#                 }
+#                 for index, vect in enumerate(vects)
+#             ]
+#         )
+#         yield (index, total)
+#     helpers.bulk(client, entries, refresh=True)
 
 
 def insert_with_tqdm(

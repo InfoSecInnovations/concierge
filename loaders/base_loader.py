@@ -12,21 +12,20 @@ def get_current_time():
 class ConciergeDocument:
     @dataclass
     class DocumentMetadata:
+        type: str
         source: str
         ingest_date: int
 
     @dataclass
-    class SubDocument:
+    class ConciergePage:
         @dataclass
-        class SubDocumentMetadata:
+        class ConciergePageMetadata:
             pass
 
-        metadata: SubDocumentMetadata
-        chunks: list[str]
+        metadata: ConciergePageMetadata
+        content: str
 
-    sub_documents: list[SubDocument]
-
-    metadata_type: str
+    pages: list[ConciergePage]
     metadata: DocumentMetadata
 
 
@@ -40,7 +39,7 @@ class ConciergeDocLoader(metaclass=ABCMeta):
 
 class ConciergeFileLoader(ConciergeDocLoader):
     @dataclass
-    class FileMetaData:
+    class FileMetaData(ConciergeDocument.DocumentMetadata):
         filename: str
 
     @staticmethod
