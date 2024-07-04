@@ -9,8 +9,8 @@ Concierge is a local and modular RAG framework still in alpha.
 
 Built with simplicy and security in mind, it has some features we love -- and hope you do too!
 * The quick install method is so easy.
-* Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use
-* Tasks: you can change what the AI can do for you via dropdowns
+* Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use.
+* Tasks: you can change what the AI can do for you via dropdowns.
 
 ## Dependencies ##  
 
@@ -36,7 +36,7 @@ It is unlikely you'll be able to run Concierge with less than 8GB RAM, at least 
 
 If you're using Docker Desktop you need to make sure at least 4GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 8GB RAM and haven't modified your configuration it's likely you don't need to do anything.
 
-You can get more tips for optimizing your installation here: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, however we have found that Concierge still runs without performing those modifications.
+You should perform the following system configuration steps according to your Operating System: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, otherwise you may not be able to run the OpenSearch container Concierge depends on.
 
 ## Setup
 
