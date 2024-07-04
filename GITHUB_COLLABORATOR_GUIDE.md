@@ -22,6 +22,36 @@ We will be using [semver](https://semver.org/) to number releases, i.e. MAJOR.MI
 - Go to the Releases page, and create a new release from the `main` branch. Prefix the title with "Alpha" or "Beta" if appropriate. In the current stage, all releases should be prefixed with "Alpha"!
 - Copy appropriate section from CHANGELOG.md into the release description.
 
+### Publishing installer updates to PyPI
+
+#### build python package
+
+`cd <package_dir>`
+
+`python -m build` (must be used outside the venv)
+	
+#### publish python package
+
+You will need to have the correct permissions on PyPI
+
+Enter the venv
+
+`pip install twine` into the venv if not done already
+
+delete files from older versions in `dist`
+
+`twine upload dist/*`
+
+### Publishing app updates to Docker Hub
+
+You will need to have the correct permissions on Docker Hub
+
+You need sudo/admin privileges on your machine to run the commands
+
+`docker build -t infosecinnovations/concierge:latest .`
+
+`docker image push infosecinnovations/concierge:latest`
+
 ### TODO
 
 Use script to automate publishing a release!
