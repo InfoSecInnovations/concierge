@@ -5,18 +5,18 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import argparse
-from concierge_backend_lib.opensearch import get_client, delete_index
+from concierge_backend_lib.opensearch import get_client, delete_collection
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-i",
-    "--index",
+    "-c",
+    "--collection",
     required=True,
-    help="OpenSearch index containing the vectorized data.",
+    help="Collection containing the vectorized data.",
 )
 args = parser.parse_args()
 
-index_name = args.index
+collection_name = args.collection
 
 client = get_client()
-print(delete_index(client, index_name))
+print(delete_collection(client, collection_name))

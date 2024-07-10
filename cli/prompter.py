@@ -101,12 +101,15 @@ while True:
 
     print("\nResponding based on the following sources:")
     for source in context["sources"]:
-        metadata = source["metadata"]
+        doc_metadata = source["doc_metadata"]
+        page_metadata = source["page_metadata"]
         if source["type"] == "pdf":
-            print(f'   PDF File: page {metadata["page"]} of {metadata["source"]}')
+            print(
+                f'   PDF File: page {page_metadata["page"]} of {doc_metadata["source"]}'
+            )
         if source["type"] == "web":
             print(
-                f'   Web page: {metadata["source"]} scraped {metadata["ingest_date"]}'
+                f'   Web page: {page_metadata["source"]} scraped {doc_metadata["ingest_date"]}, top level URL: {doc_metadata["source"]}'
             )
     print("\n\n")
 

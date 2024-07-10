@@ -6,7 +6,11 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import argparse
 import shutil
-from concierge_backend_lib.opensearch import get_client, ensure_index, insert
+from concierge_backend_lib.opensearch import (
+    get_client,
+    ensure_collection,
+    insert_with_tqdm,
+)
 from concierge_backend_lib.loading import load_file
 
 upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))
@@ -19,19 +23,19 @@ parser.add_argument(
     help="Path of the directory containing the files to ingest.",
 )
 parser.add_argument(
-    "-i",
-    "--index",
+    "-c",
+    "--collection",
     required=True,
-    help="OpenSearch index containing the vectorized data.",
+    help="Collection containing the vectorized data.",
 )
 args = parser.parse_args()
 source_path = args.source
-index = args.index
+collection = args.collection
 
 source_files = os.listdir(source_path)
 
 client = get_client()
-ensure_index(client, index)
+ensure_collection(client, collection)
 
 for file in source_files:
     uploaded_path = os.path.join(upload_dir, file)
@@ -39,5 +43,4 @@ for file in source_files:
     print(file)
     doc = load_file(upload_dir, file)
     if doc:
-        for prog in insert(client, index, doc):
-            print(prog[0])
+        insert_with_tqdm(client, collection, doc)

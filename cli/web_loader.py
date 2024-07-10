@@ -5,7 +5,11 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loaders.web import WebLoader
-from concierge_backend_lib.opensearch import get_client, ensure_index, insert_with_tqdm
+from concierge_backend_lib.opensearch import (
+    get_client,
+    ensure_collection,
+    insert_with_tqdm,
+)
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -26,7 +30,7 @@ url = args.url
 index_name = args.index
 
 client = get_client()
-ensure_index(client, index_name)
+ensure_collection(client, index_name)
 
 pages = WebLoader.load(url)
 print(url)
