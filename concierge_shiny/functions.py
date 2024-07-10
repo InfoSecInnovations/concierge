@@ -5,14 +5,15 @@ from tqdm import tqdm
 from util.async_generator import asyncify_generator
 
 
-def chunk_link(uploads_dir, chunk):
-    metadata = chunk["metadata"]
-    if chunk["type"] == "pdf":
-        return f'PDF File: [page {metadata["page"]} of {metadata["filename"]}](<{uploads_dir}/{metadata["filename"]}#page={metadata["page"]}>){{target="_blank"}}'
-    if chunk["type"] == "web":
-        return f'Web page: <{metadata["source"]}>{{target="_blank"}} scraped {metadata["ingest_date"]}'
-    if chunk["type"] == "plaintext":
-        return f'{metadata["extension"]} file {metadata["filename"]}'
+def page_link(uploads_dir, page):
+    doc_metadata = page["doc_metadata"]
+    page_metadata = page["page_metadata"]
+    if page["type"] == "pdf":
+        return f'PDF File: [page {page_metadata["page"]} of {doc_metadata["filename"]}](<{uploads_dir}/{doc_metadata["filename"]}#page={page_metadata["page"]}>){{target="_blank"}}'
+    if page["type"] == "web":
+        return f'Web page: <{page_metadata["source"]}>{{target="_blank"}} scraped {doc_metadata["ingest_date"]} from parent URL <{doc_metadata["source"]}>{{target="_blank"}}'
+    if page["type"] == "plaintext":
+        return f'{doc_metadata["extension"]} file {doc_metadata["filename"]}'
 
 
 def doc_link(uploads_dir, doc):

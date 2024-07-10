@@ -13,7 +13,7 @@ from components import (
 )
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs
-from functions import chunk_link, load_llm_model
+from functions import page_link, load_llm_model
 
 md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
@@ -151,7 +151,7 @@ def prompter_server(
         if len(context["sources"]):
             yield "Responding based on the following sources:\n\n"
             for source in context["sources"]:
-                yield f"{chunk_link(upload_dir, source)}\n\n"
+                yield f"{page_link(upload_dir, source)}\n\n"
             if "prompt" in tasks[task]:
                 yield get_response(
                     context["context"],

@@ -109,8 +109,6 @@ def insert(client: OpenSearch, collection_name: str, document: ConciergeDocument
                 **vars(page.metadata),
             },
         )["_id"]
-        # TODO: ensure index using metadata type + pages
-        # TODO: insert page and get ID
         chunks = splitter.split_text(page.content)
         vects = create_embeddings(chunks)
         entries.extend(
@@ -213,7 +211,9 @@ def delete_index(client: OpenSearch, index_name: str):
 
 
 def delete_collection(client: OpenSearch, collection_name: str):
+    # get all indices in alias
     indices = client.indices.resolve_index(collection_name)["aliases"][0]["indices"]
+    # deleting all indices also removes the alias
     response = client.indices.delete(index=",".join(indices))
     if not response["acknowledged"]:
         print(f"Failed to delete indices for {collection_name}")
@@ -221,36 +221,40 @@ def delete_collection(client: OpenSearch, collection_name: str):
     return True
 
 
-def get_documents(client: OpenSearch, index_name: str):
-    query = {
-        "size": 0,
-        "aggs": {
-            "documents": {
-                "multi_terms": {
-                    "size": 100000,
-                    "terms": [
-                        {"field": "metadata_type"},
-                        {
-                            "field": "metadata.source",
-                        },
-                        {"field": "metadata.extension", "missing": "n/a"},
-                    ],
+def get_documents(client: OpenSearch, collection_name: str):
+    # get all indices in alias
+    indices = client.indices.resolve_index(collection_name)["aliases"][0]["indices"]
+    # locate top level indices in collection alias
+    mappings = client.indices.get_mapping(",".join(indices))
+    top_level = [
+        index
+        for index in indices
+        if "parent_index" not in mappings[index]["mappings"]["properties"]
+    ]
+    # get documents from all of these
+    query = {"query": {"match_all": {}}}
+    response = client.search(body=query, index=",".join(top_level))
+    docs = [
+        {**hit["_source"], "id": hit["_id"], "index": hit["_index"]}
+        for hit in response["hits"]["hits"]
+    ]
+    for doc in docs:
+        query = {
+            "query": {
+                "bool": {
+                    "filter": [
+                        {"term": {"parent_id": doc["id"]}},
+                        {"term": {"parent_index": doc["index"]}},
+                    ]
                 }
             }
-        },
-    }
-
-    response = client.search(body=query, index=index_name)
-
-    return [
-        {
-            "type": bucket["key"][0],
-            "source": bucket["key"][1],
-            "extension": bucket["key"][2],
-            "vector_count": bucket["doc_count"],
         }
-        for bucket in response["aggregations"]["documents"]["buckets"]
-    ]
+        # get all documents that are a child of this one (these will be pages)
+        response = client.search(body=query, index=collection_name)
+        doc["page_count"] = response["hits"]["total"]["value"]
+        # TODO: get vector count
+
+    return docs
 
 
 def delete_document(client: OpenSearch, index_name: str, type: str, source: str):
