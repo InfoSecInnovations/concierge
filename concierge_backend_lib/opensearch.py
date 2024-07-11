@@ -43,7 +43,7 @@ def ensure_collection(client: OpenSearch, collection_name: str):
 
 def get_collections(client: OpenSearch):
     response = client.indices.get("*")
-    # TODO: we must be able to do this in OpenSearch somehow?
+    # TODO: can we do this in OpenSearch somehow?
     response = [
         list(index["aliases"].keys())[0]
         for index in response.values()
