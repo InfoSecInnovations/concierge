@@ -41,16 +41,16 @@ def ensure_collection(client: OpenSearch, collection_name: str):
         client.indices.create(index_name, body=index_body)
 
 
-def get_indices(client: OpenSearch):
+def get_collections(client: OpenSearch):
     response = client.indices.get("*")
     # TODO: we must be able to do this in OpenSearch somehow?
-    response = {
-        k: v
-        for k, v in response.items()
-        if "document_vector" in v["mappings"]["properties"]
-        and v["mappings"]["properties"]["document_vector"]["type"] == "knn_vector"
-    }
-    return list(response.keys())
+    response = [
+        list(index["aliases"].keys())[0]
+        for index in response.values()
+        if "document_vector" in index["mappings"]["properties"]
+        and index["mappings"]["properties"]["document_vector"]["type"] == "knn_vector"
+    ]
+    return response
 
 
 def delete_index(client: OpenSearch, index_name: str):
