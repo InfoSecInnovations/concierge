@@ -9,19 +9,19 @@ from concierge_backend_lib.opensearch import get_client, get_documents
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-i",
-    "--index",
+    "-c",
+    "--collection",
     required=True,
-    help="OpenSearch index containing the vectorized data.",
+    help="Collection containing the vectorized data.",
 )
 args = parser.parse_args()
 
-index_name = args.index
+collection_name = args.collection
 
 client = get_client()
-documents = get_documents(client, index_name)
+documents = get_documents(client, collection_name)
 
 for document in documents:
     print(
-        f"source: {document['source']}, type: {document['type']}, vectors: {document['vector_count']}"
+        f"source: {document['source']}, type: {document['type']}, pages: {document['page_count']}, vectors: {document['vector_count']}"
     )

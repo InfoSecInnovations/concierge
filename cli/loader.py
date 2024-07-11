@@ -6,11 +6,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import argparse
 import shutil
-from concierge_backend_lib.opensearch import (
-    get_client,
-    ensure_collection,
-    insert_with_tqdm,
-)
+from concierge_backend_lib.opensearch import get_client, ensure_collection
+from concierge_backend_lib.ingesting import insert_with_tqdm
 from concierge_backend_lib.loading import load_file
 
 upload_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "uploads"))

@@ -1,21 +1,9 @@
 import os
 from dotenv import load_dotenv
-from opensearchpy import OpenSearch, helpers
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from tqdm import tqdm
-from concierge_backend_lib.embeddings import create_embeddings
-from loaders.base_loader import ConciergeDocument
-from dataclasses import fields
+from opensearchpy import OpenSearch
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
-
-chunk_size = 200
-chunk_overlap = 25
-
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=chunk_size, chunk_overlap=chunk_overlap
-)
 
 
 def get_client():
@@ -43,154 +31,14 @@ def ensure_collection(client: OpenSearch, collection_name: str):
                             "parameters": {},
                         },
                     },
-                    "parent_index": {"type": "keyword"},
-                    "parent_id": {"type": "keyword"},
+                    "page_index": {"type": "keyword"},
+                    "page_id": {"type": "keyword"},
+                    "doc_index": {"type": "keyword"},
+                    "doc_id": {"type": "keyword"},
                 }
             },
         }
         client.indices.create(index_name, body=index_body)
-
-
-def get_field_type(python_type):
-    if python_type == "int":
-        return "long"
-    if python_type == "float":
-        return "float"
-    if python_type == "bool":
-        return "boolean"
-    return "keyword"
-
-
-def insert(client: OpenSearch, collection_name: str, document: ConciergeDocument):
-    entries = []
-
-    metadata_index_name = f"{collection_name}.{document.metadata.type}"
-    if not client.indices.exists(metadata_index_name):
-        index_body = {
-            "aliases": {collection_name: {}},
-            "mappings": {
-                "properties": {
-                    field.name: {"type": get_field_type(field.type)}
-                    for field in fields(document.metadata)
-                }
-            },
-        }
-        client.indices.create(metadata_index_name, body=index_body)
-    metadata_id = client.index(metadata_index_name, vars(document.metadata))["_id"]
-
-    total = len(document.pages)
-    if not total:
-        return
-
-    page = document.pages[0]
-    page_data_index_name = f"{metadata_index_name}.pages"
-    if not client.indices.exists(page_data_index_name):
-        index_body = {
-            "aliases": {collection_name: {}},
-            "mappings": {
-                "properties": {
-                    "parent_index": {"type": "keyword"},
-                    "parent_id": {"type": "keyword"},
-                    **{
-                        field.name: {"type": get_field_type(field.type)}
-                        for field in fields(page.metadata)
-                    },
-                }
-            },
-        }
-        client.indices.create(page_data_index_name, body=index_body)
-
-    for index, page in enumerate(document.pages):
-        page_id = client.index(
-            page_data_index_name,
-            {
-                "parent_index": metadata_index_name,
-                "parent_id": metadata_id,
-                **vars(page.metadata),
-            },
-        )["_id"]
-        chunks = splitter.split_text(page.content)
-        vects = create_embeddings(chunks)
-        entries.extend(
-            [
-                {
-                    "_index": collection_name,
-                    "text": chunks[index],
-                    "document_vector": vect,
-                    "parent_index": page_data_index_name,
-                    "parent_id": page_id,
-                }
-                for index, vect in enumerate(vects)
-            ]
-        )
-        yield (index, total)
-    helpers.bulk(client, entries, refresh=True)
-
-
-def insert_with_tqdm(
-    client: OpenSearch, collection_name: str, document: ConciergeDocument
-):
-    page_progress = tqdm(total=len(document.pages))
-    for x in insert(client, collection_name, document):
-        page_progress.n = x[0] + 1
-        page_progress.refresh()
-    page_progress.close()
-
-
-def get_context(
-    client: OpenSearch, collection_name: str, reference_limit: int, user_input: str
-):
-    query = {
-        "size": reference_limit,
-        "query": {
-            "knn": {
-                "document_vector": {
-                    "vector": create_embeddings(user_input),
-                    "min_score": 0.8,  # this is quite a magic number, tweak as needed!
-                }
-            }
-        },
-        "_source": {"includes": ["parent_index", "parent_id", "text"]},
-    }
-
-    response = client.search(body=query, index=f"{collection_name}.vectors")
-
-    hits = [hit["_source"] for hit in response["hits"]["hits"]]
-
-    page_metadata = {}
-
-    for hit in hits:
-        if hit["parent_index"] not in page_metadata:
-            page_metadata[hit["parent_index"]] = {}
-        if hit["parent_id"] not in page_metadata[hit["parent_index"]]:
-            response = client.get(hit["parent_index"], hit["parent_id"])
-            page_metadata[hit["parent_index"]][hit["parent_id"]] = response["_source"]
-
-    doc_metadata = {}
-
-    for item in page_metadata.values():
-        for value in item.values():
-            if value["parent_index"] not in doc_metadata:
-                doc_metadata[value["parent_index"]] = {}
-            if value["parent_id"] not in doc_metadata[value["parent_index"]]:
-                response = client.get(value["parent_index"], value["parent_id"])
-                doc_metadata[value["parent_index"]][value["parent_id"]] = response[
-                    "_source"
-                ]
-
-    sources = []
-
-    for hit in hits:
-        page = page_metadata[hit["parent_index"]][hit["parent_id"]]
-        doc = doc_metadata[page["parent_index"]][page["parent_id"]]
-        sources.append(
-            {"type": doc["type"], "page_metadata": page, "doc_metadata": doc}
-        )
-
-    return {
-        "context": "\n".join([hit["text"] for hit in hits]),
-        "sources": sources,
-    }
 
 
 def get_indices(client: OpenSearch):
@@ -229,7 +77,7 @@ def get_documents(client: OpenSearch, collection_name: str):
     top_level = [
         index
         for index in indices
-        if "parent_index" not in mappings[index]["mappings"]["properties"]
+        if "doc_index" not in mappings[index]["mappings"]["properties"]
     ]
     # get documents from all of these
     query = {"query": {"match_all": {}}}
@@ -243,16 +91,34 @@ def get_documents(client: OpenSearch, collection_name: str):
             "query": {
                 "bool": {
                     "filter": [
-                        {"term": {"parent_id": doc["id"]}},
-                        {"term": {"parent_index": doc["index"]}},
-                    ]
+                        {"term": {"doc_id": doc["id"]}},
+                        {"term": {"doc_index": doc["index"]}},
+                    ],
+                    "must_not": {
+                        "exists": {
+                            "field": "document_vector"
+                        }  # if there's no vector field this is a page
+                    },
                 }
             }
         }
-        # get all documents that are a child of this one (these will be pages)
-        response = client.search(body=query, index=collection_name)
-        doc["page_count"] = response["hits"]["total"]["value"]
-        # TODO: get vector count
+        doc["page_count"] = client.count(body=query, index=collection_name)["count"]
+        query = {
+            "query": {
+                "bool": {
+                    "filter": [
+                        {"term": {"doc_id": doc["id"]}},
+                        {"term": {"doc_index": doc["index"]}},
+                    ],
+                    "must": {
+                        "exists": {
+                            "field": "document_vector"
+                        }  # we want vectors only here
+                    },
+                }
+            }
+        }
+        doc["vector_count"] = client.count(body=query, index=collection_name)["count"]
 
     return docs
 

@@ -7,9 +7,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
-from concierge_backend_lib.prompting import get_response
+from concierge_backend_lib.prompting import get_context, get_response
 from concierge_backend_lib.ollama import load_model
-from concierge_backend_lib.opensearch import get_client, get_context
+from concierge_backend_lib.opensearch import get_client
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
