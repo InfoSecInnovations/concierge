@@ -1,6 +1,6 @@
 import requests
 import os
-from concierge_backend_lib.opensearch import get_client, get_indices
+from concierge_backend_lib.opensearch import get_client, get_collections
 
 OLLAMA_HOST = os.getenv("OLLAMA_HOST") or "localhost"
 OPENSEARCH_HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
@@ -16,7 +16,7 @@ def check_ollama():
 def check_opensearch():
     try:
         client = get_client()
-        get_indices(client)
+        get_collections(client)
         return True
     except Exception:
         return False

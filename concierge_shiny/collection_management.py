@@ -7,8 +7,8 @@ from components import (
 )
 from util.async_single import asyncify
 from concierge_backend_lib.opensearch import (
-    get_indices,
-    delete_index,
+    get_collections,
+    delete_collection,
     get_documents,
     delete_document,
 )
@@ -55,7 +55,7 @@ def document_server(
     @ui.bind_task_button(button_id="delete_doc")
     @reactive.extended_task
     async def delete():
-        await asyncify(delete_document, client, collection, doc["type"], doc["source"])
+        await asyncify(delete_document, client, collection, doc["type"], doc["id"])
         deleting.set(False)
 
     @reactive.effect
@@ -150,14 +150,14 @@ def collection_management_server(
         if fetching_docs.get():
             return ui.markdown("#### Fetching documents in collection...")
         return ui.TagList(
-            *[document_ui(doc["id"], upload_dir, doc) for doc in current_docs.get()],
+            *[document_ui(doc["el_id"], upload_dir, doc) for doc in current_docs.get()],
         )
 
     @ui.bind_task_button(button_id="delete")
     @reactive.extended_task
     async def delete(collection_name):
-        await asyncify(delete_index, client, collection_name)
-        new_collections = await asyncify(get_indices, client)
+        await asyncify(delete_collection, client, collection_name)
+        new_collections = await asyncify(get_collections, client)
         collections.set(new_collections)
         if not new_collections:
             selected_collection.set(None)
@@ -173,7 +173,7 @@ def collection_management_server(
     async def get_documents_task(collection_name):
         docs = await asyncify(get_documents, client, collection_name)
         fetching_docs.set(False)
-        current_docs.set([{**doc, "id": rand_hex(4)} for doc in docs])
+        current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
 
     @reactive.effect
     @reactive.event(
@@ -190,5 +190,5 @@ def collection_management_server(
     def document_servers():
         for doc in current_docs.get():
             document_server(
-                doc["id"], client, selected_collection.get(), doc, on_delete_document
+                doc["el_id"], client, selected_collection.get(), doc, on_delete_document
             )

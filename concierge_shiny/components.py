@@ -1,7 +1,7 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from concierge_backend_lib.opensearch import get_indices, ensure_index
+from concierge_backend_lib.opensearch import get_collections, ensure_collection
 from util.async_single import asyncify
 import os
 from markdown_it import MarkdownIt
@@ -250,10 +250,10 @@ def collection_create_server(
 
     @reactive.extended_task
     async def create_collection(collection_name):
-        await asyncify(ensure_index, client, collection_name)
+        await asyncify(ensure_collection, client, collection_name)
         selected_collection.set(collection_name)
         print(f"created collection {collection_name}")
-        collections.set(await asyncify(get_indices, client))
+        collections.set(await asyncify(get_collections, client))
         creating.set(False)
 
     @reactive.effect

@@ -2,8 +2,7 @@ from shiny import ui, Inputs, Outputs, Session, module, reactive, render
 from configobj import ConfigObj
 from pathlib import Path
 import os
-from concierge_backend_lib.prompting import get_response
-from concierge_backend_lib.opensearch import get_context
+from concierge_backend_lib.prompting import get_response, get_context
 from util.async_generator import asyncify_generator
 from components import (
     collection_selector_ui,

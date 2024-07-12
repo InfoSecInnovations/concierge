@@ -2,7 +2,7 @@ from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 import shutil
 import os
 from tqdm import tqdm
-from concierge_backend_lib.opensearch import insert
+from concierge_backend_lib.ingesting import insert
 from concierge_backend_lib.loading import load_file
 from loaders.web import WebLoader
 from loaders.base_loader import ConciergeDocument
@@ -57,13 +57,11 @@ def ingester_server(
     def file_input():
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
-    async def load_pages(
-        pages: list[ConciergeDocument], collection_name: str, label: str
-    ):
-        page_progress = tqdm(total=len(pages))
-        with ui.Progress(1, len(pages)) as p:
+    async def load_doc(doc: ConciergeDocument, collection_name: str, label: str):
+        page_progress = tqdm(total=len(doc.pages))
+        with ui.Progress(1, len(doc.pages)) as p:
             p.set(0, message=f"{label}: loading...")
-            async for x in asyncify_generator(insert(client, collection_name, pages)):
+            async for x in asyncify_generator(insert(client, collection_name, doc)):
                 p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")
                 page_progress.n = x[0] + 1
                 page_progress.refresh()
@@ -75,9 +73,9 @@ def ingester_server(
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
             shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
-            pages = load_file(upload_dir, file["name"])
-            if pages:
-                await load_pages(pages, collection_name, file["name"])
+            doc = load_file(upload_dir, file["name"])
+            if doc:
+                await load_doc(doc, collection_name, file["name"])
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
@@ -85,8 +83,8 @@ def ingester_server(
         for url in urls:
             print(url)
             ui.notification_show(f"Processing {url}")
-            pages = WebLoader.load(url)
-            await load_pages(pages, collection_name, url)
+            doc = WebLoader.load(url)
+            await load_doc(doc, collection_name, url)
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 

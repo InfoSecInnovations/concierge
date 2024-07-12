@@ -2,7 +2,7 @@ from shiny import App, ui, Inputs, Outputs, Session, reactive
 from home import home_ui
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
-from concierge_backend_lib.opensearch import get_indices, get_client
+from concierge_backend_lib.opensearch import get_collections, get_client
 import os
 import shinyswatch
 from components import status_ui, status_server
@@ -53,7 +53,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.extended_task
     async def set_collections():
-        collections.set(await asyncify(get_indices, client))
+        collections.set(await asyncify(get_collections, client))
 
     @reactive.effect
     def update_collections():
