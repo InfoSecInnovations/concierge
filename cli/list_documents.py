@@ -23,5 +23,5 @@ documents = get_documents(client, collection_name)
 
 for document in documents:
     print(
-        f"source: {document['source']}, type: {document['type']}, pages: {document['page_count']}, vectors: {document['vector_count']}"
+        f"id: {document['id']}, source: {document['source']}, type: {document['type']}, pages: {document['page_count']}, vectors: {document['vector_count']}"
     )

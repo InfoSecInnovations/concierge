@@ -123,17 +123,21 @@ def get_documents(client: OpenSearch, collection_name: str):
     return docs
 
 
-def delete_document(client: OpenSearch, index_name: str, type: str, source: str):
+def delete_document(
+    client: OpenSearch, collection_name: str, doc_type: str, doc_id: str
+):
+    doc_index = f"{collection_name}.{doc_type}"
     query = {
         "query": {
             "bool": {
                 "filter": [
-                    {"term": {"metadata_type": type}},
-                    {"term": {"metadata.source": source}},
+                    {"term": {"doc_id": doc_id}},
+                    {"term": {"doc_index": doc_index}},
                 ]
             }
         }
     }
-    response = client.delete_by_query(body=query, index=index_name, refresh=True)
-
-    return response["deleted"]
+    response = client.delete_by_query(body=query, index=collection_name)
+    deleted_count = response["deleted"]
+    client.delete(doc_index, doc_id, refresh=True)
+    return deleted_count + 1

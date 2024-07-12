@@ -9,28 +9,28 @@ from concierge_backend_lib.opensearch import get_client, delete_document
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-i",
-    "--index",
+    "-c",
+    "--collection",
     required=True,
-    help="OpenSearch index containing the vectorized data.",
+    help="collection containing the document.",
 )
 parser.add_argument(
     "-t",
     "--type",
     required=True,
-    help="Document type (use the documents command to list this value for existing documents)",
+    help="type of document",
 )
 parser.add_argument(
-    "-s",
-    "--source",
+    "-i",
+    "--id",
     required=True,
-    help="Document source (use the documents command to list this value for existing documents)",
+    help="ID of document",
 )
 args = parser.parse_args()
 
-index_name = args.index
+collection_name = args.collection
 doc_type = args.type
-doc_source = args.source
+doc_id = args.id
 
 client = get_client()
-print(f"{delete_document(client, index_name, doc_type, doc_source)} vectors deleted.")
+print(f"{delete_document(client, collection_name, doc_type, doc_id)} entities deleted.")
