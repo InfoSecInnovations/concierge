@@ -192,6 +192,8 @@ Repeat the process used during install.
 
 While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.
 
+One notable feature is that the `loader` script loads an entire directory of documents which the GUI is currently unable to do.
+
 To use them you can navigate to the `cli` subdirectory or append `cli.` to the script name from the parent directory.
 
 Make sure you are running inside the venv.
@@ -202,9 +204,10 @@ Available commands:
 - `loader`
 - `web_loader`
 - `prompter`
-- `list_indices`
-- `documents`
-- `delete_index`
+- `list_collections`
+- `list_documents`
+- `delete_collection`
+- `delete_document`
 
 ## Known issues
 

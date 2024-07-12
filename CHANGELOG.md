@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 - TBD
+
+### Changes
+
+- OpenSearch backend now uses multiple indices to store document metadata, this avoids unnecessary duplication of said metadata and allows us to more easily reference specific documents in the collection
+- Some of the CLI scripts have been renamed to be more consistent and better fit the new database schema
+
 ## 0.3.0 - 2024-07-03
 
 ### Changes
