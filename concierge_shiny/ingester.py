@@ -59,7 +59,7 @@ def ingester_server(
 
     async def load_doc(doc: ConciergeDocument, collection_name: str, label: str):
         page_progress = tqdm(total=len(doc.pages))
-        with ui.Progress(1, len(doc.pages)) as p:
+        with ui.Progress(0, len(doc.pages)) as p:
             p.set(0, message=f"{label}: loading...")
             async for x in asyncify_generator(insert(client, collection_name, doc)):
                 p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")

@@ -79,8 +79,14 @@ def get_documents(client: OpenSearch, collection_name: str):
         for index in indices
         if "doc_index" not in mappings[index]["mappings"]["properties"]
     ]
+    # if there aren't any document indices we want to return here to avoid querying all existing data
+    if not top_level:
+        return []
     # get documents from all of these
-    query = {"query": {"match_all": {}}}
+    query = {
+        "size": 10000,  # this is the maximum number of results
+        "query": {"match_all": {}},
+    }
     response = client.search(body=query, index=",".join(top_level))
     docs = [
         {**hit["_source"], "id": hit["_id"], "index": hit["_index"]}
