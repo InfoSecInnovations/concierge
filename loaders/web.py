@@ -6,7 +6,7 @@ from langchain_community.document_loaders.recursive_url_loader import RecursiveU
 
 class WebLoader(ConciergeDocLoader):
     @dataclass
-    class WebPageMetadata(ConciergeDocument.SubDocument.SubDocumentMetadata):
+    class WebPageMetadata(ConciergeDocument.ConciergePage.ConciergePageMetadata):
         title: str | None
         language: str | None
         source: str

@@ -13,13 +13,13 @@ from concierge_backend_lib.opensearch import get_client
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-t", "--task", required=True, help="Required: What you want Concierge to do."
+    "-t", "--task", required=True, help="What you want Concierge to do."
 )
 parser.add_argument(
-    "-i",
-    "--index",
+    "-c",
+    "--collection",
     required=True,
-    help="OpenSearch index containing the vectorized data.",
+    help="Collection containing the vectorized data.",
 )
 parser.add_argument(
     "-p", "--persona", help="What personality or tone you want as the response."
@@ -27,7 +27,7 @@ parser.add_argument(
 parser.add_argument(
     "-e", "--enhancers", nargs="*", help="Comments to be added after the main response."
 )
-parser.add_argument("-f", "--file", help="file to be used in prompt to Concierge.")
+parser.add_argument("-f", "--file", help="File to be used in prompt to Concierge.")
 args = parser.parse_args()
 
 config_dir = os.path.abspath(
@@ -62,7 +62,7 @@ if args.file:
     else:
         source_file = open(args.file, "r")
 
-index_name = args.index
+collection_name = args.collection
 
 ### VARs ###
 # TODO will want to make this a select later
@@ -97,7 +97,7 @@ while True:
     print(task["greeting"])
     user_input = input()
 
-    context = get_context(client, index_name, references, user_input)
+    context = get_context(client, collection_name, references, user_input)
 
     print("\nResponding based on the following sources:")
     for source in context["sources"]:
