@@ -26,11 +26,11 @@ md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
 
 @module.ui
-def document_ui(upload_dir, doc):
+def document_ui(collection_name, doc):
     return ui.card(
         ui.markdown(
             f"""
-{doc_link(upload_dir, doc)}
+{doc_link(collection_name, doc)}
 
 {doc['vector_count']} vectors
 """,
@@ -89,7 +89,6 @@ def collection_management_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    upload_dir,
     selected_collection,
     collections,
     opensearch_status,
@@ -100,7 +99,7 @@ def collection_management_server(
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server(
-        "ingester", upload_dir, selected_collection, collections, client
+        "ingester", selected_collection, collections, client
     )
 
     document_delete_trigger = reactive.value(0)
@@ -152,7 +151,10 @@ def collection_management_server(
         if fetching_docs.get():
             return ui.markdown("#### Fetching documents in collection...")
         return ui.TagList(
-            *[document_ui(doc["el_id"], upload_dir, doc) for doc in current_docs.get()],
+            *[
+                document_ui(doc["el_id"], selected_collection.get(), doc)
+                for doc in current_docs.get()
+            ],
         )
 
     @ui.bind_task_button(button_id="delete")

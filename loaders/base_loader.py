@@ -8,17 +8,17 @@ def get_current_time():
     return int(round(time.time() * 1000))
 
 
-@dataclass
+@dataclass(kw_only=True)
 class ConciergeDocument:
-    @dataclass
+    @dataclass(kw_only=True)
     class DocumentMetadata:
         type: str
         source: str
         ingest_date: int
 
-    @dataclass
+    @dataclass(kw_only=True)
     class ConciergePage:
-        @dataclass
+        @dataclass(kw_only=True)
         class ConciergePageMetadata:
             pass
 
@@ -38,9 +38,10 @@ class ConciergeDocLoader(metaclass=ABCMeta):
 
 
 class ConciergeFileLoader(ConciergeDocLoader):
-    @dataclass
+    @dataclass(kw_only=True)
     class FileMetaData(ConciergeDocument.DocumentMetadata):
         filename: str
+        media_type: str | None = None
 
     @staticmethod
     @abstractmethod

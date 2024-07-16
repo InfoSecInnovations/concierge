@@ -61,7 +61,6 @@ def prompter_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    upload_dir,
     selected_collection,
     collections,
     opensearch_status,
@@ -150,7 +149,7 @@ def prompter_server(
         if len(context["sources"]):
             yield "Responding based on the following sources:\n\n"
             for source in context["sources"]:
-                yield f"{page_link(upload_dir, source)}\n\n"
+                yield f"{page_link(collection_name, source)}\n\n"
             if "prompt" in tasks[task]:
                 yield get_response(
                     context["context"],

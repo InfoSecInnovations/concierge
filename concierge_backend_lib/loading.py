@@ -11,14 +11,13 @@ from loaders.text import TextFileLoader
 loaders: list[ConciergeFileLoader] = [PDFLoader, TextFileLoader]
 
 
-def load_file(directory, filename) -> ConciergeDocument | None:
-    full_path = os.path.join(directory, filename)
+def load_file(full_path) -> ConciergeDocument | None:
     for loader in loaders:
         if loader.can_load(full_path):
             try:
                 return loader.load(full_path)
-            except Exception:
-                pass
+            except Exception as e:
+                print(e)
     print(
         f"{full_path} was unable to be loaded by any of the current Concierge loading options"
     )

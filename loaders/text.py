@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 class TextFileLoader(ConciergeFileLoader):
-    @dataclass
+    @dataclass(kw_only=True)
     class TextFileMetadata(ConciergeFileLoader.FileMetaData):
         extension: str
 

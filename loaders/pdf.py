@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 class PDFLoader(ConciergeFileLoader):
-    @dataclass
+    @dataclass(kw_only=True)
     class PDFPageMetadata(ConciergeDocument.ConciergePage.ConciergePageMetadata):
         page: int
 
@@ -26,6 +26,7 @@ class PDFLoader(ConciergeFileLoader):
                 source=full_path,
                 filename=Path(full_path).name,
                 ingest_date=date_time,
+                media_type="application/pdf",
             ),
             pages=[
                 ConciergeDocument.ConciergePage(

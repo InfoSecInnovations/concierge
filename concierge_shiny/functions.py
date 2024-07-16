@@ -1,30 +1,51 @@
-import ntpath
 from shiny import ui
 from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from util.async_generator import asyncify_generator
 
 
-def page_link(uploads_dir, page):
+def doc_url(collection_name, doc_type, doc_id):
+    return f"/files/{collection_name}/{doc_type}/{doc_id}"
+
+
+def md_link(url, text=None):
+    if text:
+        return f'[{text}](<{url}>){{target="_blank"}}'
+    return f'<{url}>{{target="_blank"}}'
+
+
+def page_link(collection_name, page):
     doc_metadata = page["doc_metadata"]
     page_metadata = page["page_metadata"]
     if page["type"] == "pdf":
-        return f'PDF File: [page {page_metadata["page"]} of {doc_metadata["filename"]}](<{uploads_dir}/{doc_metadata["filename"]}#page={page_metadata["page"]}>){{target="_blank"}}'
+        return f'PDF File: {md_link(
+            f"{doc_url(collection_name, page["type"], doc_metadata["id"])}#page={page_metadata["page"]}", 
+            f"page {page_metadata["page"]} of {doc_metadata["filename"]}"
+        )}'
     if page["type"] == "web":
-        return f'Web page: <{page_metadata["source"]}>{{target="_blank"}} scraped {doc_metadata["ingest_date"]} from parent URL <{doc_metadata["source"]}>{{target="_blank"}}'
-    if page["type"] == "plaintext":
-        return f'{doc_metadata["extension"]} file {doc_metadata["filename"]}'
+        return f'Web page: {md_link(page_metadata["source"])} scraped {doc_metadata["ingest_date"]} from parent URL {md_link(doc_metadata["source"])}'
+    if "filename" in doc_metadata:
+        return f'{doc_metadata["extension"]} file {md_link(
+            doc_url(collection_name, doc_metadata["type"], doc_metadata["id"]),
+            doc_metadata["filename"]
+        )}'
+    return f'{doc_metadata["type"]} type document from {doc_metadata["source"]}'
 
 
-def doc_link(uploads_dir, doc):
+def doc_link(collection_name, doc):
     if doc["type"] == "pdf":
-        filename = ntpath.basename(doc["source"])
-        return f'PDF File: [{filename}](<{uploads_dir}/{filename}>){{target="_blank"}}'
+        return f'PDF File: {md_link(
+            doc_url(collection_name, doc["type"], doc["id"]),
+            doc["filename"]
+        )}'
     if doc["type"] == "web":
-        return f'Web page: <{doc["source"]}>{{target="_blank"}}'
-    if doc["type"] == "plaintext":
-        filename = ntpath.basename(doc["source"])
-        return f'{doc["extension"]} file {filename}'
+        return f'Web page: {md_link(doc["source"])}'
+    if "filename" in doc:
+        return f'{doc["extension"] if "extension" in doc else doc["type"]} file {md_link(
+            doc_url(collection_name, doc["type"], doc["id"]),
+            doc["filename"]
+        )}'
+    return f'{doc["type"]} type document from {doc["source"]}'
 
 
 async def load_llm_model(model_name):

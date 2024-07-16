@@ -28,7 +28,12 @@ def get_field_type(python_type):
     return "keyword"
 
 
-def insert(client: OpenSearch, collection_name: str, document: ConciergeDocument):
+def insert(
+    client: OpenSearch,
+    collection_name: str,
+    document: ConciergeDocument,
+    binary: bytes | None = None,
+):
     entries = []
 
     doc_index_name = f"{collection_name}.{document.metadata.type}"
@@ -46,8 +51,34 @@ def insert(client: OpenSearch, collection_name: str, document: ConciergeDocument
     doc_id = client.index(doc_index_name, vars(document.metadata))["_id"]
 
     total = len(document.pages)
-    if not total:
+    if not total:  # this shouldn't really happen
+        print("document has no pages!")
         return
+
+    if binary:
+        binary_index_name = f"{collection_name}.binary"
+        if not client.indices.exists(binary_index_name):
+            index_body = {
+                "aliases": {collection_name: {}},
+                "mappings": {
+                    "properties": {
+                        "doc_index": {"type": "keyword"},
+                        "doc_id": {"type": "keyword"},
+                        "data": {"type": "binary"},
+                        "media_type": {"type": "keyword"},
+                    }
+                },
+            }
+            client.indices.create(binary_index_name, index_body)
+        client.index(
+            binary_index_name,
+            {
+                "doc_index": doc_index_name,
+                "doc_id": doc_id,
+                "data": binary.hex(),
+                "media_type": document.metadata.media_type or "text/plain",
+            },
+        )
 
     page = document.pages[0]
     page_index_name = f"{doc_index_name}.pages"
@@ -97,10 +128,13 @@ def insert(client: OpenSearch, collection_name: str, document: ConciergeDocument
 
 
 def insert_with_tqdm(
-    client: OpenSearch, collection_name: str, document: ConciergeDocument
+    client: OpenSearch,
+    collection_name: str,
+    document: ConciergeDocument,
+    binary: bytes | None = None,
 ):
     page_progress = tqdm(total=len(document.pages))
-    for x in insert(client, collection_name, document):
+    for x in insert(client, collection_name, document, binary):
         page_progress.n = x[0] + 1
         page_progress.refresh()
     page_progress.close()

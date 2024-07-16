@@ -46,7 +46,10 @@ def get_context(
                 doc_metadata[value["doc_index"]] = {}
             if value["doc_id"] not in doc_metadata[value["doc_index"]]:
                 response = client.get(value["doc_index"], value["doc_id"])
-                doc_metadata[value["doc_index"]][value["doc_id"]] = response["_source"]
+                doc_metadata[value["doc_index"]][value["doc_id"]] = {
+                    **response["_source"],
+                    "id": value["doc_id"],
+                }
 
     sources = []
 

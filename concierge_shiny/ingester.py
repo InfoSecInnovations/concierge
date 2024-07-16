@@ -1,6 +1,4 @@
 from shiny import ui, reactive, render, Inputs, Outputs, Session, module
-import shutil
-import os
 from tqdm import tqdm
 from concierge_backend_lib.ingesting import insert
 from concierge_backend_lib.loading import load_file
@@ -28,7 +26,6 @@ def ingester_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    upload_dir,
     selected_collection,
     collections,
     client: OpenSearch,
@@ -57,25 +54,33 @@ def ingester_server(
     def file_input():
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
-    async def load_doc(doc: ConciergeDocument, collection_name: str, label: str):
+    async def load_doc(
+        doc: ConciergeDocument,
+        collection_name: str,
+        label: str,
+        binary: bytes | None = None,
+    ):
         page_progress = tqdm(total=len(doc.pages))
         with ui.Progress(0, len(doc.pages)) as p:
             p.set(0, message=f"{label}: loading...")
-            async for x in asyncify_generator(insert(client, collection_name, doc)):
+            async for x in asyncify_generator(
+                insert(client, collection_name, doc, binary)
+            ):
                 p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")
                 page_progress.n = x[0] + 1
                 page_progress.refresh()
         page_progress.close()
 
     async def ingest_files(files: list[dict], collection_name: str):
-        os.makedirs(upload_dir, exist_ok=True)  # ensure the upload directory exists!
         for file in files:
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
-            shutil.copyfile(file["datapath"], os.path.join(upload_dir, file["name"]))
-            doc = load_file(upload_dir, file["name"])
+            with open(file["datapath"], "rb") as f:
+                binary = f.read()
+            doc = load_file(file["datapath"])
+            doc.metadata.filename = file["name"]
             if doc:
-                await load_doc(doc, collection_name, file["name"])
+                await load_doc(doc, collection_name, file["name"], binary)
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 

@@ -3,12 +3,12 @@ from home import home_ui
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
 from concierge_backend_lib.opensearch import get_collections, get_client
-import os
 import shinyswatch
 from components import status_ui, status_server
 from util.async_single import asyncify
-
-UPLOADS_DIR = "uploads"
+from opensearch_binary import serve_binary
+from starlette.applications import Starlette
+from starlette.routing import Mount, Route
 
 app_ui = ui.page_auto(
     ui.navset_pill_list(
@@ -33,7 +33,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     client = get_client()
     prompter_server(
         "prompter",
-        UPLOADS_DIR,
         selected_collection,
         collections,
         opensearch_status,
@@ -42,7 +41,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     )
     collection_management_server(
         "collection_management",
-        UPLOADS_DIR,
         selected_collection,
         collections,
         opensearch_status,
@@ -69,12 +67,13 @@ def server(input: Inputs, output: Outputs, session: Session):
         ollama_status.set(current_status["ollama"])
 
 
-app = App(
-    app_ui,
-    server,
-    static_assets={
-        f"/{UPLOADS_DIR}": os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", UPLOADS_DIR)
-        )
-    },
-)
+shiny_app = App(app_ui, server)
+
+
+routes = [
+    Route("/files/{collection_name}/{doc_type}/{doc_id}", endpoint=serve_binary),
+    Mount("/", app=shiny_app),
+]
+
+
+app = Starlette(routes=routes)
