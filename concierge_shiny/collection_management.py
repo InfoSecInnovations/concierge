@@ -129,12 +129,7 @@ def collection_management_server(
                 ui.accordion(
                     ingester_ui("ingester"),
                     ui.accordion_panel(
-                        ui.div(
-                            ui.markdown("#### Manage Documents"),
-                            ui.markdown(
-                                f"({len(current_docs.get())} documents in collection)"
-                            ),
-                        ),
+                        ui.output_ui("documents_title"),
                         ui.output_ui("collection_documents"),
                         value="manage_documents",
                     ),
@@ -144,6 +139,13 @@ def collection_management_server(
                 ui.input_task_button(id="delete", label="Delete Collection"),
             )
         return ui.markdown("Please create a collection first!")
+
+    @render.ui
+    def documents_title():
+        return ui.div(
+            ui.markdown("#### Manage Documents"),
+            ui.markdown(f"({len(current_docs.get())} documents in collection)"),
+        )
 
     @render.ui
     def collection_documents():
