@@ -40,10 +40,7 @@ if not requirements_met:
     compute_method = (
         input("Start docker containers with CPU or GPU? [CPU] or GPU:") or "CPU"
     )
-    if compute_method == "GPU":
-        docker_compose_helper(environment, "GPU")
-    else:
-        docker_compose_helper(environment, "CPU")
+    docker_compose_helper(environment, ".", compute_method)
 
 
 subprocess.run(
