@@ -4,8 +4,12 @@
 
 ### Changes
 
-- OpenSearch backend now uses multiple indices to store document metadata, this avoids unnecessary duplication of said metadata and allows us to more easily reference specific documents in the collection
-- Some of the CLI scripts have been renamed to be more consistent and better fit the new database schema
+- OpenSearch backend now uses multiple indices to store document metadata, this avoids unnecessary duplication of said metadata and allows us to more easily reference specific documents in the collection.
+- Some of the CLI scripts have been renamed to be more consistent and better fit the new database schema.
+
+### Added
+
+- Install script makes necessary changes if previously installed version is incompatible with the one being installed.
 
 ## 0.3.0 - 2024-07-03
 
