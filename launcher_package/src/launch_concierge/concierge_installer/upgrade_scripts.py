@@ -20,6 +20,7 @@ def remove_opensearch(concierge_root_dir):
             "opensearch-dashboards",
         ],
         stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,  # this can error if some containers don't exist, so we just hide the errors
     )
     opensearch_dir = os.path.join(concierge_root_dir, "volumes", "opensearch-data1")
     if os.path.exists(opensearch_dir):
