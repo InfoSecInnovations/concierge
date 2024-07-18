@@ -19,10 +19,10 @@ class ConciergeDocument:
     @dataclass(kw_only=True)
     class ConciergePage:
         @dataclass(kw_only=True)
-        class ConciergePageMetadata:
+        class PageMetadata:
             pass
 
-        metadata: ConciergePageMetadata
+        metadata: PageMetadata
         content: str
 
     pages: list[ConciergePage]

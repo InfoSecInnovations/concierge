@@ -31,7 +31,7 @@ class TextFileLoader(ConciergeFileLoader):
             ),
             pages=[  # we just load the whole file into a single sub document
                 ConciergeDocument.ConciergePage(
-                    metadata=ConciergeDocument.ConciergePage.ConciergePageMetadata(),
+                    metadata=ConciergeDocument.ConciergePage.PageMetadata(),
                     content=page.page_content,
                 )
                 for page in pages

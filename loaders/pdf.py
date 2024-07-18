@@ -7,7 +7,7 @@ from pathlib import Path
 
 class PDFLoader(ConciergeFileLoader):
     @dataclass(kw_only=True)
-    class PDFPageMetadata(ConciergeDocument.ConciergePage.ConciergePageMetadata):
+    class PDFPageMetadata(ConciergeDocument.ConciergePage.PageMetadata):
         page: int
 
     @staticmethod
