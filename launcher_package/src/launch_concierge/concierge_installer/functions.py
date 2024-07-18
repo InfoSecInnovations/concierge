@@ -122,11 +122,16 @@ def clean_up_existing():
                     )
                     proceed = input("Run upgrade scripts? [yes]/no: ") or "yes"
                     if proceed.upper() == "YES":
+                        print(
+                            "\nCleaning up incompatible elements from previous installations...\n"
+                        )
                         # iterate until we reach a script with a higher version than the new one (although ideally the user is installing latest and this won't happen)
                         for s in scripts[start_index:]:
                             if Version(s["version"]) > Version(new_version):
                                 break
                             s["func"](concierge_root)  # execute upgrade function
+                        print("\nCleanup of previous incompatible elements complete.\n")
+                        print("\nThe following cleanup steps are optional.\n")
 
             # option to remove volumes directory
             concierge_volumes = os.path.join(concierge_root, "volumes")
