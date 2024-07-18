@@ -6,7 +6,7 @@ from launch_concierge.concierge_installer.functions import (
     clean_up_existing,
     prompt_for_parameters,
     prompt_concierge_install,
-    install_docker,
+    do_install,
 )
 
 
@@ -15,7 +15,7 @@ def install():
     clean_up_existing()
     prompt_for_parameters(argument_processor)
     prompt_concierge_install()
-    install_docker(argument_processor, files(), "production")
+    do_install(argument_processor, files(), "production")
     print(
         f"\nInstall completed. After a couple of minutes you should be able to access the Concierge Web UI at localhost:{argument_processor.parameters['port']}\n"
     )

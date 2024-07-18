@@ -13,3 +13,4 @@ opensearch-py
 sentence-transformers
 jsons
 binaryornot
+starlette

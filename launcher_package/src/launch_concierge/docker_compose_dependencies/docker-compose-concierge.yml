@@ -2,8 +2,6 @@ services:
   concierge:
     image: infosecinnovations/concierge:latest
     container_name: concierge
-    volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/file_uploads:/uploads
     environment:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
