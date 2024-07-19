@@ -52,9 +52,11 @@ You will need to have the correct permissions on Docker Hub
 
 You need sudo/admin privileges on your machine to run the commands
 
-`docker build -t infosecinnovations/concierge:latest .`
+Make sure to use the exact same version number as the PyPI package otherwise the docker compose file won't be able to pull the relevant version.
 
-`docker image push infosecinnovations/concierge:latest`
+`docker build -t infosecinnovations/concierge:<version_number> .`
+
+`docker image push infosecinnovations/concierge:<version_number>`
 
 ### TODO
 

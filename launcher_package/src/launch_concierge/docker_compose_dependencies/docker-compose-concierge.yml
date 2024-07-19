@@ -1,6 +1,6 @@
 services:
   concierge:
-    image: infosecinnovations/concierge:latest
+    image: infosecinnovations/concierge:${CONCIERGE_VERSION:-latest}
     container_name: concierge
     environment:
       - OPENSEARCH_HOST=opensearch-node1
