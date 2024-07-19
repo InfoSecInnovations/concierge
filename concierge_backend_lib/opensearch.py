@@ -53,11 +53,6 @@ def get_collections(client: OpenSearch):
     return response
 
 
-def delete_index(client: OpenSearch, index_name: str):
-    response = client.indices.delete(index=index_name)
-    return response["acknowledged"]
-
-
 def delete_collection(client: OpenSearch, collection_name: str):
     # get all indices in alias
     indices = client.indices.resolve_index(collection_name)["aliases"][0]["indices"]

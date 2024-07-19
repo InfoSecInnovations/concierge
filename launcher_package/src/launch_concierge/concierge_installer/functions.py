@@ -3,56 +3,10 @@ import os
 import shutil
 from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
+from script_builder.version import Version
 from importlib.metadata import version
 from launch_concierge.concierge_installer.upgrade_scripts import scripts
 from util.list_util import find_index
-
-
-class Version:
-    def __init__(self, v: str):
-        self.v = v
-        split = self.v.split(".")
-        self.major = int(split[0])
-        self.minor = int(split[1])
-        self.patch = int(split[2])
-
-    def __gt__(self, other):
-        if self.major > other.major:
-            return True
-        if self.major < other.major:
-            return False
-        if self.minor > other.minor:
-            return True
-        if self.minor < other.minor:
-            return False
-        return self.patch > other.patch
-
-    def __lt__(self, other):
-        if self.major < other.major:
-            return True
-        if self.major > other.major:
-            return False
-        if self.minor < other.minor:
-            return True
-        if self.minor > other.minor:
-            return False
-        return self.patch < other.patch
-
-    def __eq__(self, other):
-        return (
-            self.major == other.major
-            and self.minor == other.minor
-            and self.patch == other.patch
-        )
-
-    def __ne__(self, other):
-        return not (self == other)
-
-    def __ge__(self, other):
-        return self > other or self == other
-
-    def __le__(self, other):
-        return self < other or self == other
 
 
 def init_arguments(install_arguments):
