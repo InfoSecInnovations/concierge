@@ -24,13 +24,17 @@ We will be using [semver](https://semver.org/) to number releases, i.e. MAJOR.MI
 
 ### Publishing installer updates to PyPI
 
-#### build python package
+#### Set version number
+
+in the package's `pyproject.toml` increment the version to match the release number. See [Version Specifiers - Python Packaging User Guide](https://packaging.python.org/en/latest/specifications/version-specifiers/) for how PyPI handles version numbers. If you don't want your release to become the default version make sure to add a pre-release specifier such as `rc` to the name.
+
+#### Build python package
 
 `cd <package_dir>`
 
 `python -m build` (must be used outside the venv)
 	
-#### publish python package
+#### Publish python package
 
 You will need to have the correct permissions on PyPI
 
