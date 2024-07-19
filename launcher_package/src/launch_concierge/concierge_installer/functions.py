@@ -3,10 +3,10 @@ import os
 import shutil
 from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
-from script_builder.version import Version
 from importlib.metadata import version
 from launch_concierge.concierge_installer.upgrade_scripts import scripts
 from util.list_util import find_index
+from packaging.version import Version
 
 
 def init_arguments(install_arguments):
@@ -60,7 +60,7 @@ def clean_up_existing():
                 # find if we have any upgrade scripts between the existing and new version
                 start_index = find_index(
                     scripts,
-                    lambda s: Version(s["version"]) >= Version(existing_version)
+                    lambda s: Version(s["version"]) > Version(existing_version)
                     and Version(s["version"]) <= Version(new_version),
                 )
                 if start_index >= 0:

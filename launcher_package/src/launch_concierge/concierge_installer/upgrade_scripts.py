@@ -57,4 +57,4 @@ def upgrade040(concierge_root_dir):
     remove_opensearch(concierge_root_dir)
 
 
-scripts = [{"version": "0.4.0", "func": upgrade040}]
+scripts = [{"version": "0.4rc0", "func": upgrade040}]
