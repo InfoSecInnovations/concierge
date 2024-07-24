@@ -5,7 +5,7 @@ from collection_management import collection_management_ui, collection_managemen
 from concierge_backend_lib.opensearch import get_collections, get_client
 import shinyswatch
 from components import status_ui, status_server
-from util.async_single import asyncify
+from isi_util.async_single import asyncify
 from opensearch_binary import serve_binary
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route

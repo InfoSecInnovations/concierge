@@ -5,8 +5,9 @@ from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
 from importlib.metadata import version
 from launch_concierge.concierge_installer.upgrade_scripts import scripts
-from util.list_util import find_index
+from isi_util.list_util import find_index
 from packaging.version import Version
+from importlib.resources import files
 
 
 def init_arguments(install_arguments):
@@ -37,6 +38,22 @@ def clean_up_existing():
         )
         exit()
 
+    if os.path.exists(os.path.join(files(), "..", "volumes")):
+        print("/!\ WARNING /!\\\n")
+        print(f'"volumes" directory was found in {files()}')
+        print(
+            "This is probably the result of an issue caused by a previous version which was ignoring the user's settings and incorrectly creating the Concierge volumes inside the package install directory."
+        )
+        proceed = False
+        while not proceed:
+            prompt = input("Quit installer to move or remove directory? yes/no: ")
+            if prompt.upper() == "YES":
+                exit()
+            if prompt.upper() == "NO":
+                proceed = True
+            else:
+                print("Please enter yes or no!")
+
     # Check if Concierge is already configured
     if os.path.isfile(".env"):
         concierge_root = ""
@@ -60,7 +77,10 @@ def clean_up_existing():
                 # find if we have any upgrade scripts between the existing and new version
                 start_index = find_index(
                     scripts,
-                    lambda s: Version(s["version"]) > Version(existing_version)
+                    lambda s: (
+                        not existing_version
+                        or Version(s["version"]) > Version(existing_version)
+                    )  # if there's no existing version we start from zero
                     and Version(s["version"]) <= Version(new_version),
                 )
                 if start_index >= 0:
@@ -167,7 +187,17 @@ def docker_compose_helper(environment, compute_method, dir, rebuild=False):
         filename = f"{filename}-dev"
     if compute_method == "GPU":
         filename = f"{filename}-gpu"
-    full_path = os.path.abspath(os.path.join(dir, f"{filename}.yml"))
+    filename += ".yml"
+    if dir != os.getcwd():
+        shutil.copytree(
+            os.path.join(dir, "docker_compose_dependencies"),
+            os.path.join(os.getcwd(), "docker_compose_dependencies"),
+            dirs_exist_ok=True,
+        )
+        shutil.copyfile(
+            os.path.join(dir, filename), os.path.join(os.getcwd(), filename)
+        )
+    full_path = os.path.abspath(os.path.join(os.getcwd(), filename))
     if rebuild:
         # pull latest versions
         subprocess.run(["docker", "compose", "-f", full_path, "pull"])
