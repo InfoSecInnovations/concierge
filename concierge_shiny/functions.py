@@ -1,7 +1,7 @@
 from shiny import ui
 from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
-from util.async_generator import asyncify_generator
+from isi_util.async_generator import asyncify_generator
 
 
 def doc_url(collection_name, doc_type, doc_id):

@@ -3,7 +3,7 @@ from configobj import ConfigObj
 from pathlib import Path
 import os
 from concierge_backend_lib.prompting import get_response, get_context
-from util.async_generator import asyncify_generator
+from isi_util.async_generator import asyncify_generator
 from components import (
     collection_selector_ui,
     collection_selector_server,

@@ -78,7 +78,7 @@ Create a file called `.env` following the template of `.env.example` in this rep
 
 Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Concierge data to be stored.
 
-From `launcher_package/src/launch_concierge` copy `docker_compose_dependencies`.
+From `launcher_package/src/launch_concierge/docker_compose` copy `docker_compose_dependencies`.
 
 From the same directory, if you wish to use the CPU only, copy `docker-compose.yml`, if you wish to use GPU acceleration where available, copy `docker-compose-gpu.yml` instead.
 

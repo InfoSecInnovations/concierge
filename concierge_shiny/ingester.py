@@ -4,7 +4,7 @@ from concierge_backend_lib.ingesting import insert
 from concierge_backend_lib.loading import load_file
 from loaders.web import WebLoader
 from loaders.base_loader import ConciergeDocument
-from util.async_generator import asyncify_generator
+from isi_util.async_generator import asyncify_generator
 from components import (
     collection_selector_server,
     collection_create_server,

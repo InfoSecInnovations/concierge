@@ -5,7 +5,7 @@ from components import (
     collection_selector_ui,
     collection_selector_server,
 )
-from util.async_single import asyncify
+from isi_util.async_single import asyncify
 from concierge_backend_lib.opensearch import (
     get_collections,
     delete_collection,

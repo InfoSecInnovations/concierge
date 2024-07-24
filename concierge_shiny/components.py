@@ -2,7 +2,7 @@ from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_backend_lib.opensearch import get_collections, ensure_collection
-from util.async_single import asyncify
+from isi_util.async_single import asyncify
 import os
 from markdown_it import MarkdownIt
 from mdit_py_plugins import attrs

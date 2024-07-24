@@ -1,5 +1,4 @@
 # The user install script only configures the Docker environment and containers
-from importlib.resources import files
 from launch_concierge.concierge_installer.arguments import install_arguments
 from launch_concierge.concierge_installer.functions import (
     init_arguments,
@@ -15,7 +14,7 @@ def install():
     clean_up_existing()
     prompt_for_parameters(argument_processor)
     prompt_concierge_install()
-    do_install(argument_processor, files(), "production")
+    do_install(argument_processor, "production")
     print(
         f"\nInstall completed. After a couple of minutes you should be able to access the Concierge Web UI at localhost:{argument_processor.parameters['port']}\n"
     )

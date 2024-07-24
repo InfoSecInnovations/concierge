@@ -181,23 +181,15 @@ def prompt_for_parameters(argument_processor):
     )
 
 
-def docker_compose_helper(environment, compute_method, dir, rebuild=False):
+def docker_compose_helper(environment, compute_method, is_local=False, rebuild=False):
     filename = "docker-compose"
     if environment == "development":
         filename = f"{filename}-dev"
     if compute_method == "GPU":
         filename = f"{filename}-gpu"
-    filename += ".yml"
-    if dir != os.getcwd():
-        shutil.copytree(
-            os.path.join(dir, "docker_compose_dependencies"),
-            os.path.join(os.getcwd(), "docker_compose_dependencies"),
-            dirs_exist_ok=True,
-        )
-        shutil.copyfile(
-            os.path.join(dir, filename), os.path.join(os.getcwd(), filename)
-        )
-    full_path = os.path.abspath(os.path.join(os.getcwd(), filename))
+    if is_local:
+        filename = f"{filename}-local"
+    full_path = os.path.abspath(os.path.join(os.getcwd(), f"{filename}.yml"))
     if rebuild:
         # pull latest versions
         subprocess.run(["docker", "compose", "-f", full_path, "pull"])
@@ -222,7 +214,7 @@ def prompt_concierge_install():
     )
 
 
-def do_install(argument_processor, docker_compose_dir, environment="production"):
+def do_install(argument_processor, environment="production", is_local=False):
     # setup .env (needed for docker compose files)
     with open(".env", "w") as env_file:
         # write .env info needed
@@ -237,11 +229,18 @@ def do_install(argument_processor, docker_compose_dir, environment="production")
                 ]
             )
         )
+    # the development environment uses different docker compose files which should already be in the cwd
+    if environment != "development":
+        # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
+        package_dir = os.path.abspath(os.path.join(files(), ".."))
+        shutil.copytree(
+            os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
+        )
     # docker compose
     if argument_processor.parameters["compute_method"] == "GPU":
-        docker_compose_helper(environment, "GPU", docker_compose_dir, True)
+        docker_compose_helper(environment, "GPU", is_local, True)
     elif argument_processor.parameters["compute_method"] == "CPU":
-        docker_compose_helper(environment, "CPU", docker_compose_dir, True)
+        docker_compose_helper(environment, "CPU", is_local, True)
     else:
         # need to do input check to prevent this condition (and others like it)
         print("You have selected an unknown/unexpected compute method.")
