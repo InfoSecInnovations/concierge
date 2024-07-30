@@ -17,11 +17,10 @@ app_ui = ui.page_auto(
         ui.nav_panel(
             "Collection Management", collection_management_ui("collection_management")
         ),
-        ui.nav_control(
-            status_ui("status_widget"), shinyswatch.theme_picker_ui(default="pulse")
-        ),
+        ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
         id="navbar",
     ),
+    theme=shinyswatch.theme.pulse,
 )
 
 
