@@ -15,10 +15,7 @@ from concierge_backend_lib.opensearch import (
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
-from markdown_it import MarkdownIt
-from mdit_py_plugins import attrs
-
-md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
+from markdown_renderer import md
 
 # --------
 # DOCUMENT

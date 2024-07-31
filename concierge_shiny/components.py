@@ -4,10 +4,7 @@ from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_backend_lib.opensearch import get_collections, ensure_collection
 from isi_util.async_single import asyncify
 import os
-from markdown_it import MarkdownIt
-from mdit_py_plugins import attrs
-
-md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
+from markdown_renderer import md
 
 # --------
 # COLLECTION SELECTOR
