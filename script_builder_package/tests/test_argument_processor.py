@@ -118,3 +118,28 @@ def test_command_line(monkeypatch):
     assert processor.parameters["key_1"] == "default1"
     assert processor.parameters["key_2"] == "testing"
     assert processor.parameters["key_3"] == "response3"
+
+
+partial_inputs = ["testing", "foo"]
+
+
+def test_mixed_inputs(monkeypatch):
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            sys.argv[0],
+            "--key_1",
+            "default1",
+            "--key_4",
+            "bar",
+        ],
+    )
+    processor = ArgumentProcessor(arguments)
+    mock_input = iter(partial_inputs)
+    monkeypatch.setattr("builtins.input", lambda _: next(mock_input))
+    processor.init_args()
+    processor.prompt_for_parameters()
+    assert processor.parameters["key_1"] == "default1"
+    assert processor.parameters["key_2"] == "testing"
+    assert processor.parameters["key_3"] == "foo"
+    assert processor.parameters["key_4"] == "bar"
