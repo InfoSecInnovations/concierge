@@ -39,6 +39,8 @@ Ruff will attempt to fix any errors, if the checks fail but all errors are fixed
 
 We have very low coverage at the moment but we are in the process of adding tests using pytest. To run the tests, enter the venv and simply use the `pytest` command. Green dots means all the tests passed.
 
+We will be adding this step to PR submissions, so running the tests locally will allow you to save time getting your PR accepted.
+
 ## Pull Requests
 
 Once you're happy with your changes, please submit a Pull Request and we will review your contribution and accept it if it matches our guidelines and the goals of the project.
