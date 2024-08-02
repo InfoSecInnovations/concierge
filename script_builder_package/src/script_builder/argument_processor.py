@@ -20,11 +20,16 @@ class ArgumentData:
 
 
 class ArgumentProcessor:
+    @dataclass
+    class InputParameters:
+        text: str
+        default: str
+
     def __init__(self, arguments: list[ArgumentData]) -> None:
         self.arguments = arguments
         self.parameters: dict[str, str] = {}
 
-    def __get_argument_input(self, input_data: ArgumentData.InputData):
+    def __get_argument_input_parameters(self, input_data: ArgumentData.InputData):
         input_text = ""
         if callable(input_data.default):
             input_default = input_data.default(self)
@@ -44,7 +49,7 @@ class ArgumentProcessor:
         elif input_default:
             input_text += f"[{input_default}]"
         input_text += ": "
-        return input(input_text).strip() or input_default
+        return ArgumentProcessor.InputParameters(text=input_text, default=input_default)
 
     def init_args(self):
         parser = argparse.ArgumentParser()
@@ -58,13 +63,18 @@ class ArgumentProcessor:
 
     def prompt_for_parameters(self):
         for index, argument in enumerate(self.arguments):
+            if argument.condition and not argument.condition(self):
+                continue
             print(f"Question {index + 1} of {len(self.arguments)}:")
             if argument.key in self.parameters:
                 print("Answer provided by command line argument.")
                 continue
             for line in argument.description:
                 print(line)
-            self.parameters[argument.key] = self.__get_argument_input(argument.input)
+            input_parameters = self.__get_argument_input_parameters(argument.input)
+            self.parameters[argument.key] = (
+                input(input_parameters.text).strip() or input_parameters.default
+            )
             print("\n")
 
     def get_command_parameters(self):
@@ -72,5 +82,6 @@ class ArgumentProcessor:
             [
                 f"--{argument.key}={self.parameters[argument.key]}"
                 for argument in self.arguments
+                if argument.key in self.parameters
             ]
         )

@@ -1,5 +1,6 @@
 ruff
 pre-commit
+pytest
 -e util_package
 -e script_builder_package
 -e launcher_package
