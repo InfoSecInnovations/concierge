@@ -1,4 +1,4 @@
-from shiny import App, ui, module
+from shiny import App, ui, module, render
 
 # Create a welcome message
 welcome = ui.markdown(
@@ -12,12 +12,21 @@ welcome = ui.markdown(
 
 @module.ui
 def chat_module_ui():
-    return ui.chat_ui("chat")
+    return [
+        ui.output_ui("chat_output"),
+        ui.input_action_button(id="placeholder_increment", label="Increment"),
+    ]
 
 
 @module.server
 def chat_module_server(input, output, session):
     chat = ui.Chat(id="chat", messages=[welcome])
+
+    @render.ui
+    def chat_output():
+        return ui.chat_ui(
+            id="chat", placeholder=f"placeholder {input.placeholder_increment()}"
+        )
 
     # Define a callback to run when the user submits a message
     @chat.on_user_submit

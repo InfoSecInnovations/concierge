@@ -7,11 +7,8 @@ from components import (
     collection_selector_ui,
     collection_selector_server,
 )
-from markdown_it import MarkdownIt
-from mdit_py_plugins import attrs
 from functions import page_link, load_llm_model
-
-md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
+from markdown_renderer import md
 
 REFERENCE_LIMIT = 5
 
@@ -29,18 +26,6 @@ def load_config(dir):
 tasks = load_config("tasks")
 personas = load_config("personas")
 enhancers = load_config("enhancers")
-
-# --------
-# MESSAGE ITEM
-# --------
-
-
-@module.ui
-def message_ui(message):
-    return ui.card(
-        ui.markdown(message["content"], render_func=md.render),
-        class_="text-primary" if message["role"] == "assistant" else None,
-    )
 
 
 # --------
