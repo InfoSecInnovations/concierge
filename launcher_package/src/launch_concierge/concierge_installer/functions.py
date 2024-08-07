@@ -39,7 +39,7 @@ def clean_up_existing():
         exit()
 
     if os.path.exists(os.path.join(files(), "..", "volumes")):
-        print("/!\ WARNING /!\\\n")
+        print("/!\\ WARNING /!\\\n")
         print(f'"volumes" directory was found in {files()}')
         print(
             "This is probably the result of an issue caused by a previous version which was ignoring the user's settings and incorrectly creating the Concierge volumes inside the package install directory."
