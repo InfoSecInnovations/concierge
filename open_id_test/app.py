@@ -1,14 +1,17 @@
-import urllib.parse
 from shiny import App, ui, Inputs, Outputs, Session, render
 import dotenv
 import os
 from requests_oauthlib import OAuth2Session
+from starlette.applications import Starlette
+from starlette.routing import Mount, Route
+from auth_callback import auth_callback
+import json
 
 dotenv.load_dotenv()
 
 client_id = os.getenv("OAUTH2_CLIENT_ID")
 client_secret = os.getenv("OAUTH2_CLIENT_SECRET")
-redirect_uri = "http://127.0.0.1:60721/"
+redirect_uri = "http://127.0.0.1:15130/callback/"
 scope = ["openid"]
 authorization_endpoint = "https://accounts.google.com/o/oauth2/auth"
 token_endpoint = "https://accounts.google.com/o/oauth2/token"
@@ -17,27 +20,16 @@ app_ui = ui.page_auto(ui.output_ui("openid_data"))
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-    query_string = input[".clientdata_url_search"]._value
-    if query_string:
-        parsed = urllib.parse.parse_qs(query_string[1:])  # query string starts with ?
+    if "concierge_auth" in session.http_conn.cookies:
+        token = session.http_conn.cookies["concierge_auth"]
+        oauth = OAuth2Session(client_id, token=json.loads(token))
+        r = oauth.get("https://www.googleapis.com/oauth2/v1/userinfo")
 
-        if "code" in parsed:
-            oauth = OAuth2Session(
-                client_id, state=parsed["state"][0], redirect_uri=redirect_uri
-            )
-            print(parsed["code"][0])
-            oauth.fetch_token(
-                token_url=token_endpoint,
-                client_secret=client_secret,
-                code=parsed["code"][0],
-            )
-            r = oauth.get("https://www.googleapis.com/oauth2/v1/userinfo")
+        @render.ui
+        def openid_data():
+            return ui.markdown(r.text)
 
-            @render.ui
-            def openid_data():
-                return ui.markdown(r.text)
-
-            return
+        return
 
     oauth = OAuth2Session(client_id, redirect_uri=redirect_uri, scope=scope)
     authorization_url, state = oauth.authorization_url(
@@ -53,4 +45,11 @@ def server(input: Inputs, output: Outputs, session: Session):
         return ui.markdown(f"<{authorization_url}>")
 
 
-app = App(app_ui, server)
+shiny_app = App(app_ui, server)
+
+routes = [
+    Route("/callback/", endpoint=auth_callback),
+    Mount("/", app=shiny_app),
+]
+
+app = Starlette(routes=routes)
