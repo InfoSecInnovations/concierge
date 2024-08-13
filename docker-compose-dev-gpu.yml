@@ -8,11 +8,11 @@ services:
   opensearch-node1:
     extends:
       file: launcher_package/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
-      service: opensearch-node1
+      service: opensearch-node-disable-security
   opensearch-dashboards:
     extends:
       file: launcher_package/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
-      service: opensearch-dashboards
+      service: opensearch-dashboards-disable-security
 
 volumes:
   opensearch-data1:

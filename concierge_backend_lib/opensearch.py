@@ -1,14 +1,18 @@
 import os
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch
+from requests_oauth2client import BearerAuth
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
 
 
-def get_client():
+def get_client(token: str | None = None):
     host = HOST
     port = 9200
+
+    if token:
+        return OpenSearch(hosts=[{"host": host, "port": port}], auth=BearerAuth(token))
 
     return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
 
