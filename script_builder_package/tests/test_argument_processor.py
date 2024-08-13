@@ -85,6 +85,12 @@ def test_user_input(monkeypatch):
     processor = ArgumentProcessor(arguments)
     mock_input = iter(inputs)
     monkeypatch.setattr("builtins.input", lambda _: next(mock_input))
+    monkeypatch.setattr(  # if we don't set the command line arguments init_args picks up anything passed into pytest
+        "sys.argv",
+        [
+            sys.argv[0],
+        ],
+    )
     processor.init_args()
     processor.prompt_for_parameters()
     assert processor.parameters["key_1"] == "default1"
