@@ -82,7 +82,7 @@ config:
         ###### and here https://tools.ietf.org/html/rfc7239
         ###### and https://tomcat.apache.org/tomcat-8.0-doc/config/valve.html#Remote_IP_Valve
     authc:
-      openid_auth_domain:
+      openid_google:
         http_enabled: true
         transport_enabled: true
         order: 0
@@ -90,9 +90,19 @@ config:
           type: openid
           challenge: false
           config:
-            subject_key: email
-            roles_key: roles
             openid_connect_url: https://accounts.google.com/.well-known/openid-configuration
+        authentication_backend:
+          type: noop
+      openid_microsoft:
+        http_enabled: true
+        transport_enabled: true
+        order: 1
+        http_authenticator:
+          type: openid
+          challenge: false
+          config:
+            roles_key: roles
+            openid_connect_url: https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
         authentication_backend:
           type: noop
       kerberos_auth_domain:
@@ -113,7 +123,7 @@ config:
         description: "Authenticate via HTTP Basic against internal users database"
         http_enabled: true
         transport_enabled: true
-        order: 4
+        order: 7
         http_authenticator:
           type: basic
           challenge: true
@@ -136,7 +146,7 @@ config:
         description: "Authenticate via Json Web Token"
         http_enabled: false
         transport_enabled: false
-        order: 0
+        order: 4
         http_authenticator:
           type: jwt
           challenge: false

@@ -4,26 +4,27 @@ import dotenv
 import os
 from requests_oauthlib import OAuth2Session
 import json
+from oid_configs import oauth_configs, oauth_config_data
 
 dotenv.load_dotenv()
-
-client_id = os.getenv("OAUTH2_CLIENT_ID")
-client_secret = os.getenv("OAUTH2_CLIENT_SECRET")
-redirect_uri = "http://127.0.0.1:15130/callback/"
-scope = ["openid"]
-authorization_endpoint = "https://accounts.google.com/o/oauth2/auth"
-token_endpoint = "https://accounts.google.com/o/oauth2/token"
+redirect_uri = "http://localhost:15130/callback/"
 
 
 async def auth_callback(request: Request):
+    provider = request.path_params["provider"]
+    config = oauth_configs[provider]
+    data = oauth_config_data[provider]
     oauth = OAuth2Session(
-        client_id, state=request.query_params.get("state"), redirect_uri=redirect_uri
+        client_id=os.getenv(data["id_env_var"]),
+        state=request.query_params.get("state"),
+        redirect_uri=redirect_uri + provider,
     )
     token = oauth.fetch_token(
-        token_url=token_endpoint,
-        client_secret=client_secret,
+        token_url=config["token_endpoint"],
+        client_secret=os.getenv(data["secret_env_var"]),
         code=request.query_params.get("code"),
     )
     response = RedirectResponse(url="/")
     response.set_cookie("concierge_auth", json.dumps(token), httponly=True)
+    response.set_cookie("concierge_auth_provider", provider, httponly=True)
     return response
