@@ -2,14 +2,12 @@ from shiny import App, ui, Inputs, Outputs, Session, render, reactive
 import dotenv
 import os
 from requests_oauthlib import OAuth2Session
+from oauthlib.oauth2 import TokenExpiredError
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
-from auth_callback import auth_callback
+from oauth2 import auth_callback, refresh
 import json
 from concierge_backend_lib.opensearch import get_client, get_collections
-import requests
-import jwcrypto.jwk
-import jwcrypto.jwt
 from oid_configs import oauth_configs, oauth_config_data
 
 dotenv.load_dotenv()
@@ -17,33 +15,36 @@ dotenv.load_dotenv()
 client_id = os.getenv("OAUTH2_CLIENT_ID")
 client_secret = os.getenv("OAUTH2_CLIENT_SECRET")
 redirect_uri = "http://localhost:15130/callback/"
-scope = ["openid", "profile", "email"]
+scope = ["openid profile email offline_access"]
 
 app_ui = ui.page_auto(ui.output_ui("openid_data"))
 
 
 def server(input: Inputs, output: Outputs, session: Session):
     if (
-        "concierge_auth" in session.http_conn.cookies
+        "concierge_token_chunk_count" in session.http_conn.cookies
         and "concierge_auth_provider" in session.http_conn.cookies
     ):
-        token = session.http_conn.cookies["concierge_auth"]
+        chunk_count = int(session.http_conn.cookies["concierge_token_chunk_count"])
+        token = ""
+        for i in range(chunk_count):
+            token += session.http_conn.cookies[f"concierge_auth_{i}"]
         provider = session.http_conn.cookies["concierge_auth_provider"]
         oidc_config = oauth_configs[provider]
         data = oauth_config_data[provider]
-        oauth = OAuth2Session(
-            client_id=os.getenv(data["id_env_var"]), token=json.loads(token)
-        )
         parsed_token = json.loads(token)
-        jwks_url = oidc_config["jwks_uri"]
-        id_token_keys = jwcrypto.jwk.JWKSet.from_json(requests.get(jwks_url).text)
-        jwt = jwcrypto.jwt.JWT(
-            jwt=parsed_token["id_token"],
-            key=id_token_keys,
-            algs=oidc_config["id_token_signing_alg_values_supported"],
+        oauth = OAuth2Session(
+            client_id=os.getenv(data["id_env_var"]), token=parsed_token
         )
-        print(jwt.claims)
-        parsed_claims = json.loads(jwt.claims)
+        try:
+            user_info = oauth.get(oidc_config["userinfo_endpoint"]).json()
+        except TokenExpiredError:
+
+            @render.ui
+            def openid_data():
+                return ui.tags.script(f'window.location.href = "/refresh/{provider}"')
+
+            return
 
         client = get_client(parsed_token["id_token"])
         collections = reactive.value(get_collections(client))
@@ -52,7 +53,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         def openid_data():
             return ui.TagList(
                 ui.markdown("## Profile Info"),
-                ui.markdown(parsed_claims["sub"]),
+                ui.markdown(user_info["sub"]),
                 ui.markdown("## Collections"),
                 ui.markdown(", ".join(collections.get())),
             )
@@ -69,11 +70,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             scope=scope,
         )
         authorization_url, state = oauth.authorization_url(
-            config["authorization_endpoint"],
-            # access_type and prompt are Google specific extra
-            # parameters.
-            # access_type="offline",
-            # prompt="select_account",
+            config["authorization_endpoint"]
         )
         urls.append(authorization_url)
 
@@ -86,6 +83,7 @@ shiny_app = App(app_ui, server)
 
 routes = [
     Route("/callback/{provider}", endpoint=auth_callback),
+    Route("/refresh/{provider}", endpoint=refresh),
     Mount("/", app=shiny_app),
 ]
 

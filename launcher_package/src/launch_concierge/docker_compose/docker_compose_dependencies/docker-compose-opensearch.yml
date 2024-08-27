@@ -34,10 +34,10 @@ services:
       - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
     volumes:
-      - ./opensearch_config/opensearch_with_security.yml:/usr/share/opensearch/config/opensearch.yml
-      - ./opensearch_config/security_config_openid.yml:/usr/share/opensearch/config/opensearch-security/config.yml
-      - ./opensearch_config/roles_mapping.yml:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml
-      - ./opensearch_config/internal_users.yml:/usr/share/opensearch/config/opensearch-security/internal_users.yml
+      - ${OPENSEARCH_CONFIG}:/usr/share/opensearch/config/opensearch.yml
+      - ${OPENSEARCH_SECURITY_CONFIG}:/usr/share/opensearch/config/opensearch-security/config.yml
+      - ${OPENSEARCH_ROLES_MAPPING}:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml
+      - ${OPENSEARCH_INTERNAL_USERS}:/usr/share/opensearch/config/opensearch-security/internal_users.yml
       - ./certificates/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
       - ./certificates/kirk.pem:/usr/share/opensearch/config/kirk.pem
       - ./certificates/kirk-key.pem:/usr/share/opensearch/config/kirk-key.pem

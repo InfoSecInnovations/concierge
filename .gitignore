@@ -1,8 +1,6 @@
-# .env file used to set local paths for Docker and scripts
+# config files used by Concierge
 .env
-
-# directory used by web server to store uploaded files
-uploads
+concierge.yml
 
 # files that appear to be due to installing dependencies, try un-ignoring these if needed
 share
