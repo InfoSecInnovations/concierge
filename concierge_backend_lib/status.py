@@ -13,9 +13,9 @@ def check_ollama():
         return False
 
 
-def check_opensearch():
+def check_opensearch(token=None):
     try:
-        client = get_client()
+        client = get_client(token)
         get_collections(client)
         return True
     except Exception:

@@ -50,7 +50,9 @@ def status_ui():
 
 
 @module.server
-def status_server(input: Inputs, output: Outputs, session: Session):
+def status_server(
+    input: Inputs, output: Outputs, session: Session, token: str | None = None
+):
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
 
@@ -60,7 +62,7 @@ def status_server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.extended_task
     async def get_opensearch_status():
-        return await asyncify(check_opensearch)
+        return await asyncify(check_opensearch, token)
 
     @reactive.effect
     def set_ollama_status():
