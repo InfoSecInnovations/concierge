@@ -14,7 +14,6 @@ dotenv.load_dotenv()
 
 client_id = os.getenv("OAUTH2_CLIENT_ID")
 client_secret = os.getenv("OAUTH2_CLIENT_SECRET")
-redirect_uri = "http://localhost:15130/callback/"
 scope = ["openid profile email offline_access"]
 
 app_ui = ui.page_auto(ui.output_ui("openid_data"))
@@ -61,6 +60,8 @@ def server(input: Inputs, output: Outputs, session: Session):
         return
 
     urls = []
+
+    redirect_uri = f"{session.http_conn.headers["origin"]}/callback/"
 
     for provider, data in oauth_config_data.items():
         config = oauth_configs[provider]

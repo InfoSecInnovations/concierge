@@ -4,11 +4,11 @@ services:
   ollama:
     extends:
       file: docker_compose_dependencies/docker-compose-ollama.yml
-      service: ollama
+      service: ${OLLAMA_SERVICE:-ollama}
   opensearch-node1:
     extends:
       file: docker_compose_dependencies/docker-compose-opensearch.yml
-      service: opensearch-node-disable-security
+      service: ${OPENSEARCH_SERVICE:-opensearch-node-disable-security}
   concierge:
     extends:
       file: docker_compose_dependencies/docker-compose-concierge.yml

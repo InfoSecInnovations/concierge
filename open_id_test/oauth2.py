@@ -7,7 +7,6 @@ import json
 from oid_configs import oauth_configs, oauth_config_data
 
 dotenv.load_dotenv()
-redirect_uri = "http://localhost:15130/callback/"
 max_bytes = 4000
 
 
@@ -26,6 +25,7 @@ async def auth_callback(request: Request):
     provider = request.path_params["provider"]
     config = oauth_configs[provider]
     data = oauth_config_data[provider]
+    redirect_uri = f"{request.base_url}callback/"
     oauth = OAuth2Session(
         client_id=os.getenv(data["id_env_var"]),
         state=request.query_params.get("state"),
