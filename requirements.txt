@@ -14,3 +14,4 @@ sentence-transformers~=3.0.1
 jsons~=1.6.3
 binaryornot~=0.4.4
 isi-util
+humanize~=4.10.0
