@@ -10,10 +10,6 @@ def get_base_directory(processor: ArgumentProcessor):
     )
 
 
-def get_docker_directory(processor: ArgumentProcessor):
-    return get_base_directory(processor)
-
-
 def get_default_log_dir(processor: ArgumentProcessor):
     return os.path.join(get_base_directory(processor), "logs")
 
@@ -32,14 +28,6 @@ install_arguments = [
         ],
         input=ArgumentData.InputData(
             default="everyone", options=["everyone", "standalone"]
-        ),
-    ),
-    ArgumentData(
-        key="docker_volumes",
-        help="Path where this Concierge instance will store data",
-        description=["Where do you want your Concierge data to persist?"],
-        input=ArgumentData.InputData(
-            default=get_docker_directory, prompt="path for data?"
         ),
     ),
     ArgumentData(
@@ -65,6 +53,7 @@ install_arguments = [
         key="activity_logging",
         help="Will this Concierge instance log activity? Strongly suggest setting this!",
         description=[
+            "NOTE: this feature is not implemented yet, the current logging options are placeholders!",
             "Logging is a key component of Concierge",
             "We strongly recommend you leave this enabled.",
             "Your logs will remain local to your Concierge instance.",
