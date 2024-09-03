@@ -1,6 +1,7 @@
 import subprocess
 import os
 import shutil
+import launch_concierge
 from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
 from importlib.metadata import version
@@ -38,9 +39,9 @@ def clean_up_existing():
         )
         exit()
 
-    if os.path.exists(os.path.join(files(), "..", "volumes")):
+    if os.path.exists(os.path.join(files(launch_concierge), "volumes")):
         print("/!\\ WARNING /!\\\n")
-        print(f'"volumes" directory was found in {files()}')
+        print(f'"volumes" directory was found in {files(launch_concierge)}')
         print(
             "This is probably the result of an issue caused by a previous version which was ignoring the user's settings and incorrectly creating the Concierge volumes inside the package install directory."
         )
@@ -238,7 +239,7 @@ def do_install(argument_processor, environment="production", is_local=False):
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
         # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
-        package_dir = os.path.abspath(os.path.join(files(), ".."))
+        package_dir = os.path.abspath(os.path.join(files(launch_concierge)))
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
