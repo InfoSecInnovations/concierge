@@ -40,6 +40,8 @@ You should perform the following system configuration steps according to your Op
 
 ## Setup
 
+The provided install scripts perform a lot of automated cleanup and ensure that all the components are configured correctly to work together, so we strongly recommend you use these instead of attempting the manual install. However if you need to customize the Docker environment the manual steps may help you find what you need to be able to do so.
+
 ### Quick install (Recommended)
 
 You no longer need to clone this repository.
@@ -121,6 +123,8 @@ git clone repo or extract zip.
 ### Quick install (Recommended)
 
 `cd concierge` go into the cloned project directory.
+
+You should not create a virtual environment as the script below will handle it for you.
 
 `python install_dev.py` to launch the installer (same steps as the user installer).
 
