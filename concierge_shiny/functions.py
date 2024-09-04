@@ -10,6 +10,7 @@ from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import TokenExpiredError
 import os
 import dotenv
+import humanize
 
 dotenv.load_dotenv()
 
@@ -82,7 +83,7 @@ async def load_llm_model(model_name):
                 pbar.initial = progress[0]
             p.set(
                 value=progress[0],
-                message=f"Loading {model_name} Language Model: {progress[0]}/{progress[1]}",
+                message=f"Loading {model_name} Language Model: {humanize.naturalsize(progress[0], binary=True)}/{humanize.naturalsize(progress[1], binary=True)}",
             )
             pbar.n = progress[0]
             pbar.refresh()
