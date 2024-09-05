@@ -8,6 +8,7 @@
 - Documents are inserted into OpenSearch database instead of uploads directory.
 - Some of the CLI scripts have been renamed to be more consistent and better fit the new database schema.
 - Volumes are managed by Docker instead of mounting directories from the host OS. This allows us to resolve some issues with permissions that may have been preventing Linux users from using the app.
+- Chat UI uses new chatbot interface provided by Shiny for Python.
 
 ### Added
 
