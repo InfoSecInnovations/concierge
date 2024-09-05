@@ -2,6 +2,7 @@ import subprocess
 import os
 import shutil
 import launch_concierge
+import yaml
 from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
 from importlib.metadata import version
@@ -190,12 +191,10 @@ def prompt_for_parameters(argument_processor):
     )
 
 
-def docker_compose_helper(environment, compute_method, is_local=False, rebuild=False):
+def docker_compose_helper(environment, is_local=False, rebuild=False):
     filename = "docker-compose"
     if environment == "development":
         filename = f"{filename}-dev"
-    if compute_method == "GPU":
-        filename = f"{filename}-gpu"
     if is_local:
         filename = f"{filename}-local"
     full_path = os.path.abspath(os.path.join(os.getcwd(), f"{filename}.yml"))
@@ -224,18 +223,37 @@ def prompt_concierge_install():
 
 
 def do_install(argument_processor, environment="production", is_local=False):
+    with open("concierge.yml", "r") as file:
+        config = yaml.safe_load(file)
     # setup .env (needed for docker compose files)
+    env_lines = [
+        "ENVIRONMENT=" + environment,
+        "WEB_PORT=" + argument_processor.parameters["port"],
+        "CONCIERGE_VERSION=" + version("launch_concierge"),
+        "OLLAMA_SERVICE=" + "ollama-gpu"
+        if argument_processor.parameters["compute_method"] == "GPU"
+        else "ollama",
+        "OPENSEARCH_SERVICE=" + "opensearch-node-enable-security"
+        if "auth" in config
+        else "opensearch-node-disable-security",
+        "OPENSEARCH_DASHBOARDS_SERVICE=" + "opensearch-dashboards-base"
+        if "auth" in config
+        else "opensearch-dashboards-disable-security",
+    ]
+    if "auth" in config:
+        env_lines.extend(
+            [
+                "OPENSEARCH_CONFIG="
+                + "./opensearch_config/opensearch_with_security.yml",
+                "OPENSEARCH_SECURITY_CONFIG="
+                + "./opensearch_config/security_config_openid.yml",  # TODO: custom file
+                "OPENSEARCH_ROLES_MAPPING=" + "./opensearch_config/roles_mapping.yml",
+                "OPENSEARCH_INTERNAL_USERS=" + "./opensearch_config/internal_users.yml",
+            ]
+        )
     with open(".env", "w") as env_file:
         # write .env info needed
-        env_file.writelines(
-            "\n".join(
-                [
-                    "ENVIRONMENT=" + environment,
-                    "WEB_PORT=" + argument_processor.parameters["port"],
-                    "CONCIERGE_VERSION=" + version("launch_concierge"),
-                ]
-            )
-        )
+        env_file.writelines("\n".join(env_lines))
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
         # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
@@ -244,15 +262,7 @@ def do_install(argument_processor, environment="production", is_local=False):
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
     # docker compose
-    if argument_processor.parameters["compute_method"] == "GPU":
-        docker_compose_helper(environment, "GPU", is_local, True)
-    elif argument_processor.parameters["compute_method"] == "CPU":
-        docker_compose_helper(environment, "CPU", is_local, True)
-    else:
-        # need to do input check to prevent this condition (and others like it)
-        print("You have selected an unknown/unexpected compute method.")
-        print("you will need to run the docker compose file manually")
-        exit()
+    docker_compose_helper(environment, is_local, True)
     # ollama model load
     subprocess.run(
         [

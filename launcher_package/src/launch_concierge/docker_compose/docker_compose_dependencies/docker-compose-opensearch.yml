@@ -31,7 +31,6 @@ services:
   opensearch-node-enable-security:
     extends: opensearch-node-base
     environment:
-      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
     volumes:
       - ${OPENSEARCH_CONFIG}:/usr/share/opensearch/config/opensearch.yml
