@@ -230,15 +230,24 @@ def do_install(argument_processor, environment="production", is_local=False):
         "ENVIRONMENT=" + environment,
         "WEB_PORT=" + argument_processor.parameters["port"],
         "CONCIERGE_VERSION=" + version("launch_concierge"),
-        "OLLAMA_SERVICE=" + "ollama-gpu"
-        if argument_processor.parameters["compute_method"] == "GPU"
-        else "ollama",
-        "OPENSEARCH_SERVICE=" + "opensearch-node-enable-security"
-        if "auth" in config
-        else "opensearch-node-disable-security",
-        "OPENSEARCH_DASHBOARDS_SERVICE=" + "opensearch-dashboards-base"
-        if "auth" in config
-        else "opensearch-dashboards-disable-security",
+        "OLLAMA_SERVICE="
+        + (
+            "ollama-gpu"
+            if argument_processor.parameters["compute_method"] == "GPU"
+            else "ollama"
+        ),
+        "OPENSEARCH_SERVICE="
+        + (
+            "opensearch-node-enable-security"
+            if "auth" in config
+            else "opensearch-node-disable-security"
+        ),
+        "OPENSEARCH_DASHBOARDS_SERVICE="
+        + (
+            "opensearch-dashboards-base"
+            if "auth" in config
+            else "opensearch-dashboards-disable-security"
+        ),
     ]
     if "auth" in config:
         env_lines.extend(
