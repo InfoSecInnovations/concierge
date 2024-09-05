@@ -1,16 +1,17 @@
 # Changelog
 
-## 0.4.0 - TBD
+## 0.4.0 - 2024-09-05
 
 ### Changes
 
 - OpenSearch backend now uses multiple indices to store document metadata, this avoids unnecessary duplication of said metadata and allows us to more easily reference specific documents in the collection.
+- Documents are inserted into OpenSearch database instead of uploads directory.
 - Some of the CLI scripts have been renamed to be more consistent and better fit the new database schema.
-- Use volumes managed by Docker instead of mounting directories from the host OS. This allows us to resolve some issues with permissions that may have been preventing Linux users from using the app.
+- Volumes are managed by Docker instead of mounting directories from the host OS. This allows us to resolve some issues with permissions that may have been preventing Linux users from using the app.
 
 ### Added
 
-- Install script makes necessary changes if previously installed version is incompatible with the one being installed.
+- Install script makes necessary changes if previously installed version is incompatible with the one being installed. As we approach 1.0 we will refine this system to minimize data loss when upgrading, while still in Alpha phase we make no such promises!
 
 ## 0.3.0 - 2024-07-03
 
