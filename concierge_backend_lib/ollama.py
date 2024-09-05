@@ -16,11 +16,14 @@ def create_embeddings(text):
 def load_model(model_name):
     # TODO several revs in the future... allow users to pick model.
     # very much low priority atm
-    models = requests.get(f"http://{HOST}:11434/api/tags")
-    model_list = json.loads(models.text)["models"]
-    if not next(
-        filter(lambda x: x["name"].split(":")[0] == model_name, model_list), None
-    ):
+    def is_loaded():
+        models = requests.get(f"http://{HOST}:11434/api/tags")
+        model_list = json.loads(models.text)["models"]
+        return next(
+            filter(lambda x: x["name"].split(":")[0] == model_name, model_list), None
+        )
+
+    while not is_loaded():
         print(f"{model_name} model not found. Please wait while it loads.")
         request = requests.post(
             f"http://{HOST}:11434/api/pull",

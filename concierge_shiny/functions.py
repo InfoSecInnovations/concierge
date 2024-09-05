@@ -2,6 +2,7 @@ from shiny import ui
 from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
+import humanize
 
 
 def doc_url(collection_name, doc_type, doc_id):
@@ -68,7 +69,7 @@ async def load_llm_model(model_name):
                 pbar.initial = progress[0]
             p.set(
                 value=progress[0],
-                message=f"Loading {model_name} Language Model: {progress[0]}/{progress[1]}",
+                message=f"Loading {model_name} Language Model: {humanize.naturalsize(progress[0], binary=True)}/{humanize.naturalsize(progress[1], binary=True)}",
             )
             pbar.n = progress[0]
             pbar.refresh()

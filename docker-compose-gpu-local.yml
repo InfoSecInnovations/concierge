@@ -20,6 +20,7 @@ services:
 
 volumes:
   opensearch-data1:
+  ollama:
 
 networks:
   default:
