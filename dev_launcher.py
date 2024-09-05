@@ -2,6 +2,7 @@ import subprocess
 from script_builder.util import get_venv_executable
 from launcher_package.src.launch_concierge.concierge_installer.functions import (
     docker_compose_helper,
+    set_compute,
 )
 import argparse
 import dotenv
@@ -24,8 +25,9 @@ dotenv.load_dotenv()
 compute_method = (
     input("Start docker containers with CPU or GPU? [CPU] or GPU:") or "CPU"
 )
+set_compute(compute_method)
 docker_compose_helper(
-    environment, compute_method, environment == "production"
+    environment, environment == "production"
 )  # the dev version of the production environment builds the image locally
 
 if environment == "production":

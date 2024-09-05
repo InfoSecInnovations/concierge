@@ -82,33 +82,33 @@ config:
         ###### and here https://tools.ietf.org/html/rfc7239
         ###### and https://tomcat.apache.org/tomcat-8.0-doc/config/valve.html#Remote_IP_Valve
     authc:
-      openid_google:
-        http_enabled: true
-        transport_enabled: true
-        order: 0
-        http_authenticator:
-          type: openid
-          challenge: false
-          config:
-            openid_connect_url: https://accounts.google.com/.well-known/openid-configuration
-        authentication_backend:
-          type: noop
-      openid_microsoft:
-        http_enabled: true
-        transport_enabled: true
-        order: 1
-        http_authenticator:
-          type: openid
-          challenge: false
-          config:
-            roles_key: roles
-            openid_connect_url: https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
-        authentication_backend:
-          type: noop
+      # openid_google:
+      #   http_enabled: true
+      #   transport_enabled: true
+      #   order: 0
+      #   http_authenticator:
+      #     type: openid
+      #     challenge: false
+      #     config:
+      #       openid_connect_url: https://accounts.google.com/.well-known/openid-configuration
+      #   authentication_backend:
+      #     type: noop
+      # openid_microsoft:
+      #   http_enabled: true
+      #   transport_enabled: true
+      #   order: 1
+      #   http_authenticator:
+      #     type: openid
+      #     challenge: false
+      #     config:
+      #       roles_key: roles
+      #       openid_connect_url: https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration
+      #   authentication_backend:
+      #     type: noop
       kerberos_auth_domain:
         http_enabled: false
         transport_enabled: false
-        order: 6
+        order: 106
         http_authenticator:
           type: kerberos
           challenge: true
@@ -123,7 +123,7 @@ config:
         description: "Authenticate via HTTP Basic against internal users database"
         http_enabled: true
         transport_enabled: true
-        order: 7
+        order: 107
         http_authenticator:
           type: basic
           challenge: true
@@ -133,7 +133,7 @@ config:
         description: "Authenticate via proxy"
         http_enabled: false
         transport_enabled: false
-        order: 3
+        order: 103
         http_authenticator:
           type: proxy
           challenge: false
@@ -146,7 +146,7 @@ config:
         description: "Authenticate via Json Web Token"
         http_enabled: false
         transport_enabled: false
-        order: 4
+        order: 104
         http_authenticator:
           type: jwt
           challenge: false
@@ -163,7 +163,7 @@ config:
         description: "Authenticate via SSL client certificates"
         http_enabled: false
         transport_enabled: false
-        order: 2
+        order: 102
         http_authenticator:
           type: clientcert
           config:
@@ -175,7 +175,7 @@ config:
         description: "Authenticate via LDAP or Active Directory"
         http_enabled: false
         transport_enabled: false
-        order: 5
+        order: 105
         http_authenticator:
           type: basic
           challenge: false

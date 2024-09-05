@@ -1,0 +1,2 @@
+# dev install will copy files from launcher package to here, we shouldn't commit these as they are local to the current install
+opensearch_config

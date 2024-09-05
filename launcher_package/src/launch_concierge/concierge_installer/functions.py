@@ -11,6 +11,8 @@ from isi_util.list_util import find_index
 from packaging.version import Version
 from importlib.resources import files
 
+package_dir = files(launch_concierge)
+
 
 def init_arguments(install_arguments):
     require_admin()
@@ -40,9 +42,9 @@ def clean_up_existing():
         )
         exit()
 
-    if os.path.exists(os.path.join(files(launch_concierge), "volumes")):
+    if os.path.exists(os.path.join(package_dir, "volumes")):
         print("/!\\ WARNING /!\\\n")
-        print(f'"volumes" directory was found in {files(launch_concierge)}')
+        print(f'"volumes" directory was found in {package_dir}')
         print(
             "This is probably the result of an issue caused by a previous version which was ignoring the user's settings and incorrectly creating the Concierge volumes inside the package install directory."
         )
@@ -223,7 +225,13 @@ def prompt_concierge_install():
 
 
 def do_install(argument_processor, environment="production", is_local=False):
-    with open("concierge.yml", "r") as file:
+    # the development environment uses different docker compose files which should already be in the cwd
+    if environment != "development":
+        # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
+        shutil.copytree(
+            os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
+        )
+    with open("concierge.yml", "r") as file:  # TODO: write this file from user input
         config = yaml.safe_load(file)
     # setup .env (needed for docker compose files)
     env_lines = [
@@ -249,27 +257,61 @@ def do_install(argument_processor, environment="production", is_local=False):
             else "opensearch-dashboards-disable-security"
         ),
     ]
+    # configure auth settings if needed
     if "auth" in config:
+        open_id_config_path = os.path.abspath(
+            os.path.join(
+                os.getcwd(),
+                "docker_compose_dependencies",
+                "opensearch_config",
+                "security_config_openid.yml",
+            )
+        )
         env_lines.extend(
             [
                 "OPENSEARCH_CONFIG="
                 + "./opensearch_config/opensearch_with_security.yml",
-                "OPENSEARCH_SECURITY_CONFIG="
-                + "./opensearch_config/security_config_openid.yml",  # TODO: custom file
+                "OPENSEARCH_SECURITY_CONFIG=" + open_id_config_path,
                 "OPENSEARCH_ROLES_MAPPING=" + "./opensearch_config/roles_mapping.yml",
                 "OPENSEARCH_INTERNAL_USERS=" + "./opensearch_config/internal_users.yml",
             ]
         )
+        with open(
+            os.path.join(
+                package_dir,
+                "docker_compose",
+                "docker_compose_dependencies",
+                "opensearch_config",
+                "security_config_openid.yml",
+            ),
+            "r",
+        ) as file:  # TODO: write this file from user input
+            security_config = yaml.safe_load(file)
+        auth = config["auth"]
+        if "openid" in auth:
+            for k, v in auth["openid"].items():
+                # TODO: get order
+                security_config["config"]["dynamic"]["authc"][f"openid_{k}"] = {
+                    "http_enabled": True,
+                    "transport_enabled": True,
+                    "order": 0,
+                    "http_authenticator": {
+                        "type": "openid",
+                        "challenge": False,
+                        "config": {"openid_connect_url": v["url"]},
+                    },
+                    "authentication_backend": {"type": "noop"},
+                }
+                if "roles_key" in v:
+                    security_config["config"]["dynamic"]["authc"][f"openid_{k}"][
+                        "http_authenticator"
+                    ]["config"]["roles_key"] = v["roles_key"]
+        os.makedirs(os.path.dirname(open_id_config_path), exist_ok=True)
+        with open(open_id_config_path, "w") as file:
+            yaml.dump(security_config, file)
     with open(".env", "w") as env_file:
         # write .env info needed
         env_file.writelines("\n".join(env_lines))
-    # the development environment uses different docker compose files which should already be in the cwd
-    if environment != "development":
-        # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
-        package_dir = os.path.abspath(os.path.join(files(launch_concierge)))
-        shutil.copytree(
-            os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
-        )
     # docker compose
     docker_compose_helper(environment, is_local, True)
     # ollama model load
@@ -284,3 +326,21 @@ def do_install(argument_processor, environment="production", is_local=False):
             argument_processor.parameters["language_model"],
         ]
     )
+
+
+def set_compute(method: str):
+    # because we have limited dependencies for the launcher scripts we remove and recreate the relevant line in the env file
+
+    try:
+        with open(".env", "r") as file:
+            lines = file.readlines()
+    except Exception:
+        lines = []
+
+    lines = [line for line in lines if not line.startswith("OLLAMA_SERVICE=")]
+    lines.append(
+        f'OLLAMA_SERVICE={"ollama-gpu" if method.lower() == "gpu" else "ollama"}'
+    )
+
+    with open(".env", "w") as file:
+        file.writelines("\n".join(lines))
