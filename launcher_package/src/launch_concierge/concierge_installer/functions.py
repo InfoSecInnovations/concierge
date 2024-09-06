@@ -3,13 +3,21 @@ import os
 import shutil
 import launch_concierge
 import yaml
-from script_builder.util import require_admin, get_lines, prompt_install
+from script_builder.util import (
+    require_admin,
+    get_lines,
+    prompt_install,
+    write_env,
+    get_valid_input,
+)
 from script_builder.argument_processor import ArgumentProcessor
 from importlib.metadata import version
 from launch_concierge.concierge_installer.upgrade_scripts import scripts
 from isi_util.list_util import find_index
 from packaging.version import Version
 from importlib.resources import files
+from getpass import getpass
+import re
 
 package_dir = files(launch_concierge)
 
@@ -224,6 +232,58 @@ def prompt_concierge_install():
     )
 
 
+def configure_openid():
+    print(
+        "To add an OpenID provider you will need to register an app to obtain a client ID and client secret."
+    )
+    print(
+        "You will also need to locate the configuration URL that usually looks something like this: https://www.example.com/.well-known/openid-configuration"
+    )
+    print(
+        "If possible, we recommend using a provider that supports assigning roles using OpenID claims. This is simpler than having to assign permissions within Concierge."
+    )
+    try:
+        with open(
+            "concierge.yml", "r"
+        ) as file:  # TODO: write this file from user input
+            config = yaml.safe_load(file)
+    except Exception:
+        config = {}
+    if "auth" in config and "openid" in config["auth"]:
+        existing = config["auth"]["openid"].keys()
+        if len(existing):
+            print(f"Providers already configured: {', '.join(existing)}")
+    label = get_valid_input(
+        "Assign a name to this provider, if it matches an existing one the old config will be overwritten. Not case-sensitive, special characters other than underscores will be removed: "
+    )
+    config_url = get_valid_input(
+        "Please enter your OpenID provider's configuration URL: "
+    )
+    client_id = get_valid_input("Please enter your app's client ID: ")
+    id_key = f"{label.upper()}_CLIENT_ID"
+    client_secret = getpass("Please enter your app's client secret: ")
+    secret_key = f"{label.upper()}_CLIENT_SECRET"
+    roles_key = input(
+        "Which OpenID claim is used to assign user roles? Leave blank if not applicable: "
+    ).strip()
+    label = re.sub(r"\W+", "", label.lower())
+    if "auth" not in config:
+        config["auth"] = {}
+    if "openid" not in config["auth"]:
+        config["auth"]["openid"] = {}
+    config["auth"]["openid"][label] = {
+        "url": config_url,
+        "id_env_var": id_key,
+        "secret_env_var": secret_key,
+    }
+    if roles_key:
+        config["auth"]["openid"][label]["roles_key"] = roles_key
+    with open("concierge.yml", "w") as file:
+        file.write(yaml.dump(config))
+    write_env(id_key, client_id)
+    write_env(secret_key, client_secret)
+
+
 def do_install(argument_processor, environment="production", is_local=False):
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
@@ -231,8 +291,20 @@ def do_install(argument_processor, environment="production", is_local=False):
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
-    with open("concierge.yml", "r") as file:  # TODO: write this file from user input
-        config = yaml.safe_load(file)
+    if argument_processor.parameters["enable_openid"] == "True":
+        configure_openid()
+        # TODO: allow multiple providers
+    try:
+        with open("concierge.yml", "r") as file:
+            config = yaml.safe_load(file)
+    except Exception:
+        config = {}
+    try:
+        with open(".env", "r") as file:
+            existing_env = file.readlines()
+    except Exception:
+        existing_env = []
+
     # setup .env (needed for docker compose files)
     env_lines = [
         "ENVIRONMENT=" + environment,
@@ -285,12 +357,46 @@ def do_install(argument_processor, environment="production", is_local=False):
                 "security_config_openid.yml",
             ),
             "r",
-        ) as file:  # TODO: write this file from user input
+        ) as file:
             security_config = yaml.safe_load(file)
         auth = config["auth"]
         if "openid" in auth:
             for k, v in auth["openid"].items():
-                # TODO: get order
+                id_line = next(
+                    (x for x in existing_env if x.startswith(f'{v["id_env_var"]}=')),
+                    None,
+                )
+                secret_line = next(
+                    (
+                        x
+                        for x in existing_env
+                        if x.startswith(f'{v["secret_env_var"]}=')
+                    ),
+                    None,
+                )
+                if not id_line:
+                    print(
+                        f"No client ID was found for OpenID provider {k}, this provider will be skipped!"
+                    )
+                    continue
+                if not secret_line:
+                    print(
+                        f"No client secret was found for OpenID provider {k}, this provider will be skipped!"
+                    )
+                    continue
+                env_lines.append(id_line)
+                env_lines.append(secret_line)
+
+                order = 0
+
+                def order_available():
+                    for conf in security_config["config"]["dynamic"]["authc"].values():
+                        if conf["order"] == order:
+                            return False
+                    return True
+
+                while not order_available():
+                    order += 1
                 security_config["config"]["dynamic"]["authc"][f"openid_{k}"] = {
                     "http_enabled": True,
                     "transport_enabled": True,
@@ -306,6 +412,7 @@ def do_install(argument_processor, environment="production", is_local=False):
                     security_config["config"]["dynamic"]["authc"][f"openid_{k}"][
                         "http_authenticator"
                     ]["config"]["roles_key"] = v["roles_key"]
+
         os.makedirs(os.path.dirname(open_id_config_path), exist_ok=True)
         with open(open_id_config_path, "w") as file:
             yaml.dump(security_config, file)
@@ -329,18 +436,4 @@ def do_install(argument_processor, environment="production", is_local=False):
 
 
 def set_compute(method: str):
-    # because we have limited dependencies for the launcher scripts we remove and recreate the relevant line in the env file
-
-    try:
-        with open(".env", "r") as file:
-            lines = file.readlines()
-    except Exception:
-        lines = []
-
-    lines = [line for line in lines if not line.startswith("OLLAMA_SERVICE=")]
-    lines.append(
-        f'OLLAMA_SERVICE={"ollama-gpu" if method.lower() == "gpu" else "ollama"}'
-    )
-
-    with open(".env", "w") as file:
-        file.writelines("\n".join(lines))
+    write_env("OLLAMA_SERVICE", "ollama-gpu" if method.lower() == "gpu" else "ollama")

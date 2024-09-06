@@ -80,6 +80,18 @@ install_arguments = [
         ),
     ),
     ArgumentData(
+        key="enable_openid",
+        help="Enable OpenID authentication?",
+        description=[
+            "You can use OpenID to provide user authentication with Concierge.",
+            "It's currently the only supported authentication platform.",
+            "You will be required to register an app with an OpenID provider to use this option.",
+        ],
+        input=ArgumentData.InputData(
+            default="False", options=["True", "False"], prompt="OpenID enabled?"
+        ),
+    ),
+    ArgumentData(
         key="port",
         help="Which port should the Concierge web UI be served on?",
         description=["Which port should the Concierge web UI be served on?"],
