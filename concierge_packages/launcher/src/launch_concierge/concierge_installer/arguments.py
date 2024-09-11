@@ -1,5 +1,6 @@
 from script_builder.argument_processor import ArgumentData, ArgumentProcessor
 from script_builder.util import get_default_directory
+from concierge_util.config import load_config
 import os
 
 
@@ -16,6 +17,17 @@ def get_default_log_dir(processor: ArgumentProcessor):
 
 def logging_enabled(processor: ArgumentProcessor):
     return processor.parameters["activity_logging"] == "True"
+
+
+def security_config_exists(processor: ArgumentProcessor):
+    config = load_config()
+    return config and "auth" in config
+
+
+def can_enable_openid(processor: ArgumentProcessor):
+    return (
+        processor["disable_auth"] != "True"
+    )  # if we just disabled authentication don't configure OpenID
 
 
 install_arguments = [
@@ -82,26 +94,30 @@ install_arguments = [
     ),
     ArgumentData(
         key="disable_auth",
-        help="Enable OpenID authentication?",
+        help="Remove existing authentication configuration?",
+        condition=security_config_exists,
         description=[
-            "You can use OpenID to provide user authentication with Concierge.",
-            "It's currently the only supported authentication platform.",
-            "You will be required to register an app with an OpenID provider to use this option.",
+            "A config file was detected with authentication already configured.",
+            'If you wish to keep the configuration present in this file select "No"',
         ],
         input=ArgumentData.InputData(
-            default="False", options=["True", "False"], prompt="OpenID enabled?"
+            default="No",
+            options=["Yes", "No"],
+            prompt="Remove existing authentication configuration?",
         ),
     ),
     ArgumentData(
         key="enable_openid",
-        help="Enable OpenID authentication?",
+        help="Configure OpenID authentication?",
+        condition=can_enable_openid,
         description=[
             "You can use OpenID to provide user authentication with Concierge.",
             "It's currently the only supported authentication platform.",
             "You will be required to register an app with an OpenID provider to use this option.",
+            "If you already have an OpenID configuration set up this option will allow you to overwrite or add to it.",
         ],
         input=ArgumentData.InputData(
-            default="False", options=["True", "False"], prompt="OpenID enabled?"
+            default="No", options=["Yes", "No"], prompt="Configure OpenID?"
         ),
     ),
     ArgumentData(

@@ -250,13 +250,20 @@ def configure_openid():
             config = yaml.safe_load(file)
     except Exception:
         config = {}
+    existing = []
     if "auth" in config and "openid" in config["auth"]:
         existing = config["auth"]["openid"].keys()
         if len(existing):
             print(f"Providers already configured: {', '.join(existing)}")
-    label = get_valid_input(
-        "Assign a name to this provider, if it matches an existing one the old config will be overwritten. Not case-sensitive, special characters other than underscores will be removed: "
-    )
+    label_prompt = "Assign a name to this provider, if it matches an existing one the old config will be overwritten. Not case-sensitive, special characters other than underscores will be removed."
+    # if a config exists the user can just keep that, if not they must enter a valid one
+    if existing:
+        print(label_prompt)
+        label = input("Leave this blank to keep existing configuration: ").strip()
+        if not label:
+            return
+    else:
+        label = get_valid_input(f"{label_prompt}: ")
     config_url = get_valid_input(
         "Please enter your OpenID provider's configuration URL: "
     )
@@ -292,7 +299,7 @@ def do_install(argument_processor, environment="production", is_local=False):
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
-    if argument_processor.parameters["enable_openid"] == "True":
+    if argument_processor.parameters["enable_openid"] == "Yes":
         configure_openid()
         # TODO: allow multiple providers
     try:
@@ -362,6 +369,7 @@ def do_install(argument_processor, environment="production", is_local=False):
             security_config = yaml.safe_load(file)
         auth = config["auth"]
         if "openid" in auth:
+            valid_item = False
             for k, v in auth["openid"].items():
                 id_line = next(
                     (x for x in existing_env if x.startswith(f'{v["id_env_var"]}=')),
@@ -413,6 +421,15 @@ def do_install(argument_processor, environment="production", is_local=False):
                     security_config["config"]["dynamic"]["authc"][f"openid_{k}"][
                         "http_authenticator"
                     ]["config"]["roles_key"] = v["roles_key"]
+                valid_item = True
+            if not valid_item:
+                print(
+                    "OpenID was configured in Concierge configuration file but client ID or secret are missing from the environment file."
+                )
+                print(
+                    "Please rerun the installer and either remove authentication or make sure to input a valid OpenID client ID and secret."
+                )
+                exit()
 
         os.makedirs(os.path.dirname(open_id_config_path), exist_ok=True)
         with open(open_id_config_path, "w") as file:

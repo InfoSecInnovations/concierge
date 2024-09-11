@@ -16,3 +16,4 @@ binaryornot~=0.4.4
 isi-util
 concierge-util
 humanize~=4.10.0
+requests_oauth2client~=1.5.3
