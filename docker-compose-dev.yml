@@ -3,15 +3,15 @@ name: concierge
 services:
   ollama:
     extends:
-      file: launcher_package/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-ollama.yml
+      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-ollama.yml
       service: ${OLLAMA_SERVICE:-ollama}
   opensearch-node1:
     extends:
-      file: launcher_package/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
+      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
       service: ${OPENSEARCH_SERVICE:-opensearch-node-disable-security}
   opensearch-dashboards:
     extends:
-      file: launcher_package/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
+      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
       service: ${OPENSEARCH_DASHBOARDS_SERVICE:-opensearch-dashboards-disable-security}
 
 volumes:

@@ -78,7 +78,7 @@ If you would prefer to configure and launch the app without going through our ut
 
 Create a file called `.env` following the template of `.env.example` in this repository.
 
-From `launcher_package/src/launch_concierge/docker_compose` copy `docker_compose_dependencies`.
+From `concierge_packages/launcher/src/launch_concierge/docker_compose` copy `docker_compose_dependencies`.
 
 From the same directory, if you wish to use the CPU only, copy `docker-compose.yml`, if you wish to use GPU acceleration where available, copy `docker-compose-gpu.yml` instead.
 

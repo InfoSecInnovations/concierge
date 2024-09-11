@@ -41,9 +41,7 @@ dev_launcher.py
 
 # non-container files
 cli
-launcher_package
-script_builder_package
-util_package
+concierge_packages
 
 # compose files
 **/docker-compose*

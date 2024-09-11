@@ -1,6 +1,6 @@
 import subprocess
 import sys
-from script_builder_package.src.script_builder.util import (
+from concierge_packages.script_builder.src.script_builder.util import (
     get_venv_executable,
     setup_pip,
     install_requirements,

@@ -6,7 +6,7 @@ import json
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import TokenExpiredError
 import os
-from functions import load_config
+from concierge_util.config import load_config
 import dotenv
 
 dotenv.load_dotenv()

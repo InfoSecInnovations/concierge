@@ -13,7 +13,7 @@ from markdown_renderer import md
 REFERENCE_LIMIT = 5
 
 
-def load_config(dir):
+def load_prompter_config(dir):
     files = os.listdir(Path("prompter_config", dir).as_posix())
     return {
         file.replace(".concierge", ""): ConfigObj(
@@ -23,9 +23,9 @@ def load_config(dir):
     }
 
 
-tasks = load_config("tasks")
-personas = load_config("personas")
-enhancers = load_config("enhancers")
+tasks = load_prompter_config("tasks")
+personas = load_prompter_config("personas")
+enhancers = load_prompter_config("enhancers")
 
 
 # --------

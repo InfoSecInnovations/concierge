@@ -1,5 +1,6 @@
 ruff
 pre-commit
--e util_package
--e script_builder_package
--e launcher_package
+-e concierge_packages/isi_util
+-e concierge_packages/script_builder
+-e concierge_packages/launcher
+-e concierge_packages/concierge_util

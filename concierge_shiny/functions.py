@@ -3,15 +3,6 @@ from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
-import yaml
-
-
-def load_config():
-    try:
-        with open("concierge.yml", "r") as file:
-            return yaml.safe_load(file)
-    except Exception:
-        return None
 
 
 def doc_url(collection_name, doc_type, doc_id):

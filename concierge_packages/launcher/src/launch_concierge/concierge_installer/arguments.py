@@ -14,7 +14,7 @@ def get_default_log_dir(processor: ArgumentProcessor):
     return os.path.join(get_base_directory(processor), "logs")
 
 
-def show_logging_directory(processor: ArgumentProcessor):
+def logging_enabled(processor: ArgumentProcessor):
     return processor.parameters["activity_logging"] == "True"
 
 
@@ -64,7 +64,7 @@ install_arguments = [
     ),
     ArgumentData(
         key="logging_directory",
-        condition=show_logging_directory,
+        condition=logging_enabled,
         help="Path for logs to be written",
         description=["Where would you like to store the Concierge logs?"],
         input=ArgumentData.InputData(
@@ -73,10 +73,23 @@ install_arguments = [
     ),
     ArgumentData(
         key="log_retention",
+        condition=logging_enabled,
         help="How long will logs be kept?",
         description=["How long do you want to keep Concierge activity logs?"],
         input=ArgumentData.InputData(
             default="90", prompt="how many days should logs be retained?"
+        ),
+    ),
+    ArgumentData(
+        key="disable_auth",
+        help="Enable OpenID authentication?",
+        description=[
+            "You can use OpenID to provide user authentication with Concierge.",
+            "It's currently the only supported authentication platform.",
+            "You will be required to register an app with an OpenID provider to use this option.",
+        ],
+        input=ArgumentData.InputData(
+            default="False", options=["True", "False"], prompt="OpenID enabled?"
         ),
     ),
     ArgumentData(
