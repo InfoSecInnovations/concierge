@@ -21,7 +21,12 @@ def logging_enabled(processor: ArgumentProcessor):
 
 def security_config_exists(processor: ArgumentProcessor):
     config = load_config()
-    return config and "auth" in config
+    return (
+        config
+        and "auth" in config
+        and "openid" in config["auth"]
+        and len(config["auth"]["openid"])
+    )
 
 
 def can_enable_openid(processor: ArgumentProcessor):

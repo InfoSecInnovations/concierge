@@ -244,9 +244,7 @@ def configure_openid():
         "If possible, we recommend using a provider that supports assigning roles using OpenID claims. This is simpler than having to assign permissions within Concierge."
     )
     try:
-        with open(
-            "concierge.yml", "r"
-        ) as file:  # TODO: write this file from user input
+        with open("concierge.yml", "r") as file:
             config = yaml.safe_load(file)
     except Exception:
         config = {}
@@ -337,6 +335,9 @@ def do_install(argument_processor, environment="production", is_local=False):
             else "opensearch-dashboards-disable-security"
         ),
     ]
+    # make sure to delete existing auth if the user selected that option before triggering the next step
+    if argument_processor.parameters["disable_auth"] == "Yes":
+        del config["auth"]
     # configure auth settings if needed
     if "auth" in config:
         open_id_config_path = os.path.abspath(
