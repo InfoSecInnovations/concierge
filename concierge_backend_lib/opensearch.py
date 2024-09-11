@@ -5,7 +5,6 @@ from requests_oauth2client import BearerAuth
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
-PASSWORD = "admin"  # os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
 
 
 def get_client(token: str | None = None):
@@ -22,13 +21,7 @@ def get_client(token: str | None = None):
             connection_class=RequestsHttpConnection,
         )
 
-    return OpenSearch(
-        hosts=[{"host": host, "port": port}],
-        http_auth=("admin", PASSWORD),
-        use_ssl=True,
-        verify_certs=False,
-        ssl_show_warn=False,
-    )
+    return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
 
 
 def ensure_collection(client: OpenSearch, collection_name: str):

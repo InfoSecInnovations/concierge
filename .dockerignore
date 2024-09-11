@@ -1,8 +1,9 @@
-# .env file used to set local paths for Docker and scripts
+# config files
 .env
-
-# directory used by web server to store uploaded files
-uploads
+.env.example
+concierge.yml
+concierge.example.yml
+ruff.toml
 
 # files that appear to be due to installing dependencies, try un-ignoring these if needed
 share
@@ -28,7 +29,21 @@ pip-selfcheck.json
 
 # dev dependencies
 .ruff_cache
+.pytest_cache
 .vscode
+contribution_guides
+test_certs
+*.md
+install_dev.py
+dev_installer.py
+launch_dev.py
+dev_launcher.py
+
+# non-container files
+cli
+launcher_package
+script_builder_package
+util_package
 
 # compose files
-docker-compose*
+**/docker-compose*

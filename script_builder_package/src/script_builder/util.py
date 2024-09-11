@@ -113,7 +113,7 @@ def write_env(key, value, env_file=".env"):
     except Exception:
         lines = []
 
-    lines = [line for line in lines if not line.startswith(f"{key}=")]
+    lines = [line.rstrip() for line in lines if not line.startswith(f"{key}=")]
     lines.append(f"{key}={value}")
 
     with open(env_file, "w") as file:

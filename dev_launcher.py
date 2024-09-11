@@ -1,5 +1,5 @@
-import subprocess
-from script_builder.util import get_venv_executable
+# import subprocess
+# from script_builder.util import get_venv_executable
 from launcher_package.src.launch_concierge.concierge_installer.functions import (
     docker_compose_helper,
     set_compute,
@@ -7,6 +7,7 @@ from launcher_package.src.launch_concierge.concierge_installer.functions import 
 import argparse
 import dotenv
 import os
+from shiny import run_app
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -33,16 +34,32 @@ docker_compose_helper(
 if environment == "production":
     exit()  # in production we use the docker container to host the Shiny app so our work is done here
 
-subprocess.run(
-    [
-        get_venv_executable(),
-        "-m",
-        "shiny",
-        "run",
-        "--port",
-        os.getenv("WEB_PORT", "15130"),
-        *(["--reload"] if environment == "development" else []),
-        "--launch-browser",
-        "concierge_shiny/app.py",
-    ]
+run_app(
+    app_dir="concierge_shiny",
+    port=int(os.getenv("WEB_PORT", "15130")),
+    # reload currently reruns this script instead of the app
+    # reload=environment == "development",
+    # launch_browser currently doesn't work with HTTPS
+    # launch_browser=True,
+    host="localhost",
+    ssl_keyfile="test_certs/key.pem",
+    ssl_certfile="test_certs/cert.pem",
 )
+
+# subprocess.run(
+#     [
+#         get_venv_executable(),
+#         "-m",
+#         "shiny",
+#         "run",
+#         "--port",
+#         os.getenv("WEB_PORT", "15130"),
+#         *(["--reload"] if environment == "development" else []),
+#         "--launch-browser",
+#         "--ssl-keyfile",
+#         "test_certs/key.pem",
+#         "--ssl-certfile",
+#         "test_certs/cert.pem",
+#         "concierge_shiny/app.py"
+#     ]
+# )

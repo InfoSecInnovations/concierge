@@ -8,3 +8,6 @@ services:
     ports:
       - ${WEB_PORT:-15130}:15130
     restart: unless-stopped
+    volumes:
+      - ${WEB_CERT:-../test_certs/cert.pem}:/web_certs/cert.pem
+      - ${WEB_KEY:-../test_certs/key.pem}:/web_certs/key.pem

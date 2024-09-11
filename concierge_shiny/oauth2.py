@@ -4,10 +4,19 @@ import dotenv
 import os
 from requests_oauthlib import OAuth2Session
 import json
-from oid_configs import oauth_configs, oauth_config_data
+import requests
+from functions import load_config
 
 dotenv.load_dotenv()
 max_bytes = 3000  # setting a cookie adds escape characters to the stringified JSON so this allows a safe margin to avoid hitting the 4096 byte limit
+
+config = load_config()
+if config and "auth" in config and "openid" in config["auth"]:
+    oauth_config_data = config["auth"]["openid"]
+    oauth_configs = {
+        provider: requests.get(data["url"]).json()
+        for provider, data in oauth_config_data.items()
+    }
 
 
 def set_token_cookies(token, response):

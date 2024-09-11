@@ -211,6 +211,7 @@ def docker_compose_helper(environment, is_local=False, rebuild=False):
     if rebuild:
         # pull latest versions
         subprocess.run(["docker", "compose", "-f", full_path, "pull"])
+    if is_local:
         # build local concierge image
         subprocess.run(["docker", "compose", "-f", full_path, "build"])
     subprocess.run(
@@ -384,8 +385,8 @@ def do_install(argument_processor, environment="production", is_local=False):
                         f"No client secret was found for OpenID provider {k}, this provider will be skipped!"
                     )
                     continue
-                env_lines.append(id_line)
-                env_lines.append(secret_line)
+                env_lines.append(id_line.rstrip())
+                env_lines.append(secret_line.rstrip())
 
                 order = 0
 

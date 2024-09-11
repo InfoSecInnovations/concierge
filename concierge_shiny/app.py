@@ -12,7 +12,7 @@ from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
 import dotenv
-from functions import get_authorized_client
+from auth import get_authorized_client
 
 dotenv.load_dotenv()
 
