@@ -12,7 +12,7 @@ import os
 
 argument_processor = init_arguments(install_arguments)
 clean_up_existing()
-prompt_for_parameters(argument_processor)
+prompt_for_parameters(argument_processor, "python install_dev.py")
 prompt_concierge_install()
 
 # install git commit linter hook

@@ -9,10 +9,10 @@ from launch_concierge.concierge_installer.functions import (
 )
 
 
-def install():
+def install(command="install_concierge"):
     argument_processor = init_arguments(install_arguments)
     clean_up_existing()
-    prompt_for_parameters(argument_processor)
+    prompt_for_parameters(argument_processor, command)
     prompt_concierge_install()
     do_install(argument_processor, "production")
     print(
@@ -24,4 +24,4 @@ def install():
 
 
 if __name__ == "__main__":
-    install()
+    install("python -m launch_concierge.install")

@@ -140,9 +140,13 @@ def clean_up_existing():
                 if approve_to_delete == "yes":
                     shutil.rmtree(concierge_volumes)
 
-            def check_dependencies(check_command, label, remove_command):
+            def check_dependencies(
+                check_command, label, remove_command, remove_info=""
+            ):
                 result = get_lines(check_command)
                 if result:
+                    if remove_info:
+                        print(remove_info)
                     print(f"The following docker {label} were discovered:")
                     print(" ".join(result))
 
@@ -165,6 +169,14 @@ def clean_up_existing():
                 ["docker", "container", "ls", "--all", "--format", "{{.Names}}"],
                 "containers",
                 ["docker", "container", "rm", "--force"],
+                "If you intend to remove a volume belonging to a container, you will need to remove the container here first!",
+            )
+            # docker volumes
+            check_dependencies(
+                ["docker", "volume", "ls", "--format", "{{.Name}}"],
+                "volumes",
+                ["docker", "volume", "rm", "--force"],
+                "If a running container is using a volume you will not be able to remove it.",
             )
             # docker networks
             check_dependencies(
@@ -174,7 +186,7 @@ def clean_up_existing():
             )
 
 
-def prompt_for_parameters(argument_processor):
+def prompt_for_parameters(argument_processor, command="python install.py"):
     print("Welcome to the Concierge installer.")
     print("Just a few configuration questions and then some download scripts will run.")
     print("Note: you can just hit enter to accept the default option.\n\n")
@@ -188,9 +200,7 @@ def prompt_for_parameters(argument_processor):
     print(
         "After git clone or unzipping, run this command and you can skip all these questions!\n\n"
     )
-    print(
-        "\npython install.py" + argument_processor.get_command_parameters() + "\n\n\n"
-    )
+    print(f"\n{command} {argument_processor.get_command_parameters()}\n\n\n")
 
     print("About to make changes to your system.\n")
     # TODO make a download size variable & update based on findings

@@ -1,5 +1,7 @@
-ruff
-pre-commit
+ruff~=0.6.4
+pre-commit~=3.8.0
+pipdeptree~=2.23.3
+twine~=5.1.1
 -e concierge_packages/isi_util
 -e concierge_packages/script_builder
 -e concierge_packages/launcher
