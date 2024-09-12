@@ -11,3 +11,4 @@ services:
     volumes:
       - ${WEB_CERT:-../test_certs/cert.pem}:/web_certs/cert.pem
       - ${WEB_KEY:-../test_certs/key.pem}:/web_certs/key.pem
+      - ../concierge.yml:/concierge.yml
