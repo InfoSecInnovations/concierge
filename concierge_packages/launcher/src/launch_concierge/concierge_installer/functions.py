@@ -276,13 +276,13 @@ def configure_openid():
         "Please enter your OpenID provider's configuration URL: "
     )
     client_id = get_valid_input("Please enter your app's client ID: ")
-    id_key = f"{label.upper()}_CLIENT_ID"
     client_secret = getpass("Please enter your app's client secret: ")
-    secret_key = f"{label.upper()}_CLIENT_SECRET"
     roles_key = input(
         "Which OpenID claim is used to assign user roles? Leave blank if not applicable: "
     ).strip()
     label = re.sub(r"\W+", "", label.lower())
+    id_key = f"{label.upper()}_CLIENT_ID"
+    secret_key = f"{label.upper()}_CLIENT_SECRET"
     if "auth" not in config:
         config["auth"] = {}
     if "openid" not in config["auth"]:
