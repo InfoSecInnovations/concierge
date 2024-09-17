@@ -44,7 +44,7 @@ install_arguments = [
             "Please choose 'everyone' (this is the default) or 'standalone' (just you):",
         ],
         input=ArgumentData.InputData(
-            default="everyone", options=["everyone", "standalone"]
+            default="everyone", options=["everyone", "standalone"], case_sensitive=False
         ),
     ),
     ArgumentData(
@@ -53,7 +53,9 @@ install_arguments = [
         description=[
             "Do you want to use CPU (default) or GPU compute to speed up Concierge responses?"
         ],
-        input=ArgumentData.InputData(default="CPU", options=["CPU", "GPU"]),
+        input=ArgumentData.InputData(
+            default="CPU", options=["CPU", "GPU"], case_sensitive=False
+        ),
     ),
     ArgumentData(
         key="language_model",
@@ -64,7 +66,9 @@ install_arguments = [
             "For more info on language models available please go here:",
             "https://ollama.com/library",
         ],
-        input=ArgumentData.InputData(default="mistral", prompt="which language model?"),
+        input=ArgumentData.InputData(
+            default="mistral", prompt="which language model?", case_sensitive=True
+        ),
     ),
     ArgumentData(
         key="activity_logging",
@@ -76,7 +80,9 @@ install_arguments = [
             "Your logs will remain local to your Concierge instance.",
         ],
         input=ArgumentData.InputData(
-            default="True", options=["True", "False"], prompt="logging enabled?"
+            default=True,
+            prompt="logging enabled?",
+            output_type=ArgumentData.InputData.OutputType.bool,
         ),
     ),
     ArgumentData(
@@ -85,7 +91,9 @@ install_arguments = [
         help="Path for logs to be written",
         description=["Where would you like to store the Concierge logs?"],
         input=ArgumentData.InputData(
-            default=get_default_log_dir, prompt="log directory location?"
+            default=get_default_log_dir,
+            prompt="log directory location?",
+            case_sensitive=True,
         ),
     ),
     ArgumentData(
@@ -94,7 +102,9 @@ install_arguments = [
         help="How long will logs be kept?",
         description=["How long do you want to keep Concierge activity logs?"],
         input=ArgumentData.InputData(
-            default="90", prompt="how many days should logs be retained?"
+            default=90,
+            prompt="how many days should logs be retained?",
+            output_type=ArgumentData.InputData.OutputType.int,
         ),
     ),
     ArgumentData(
@@ -106,9 +116,9 @@ install_arguments = [
             'If you wish to keep the configuration present in this file select "No"',
         ],
         input=ArgumentData.InputData(
-            default="No",
-            options=["Yes", "No"],
+            default=False,
             prompt="Remove existing authentication configuration?",
+            output_type=ArgumentData.InputData.OutputType.bool,
         ),
     ),
     ArgumentData(
@@ -122,13 +132,19 @@ install_arguments = [
             "If you already have an OpenID configuration set up this option will allow you to overwrite or add to it.",
         ],
         input=ArgumentData.InputData(
-            default="No", options=["Yes", "No"], prompt="Configure OpenID?"
+            default=False,
+            prompt="Configure OpenID?",
+            output_type=ArgumentData.InputData.OutputType.bool,
         ),
     ),
     ArgumentData(
         key="port",
         help="Which port should the Concierge web UI be served on?",
         description=["Which port should the Concierge web UI be served on?"],
-        input=ArgumentData.InputData(default="15130", prompt="port?"),
+        input=ArgumentData.InputData(
+            default=15130,
+            prompt="port?",
+            output_type=ArgumentData.InputData.OutputType.int,
+        ),
     ),
 ]

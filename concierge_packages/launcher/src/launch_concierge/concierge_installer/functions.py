@@ -307,7 +307,7 @@ def do_install(argument_processor, environment="production", is_local=False):
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
-    if argument_processor.parameters["enable_openid"] == "Yes":
+    if argument_processor.parameters["enable_openid"]:
         configure_openid()
         # TODO: allow multiple providers
     try:
@@ -324,7 +324,7 @@ def do_install(argument_processor, environment="production", is_local=False):
     # setup .env (needed for docker compose files)
     env_lines = [
         "ENVIRONMENT=" + environment,
-        "WEB_PORT=" + argument_processor.parameters["port"],
+        "WEB_PORT=" + str(argument_processor.parameters["port"]),
         "CONCIERGE_VERSION=" + version("launch_concierge"),
         "OLLAMA_SERVICE="
         + (
@@ -346,7 +346,7 @@ def do_install(argument_processor, environment="production", is_local=False):
         ),
     ]
     # make sure to delete existing auth if the user selected that option before triggering the next step
-    if argument_processor.parameters["disable_auth"] == "Yes":
+    if argument_processor.parameters["disable_auth"]:
         del config["auth"]
     # configure auth settings if needed
     if "auth" in config:
