@@ -167,13 +167,13 @@ class ArgumentProcessor:
             print(f"Question {index + 1} of {len(self.arguments)}:")
             # if a condition was set it must evaluate to true for the user to be asked the question
             if argument.condition and not argument.condition(self):
-                print("Question not relevant to current situation, skipping.")
+                print("Question not relevant to current situation, skipping.\n\n")
                 # to avoid any potential for errors, we'll remove the value if it's not relevant to the current install
                 if argument.key in self.parameters:
                     del self.parameters[argument.key]
                 continue
             if argument.key in self.parameters:
-                print("Answer provided by command line argument.")
+                print("Answer provided by command line argument.\n\n")
                 continue
             for line in argument.description:
                 print(line)

@@ -176,7 +176,7 @@ def clean_up_existing():
                 ["docker", "volume", "ls", "--format", "{{.Name}}"],
                 "volumes",
                 ["docker", "volume", "rm", "--force"],
-                "If a running container is using a volume you will not be able to remove it.",
+                "If a running container is using a volume you will not be able to remove that volume in the next step.",
             )
             # docker networks
             check_dependencies(
@@ -300,14 +300,19 @@ def configure_openid():
     write_env(secret_key, client_secret)
 
 
-def do_install(argument_processor, environment="production", is_local=False):
+def do_install(
+    argument_processor: ArgumentProcessor, environment="production", is_local=False
+):
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
         # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
-    if argument_processor.parameters["enable_openid"]:
+    if (
+        "enable_openid" in argument_processor.parameters
+        and argument_processor.parameters["enable_openid"]
+    ):
         configure_openid()
         # TODO: allow multiple providers
     try:
@@ -346,7 +351,10 @@ def do_install(argument_processor, environment="production", is_local=False):
         ),
     ]
     # make sure to delete existing auth if the user selected that option before triggering the next step
-    if argument_processor.parameters["disable_auth"]:
+    if (
+        "disable_auth" in argument_processor.parameters
+        and argument_processor.parameters["disable_auth"]
+    ):
         del config["auth"]
     # configure auth settings if needed
     if "auth" in config:
@@ -363,6 +371,8 @@ def do_install(argument_processor, environment="production", is_local=False):
                 "OPENSEARCH_CONFIG="
                 + "./opensearch_config/opensearch_with_security.yml",
                 "OPENSEARCH_SECURITY_CONFIG=" + open_id_config_path,
+                "OPENSEARCH_DASHBOARDS_CONFIG="
+                + "./opensearch_config/opensearch_dashboards.yml",
                 "OPENSEARCH_ROLES_MAPPING=" + "./opensearch_config/roles_mapping.yml",
                 "OPENSEARCH_INTERNAL_USERS=" + "./opensearch_config/internal_users.yml",
             ]

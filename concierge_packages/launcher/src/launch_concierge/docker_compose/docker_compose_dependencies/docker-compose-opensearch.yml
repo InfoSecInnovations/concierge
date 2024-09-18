@@ -53,6 +53,8 @@ services:
       - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
     environment:
       - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200"]'
+    volumes:
+      - ${OPENSEARCH_DASHBOARDS_CONFIG}:/usr/share/opensearch/config/opensearch_dashboards.yml
   opensearch-dashboards-disable-security:
     extends: opensearch-dashboards-base
     environment:

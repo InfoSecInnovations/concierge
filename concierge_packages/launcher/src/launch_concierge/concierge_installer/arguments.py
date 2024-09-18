@@ -18,7 +18,10 @@ def get_default_log_dir(processor: ArgumentProcessor):
 
 
 def logging_enabled(processor: ArgumentProcessor):
-    return processor.parameters["activity_logging"]
+    return (
+        "activity_logging" in processor.parameters
+        and processor.parameters["activity_logging"]
+    )
 
 
 def security_config_exists(processor: ArgumentProcessor):
@@ -32,9 +35,10 @@ def security_config_exists(processor: ArgumentProcessor):
 
 
 def can_enable_openid(processor: ArgumentProcessor):
-    return not processor.parameters[
-        "disable_auth"
-    ]  # if we just disabled authentication don't configure OpenID
+    return (
+        "disable_auth" not in processor.parameters
+        or not processor.parameters["disable_auth"]
+    )  # if we just disabled authentication don't configure OpenID
 
 
 install_arguments = [
