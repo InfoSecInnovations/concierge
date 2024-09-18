@@ -19,6 +19,64 @@ class ArgumentData:
         case_sensitive: bool = True
         output_type: OutputType = OutputType.string
 
+        class InvalidValueError(Exception):
+            def __init__(self, message):
+                self.message = message
+
+        def process_value(self, input_value: str):
+            if self.output_type == ArgumentData.InputData.OutputType.bool:
+                if (
+                    input_value in [True, False]
+                ):  # if we used the default value we already have a bool and we can skip the extra steps
+                    return input_value
+                elif input_value.lower() in [
+                    option.lower() for option in bool_mapping[True]
+                ]:
+                    return True
+                elif input_value.lower() in [
+                    option.lower() for option in bool_mapping[False]
+                ]:
+                    return False
+                raise ArgumentData.InputData.InvalidValueError(
+                    "Please answer Yes or No!"
+                )
+            elif self.output_type == ArgumentData.InputData.OutputType.int:
+                try:
+                    value = int(input_value)
+                except ValueError:
+                    raise ArgumentData.InputData.InvalidValueError(
+                        "Please enter a valid integer number"
+                    )
+                if self.options and input_value not in self.options:
+                    raise ArgumentData.InputData.InvalidValueError(
+                        "Please enter a value matching one of the options!"
+                    )
+                return value
+            else:
+                if not self.case_sensitive:
+                    if self.options and input_value.lower() not in [
+                        option.lower() for option in self.options
+                    ]:
+                        raise ArgumentData.InputData.InvalidValueError(
+                            "Please enter a value matching one of the options!"
+                        )
+                    return input_value
+                if self.options and (input_value not in self.options):
+                    raise ArgumentData.InputData.InvalidValueError(
+                        "Please enter a value matching one of the options!"
+                    )
+                return input_value
+
+        def value_to_string(self, input_value: Any):
+            if self.output_type == ArgumentData.InputData.OutputType.bool:
+                if input_value:
+                    return bool_mapping[True][0]
+                else:
+                    return bool_mapping[False][0]
+            elif self.output_type == ArgumentData.InputData.OutputType.int:
+                return str(input_value)
+            return input_value
+
     key: str
     help: str
     description: list[str]
@@ -64,42 +122,11 @@ class ArgumentProcessor:
         valid = False
         while not valid:
             value = input(input_text).strip() or input_default
-            if input_data.output_type == ArgumentData.InputData.OutputType.bool:
-                if (
-                    value in [True, False]
-                ):  # if we used the default value we already have a bool and we can skip the extra steps
-                    valid = True
-                elif value.lower() in [option.lower() for option in bool_mapping[True]]:
-                    value = True
-                    valid = True
-                elif value.lower() in [
-                    option.lower() for option in bool_mapping[False]
-                ]:
-                    value = False
-                    valid = True
-                if not valid:
-                    print("Please answer Yes or No!")
-            elif input_data.output_type == ArgumentData.InputData.OutputType.int:
-                try:
-                    value = int(value)
-                    valid = True
-                except ValueError:
-                    print("Please enter a valid integer number!")
-                    continue
-                if input_data.options and value not in input_data.options:
-                    print("Please enter a value matching one of the options!")
-                    continue
+            try:
+                value = input_data.process_value(value)
                 valid = True
-            else:
-                if not input_data.case_sensitive:
-                    if input_data.options and value.lower() not in [
-                        option.lower() for option in input_data.options
-                    ]:
-                        print("Please enter a value matching one of the options!")
-                        continue
-                    valid = True
-                else:
-                    valid = not input_data.options or (value in input_data.options)
+            except ArgumentData.InputData.InvalidValueError as e:
+                print(e.message)
         return value
 
     def init_args(self):
@@ -109,9 +136,16 @@ class ArgumentProcessor:
         args = parser.parse_args()
         for argument in self.arguments:
             value = getattr(args, argument.key)
-            # TODO: map string value to typed value
             if value:
-                self.parameters[argument.key] = value
+                try:
+                    self.parameters[argument.key] = argument.input.process_value(value)
+                except ArgumentData.InputData.InvalidValueError as e:
+                    print(
+                        f"invalid value {value} was supplied for --{argument.key}: {e.message}"
+                    )
+                    print(
+                        "You will be prompted to supply this value during installation."
+                    )
 
     def prompt_for_parameters(self):
         for index, argument in enumerate(self.arguments):
@@ -125,10 +159,9 @@ class ArgumentProcessor:
             print("\n")
 
     def get_command_parameters(self):
-        # TODO: map typed value to string
-        return " " + " ".join(
+        return " ".join(
             [
-                f"--{argument.key}={self.parameters[argument.key]}"
+                f"--{argument.key}={argument.input.value_to_string(self.parameters[argument.key])}"
                 for argument in self.arguments
             ]
         )
