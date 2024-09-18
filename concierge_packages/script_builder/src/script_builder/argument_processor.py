@@ -151,7 +151,7 @@ class ArgumentProcessor:
             value = getattr(args, argument.key)
             if value:
                 try:
-                    self.parameters[argument.key] = argument.input.process_value(value)
+                    self.parameters[argument.key] = argument.process_value(value)
                 except ArgumentData.InvalidValueError as e:
                     print(
                         f"invalid value {value} was supplied for --{argument.key}: {e.message}"
@@ -165,7 +165,8 @@ class ArgumentProcessor:
         for index, argument in enumerate(self.arguments):
             # we still tell the user about the step even if it will be skipped so they don't get confused by the numbering
             print(f"Question {index + 1} of {len(self.arguments)}:")
-            if argument.condition and argument.condition(self):
+            # if a condition was set it must evaluate to true for the user to be asked the question
+            if argument.condition and not argument.condition(self):
                 print("Question not relevant to current situation, skipping.")
                 # to avoid any potential for errors, we'll remove the value if it's not relevant to the current install
                 if argument.key in self.parameters:
@@ -176,14 +177,14 @@ class ArgumentProcessor:
                 continue
             for line in argument.description:
                 print(line)
-            self.parameters[argument.key] = self.__get_argument_input(argument.input)
+            self.parameters[argument.key] = self.__get_argument_input(argument)
             print("\n")
 
     # the command line arguments to append to the script to be able to rerun without completing the questionnaire again
     def get_command_parameters(self):
         return " ".join(
             [
-                f"--{argument.key}={argument.input.value_to_string(self.parameters[argument.key])}"
+                f"--{argument.key}={argument.value_to_string(self.parameters[argument.key])}"
                 for argument in self.arguments
                 if argument.key in self.parameters
             ]

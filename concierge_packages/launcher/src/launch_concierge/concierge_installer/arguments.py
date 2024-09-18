@@ -6,7 +6,9 @@ import os
 
 def get_base_directory(processor: ArgumentProcessor):
     return os.path.join(
-        get_default_directory(processor.parameters["instance_type"] == "standalone"),
+        get_default_directory(
+            processor.parameters["instance_type"].lower() == "standalone"
+        ),
         "concierge",
     )
 
@@ -16,7 +18,7 @@ def get_default_log_dir(processor: ArgumentProcessor):
 
 
 def logging_enabled(processor: ArgumentProcessor):
-    return processor.parameters["activity_logging"] == "True"
+    return processor.parameters["activity_logging"]
 
 
 def security_config_exists(processor: ArgumentProcessor):
@@ -30,9 +32,9 @@ def security_config_exists(processor: ArgumentProcessor):
 
 
 def can_enable_openid(processor: ArgumentProcessor):
-    return (
-        processor["disable_auth"] != "True"
-    )  # if we just disabled authentication don't configure OpenID
+    return not processor.parameters[
+        "disable_auth"
+    ]  # if we just disabled authentication don't configure OpenID
 
 
 install_arguments = [

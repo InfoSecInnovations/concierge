@@ -329,7 +329,7 @@ def do_install(argument_processor, environment="production", is_local=False):
         "OLLAMA_SERVICE="
         + (
             "ollama-gpu"
-            if argument_processor.parameters["compute_method"] == "GPU"
+            if argument_processor.parameters["compute_method"].lower() == "gpu"
             else "ollama"
         ),
         "OPENSEARCH_SERVICE="
