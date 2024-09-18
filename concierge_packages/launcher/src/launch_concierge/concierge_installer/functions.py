@@ -155,10 +155,9 @@ def clean_up_existing():
                         f"Please give a space separated list of the {label} you would like removed or press enter to skip: "
                     )
                     print("\n")
-
                     if to_remove != "":
                         subprocess.run(
-                            [*remove_command, *(" ".split(to_remove))],
+                            [*remove_command, *to_remove.split(" ")],
                             stdout=subprocess.DEVNULL,
                         )
                 else:
