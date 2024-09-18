@@ -34,13 +34,6 @@ def security_config_exists(processor: ArgumentProcessor):
     )
 
 
-def can_enable_openid(processor: ArgumentProcessor):
-    return (
-        "disable_auth" not in processor.parameters
-        or not processor.parameters["disable_auth"]
-    )  # if we just disabled authentication don't configure OpenID
-
-
 install_arguments = [
     ArgumentData(
         key="instance_type",
@@ -108,21 +101,20 @@ install_arguments = [
         output_type=ArgumentData.OutputType.int,
     ),
     ArgumentData(
-        key="disable_auth",
-        help="Remove existing authentication configuration?",
+        key="delete_auth",
+        help="Delete existing authentication configuration?",
         condition=security_config_exists,
         description=[
             "A config file was detected with authentication already configured.",
-            'If you wish to keep the configuration present in this file select "No"',
+            'Select "Yes" to delete it, or "No" to continue using it',
         ],
         default=False,
-        prompt="Remove existing authentication configuration?",
+        prompt="Delete existing authentication configuration?",
         output_type=ArgumentData.OutputType.bool,
     ),
     ArgumentData(
         key="enable_openid",
         help="Configure OpenID authentication?",
-        condition=can_enable_openid,
         description=[
             "You can use OpenID to provide user authentication with Concierge.",
             "It's currently the only supported authentication platform.",

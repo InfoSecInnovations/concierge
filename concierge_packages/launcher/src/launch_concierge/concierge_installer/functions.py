@@ -302,6 +302,19 @@ def configure_openid():
 def do_install(
     argument_processor: ArgumentProcessor, environment="production", is_local=False
 ):
+    # delete existing auth if requested, we must do this before configuring OpenID so these actions don't step on each other
+    if (
+        "delete_auth" in argument_processor.parameters
+        and argument_processor.parameters["delete_auth"]
+    ):
+        try:
+            with open("concierge.yml", "r") as file:
+                config = yaml.safe_load(file)
+                del config["auth"]
+            with open("concierge.yml", "w") as file:
+                file.write(yaml.dump(config))
+        except Exception:
+            pass
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
         # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
@@ -349,12 +362,7 @@ def do_install(
             else "opensearch-dashboards-disable-security"
         ),
     ]
-    # make sure to delete existing auth if the user selected that option before triggering the next step
-    if (
-        "disable_auth" in argument_processor.parameters
-        and argument_processor.parameters["disable_auth"]
-    ):
-        del config["auth"]
+
     # configure auth settings if needed
     if "auth" in config:
         open_id_config_path = os.path.abspath(
