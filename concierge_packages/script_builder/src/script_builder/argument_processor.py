@@ -5,83 +5,91 @@ from collections.abc import Callable
 from typing import Any
 from enum import Enum
 
+# These are all accepted ways to answer a yes/no question, not case sensitive.
 bool_mapping = {True: ["Yes", "Y", "True"], False: ["No", "N", "False"]}
 
 
 @dataclass
 class ArgumentData:
-    @dataclass
-    class InputData:
-        OutputType = Enum("OutputType", ["string", "bool", "int"])
-        default: Any | Callable[[ArgumentProcessor], Any] | None = None
-        prompt: str | None = None
-        options: list[Any] | None = None
-        case_sensitive: bool = True
-        output_type: OutputType = OutputType.string
+    # exception to handle user input that doesn't match a valid value
+    class InvalidValueError(Exception):
+        def __init__(self, message):
+            self.message = message
 
-        class InvalidValueError(Exception):
-            def __init__(self, message):
-                self.message = message
+    # different types of value that can be handled
+    OutputType = Enum("OutputType", ["string", "bool", "int"])
+    # the dictionary key used by this argument in the parameters dictionary
+    key: str
+    # help displayed for the command line arguments
+    help: str
+    # information displayed when asking the user to input the value in the interactive questionnaire
+    description: list[str]
+    # optional function to check if the question is relevant to the current context
+    condition: Callable[[ArgumentProcessor], bool] | None = None
+    # the type of the value that will be stored in the parameters dictionary
+    output_type: OutputType = OutputType.string
+    # optional default value, can be a function
+    default: Any | Callable[[ArgumentProcessor], Any] | None = None
+    # the prompt displayed at the user input
+    prompt: str | None = None
+    # optional list of values to constrain the answer, with bool output type this is ignored
+    options: list[Any] | None = None
+    # for string values we can define whether we should check against the exact casing or not
+    case_sensitive: bool = True
 
-        def process_value(self, input_value: str):
-            if self.output_type == ArgumentData.InputData.OutputType.bool:
-                if (
-                    input_value in [True, False]
-                ):  # if we used the default value we already have a bool and we can skip the extra steps
-                    return input_value
-                elif input_value.lower() in [
-                    option.lower() for option in bool_mapping[True]
-                ]:
-                    return True
-                elif input_value.lower() in [
-                    option.lower() for option in bool_mapping[False]
-                ]:
-                    return False
-                raise ArgumentData.InputData.InvalidValueError(
-                    "Please answer Yes or No!"
+    # convert a string supplied by the user to a valid value our program can use
+    def process_value(self, input_value: str):
+        if self.output_type == ArgumentData.OutputType.bool:
+            if (
+                input_value in [True, False]
+            ):  # if we used the default value we already have a bool and we can skip the extra steps
+                return input_value
+            elif input_value.lower() in [
+                option.lower() for option in bool_mapping[True]
+            ]:
+                return True
+            elif input_value.lower() in [
+                option.lower() for option in bool_mapping[False]
+            ]:
+                return False
+            raise ArgumentData.InvalidValueError("Please answer Yes or No!")
+        elif self.output_type == ArgumentData.OutputType.int:
+            try:
+                value = int(input_value)
+            except ValueError:
+                raise ArgumentData.InvalidValueError(
+                    "Please enter a valid integer number"
                 )
-            elif self.output_type == ArgumentData.InputData.OutputType.int:
-                try:
-                    value = int(input_value)
-                except ValueError:
-                    raise ArgumentData.InputData.InvalidValueError(
-                        "Please enter a valid integer number"
-                    )
-                if self.options and input_value not in self.options:
-                    raise ArgumentData.InputData.InvalidValueError(
-                        "Please enter a value matching one of the options!"
-                    )
-                return value
-            else:
-                if not self.case_sensitive:
-                    if self.options and input_value.lower() not in [
-                        option.lower() for option in self.options
-                    ]:
-                        raise ArgumentData.InputData.InvalidValueError(
-                            "Please enter a value matching one of the options!"
-                        )
-                    return input_value
-                if self.options and (input_value not in self.options):
-                    raise ArgumentData.InputData.InvalidValueError(
+            if self.options and input_value not in self.options:
+                raise ArgumentData.InvalidValueError(
+                    "Please enter a value matching one of the options!"
+                )
+            return value
+        else:
+            if not self.case_sensitive:
+                if self.options and input_value.lower() not in [
+                    option.lower() for option in self.options
+                ]:
+                    raise ArgumentData.InvalidValueError(
                         "Please enter a value matching one of the options!"
                     )
                 return input_value
-
-        def value_to_string(self, input_value: Any):
-            if self.output_type == ArgumentData.InputData.OutputType.bool:
-                if input_value:
-                    return bool_mapping[True][0]
-                else:
-                    return bool_mapping[False][0]
-            elif self.output_type == ArgumentData.InputData.OutputType.int:
-                return str(input_value)
+            if self.options and (input_value not in self.options):
+                raise ArgumentData.InvalidValueError(
+                    "Please enter a value matching one of the options!"
+                )
             return input_value
 
-    key: str
-    help: str
-    description: list[str]
-    input: InputData
-    condition: Callable[[ArgumentProcessor], bool] | None = None
+    # convert a value used by our program to a string so the user knows what to input to reproduce the result
+    def value_to_string(self, input_value: Any):
+        if self.output_type == ArgumentData.OutputType.bool:
+            if input_value:
+                return bool_mapping[True][0]
+            else:
+                return bool_mapping[False][0]
+        elif self.output_type == ArgumentData.OutputType.int:
+            return str(input_value)
+        return input_value
 
 
 class ArgumentProcessor:
@@ -89,7 +97,8 @@ class ArgumentProcessor:
         self.arguments = arguments
         self.parameters: dict[str, Any] = {}
 
-    def __get_argument_input(self, input_data: ArgumentData.InputData):
+    # display a prompt to the user and return a valid value from their input
+    def __get_argument_input(self, input_data: ArgumentData):
         input_text = ""
         if callable(input_data.default):
             input_default = input_data.default(self)
@@ -97,7 +106,8 @@ class ArgumentProcessor:
             input_default = input_data.default
         if input_data.prompt:
             input_text += input_data.prompt + " "
-        if input_data.output_type == ArgumentData.InputData.OutputType.bool:
+        # bools are always limited to True or False as options
+        if input_data.output_type == ArgumentData.OutputType.bool:
             input_text += " or ".join(
                 [
                     f"[{bool_mapping[input_option][0]}]"
@@ -119,16 +129,19 @@ class ArgumentProcessor:
             elif input_default:
                 input_text += f"[{input_default}]"
         input_text += ": "
+        # this pattern is the equivalent of a do while loop
         valid = False
         while not valid:
             value = input(input_text).strip() or input_default
             try:
                 value = input_data.process_value(value)
                 valid = True
-            except ArgumentData.InputData.InvalidValueError as e:
+            # we keep prompting the user until they enter a valid value
+            except ArgumentData.InvalidValueError as e:
                 print(e.message)
         return value
 
+    # add command line values to the result, this should be called before prompting for user input
     def init_args(self):
         parser = argparse.ArgumentParser()
         for argument in self.arguments:
@@ -139,7 +152,7 @@ class ArgumentProcessor:
             if value:
                 try:
                     self.parameters[argument.key] = argument.input.process_value(value)
-                except ArgumentData.InputData.InvalidValueError as e:
+                except ArgumentData.InvalidValueError as e:
                     print(
                         f"invalid value {value} was supplied for --{argument.key}: {e.message}"
                     )
@@ -147,9 +160,17 @@ class ArgumentProcessor:
                         "You will be prompted to supply this value during installation."
                     )
 
+    # iterate through the questions processing user input for each one
     def prompt_for_parameters(self):
         for index, argument in enumerate(self.arguments):
+            # we still tell the user about the step even if it will be skipped so they don't get confused by the numbering
             print(f"Question {index + 1} of {len(self.arguments)}:")
+            if argument.condition and argument.condition(self):
+                print("Question not relevant to current situation, skipping.")
+                # to avoid any potential for errors, we'll remove the value if it's not relevant to the current install
+                if argument.key in self.parameters:
+                    del self.parameters[argument.key]
+                continue
             if argument.key in self.parameters:
                 print("Answer provided by command line argument.")
                 continue
@@ -158,10 +179,12 @@ class ArgumentProcessor:
             self.parameters[argument.key] = self.__get_argument_input(argument.input)
             print("\n")
 
+    # the command line arguments to append to the script to be able to rerun without completing the questionnaire again
     def get_command_parameters(self):
         return " ".join(
             [
                 f"--{argument.key}={argument.input.value_to_string(self.parameters[argument.key])}"
                 for argument in self.arguments
+                if argument.key in self.parameters
             ]
         )
