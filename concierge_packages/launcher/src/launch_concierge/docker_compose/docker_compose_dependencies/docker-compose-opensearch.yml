@@ -54,7 +54,10 @@ services:
     environment:
       - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200"]'
     volumes:
-      - ${OPENSEARCH_DASHBOARDS_CONFIG}:/usr/share/opensearch/config/opensearch_dashboards.yml
+      - ${OPENSEARCH_DASHBOARDS_CONFIG}:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
+      - ${OPENSEARCH_DASHBOARDS_CA}:/usr/share/opensearch-dashboards/config/root-ca.pem
+      - ${OPENSEARCH_DASHBOARDS_CERT}:/usr/share/opensearch-dashboards/config/client-cert.pem
+      - ${OPENSEARCH_DASHBOARDS_KEY}:/usr/share/opensearch-dashboards/config/client-cert-key.pem
   opensearch-dashboards-disable-security:
     extends: opensearch-dashboards-base
     environment:

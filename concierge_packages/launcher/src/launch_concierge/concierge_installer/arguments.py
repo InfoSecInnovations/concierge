@@ -106,7 +106,7 @@ install_arguments = [
         condition=security_config_exists,
         description=[
             "A config file was detected with authentication already configured.",
-            'Select "Yes" to delete it, or "No" to continue using it',
+            'Select "Yes" to remove the authentication configuration from the file, or "No" to continue using it',
         ],
         default=False,
         prompt="Delete existing authentication configuration?",

@@ -175,7 +175,6 @@ def clean_up_existing():
                 ["docker", "volume", "ls", "--format", "{{.Name}}"],
                 "volumes",
                 ["docker", "volume", "rm", "--force"],
-                "If a running container is using a volume you will not be able to remove that volume in the next step.",
             )
             # docker networks
             check_dependencies(
@@ -276,8 +275,9 @@ def configure_openid():
     )
     client_id = get_valid_input("Please enter your app's client ID: ")
     client_secret = getpass("Please enter your app's client secret: ")
+    print("Which OpenID claim is used to assign user roles?")
     roles_key = input(
-        "Which OpenID claim is used to assign user roles? Leave blank if not applicable: "
+        'It\'s commonly "roles" but this can vary depending on your provider. Leave blank if not applicable: '
     ).strip()
     label = re.sub(r"\W+", "", label.lower())
     id_key = f"{label.upper()}_CLIENT_ID"
@@ -365,6 +365,7 @@ def do_install(
 
     # configure auth settings if needed
     if "auth" in config:
+        print("Authentication configuration detected.")
         open_id_config_path = os.path.abspath(
             os.path.join(
                 os.getcwd(),
@@ -373,15 +374,31 @@ def do_install(
                 "security_config_openid.yml",
             )
         )
+        dashboards_open_id_config_path = os.path.abspath(
+            os.path.join(
+                os.getcwd(),
+                "docker_compose_dependencies",
+                "opensearch_config",
+                "opensearch_dashboards_openid.yml",
+            )
+        )
+        cert_dir = os.path.join(
+            package_dir, "docker_compose", "docker_compose_dependencies", "certificates"
+        )
         env_lines.extend(
             [
                 "OPENSEARCH_CONFIG="
                 + "./opensearch_config/opensearch_with_security.yml",
                 "OPENSEARCH_SECURITY_CONFIG=" + open_id_config_path,
-                "OPENSEARCH_DASHBOARDS_CONFIG="
-                + "./opensearch_config/opensearch_dashboards.yml",
+                "OPENSEARCH_DASHBOARDS_CONFIG=" + dashboards_open_id_config_path,
                 "OPENSEARCH_ROLES_MAPPING=" + "./opensearch_config/roles_mapping.yml",
                 "OPENSEARCH_INTERNAL_USERS=" + "./opensearch_config/internal_users.yml",
+                "OPENSEARCH_DASHBOARDS_CERT="
+                + os.path.abspath(os.path.join(cert_dir, "esnode.pem")),
+                "OPENSEARCH_DASHBOARDS_KEY="
+                + os.path.abspath(os.path.join(cert_dir, "esnode-key.pem")),
+                "OPENSEARCH_DASHBOARDS_CA="
+                + os.path.abspath(os.path.join(cert_dir, "root-ca.pem")),
             ]
         )
         with open(
@@ -395,6 +412,17 @@ def do_install(
             "r",
         ) as file:
             security_config = yaml.safe_load(file)
+        with open(
+            os.path.join(
+                package_dir,
+                "docker_compose",
+                "docker_compose_dependencies",
+                "opensearch_config",
+                "opensearch_dashboards_openid.yml",
+            ),
+            "r",
+        ) as file:
+            dashboards_config = yaml.safe_load(file)
         auth = config["auth"]
         if "openid" in auth:
             valid_item = False
@@ -449,6 +477,14 @@ def do_install(
                     security_config["config"]["dynamic"]["authc"][f"openid_{k}"][
                         "http_authenticator"
                     ]["config"]["roles_key"] = v["roles_key"]
+                dashboards_config["opensearch_security.openid.connect_url"] = v["url"]
+                dashboards_config["opensearch_security.openid.client_id"] = (
+                    id_line.replace(f'{v["id_env_var"]}=', "").rstrip()
+                )
+                dashboards_config["opensearch_security.openid.client_secret"] = (
+                    secret_line.replace(f'{v["secret_env_var"]}=', "").rstrip()
+                )
+                print(f"OpenID provider {k} was enabled.")
                 valid_item = True
             if not valid_item:
                 print(
@@ -462,6 +498,9 @@ def do_install(
         os.makedirs(os.path.dirname(open_id_config_path), exist_ok=True)
         with open(open_id_config_path, "w") as file:
             yaml.dump(security_config, file)
+        os.makedirs(os.path.dirname(dashboards_open_id_config_path), exist_ok=True)
+        with open(dashboards_open_id_config_path, "w") as file:
+            yaml.dump(dashboards_config, file)
     with open(".env", "w") as env_file:
         # write .env info needed
         env_file.writelines("\n".join(env_lines))
