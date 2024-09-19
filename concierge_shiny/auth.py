@@ -19,7 +19,7 @@ scope = ["openid profile email offline_access"]
 def login_button_ui(text):
     return [
         ui.output_ui("script_output"),
-        ui.input_action_button("login_openid_button", text),
+        ui.input_action_button("login_openid_button", text, class_="fs-2 m-3"),
     ]
 
 

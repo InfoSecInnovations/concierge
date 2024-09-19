@@ -45,7 +45,9 @@ def server(input: Inputs, output: Outputs, session: Session):
                 "Collection Management",
                 collection_management_ui("collection_management"),
             ),
-            ui.nav_control(ui.input_action_button("openid_logout", "Log Out"))
+            ui.nav_control(
+                ui.input_action_button("openid_logout", "Log Out", class_="my-3")
+            )
             if token
             else None,
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
