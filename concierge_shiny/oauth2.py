@@ -54,7 +54,9 @@ async def auth_callback(request: Request):
 
 
 async def refresh(request: Request):
-    provider = request.path_params["provider"]
+    provider = request.cookies.get("concierge_auth_provider")
+    if not provider:
+        return logout(request)
     config = oauth_configs[provider]
     data = oauth_config_data[provider]
     chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
@@ -71,4 +73,14 @@ async def refresh(request: Request):
     )
     response = RedirectResponse(url="/")
     set_token_cookies(token, response)
+    return response
+
+
+async def logout(request: Request):
+    chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
+    response = RedirectResponse(url="/")
+    response.delete_cookie("concierge_token_chunk_count")
+    response.delete_cookie("concierge_auth_provider")
+    for index in range(chunk_count):
+        response.delete_cookie(f"concierge_auth_{index}")
     return response

@@ -7,7 +7,7 @@ import shinyswatch
 from components import status_ui, status_server
 from isi_util.async_single import asyncify
 from opensearch_binary import serve_binary
-from oauth2 import auth_callback, refresh
+from oauth2 import auth_callback, refresh, logout
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
@@ -45,6 +45,9 @@ def server(input: Inputs, output: Outputs, session: Session):
                 "Collection Management",
                 collection_management_ui("collection_management"),
             ),
+            ui.nav_control(ui.input_action_button("openid_logout", "Log Out"))
+            if token
+            else None,
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
             id="navbar",
         )
@@ -64,7 +67,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status,
         client,
     )
-    status = status_server("status_widget", token)  # TODO: optional token
+    status = status_server("status_widget", token)
 
     @reactive.extended_task
     async def set_collections():
@@ -83,13 +86,21 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status.set(current_status["opensearch"])
         ollama_status.set(current_status["ollama"])
 
+    @reactive.effect
+    @reactive.event(input.openid_logout, ignore_init=True, ignore_none=True)
+    def handle_logout():
+        @render.ui
+        def concierge_main():
+            return ui.tags.script('window.location.href = "/logout"')
+
 
 shiny_app = App(app_ui, server)
 
 
 routes = [
     Route("/callback/{provider}", endpoint=auth_callback),
-    Route("/refresh/{provider}", endpoint=refresh),
+    Route("/refresh", endpoint=refresh),
+    Route("/logout", endpoint=logout),
     Route("/files/{collection_name}/{doc_type}/{doc_id}", endpoint=serve_binary),
     Mount("/", app=shiny_app),
 ]

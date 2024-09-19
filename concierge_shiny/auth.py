@@ -46,8 +46,6 @@ def get_authorized_client(session):
 
         return (None, None)
 
-    # TODO: only do this if security is enabled
-
     chunk_count = int(session.http_conn.cookies["concierge_token_chunk_count"])
     token = ""
     for i in range(chunk_count):
@@ -65,7 +63,7 @@ def get_authorized_client(session):
 
         @render.ui
         def concierge_main():
-            return ui.tags.script(f'window.location.href = "/refresh/{provider}"')
+            return ui.tags.script('window.location.href = "/refresh"')
 
         return (None, None)
 
