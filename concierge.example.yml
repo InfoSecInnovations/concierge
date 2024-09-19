@@ -5,3 +5,4 @@ auth:
       id_env_var: "MICROSOFT_CLIENT_ID"
       secret_env_var: "MICROSOFT_CLIENT_SECRET"
       roles_key: "roles"
+      display_name: "Microsoft"

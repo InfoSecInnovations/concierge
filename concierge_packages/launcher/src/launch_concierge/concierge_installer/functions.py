@@ -261,7 +261,7 @@ def configure_openid():
         existing = config["auth"]["openid"].keys()
         if len(existing):
             print(f"Providers already configured: {', '.join(existing)}")
-    label_prompt = "Assign a name to this provider, if it matches an existing one the old config will be overwritten. Not case-sensitive, special characters other than underscores will be removed."
+    label_prompt = "Assign a name to this provider, if it matches an existing one the old config will be overwritten."
     # if a config exists the user can just keep that, if not they must enter a valid one
     if existing:
         print(label_prompt)
@@ -279,20 +279,21 @@ def configure_openid():
     roles_key = input(
         'It\'s commonly "roles" but this can vary depending on your provider. Leave blank if not applicable: '
     ).strip()
-    label = re.sub(r"\W+", "", label.lower())
-    id_key = f"{label.upper()}_CLIENT_ID"
-    secret_key = f"{label.upper()}_CLIENT_SECRET"
+    label_stripped = re.sub(r"\W+", "", label.lower())
+    id_key = f"{label_stripped.upper()}_CLIENT_ID"
+    secret_key = f"{label_stripped.upper()}_CLIENT_SECRET"
     if "auth" not in config:
         config["auth"] = {}
     if "openid" not in config["auth"]:
         config["auth"]["openid"] = {}
-    config["auth"]["openid"][label] = {
+    config["auth"]["openid"][label_stripped] = {
         "url": config_url,
         "id_env_var": id_key,
         "secret_env_var": secret_key,
+        "display_name": label,
     }
     if roles_key:
-        config["auth"]["openid"][label]["roles_key"] = roles_key
+        config["auth"]["openid"][label_stripped]["roles_key"] = roles_key
     with open("concierge.yml", "w") as file:
         file.write(yaml.dump(config))
     write_env(id_key, client_id)
