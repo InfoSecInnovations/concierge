@@ -7,10 +7,11 @@ requests~=2.32.3
 pypdf~=4.3.1
 pympler~=1.1
 configobj~=5.0.8
-git+https://github.com/posit-dev/py-shiny/
+shiny~=1.1.0
 shinyswatch~=0.7.0
 opensearch-py~=2.6.0
 sentence-transformers~=3.0.1
 jsons~=1.6.3
 binaryornot~=0.4.4
 isi-util
+humanize~=4.10.0

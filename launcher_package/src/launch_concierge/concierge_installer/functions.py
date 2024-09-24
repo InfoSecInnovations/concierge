@@ -1,6 +1,7 @@
 import subprocess
 import os
 import shutil
+import launch_concierge
 from script_builder.util import require_admin, get_lines, prompt_install
 from script_builder.argument_processor import ArgumentProcessor
 from importlib.metadata import version
@@ -38,9 +39,9 @@ def clean_up_existing():
         )
         exit()
 
-    if os.path.exists(os.path.join(files(), "..", "volumes")):
-        print("/!\ WARNING /!\\\n")
-        print(f'"volumes" directory was found in {files()}')
+    if os.path.exists(os.path.join(files(launch_concierge), "volumes")):
+        print("/!\\ WARNING /!\\\n")
+        print(f'"volumes" directory was found in {files(launch_concierge)}')
         print(
             "This is probably the result of an issue caused by a previous version which was ignoring the user's settings and incorrectly creating the Concierge volumes inside the package install directory."
         )
@@ -67,13 +68,13 @@ def clean_up_existing():
                 if stripped.startswith("CONCIERGE_VERSION="):
                     existing_version = stripped.replace("CONCIERGE_VERSION=", "")
 
-        # if the Concierge docker directory is configured, we take that to mean it has previously been installed
-        if concierge_root:
+        # if an existing version is found, we take that to mean it has previously been installed, we also check the directory to see if an older version using a mount was installed
+        if concierge_root or existing_version:
             print("Concierge instance discovered.")
             print("This script can help reset your system for a re-install.\n")
 
             new_version = version("launch_concierge")
-            if new_version != existing_version:
+            if existing_version and new_version != existing_version:
                 # find if we have any upgrade scripts between the existing and new version
                 start_index = find_index(
                     scripts,
@@ -108,17 +109,25 @@ def clean_up_existing():
                         print("\nThe following cleanup steps are optional.\n")
 
             # option to remove volumes directory
-            concierge_volumes = os.path.join(concierge_root, "volumes")
-            print(
-                "Removing the Concierge volumes will delete all ingested data and any language models you downloaded."
-            )
-            print("Remove Concierge volumes?")
-            approve_to_delete = input(
-                f"Type 'yes' to delete {concierge_volumes} or press enter to skip: "
-            )
-            print("\n")
-            if approve_to_delete == "yes":
-                shutil.rmtree(concierge_volumes)
+            if concierge_root:
+                concierge_volumes = os.path.join(concierge_root, "volumes")
+                print(
+                    "Detected older version of Concierge using volume mapping, we no longer support this configuration."
+                )
+                print(
+                    "Removing the Concierge volumes will delete all ingested data and any language models you downloaded."
+                )
+                print(
+                    "Apologies for the inconvenience, you will have to redownload the language models and recreate your collections."
+                )
+                print("This type of issue is to be expected during our alpha phase!")
+                print("Remove Concierge volumes?")
+                approve_to_delete = input(
+                    f"Type 'yes' to delete {concierge_volumes} or press enter to skip: "
+                )
+                print("\n")
+                if approve_to_delete == "yes":
+                    shutil.rmtree(concierge_volumes)
 
             def check_dependencies(check_command, label, remove_command):
                 result = get_lines(check_command)
@@ -221,8 +230,6 @@ def do_install(argument_processor, environment="production", is_local=False):
         env_file.writelines(
             "\n".join(
                 [
-                    "DOCKER_VOLUME_DIRECTORY="
-                    + argument_processor.parameters["docker_volumes"],
                     "ENVIRONMENT=" + environment,
                     "WEB_PORT=" + argument_processor.parameters["port"],
                     "CONCIERGE_VERSION=" + version("launch_concierge"),
@@ -232,7 +239,7 @@ def do_install(argument_processor, environment="production", is_local=False):
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
         # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
-        package_dir = os.path.abspath(os.path.join(files(), ".."))
+        package_dir = os.path.abspath(os.path.join(files(launch_concierge)))
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )

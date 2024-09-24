@@ -77,39 +77,49 @@ def prompter_server(
                 return ui.markdown(
                     "Please create a collection and ingest some documents into it first!"
                 )
-            task_list = list(tasks)
-            selected_task = task_list[0] if "question" not in tasks else "question"
-            if "task_select" in input and input.task_select() in tasks:
-                selected_task = input.task_select()
-            return ui.TagList(
-                ui.chat_ui(
-                    id="prompter_chat", placeholder=tasks[selected_task]["greeting"]
-                ),
-                collection_selector_ui("collection_selector"),
-                ui.layout_columns(
-                    ui.input_select(
-                        id="task_select",
-                        label="Task",
-                        choices=task_list,
-                        selected=selected_task,
-                    ),
-                    ui.input_select(
-                        id="persona_select",
-                        label="Persona",
-                        choices=["None", *personas.keys()],
-                    ),
-                    ui.input_select(
-                        id="enhancers_select",
-                        label="Enhancers",
-                        choices=list(enhancers),
-                        multiple=True,
-                    ),
-                ),
-                ui.output_ui("file_input"),
-            )
+            return ui.output_ui("chat_area")
         if not ollama_status.get() or not opensearch_status.get():
             return ui.markdown("Requirements are not online, see sidebar!")
         return ui.markdown("Loading Language Model, please wait...")
+
+    @render.ui
+    def chat_area():
+        task_list = list(tasks)
+        selected_task = task_list[0] if "question" not in tasks else "question"
+        return ui.TagList(
+            ui.chat_ui(
+                id="prompter_chat", placeholder=tasks[selected_task]["greeting"]
+            ),
+            collection_selector_ui("collection_selector"),
+            ui.layout_columns(
+                ui.input_select(
+                    id="task_select",
+                    label="Task",
+                    choices=task_list,
+                    selected=selected_task,
+                ),
+                ui.input_select(
+                    id="persona_select",
+                    label="Persona",
+                    choices=["None", *personas.keys()],
+                ),
+                ui.input_select(
+                    id="enhancers_select",
+                    label="Enhancers",
+                    choices=list(enhancers),
+                    multiple=True,
+                ),
+            ),
+            ui.output_ui("file_input"),
+        )
+
+    @reactive.effect
+    @reactive.event(input.task_select)
+    def update_chat_placeholder():
+        selected_task = input.task_select()
+        task_list = list(tasks)
+        if selected_task in task_list:
+            chat.update_user_input(placeholder=tasks[selected_task]["greeting"])
 
     def stream_response(
         collection_name, user_input, task, persona, selected_enhancers, source_file

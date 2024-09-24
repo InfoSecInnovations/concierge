@@ -7,7 +7,7 @@ services:
     ports:
       - "11434:11434"
     volumes:
-      - ${DOCKER_VOLUME_DIRECTORY:-.}/volumes/ollama:/root/.ollama
+      - ollama:/root/.ollama
     restart: unless-stopped
   ollama-gpu:
     extends: ollama

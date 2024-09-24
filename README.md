@@ -40,7 +40,9 @@ You should perform the following system configuration steps according to your Op
 
 ## Setup
 
-### Quick install
+The provided install scripts perform a lot of automated cleanup and ensure that all the components are configured correctly to work together, so we strongly recommend you use these instead of attempting the manual install. However if you need to customize the Docker environment the manual steps may help you find what you need to be able to do so.
+
+### Quick install (Recommended)
 
 You no longer need to clone this repository.
 
@@ -76,8 +78,6 @@ If you would prefer to configure and launch the app without going through our ut
 
 Create a file called `.env` following the template of `.env.example` in this repository.
 
-Set `DOCKER_VOLUME_DIRECTORY` to the volume on your computer where you wish Concierge data to be stored.
-
 From `launcher_package/src/launch_concierge/docker_compose` copy `docker_compose_dependencies`.
 
 From the same directory, if you wish to use the CPU only, copy `docker-compose.yml`, if you wish to use GPU acceleration where available, copy `docker-compose-gpu.yml` instead.
@@ -92,13 +92,21 @@ Once you have set up the Docker containers using one of the methods above, Conci
 
 If running a version prior to 0.3.0 you should delete the files you cloned from the repository, remove the related Docker containers and proceed with a fresh install following the instructions above.
 
-### Quick install
+### Quick install (Recommended)
 
-If using the virtual environment, make sure to activate it before proceeding.
+#### Without virtual environment
+
+`python -m pip install launch-concierge --upgrade`
+
+`python -m launch_concierge.install`
+
+#### With virtual environment
+
+Activate the environment if not already done
 
 `pip install launch-concierge --upgrade`
 
-Run `python -m launch_concierge.install` again or `install_concierge` if using the virtual environment.
+`install_concierge`
 
 ### Manual install
 
@@ -112,9 +120,11 @@ Then you can simply launch the containers again using the command from the insta
 
 git clone repo or extract zip. 
 
-### Quick install
+### Quick install (Recommended)
 
 `cd concierge` go into the cloned project directory.
+
+You should not create a virtual environment as the script below will handle it for you.
 
 `python install_dev.py` to launch the installer (same steps as the user installer).
 
@@ -136,7 +146,7 @@ Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` en
 
 `docker compose -f docker-compose-dev-gpu.yml up -d` will load the docker dependencies for developers and use the GPU.
 
-If you want to build the code to a Docker container to simulate the production environment you can use the `docker-compose.yml` or `docker-compose-gpu.yml` files. On initial launch and when you've made changes to the code you'll need to use `docker compose -f <docker-compose-file.yml> build` to update the container and then launch the compose file again.
+If you want to build the code to a Docker container to simulate the production environment you can use the `docker-compose-local.yml` or `docker-compose-gpu-local.yml` files. On initial launch and when you've made changes to the code you'll need to use `docker compose -f <docker-compose-file.yml> build` to update the container and then launch the compose file again.
 
 ## Usage: development environment
 
