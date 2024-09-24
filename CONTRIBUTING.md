@@ -35,6 +35,12 @@ We have the ruff linter configured to catch common errors and formatting issues.
 
 Ruff will attempt to fix any errors, if the checks fail but all errors are fixed, you can just add the changes and make your commit again. If there are errors ruff is unable to fix, you will have to manually resolve them and then commit.
 
+## Testing
+
+We have very low coverage at the moment but we are in the process of adding tests using pytest. To run the tests, enter the venv and simply use the `pytest` command. Green dots means all the tests passed.
+
+We will be adding this step to PR submissions, so running the tests locally will allow you to save time getting your PR accepted.
+
 ## Pull Requests
 
 Once you're happy with your changes, please submit a Pull Request and we will review your contribution and accept it if it matches our guidelines and the goals of the project.
