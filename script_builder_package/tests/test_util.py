@@ -16,6 +16,7 @@ def test_get_lines():
             "script_builder_package/tests/printer.py",
             "line1",
             "",
+            " ",
             "line2",
         ]
     )
