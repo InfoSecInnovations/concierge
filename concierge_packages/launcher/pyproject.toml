@@ -5,7 +5,8 @@ requires-python = ">=3.10"
 dependencies = [
     "script-builder",
     "isi-util",
-    "packaging"
+    "packaging",
+    "python-dotenv"
 ]
 
 [project.scripts]

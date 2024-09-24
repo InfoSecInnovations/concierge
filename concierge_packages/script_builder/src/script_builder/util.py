@@ -104,22 +104,6 @@ def prompt_install(apply_message, cancel_message):
         print("Answer needs to be yes or no!\n")
 
 
-def write_env(key, value, env_file=".env"):
-    # because we're trying to avoid using 3rd party packages we need this little util to set an environment value
-
-    try:
-        with open(env_file, "r") as file:
-            lines = file.readlines()
-    except Exception:
-        lines = []
-
-    lines = [line.rstrip() for line in lines if not line.startswith(f"{key}=")]
-    lines.append(f"{key}={value}")
-
-    with open(env_file, "w") as file:
-        file.writelines("\n".join(lines))
-
-
 def get_valid_input(prompt):
     value = ""
     while not value:

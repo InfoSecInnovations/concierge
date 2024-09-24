@@ -7,7 +7,6 @@ from script_builder.util import (
     require_admin,
     get_lines,
     prompt_install,
-    write_env,
     get_valid_input,
 )
 from script_builder.argument_processor import ArgumentProcessor
@@ -17,6 +16,7 @@ from isi_util.list_util import find_index
 from packaging.version import Version
 from importlib.resources import files
 from getpass import getpass
+from dotenv import load_dotenv, set_key
 import re
 
 package_dir = files(launch_concierge)
@@ -68,16 +68,9 @@ def clean_up_existing():
 
     # Check if Concierge is already configured
     if os.path.isfile(".env"):
-        concierge_root = ""
-        existing_version = ""
-        # read .env file manually because we don't necessarily have the pip requirements installed yet
-        with open(".env") as f:
-            for line in f:
-                stripped = line.strip()
-                if stripped.startswith("DOCKER_VOLUME_DIRECTORY="):
-                    concierge_root = stripped.replace("DOCKER_VOLUME_DIRECTORY=", "")
-                if stripped.startswith("CONCIERGE_VERSION="):
-                    existing_version = stripped.replace("CONCIERGE_VERSION=", "")
+        load_dotenv(".env")
+        concierge_root = os.getenv("DOCKER_VOLUME_DIRECTORY")
+        existing_version = os.getenv("CONCIERGE_VERSION")
 
         # if an existing version is found, we take that to mean it has previously been installed, we also check the directory to see if an older version using a mount was installed
         if concierge_root or existing_version:
@@ -296,8 +289,8 @@ def configure_openid():
         config["auth"]["openid"][label_stripped]["roles_key"] = roles_key
     with open("concierge.yml", "w") as file:
         file.write(yaml.dump(config))
-    write_env(id_key, client_id)
-    write_env(secret_key, client_secret)
+    set_key(".env", id_key, client_id)
+    set_key(".env", secret_key, client_secret)
 
 
 def do_install(
@@ -327,43 +320,13 @@ def do_install(
         and argument_processor.parameters["enable_openid"]
     ):
         configure_openid()
-        # TODO: allow multiple providers
     try:
         with open("concierge.yml", "r") as file:
             config = yaml.safe_load(file)
     except Exception:
         config = {}
-    try:
-        with open(".env", "r") as file:
-            existing_env = file.readlines()
-    except Exception:
-        existing_env = []
-
-    # setup .env (needed for docker compose files)
-    env_lines = [
-        "ENVIRONMENT=" + environment,
-        "WEB_PORT=" + str(argument_processor.parameters["port"]),
-        "CONCIERGE_VERSION=" + version("launch_concierge"),
-        "OLLAMA_SERVICE="
-        + (
-            "ollama-gpu"
-            if argument_processor.parameters["compute_method"].lower() == "gpu"
-            else "ollama"
-        ),
-        "OPENSEARCH_SERVICE="
-        + (
-            "opensearch-node-enable-security"
-            if "auth" in config
-            else "opensearch-node-disable-security"
-        ),
-        "OPENSEARCH_DASHBOARDS_SERVICE="
-        + (
-            "opensearch-dashboards-base"
-            if "auth" in config
-            else "opensearch-dashboards-disable-security"
-        ),
-    ]
-
+    auth_configured = False
+    load_dotenv(".env")  # load env after setting OpenID so the variables are up to date
     # configure auth settings if needed
     if "auth" in config:
         print("Authentication configuration detected.")
@@ -385,22 +348,6 @@ def do_install(
         )
         cert_dir = os.path.join(
             package_dir, "docker_compose", "docker_compose_dependencies", "certificates"
-        )
-        env_lines.extend(
-            [
-                "OPENSEARCH_CONFIG="
-                + "./opensearch_config/opensearch_with_security.yml",
-                "OPENSEARCH_SECURITY_CONFIG=" + open_id_config_path,
-                "OPENSEARCH_DASHBOARDS_CONFIG=" + dashboards_open_id_config_path,
-                "OPENSEARCH_ROLES_MAPPING=" + "./opensearch_config/roles_mapping.yml",
-                "OPENSEARCH_INTERNAL_USERS=" + "./opensearch_config/internal_users.yml",
-                "OPENSEARCH_DASHBOARDS_CERT="
-                + os.path.abspath(os.path.join(cert_dir, "esnode.pem")),
-                "OPENSEARCH_DASHBOARDS_KEY="
-                + os.path.abspath(os.path.join(cert_dir, "esnode-key.pem")),
-                "OPENSEARCH_DASHBOARDS_CA="
-                + os.path.abspath(os.path.join(cert_dir, "root-ca.pem")),
-            ]
         )
         with open(
             os.path.join(
@@ -426,32 +373,21 @@ def do_install(
             dashboards_config = yaml.safe_load(file)
         auth = config["auth"]
         if "openid" in auth:
-            valid_item = False
             for k, v in auth["openid"].items():
-                id_line = next(
-                    (x for x in existing_env if x.startswith(f'{v["id_env_var"]}=')),
-                    None,
-                )
-                secret_line = next(
-                    (
-                        x
-                        for x in existing_env
-                        if x.startswith(f'{v["secret_env_var"]}=')
-                    ),
-                    None,
-                )
-                if not id_line:
+                client_id = os.getenv(v["id_env_var"])
+                if not client_id:
                     print(
                         f"No client ID was found for OpenID provider {k}, this provider will be skipped!"
                     )
                     continue
-                if not secret_line:
+                client_secret = os.getenv(v["secret_env_var"])
+                if not client_secret:
                     print(
                         f"No client secret was found for OpenID provider {k}, this provider will be skipped!"
                     )
                     continue
-                env_lines.append(id_line.rstrip())
-                env_lines.append(secret_line.rstrip())
+                set_key(".env", v["id_env_var"], client_id)
+                set_key(".env", v["secret_env_var"], client_secret)
 
                 order = 0
 
@@ -479,15 +415,13 @@ def do_install(
                         "http_authenticator"
                     ]["config"]["roles_key"] = v["roles_key"]
                 dashboards_config["opensearch_security.openid.connect_url"] = v["url"]
-                dashboards_config["opensearch_security.openid.client_id"] = (
-                    id_line.replace(f'{v["id_env_var"]}=', "").rstrip()
-                )
+                dashboards_config["opensearch_security.openid.client_id"] = client_id
                 dashboards_config["opensearch_security.openid.client_secret"] = (
-                    secret_line.replace(f'{v["secret_env_var"]}=', "").rstrip()
+                    client_secret
                 )
                 print(f"OpenID provider {k} was enabled.")
-                valid_item = True
-            if not valid_item:
+                auth_configured = True
+            if not auth_configured:
                 print(
                     "OpenID was configured in Concierge configuration file but client ID or secret are missing from the environment file."
                 )
@@ -502,9 +436,60 @@ def do_install(
         os.makedirs(os.path.dirname(dashboards_open_id_config_path), exist_ok=True)
         with open(dashboards_open_id_config_path, "w") as file:
             yaml.dump(dashboards_config, file)
-    with open(".env", "w") as env_file:
-        # write .env info needed
-        env_file.writelines("\n".join(env_lines))
+        set_key(
+            ".env",
+            "OPENSEARCH_CONFIG",
+            "./opensearch_config/opensearch_with_security.yml",
+        )
+        set_key(".env", "OPENSEARCH_SECURITY_CONFIG", open_id_config_path)
+        set_key(".env", "OPENSEARCH_DASHBOARDS_CONFIG", dashboards_open_id_config_path)
+        set_key(
+            ".env", "OPENSEARCH_ROLES_MAPPING", "./opensearch_config/roles_mapping.yml"
+        )
+        set_key(
+            ".env",
+            "OPENSEARCH_INTERNAL_USERS",
+            "./opensearch_config/internal_users.yml",
+        )
+        set_key(
+            ".env",
+            "OPENSEARCH_DASHBOARDS_CERT",
+            os.path.abspath(os.path.join(cert_dir, "esnode.pem")),
+        )
+        set_key(
+            ".env",
+            "OPENSEARCH_DASHBOARDS_KEY",
+            os.path.abspath(os.path.join(cert_dir, "esnode-key.pem")),
+        )
+        set_key(
+            ".env",
+            "OPENSEARCH_DASHBOARDS_CA",
+            os.path.abspath(os.path.join(cert_dir, "root-ca.pem")),
+        )
+    set_key(".env", "ENVIRONMENT", environment)
+    set_key(".env", "WEB_PORT", str(argument_processor.parameters["port"]))
+    set_key(".env", "CONCIERGE_VERSION", version("launch_concierge"))
+    set_key(
+        ".env",
+        "OLLAMA_SERVICE",
+        "ollama-gpu"
+        if argument_processor.parameters["compute_method"].lower() == "gpu"
+        else "ollama",
+    )
+    set_key(
+        ".env",
+        "OPENSEARCH_SERVICE",
+        "opensearch-node-enable-security"
+        if auth_configured
+        else "opensearch-node-disable-security",
+    )
+    set_key(
+        ".env",
+        "OPENSEARCH_DASHBOARDS_SERVICE",
+        "opensearch-dashboards-base"
+        if auth_configured
+        else "opensearch-dashboards-disable-security",
+    )
     # docker compose
     docker_compose_helper(environment, is_local, True)
     # ollama model load
@@ -522,4 +507,6 @@ def do_install(
 
 
 def set_compute(method: str):
-    write_env("OLLAMA_SERVICE", "ollama-gpu" if method.lower() == "gpu" else "ollama")
+    set_key(
+        ".env", "OLLAMA_SERVICE", "ollama-gpu" if method.lower() == "gpu" else "ollama"
+    )

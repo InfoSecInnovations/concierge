@@ -19,7 +19,7 @@ scope = ["openid profile email offline_access"]
 def login_button_ui(text):
     return [
         ui.output_ui("script_output"),
-        ui.input_action_button("login_openid_button", text, class_="fs-2 m-3"),
+        ui.input_action_button("login_openid_button", text),
     ]
 
 
@@ -60,10 +60,14 @@ def get_authorized_client(session):
 
         @render.ui
         def concierge_main():
-            return [
-                login_button_ui(f"login_openid_{url[0]}", f"Log in with {url[1]}")
-                for url in urls
-            ]
+            return ui.page_fillable(
+                ui.markdown("# Data Concierge AI"),
+                [
+                    login_button_ui(f"login_openid_{url[0]}", f"Log in with {url[1]}")
+                    for url in urls
+                ],
+                gap="1em",
+            )
 
         return (None, None)
 
