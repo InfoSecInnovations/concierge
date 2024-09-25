@@ -50,16 +50,19 @@ services:
     ports:
       - 5601:5601 # Map host port 5601 to container port 5601
     expose:
-      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards 
     environment:
-      - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200"]'
+      - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'  
+  opensearch-dashboards-disable-security:
+    extends: opensearch-dashboards-base
+    environment:
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+  opensearch-dashboards-enable-security:
+    extends: opensearch-dashboards-base
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200"]' # use https when security is enabled
     volumes:
       - ${OPENSEARCH_DASHBOARDS_CONFIG}:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
       - ${OPENSEARCH_DASHBOARDS_CA}:/usr/share/opensearch-dashboards/config/root-ca.pem
       - ${OPENSEARCH_DASHBOARDS_CERT}:/usr/share/opensearch-dashboards/config/client-cert.pem
       - ${OPENSEARCH_DASHBOARDS_KEY}:/usr/share/opensearch-dashboards/config/client-cert-key.pem
-  opensearch-dashboards-disable-security:
-    extends: opensearch-dashboards-base
-    environment:
-      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
-      - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'

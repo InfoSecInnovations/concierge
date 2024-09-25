@@ -1,10 +1,10 @@
 from launch_concierge.concierge_installer.arguments import install_arguments
-from launch_concierge.concierge_installer.functions import (
-    init_arguments,
+from launch_concierge.concierge_installer import (
     clean_up_existing,
+    do_install,
+    init_arguments,
     prompt_for_parameters,
     prompt_concierge_install,
-    do_install,
 )
 import subprocess
 from script_builder.util import get_venv_path
