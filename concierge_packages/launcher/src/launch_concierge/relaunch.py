@@ -1,4 +1,4 @@
-from launch_concierge.concierge_installer.functions import (
+from launch_concierge.concierge_installer import (
     docker_compose_helper,
     set_compute,
 )

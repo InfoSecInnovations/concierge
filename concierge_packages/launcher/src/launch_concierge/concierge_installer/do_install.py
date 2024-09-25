@@ -5,9 +5,9 @@ import yaml
 from script_builder.argument_processor import ArgumentProcessor
 from importlib.metadata import version
 from dotenv import load_dotenv, set_key
-from .package_dir import package_dir
 from .configure_openid import configure_openid
-from .functions import docker_compose_helper
+from .package_dir import package_dir
+from .docker_compose_helper import docker_compose_helper
 
 
 def do_install(

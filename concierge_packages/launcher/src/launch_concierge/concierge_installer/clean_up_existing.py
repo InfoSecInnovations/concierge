@@ -9,7 +9,7 @@ from launch_concierge.concierge_installer.upgrade_scripts import scripts
 from isi_util.list_util import find_index
 from packaging.version import Version
 from dotenv import load_dotenv
-from launch_concierge.concierge_installer.package_dir import package_dir
+from .package_dir import package_dir
 
 
 def clean_up_existing():

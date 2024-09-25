@@ -1,5 +1,3 @@
-import subprocess
-import os
 from script_builder.util import (
     require_admin,
     prompt_install,
@@ -9,6 +7,7 @@ from dotenv import set_key
 
 from .clean_up_existing import clean_up_existing
 from .do_install import do_install
+from .docker_compose_helper import docker_compose_helper
 
 __all__ = [
     "clean_up_existing",
@@ -51,31 +50,6 @@ def prompt_for_parameters(argument_processor, command="python install.py"):
     # print("Depending on network speed, this may take a while")
     print(
         'No changes have yet been made to your system. If you stop now or answer "no", nothing will have changed.'
-    )
-
-
-def docker_compose_helper(environment, is_local=False, rebuild=False):
-    filename = "docker-compose"
-    if environment == "development":
-        filename = f"{filename}-dev"
-    if is_local:
-        filename = f"{filename}-local"
-    full_path = os.path.abspath(os.path.join(os.getcwd(), f"{filename}.yml"))
-    if rebuild:
-        # pull latest versions
-        subprocess.run(["docker", "compose", "-f", full_path, "pull"])
-    if is_local:
-        # build local concierge image
-        subprocess.run(["docker", "compose", "-f", full_path, "build"])
-    subprocess.run(
-        [
-            "docker",
-            "compose",
-            "-f",
-            full_path,
-            "up",
-            "-d",
-        ]
     )
 
 
