@@ -7,6 +7,20 @@ _meta:
 
 # Define your roles mapping here
 
+## Concierge roles mapping
+
+private_index:
+  reserved: false
+  backend_roles:
+  - "user"
+  description: "Allow full access to private index pattern"
+
+ping_cluster:
+  reserved: false
+  backend_roles:
+  - "user"
+  description: "Allow users to check if OpenSearch is up"
+
 ## Demo roles mapping
 
 all_access:
@@ -14,21 +28,15 @@ all_access:
   backend_roles:
   - "admin"
   description: "Maps admin to all_access"
-  # prefer using admin role from external auth if possible, if not you'll have to add the user's subject claim here
+  # prefer using admin role from external auth if possible, if not you'll have to add the user's email here
   users:
-    # - "<subject claim>"
+    # - "<user@email.com>"
 
 own_index:
   reserved: false
   users:
   - "*"
   description: "Allow full access to an index named like the username"
-
-private_index:
-  reserved: false
-  users:
-  - "*"
-  description: "Allow full access to private index pattern"
 
 logstash:
   reserved: false

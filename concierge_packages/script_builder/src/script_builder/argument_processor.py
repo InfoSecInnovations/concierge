@@ -11,34 +11,37 @@ bool_mapping = {True: ["Yes", "Y", "True"], False: ["No", "N", "False"]}
 
 @dataclass
 class ArgumentData:
-    # exception to handle user input that doesn't match a valid value
     class InvalidValueError(Exception):
+        """exception to handle user input that doesn't match a valid value"""
+
         def __init__(self, message):
             self.message = message
 
-    # different types of value that can be handled
     OutputType = Enum("OutputType", ["string", "bool", "int"])
-    # the dictionary key used by this argument in the parameters dictionary
+    """different types of value that can be handled"""
     key: str
-    # help displayed for the command line arguments
+    """the dictionary key used by this argument in the parameters dictionary"""
     help: str
-    # information displayed when asking the user to input the value in the interactive questionnaire
+    """help displayed for the command line arguments"""
     description: list[str]
-    # optional function to check if the question is relevant to the current context
+    """information displayed when asking the user to input the value in the interactive questionnaire"""
     condition: Callable[[ArgumentProcessor], bool] | None = None
-    # the type of the value that will be stored in the parameters dictionary
+    """optional function to check if the question is relevant to the current context"""
     output_type: OutputType = OutputType.string
-    # optional default value, can be a function
+    """the type of the value that will be stored in the parameters dictionary"""
     default: Any | Callable[[ArgumentProcessor], Any] | None = None
-    # the prompt displayed at the user input
+    """optional default value, can be a function"""
     prompt: str | None = None
-    # optional list of values to constrain the answer, with bool output type this is ignored
+    """the prompt displayed at the user input"""
     options: list[Any] | None = None
-    # for string values we can define whether we should check against the exact casing or not
+    """optional list of values to constrain the answer, with bool output type this is ignored"""
     case_sensitive: bool = True
+    """for string values we can define whether we should check against the exact casing or not"""
+    save_user_input: bool = True
+    """whether the user's input for this argument can be saved to serve as the default on rerun"""
 
-    # convert a string supplied by the user to a valid value our program can use
     def process_value(self, input_value: str):
+        """convert a string supplied by the user to a valid value our program can use"""
         if self.output_type == ArgumentData.OutputType.bool:
             if (
                 input_value in [True, False]
@@ -80,8 +83,8 @@ class ArgumentData:
                 )
             return input_value
 
-    # convert a value used by our program to a string so the user knows what to input to reproduce the result
     def value_to_string(self, input_value: Any):
+        """convert a value used by our program to a string so the user knows what to input to reproduce the result"""
         if self.output_type == ArgumentData.OutputType.bool:
             if input_value:
                 return bool_mapping[True][0]
@@ -97,11 +100,11 @@ class ArgumentProcessor:
         self.arguments = arguments
         self.parameters: dict[str, Any] = {}
 
-    # display a prompt to the user and return a valid value from their input
     def __get_argument_input(self, input_data: ArgumentData, saved_value=None):
+        """display a prompt to the user and return a valid value from their input"""
         input_text = ""
         input_default = None
-        if saved_value:
+        if input_data.save_user_input and saved_value:
             try:
                 input_default = input_data.process_value(saved_value)
             except ArgumentData.InvalidValueError:
@@ -157,9 +160,10 @@ class ArgumentProcessor:
                 print(e.message)
         return value
 
-    # add command line values to the result, this should be called before prompting for user input
-    def init_args(self):
-        parser = argparse.ArgumentParser()
+    def init_args(self, parser: argparse.ArgumentParser | None = None):
+        """add command line values to the result, this should be called before prompting for user input"""
+        if not parser:
+            parser = argparse.ArgumentParser()
         for argument in self.arguments:
             parser.add_argument(f"--{argument.key}", help=argument.help)
         args = parser.parse_args()
@@ -176,8 +180,8 @@ class ArgumentProcessor:
                         "You will be prompted to supply this value during installation."
                     )
 
-    # iterate through the questions processing user input for each one
     def prompt_for_parameters(self, saved_values: dict[str, str] | None = None):
+        """iterate through the questions processing user input for each one"""
         for index, argument in enumerate(self.arguments):
             # we still tell the user about the step even if it will be skipped so they don't get confused by the numbering
             print(f"Question {index + 1} of {len(self.arguments)}:")
@@ -201,15 +205,19 @@ class ArgumentProcessor:
             )
             print("\n")
 
-    def get_inputs(self):
+    def get_saved_inputs(self):
         return {
             argument.key: argument.value_to_string(self.parameters[argument.key])
             for argument in self.arguments
-            if argument.key in self.parameters
+            if argument.save_user_input and argument.key in self.parameters
         }
 
-    # the command line arguments to append to the script to be able to rerun without completing the questionnaire again
     def get_command_parameters(self):
+        """the command line arguments to append to the script call to be able to rerun without completing the questionnaire again"""
         return " ".join(
-            [f"--{key}={value}" for key, value in self.get_inputs().items()]
+            [
+                f"--{argument.key}={argument.value_to_string(self.parameters[argument.key])}"
+                for argument in self.arguments
+                if argument.key in self.parameters
+            ]
         )

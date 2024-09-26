@@ -111,6 +111,7 @@ install_arguments = [
         default=False,
         prompt="Delete existing authentication configuration?",
         output_type=ArgumentData.OutputType.bool,
+        save_user_input=False,
     ),
     ArgumentData(
         key="enable_openid",

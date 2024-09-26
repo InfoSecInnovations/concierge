@@ -79,8 +79,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     def update_collections():
         if opensearch_status.get():
             set_collections()
-            indices = client.indices.get("*")
-            print(indices.keys())
         else:
             collections.set([])
 

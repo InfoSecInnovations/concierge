@@ -5,8 +5,6 @@ _meta:
 
 private_index:
   reserved: true
-  hidden: false
-  static: true
   description: "Allow all for indices named following the pattern based on username"
   cluster_permissions:
     - "cluster_composite_ops"
@@ -15,6 +13,12 @@ private_index:
         - "private_${user_name}_*"
       allowed_actions:
         - "indices_all"
+
+ping_cluster:
+  reserved: true
+  description: "Allow user to ping the cluster"
+  cluster_permissions:
+    - "cluster:monitor/main"
 
 
 # ---- default config from OpenSearch Security below ---- #

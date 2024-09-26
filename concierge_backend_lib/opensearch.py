@@ -53,15 +53,20 @@ def ensure_collection(client: OpenSearch, collection_name: str):
 
 
 def get_collections(client: OpenSearch):
-    response = client.indices.get("*")
-    # TODO: can we do this in OpenSearch somehow?
-    response = [
-        list(index["aliases"].keys())[0]
-        for index in response.values()
-        if "document_vector" in index["mappings"]["properties"]
-        and index["mappings"]["properties"]["document_vector"]["type"] == "knn_vector"
-    ]
-    return response
+    try:
+        response = client.indices.get("*", allow_no_indices=True)
+        # TODO: can we do this in OpenSearch somehow?
+        response = [
+            list(index["aliases"].keys())[0]
+            for index in response.values()
+            if "document_vector" in index["mappings"]["properties"]
+            and index["mappings"]["properties"]["document_vector"]["type"]
+            == "knn_vector"
+        ]
+        return response
+    except Exception as e:
+        print(f"[ERROR]: {e}")
+        return []
 
 
 def delete_collection(client: OpenSearch, collection_name: str):

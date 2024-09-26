@@ -4,6 +4,7 @@ from launch_concierge.concierge_installer import (
     docker_compose_helper,
     set_compute,
 )
+from launch_concierge.concierge_launcher import get_launch_arguments
 import argparse
 import dotenv
 import os
@@ -15,17 +16,14 @@ parser.add_argument(
     "--environment",
     help="development or [production]",
 )
+dotenv.load_dotenv()
+user_args = get_launch_arguments(parser)
 args = parser.parse_args()
 
 environment = args.environment
 if environment != "development":
     environment = "production"
-
-dotenv.load_dotenv()
-
-compute_method = (
-    input("Start docker containers with CPU or GPU? [CPU] or GPU:") or "CPU"
-)
+compute_method = user_args["compute_method"]
 set_compute(compute_method)
 docker_compose_helper(
     environment, environment == "production"

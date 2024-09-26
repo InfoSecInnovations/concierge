@@ -62,7 +62,8 @@ config:
     # Set filtered_alias_mode to 'warn' to allow more than 2 filtered aliases per index but warns about it (default)
     # Set filtered_alias_mode to 'nowarn' to allow more than 2 filtered aliases per index silently
     #filtered_alias_mode: warn
-    #do_not_fail_on_forbidden: false
+    do_not_fail_on_forbidden: true
+    do_not_fail_on_forbidden_empty: true
     #kibana:
     # Kibana multitenancy
     #multitenancy_enabled: true

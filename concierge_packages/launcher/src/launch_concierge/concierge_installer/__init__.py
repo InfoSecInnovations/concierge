@@ -46,7 +46,7 @@ def prompt_for_parameters(
 
     if not config:
         config = {}
-    config["previous_parameters"] = argument_processor.get_inputs()
+    config["previous_parameters"] = argument_processor.get_saved_inputs()
     write_config(config)
 
     print("Concierge setup is almost complete.\n")

@@ -14,8 +14,8 @@ def check_ollama():
 
 
 def check_opensearch(token=None):
-    try:
-        client = get_client(token)
-        return client.ping()
-    except Exception:
-        return False
+    # try:
+    client = get_client(token)
+    return client.ping()
+    # except Exception:
+    return False
