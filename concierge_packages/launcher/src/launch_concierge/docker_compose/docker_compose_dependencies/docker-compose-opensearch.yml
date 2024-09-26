@@ -36,6 +36,7 @@ services:
       - ${OPENSEARCH_CONFIG}:/usr/share/opensearch/config/opensearch.yml
       - ${OPENSEARCH_SECURITY_CONFIG}:/usr/share/opensearch/config/opensearch-security/config.yml
       - ${OPENSEARCH_ROLES_MAPPING}:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml
+      - ${OPENSEARCH_ROLES}:/usr/share/opensearch/config/opensearch-security/roles.yml
       - ${OPENSEARCH_INTERNAL_USERS}:/usr/share/opensearch/config/opensearch-security/internal_users.yml
       - ./certificates/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
       - ./certificates/kirk.pem:/usr/share/opensearch/config/kirk.pem

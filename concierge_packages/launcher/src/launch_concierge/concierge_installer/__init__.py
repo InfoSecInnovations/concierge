@@ -4,6 +4,7 @@ from script_builder.util import (
 )
 from script_builder.argument_processor import ArgumentProcessor
 from dotenv import set_key
+from concierge_util import load_config, write_config
 
 from .clean_up_existing import clean_up_existing
 from .do_install import do_install
@@ -28,12 +29,25 @@ def init_arguments(install_arguments):
     return argument_processor
 
 
-def prompt_for_parameters(argument_processor, command="python install.py"):
+def prompt_for_parameters(
+    argument_processor: ArgumentProcessor, command="python install.py"
+):
+    config = load_config()
+
     print("Welcome to the Concierge installer.")
     print("Just a few configuration questions and then some download scripts will run.")
     print("Note: you can just hit enter to accept the default option.\n\n")
 
-    argument_processor.prompt_for_parameters()
+    argument_processor.prompt_for_parameters(
+        config["previous_parameters"]
+        if config and "previous_parameters" in config
+        else None
+    )
+
+    if not config:
+        config = {}
+    config["previous_parameters"] = argument_processor.get_inputs()
+    write_config(config)
 
     print("Concierge setup is almost complete.\n")
     print(

@@ -7,3 +7,8 @@ def load_config():
             return yaml.safe_load(file)
     except Exception:
         return None
+
+
+def write_config(config):
+    with open("concierge.yml", "w") as file:
+        file.write(yaml.dump(config))

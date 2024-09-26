@@ -98,14 +98,21 @@ class ArgumentProcessor:
         self.parameters: dict[str, Any] = {}
 
     # display a prompt to the user and return a valid value from their input
-    def __get_argument_input(self, input_data: ArgumentData):
+    def __get_argument_input(self, input_data: ArgumentData, saved_value=None):
         input_text = ""
-        if callable(input_data.default):
-            input_default = input_data.default(self)
-        else:
-            input_default = input_data.default
-        if input_data.prompt:
-            input_text += input_data.prompt + " "
+        input_default = None
+        if saved_value:
+            try:
+                input_default = input_data.process_value(saved_value)
+            except ArgumentData.InvalidValueError:
+                input_default = None
+        if input_default is None:
+            if callable(input_data.default):
+                input_default = input_data.default(self)
+            else:
+                input_default = input_data.default
+            if input_data.prompt:
+                input_text += input_data.prompt + " "
         # bools are always limited to True or False as options
         if input_data.output_type == ArgumentData.OutputType.bool:
             input_text += " or ".join(
@@ -118,10 +125,19 @@ class ArgumentProcessor:
             )
         else:
             if input_data.options:
+
+                def matches(a, b):
+                    if (
+                        input_data.case_sensitive
+                        or input_data.output_type != ArgumentData.OutputType.string
+                    ):
+                        return a == b
+                    return a.lower() == b.lower()
+
                 input_text += " or ".join(
                     [
                         f"[{input_option}]"
-                        if input_option == input_default
+                        if matches(input_option, input_default)
                         else input_option
                         for input_option in input_data.options
                     ]
@@ -161,7 +177,7 @@ class ArgumentProcessor:
                     )
 
     # iterate through the questions processing user input for each one
-    def prompt_for_parameters(self):
+    def prompt_for_parameters(self, saved_values: dict[str, str] | None = None):
         for index, argument in enumerate(self.arguments):
             # we still tell the user about the step even if it will be skipped so they don't get confused by the numbering
             print(f"Question {index + 1} of {len(self.arguments)}:")
@@ -177,15 +193,23 @@ class ArgumentProcessor:
                 continue
             for line in argument.description:
                 print(line)
-            self.parameters[argument.key] = self.__get_argument_input(argument)
+            self.parameters[argument.key] = self.__get_argument_input(
+                argument,
+                saved_values[argument.key]
+                if saved_values and argument.key in saved_values
+                else None,
+            )
             print("\n")
+
+    def get_inputs(self):
+        return {
+            argument.key: argument.value_to_string(self.parameters[argument.key])
+            for argument in self.arguments
+            if argument.key in self.parameters
+        }
 
     # the command line arguments to append to the script to be able to rerun without completing the questionnaire again
     def get_command_parameters(self):
         return " ".join(
-            [
-                f"--{argument.key}={argument.value_to_string(self.parameters[argument.key])}"
-                for argument in self.arguments
-                if argument.key in self.parameters
-            ]
+            [f"--{key}={value}" for key, value in self.get_inputs().items()]
         )

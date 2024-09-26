@@ -123,7 +123,10 @@ def do_install(
                     "http_authenticator": {
                         "type": "openid",
                         "challenge": False,
-                        "config": {"openid_connect_url": v["url"]},
+                        "config": {
+                            "openid_connect_url": v["url"],
+                            "subject_key": "email",
+                        },
                     },
                     "authentication_backend": {"type": "noop"},
                 }
@@ -163,6 +166,7 @@ def do_install(
         set_key(
             ".env", "OPENSEARCH_ROLES_MAPPING", "./opensearch_config/roles_mapping.yml"
         )
+        set_key(".env", "OPENSEARCH_ROLES", "./opensearch_config/roles.yml")
         set_key(
             ".env",
             "OPENSEARCH_INTERNAL_USERS",

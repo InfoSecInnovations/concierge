@@ -5,8 +5,11 @@ import json
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import TokenExpiredError
 import os
-from concierge_util.config import load_config
+from concierge_util import load_config
 import dotenv
+# import jwcrypto.jwk
+# import jwcrypto.jwt
+# import requests
 
 dotenv.load_dotenv()
 
@@ -84,6 +87,18 @@ def get_authorized_client(session):
         oauth.get(
             oidc_config["userinfo_endpoint"]
         ).json()  # TODO: maybe do something with the user info?
+        # uncomment below to debug OpenID claims
+        # jwks_url = oidc_config['jwks_uri']
+        # id_token_keys = jwcrypto.jwk.JWKSet.from_json(
+        #     requests.get(jwks_url).text
+        # )
+        # jwt = jwcrypto.jwt.JWT(
+        #     jwt=parsed_token["id_token"],
+        #     key=id_token_keys,
+        #     algs=oidc_config['id_token_signing_alg_values_supported']
+        # )
+        # jwt_claims = json.loads(jwt.claims)
+        # print(jwt_claims)
     except TokenExpiredError:
 
         @render.ui

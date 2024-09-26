@@ -24,6 +24,12 @@ own_index:
   - "*"
   description: "Allow full access to an index named like the username"
 
+private_index:
+  reserved: false
+  users:
+  - "*"
+  description: "Allow full access to private index pattern"
+
 logstash:
   reserved: false
   backend_roles:
@@ -40,6 +46,7 @@ readall:
   reserved: false
   backend_roles:
   - "readall"
+  - "user"
 
 manage_snapshots:
   reserved: false

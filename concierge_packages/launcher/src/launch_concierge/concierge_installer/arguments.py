@@ -1,6 +1,6 @@
 from script_builder.argument_processor import ArgumentData, ArgumentProcessor
 from script_builder.util import get_default_directory
-from concierge_util.config import load_config
+from concierge_util import load_config
 import os
 
 
