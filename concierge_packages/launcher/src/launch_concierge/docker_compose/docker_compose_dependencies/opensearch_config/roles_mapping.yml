@@ -33,6 +33,7 @@ kibana_user:
   reserved: false
   backend_roles:
   - "kibanauser"
+  - "user"
   description: "Maps kibanauser to kibana_user"
 
 readall:

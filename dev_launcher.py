@@ -1,6 +1,6 @@
 # import subprocess
 # from script_builder.util import get_venv_executable
-from concierge_packages.launcher.src.launch_concierge.concierge_installer.functions import (
+from launch_concierge.concierge_installer import (
     docker_compose_helper,
     set_compute,
 )
