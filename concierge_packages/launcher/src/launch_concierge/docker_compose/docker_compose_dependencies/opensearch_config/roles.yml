@@ -14,6 +14,30 @@ private_index:
       allowed_actions:
         - "indices_all"
 
+read_shared_index:
+  reserved: true
+  description: "Allow read access for indices named following the shared index pattern"
+  cluster_permissions:
+    - "cluster_composite_ops"
+  index_permissions:
+    - index_patterns:
+        - "shared_*"
+      allowed_actions:
+        - "indices:admin/get"
+        - "read"
+
+read_write_shared_index:
+  reserved: true
+  description: "Allow read and write access for indices named following the shared index pattern"
+  cluster_permissions:
+    - "cluster_composite_ops"
+  index_permissions:
+    - index_patterns:
+        - "shared_*"
+      allowed_actions:
+        - "indices:admin/get"
+        - "crud"
+
 ping_cluster:
   reserved: true
   description: "Allow user to ping the cluster"

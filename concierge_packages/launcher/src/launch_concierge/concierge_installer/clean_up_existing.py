@@ -50,7 +50,7 @@ def clean_up_existing():
 
     # Check if Concierge is already configured
     if os.path.isfile(".env"):
-        load_dotenv(".env")
+        load_dotenv(".env", override=True)
         concierge_root = os.getenv("DOCKER_VOLUME_DIRECTORY")
         existing_version = os.getenv("CONCIERGE_VERSION")
 

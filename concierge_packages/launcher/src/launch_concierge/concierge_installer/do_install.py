@@ -43,7 +43,9 @@ def do_install(
     except Exception:
         config = {}
     auth_configured = False
-    load_dotenv(".env")  # load env after setting OpenID so the variables are up to date
+    load_dotenv(
+        ".env", override=True
+    )  # load env after setting OpenID so the variables are up to date, we use override because previous functions may have loaded the old values
     # configure auth settings if needed
     if "auth" in config:
         print("Authentication configuration detected.")

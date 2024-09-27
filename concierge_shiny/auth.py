@@ -7,9 +7,9 @@ from oauthlib.oauth2 import TokenExpiredError
 import os
 from concierge_util import load_config
 import dotenv
-# import jwcrypto.jwk
-# import jwcrypto.jwt
-# import requests
+import jwcrypto.jwk
+import jwcrypto.jwt
+import requests
 
 dotenv.load_dotenv()
 
@@ -87,18 +87,16 @@ def get_authorized_client(session):
         oauth.get(
             oidc_config["userinfo_endpoint"]
         ).json()  # TODO: maybe do something with the user info?
-        # uncomment below to debug OpenID claims
-        # jwks_url = oidc_config['jwks_uri']
-        # id_token_keys = jwcrypto.jwk.JWKSet.from_json(
-        #     requests.get(jwks_url).text
-        # )
-        # jwt = jwcrypto.jwt.JWT(
-        #     jwt=parsed_token["id_token"],
-        #     key=id_token_keys,
-        #     algs=oidc_config['id_token_signing_alg_values_supported']
-        # )
-        # jwt_claims = json.loads(jwt.claims)
-        # print(jwt_claims)
+        jwks_url = oidc_config["jwks_uri"]
+        id_token_keys = jwcrypto.jwk.JWKSet.from_json(requests.get(jwks_url).text)
+        jwt = jwcrypto.jwt.JWT(
+            jwt=parsed_token["id_token"],
+            key=id_token_keys,
+            algs=oidc_config["id_token_signing_alg_values_supported"],
+        )
+        jwt_claims = json.loads(jwt.claims)
+        email = jwt_claims["email"]
+        print(f"User email: {email}")
     except TokenExpiredError:
 
         @render.ui
@@ -107,4 +105,10 @@ def get_authorized_client(session):
 
         return (None, None)
 
-    return (get_client(parsed_token["id_token"]), parsed_token["id_token"])
+    client = get_client(parsed_token["id_token"])
+    auth_info = client.security.authinfo()
+    print("auth info:")
+    print(auth_info)
+    print('Indices available with "private_${email}_*" pattern:')
+    print(client.indices.get(f"private_{email}_*"))
+    return (client, parsed_token["id_token"])

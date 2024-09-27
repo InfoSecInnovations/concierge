@@ -12,14 +12,26 @@ _meta:
 private_index:
   reserved: false
   backend_roles:
-  - "user"
+  - "private_collection"
   description: "Allow full access to private index pattern"
 
 ping_cluster:
   reserved: false
-  backend_roles:
-  - "user"
+  users:
+  - "*"
   description: "Allow users to check if OpenSearch is up"
+
+read_shared_index:
+  reserved: false
+  backend_roles:
+  - "shared_read"
+  description: "Allow read access to shared index pattern"
+
+read_write_shared_index:
+  reserved: false
+  backend_roles:
+  - "shared_read_write"
+  description: "Allow read/write access to shared index pattern"
 
 ## Demo roles mapping
 
