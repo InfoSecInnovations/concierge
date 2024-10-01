@@ -127,7 +127,7 @@ def do_install(
                         "challenge": False,
                         "config": {
                             "openid_connect_url": v["url"],
-                            "subject_key": "email",
+                            "subject_key": "sub",
                         },
                     },
                     "authentication_backend": {"type": "noop"},

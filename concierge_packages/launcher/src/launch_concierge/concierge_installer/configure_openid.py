@@ -15,7 +15,7 @@ def configure_openid():
         "You will also need to locate the configuration URL that usually looks something like this: https://www.example.com/.well-known/openid-configuration"
     )
     print(
-        "If possible, we recommend using a provider that supports assigning roles using OpenID claims. This is simpler than having to assign permissions within Concierge."
+        "You must use a provider that lets you assign roles to users as we don't currently support assigning roles within Concierge."
     )
     try:
         with open("concierge.yml", "r") as file:
@@ -24,13 +24,14 @@ def configure_openid():
         config = {}
     existing = []
     if "auth" in config and "openid" in config["auth"]:
-        existing = config["auth"]["openid"].keys()
+        existing = config["auth"]["openid"].keys()[0]
         if len(existing):
-            print(f"Providers already configured: {', '.join(existing)}")
-    label_prompt = "Assign a name to this provider, if it matches an existing one the old config will be overwritten."
+            print(f"Provider already configured: {existing}")
+            print("If you enter new provider details this one will be overwritten.")
+    label_prompt = "Assign a name to this provider"
     # if a config exists the user can just keep that, if not they must enter a valid one
     if existing:
-        print(label_prompt)
+        print(f"{label_prompt}.")
         label = input("Leave this blank to keep existing configuration: ").strip()
         if not label:
             return
@@ -42,24 +43,23 @@ def configure_openid():
     client_id = get_valid_input("Please enter your app's client ID: ")
     client_secret = getpass("Please enter your app's client secret: ")
     print("Which OpenID claim is used to assign user roles?")
-    roles_key = input(
-        'It\'s commonly "roles" but this can vary depending on your provider. Leave blank if not applicable: '
-    ).strip()
+    roles_key = get_valid_input(
+        "It's commonly \"roles\" but this can vary depending on your provider. We currently don't support providers without roles: "
+    )
     label_stripped = re.sub(r"\W+", "", label.lower())
     id_key = f"{label_stripped.upper()}_CLIENT_ID"
     secret_key = f"{label_stripped.upper()}_CLIENT_SECRET"
     if "auth" not in config:
         config["auth"] = {}
-    if "openid" not in config["auth"]:
-        config["auth"]["openid"] = {}
-    config["auth"]["openid"][label_stripped] = {
-        "url": config_url,
-        "id_env_var": id_key,
-        "secret_env_var": secret_key,
-        "display_name": label,
+    config["auth"]["openid"] = {
+        label_stripped: {
+            "url": config_url,
+            "id_env_var": id_key,
+            "secret_env_var": secret_key,
+            "display_name": label,
+            "roles_key": roles_key,
+        }
     }
-    if roles_key:
-        config["auth"]["openid"][label_stripped]["roles_key"] = roles_key
     with open("concierge.yml", "w") as file:
         file.write(yaml.dump(config))
     set_key(".env", id_key, client_id)

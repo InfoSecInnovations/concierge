@@ -40,9 +40,6 @@ all_access:
   backend_roles:
   - "admin"
   description: "Maps admin to all_access"
-  # prefer using admin role from external auth if possible, if not you'll have to add the user's email here
-  users:
-    # - "<user@email.com>"
 
 own_index:
   reserved: false

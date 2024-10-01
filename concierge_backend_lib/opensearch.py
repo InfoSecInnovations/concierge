@@ -52,9 +52,9 @@ def ensure_collection(client: OpenSearch, collection_name: str):
         client.indices.create(index_name, body=index_body)
 
 
-def get_collections(client: OpenSearch):
+def get_collections(client: OpenSearch, index_pattern="*"):
     try:
-        response = client.indices.get("*", allow_no_indices=True)
+        response = client.indices.get(index_pattern, allow_no_indices=True)
         # TODO: can we do this in OpenSearch somehow?
         response = [
             list(index["aliases"].keys())[0]

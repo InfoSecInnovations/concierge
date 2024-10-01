@@ -1,8 +1,10 @@
-from shiny import ui
+from shiny import ui, reactive
 from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
+from concierge_backend_lib.opensearch import get_collections
+from isi_util.async_single import asyncify
 
 
 def doc_url(collection_name, doc_type, doc_id):
@@ -77,3 +79,27 @@ async def load_llm_model(model_name):
         pbar.close()
     print(f"{model_name} language model loaded.\n")
     ui.notification_show(f"{model_name} Language Model loaded")
+
+
+@reactive.extended_task
+async def set_collections(config, claims, client, collections):
+    # TODO: would be nice to do this in a less janky way, this solution is workaround for the fact the OpenSearch won't allow you to access indices with a pattern that isn't the authorized one
+    # if no auth get *
+    if not config or not claims:
+        collections.set(await asyncify(get_collections, client))
+        return
+    roles = claims[config["auth"]["openid"].values()[0].roles_key]
+    # admin can get everything
+    if "admin" in roles:
+        collections.set(await asyncify(get_collections, client))
+        return
+    results = []
+    # if we have access to shared collections get those
+    if "shared_read" in roles or "shared_read_write" in roles:
+        results.extend(await asyncify(get_collections, client, "shared_*"))
+    # if we have access to private collections get those
+    if "private_collection" in roles:
+        results.extend(
+            await asyncify(get_collections, client, f"private_{claims["sub"]}_*")
+        )
+    collections.set(results)

@@ -2,10 +2,8 @@ from shiny import App, ui, Inputs, Outputs, Session, reactive, render
 from home import home_ui
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
-from concierge_backend_lib.opensearch import get_collections
 import shinyswatch
 from components import status_ui, status_server
-from isi_util.async_single import asyncify
 from opensearch_binary import serve_binary
 from oauth2 import auth_callback, refresh, logout
 from starlette.applications import Starlette
@@ -13,6 +11,8 @@ from starlette.routing import Mount, Route
 import os
 import dotenv
 from auth import get_authorized_client
+from functions import set_collections
+from concierge_util import load_config
 
 dotenv.load_dotenv()
 
@@ -28,7 +28,8 @@ app_ui = ui.page_auto(
 
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
-    client, token = get_authorized_client(session)
+    config = load_config()
+    client, token, claims = get_authorized_client(session, config)
     if not client:
         return
     opensearch_status = reactive.value(False)
@@ -71,14 +72,10 @@ def server(input: Inputs, output: Outputs, session: Session):
     )
     status = status_server("status_widget", token)
 
-    @reactive.extended_task
-    async def set_collections():
-        collections.set(await asyncify(get_collections, client))
-
     @reactive.effect
     def update_collections():
         if opensearch_status.get():
-            set_collections()
+            set_collections(config, claims, client, collections)
         else:
             collections.set([])
 

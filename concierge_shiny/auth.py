@@ -5,7 +5,6 @@ import json
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import TokenExpiredError
 import os
-from concierge_util import load_config
 import dotenv
 import jwcrypto.jwk
 import jwcrypto.jwt
@@ -36,10 +35,9 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
             return ui.tags.script(f'window.location.href = "{url}"')
 
 
-def get_authorized_client(session):
-    config = load_config()
+def get_authorized_client(session, config):
     if not config or not config["auth"]:
-        return (get_client(), None)
+        return (get_client(), None, None)
 
     if (
         "concierge_token_chunk_count" not in session.http_conn.cookies
@@ -72,7 +70,7 @@ def get_authorized_client(session):
                 gap="1em",
             )
 
-        return (None, None)
+        return (None, None, None)
 
     chunk_count = int(session.http_conn.cookies["concierge_token_chunk_count"])
     token = ""
@@ -95,20 +93,14 @@ def get_authorized_client(session):
             algs=oidc_config["id_token_signing_alg_values_supported"],
         )
         jwt_claims = json.loads(jwt.claims)
-        email = jwt_claims["email"]
-        print(f"User email: {email}")
+        print(jwt_claims)
     except TokenExpiredError:
 
         @render.ui
         def concierge_main():
             return ui.tags.script('window.location.href = "/refresh"')
 
-        return (None, None)
+        return (None, None, None)
 
     client = get_client(parsed_token["id_token"])
-    auth_info = client.security.authinfo()
-    print("auth info:")
-    print(auth_info)
-    print('Indices available with "private_${email}_*" pattern:')
-    print(client.indices.get(f"private_{email}_*"))
-    return (client, parsed_token["id_token"])
+    return (client, parsed_token["id_token"], jwt_claims)
