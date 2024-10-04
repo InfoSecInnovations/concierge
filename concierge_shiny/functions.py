@@ -88,7 +88,7 @@ async def set_collections(config, claims, client, collections):
     if not config or not claims:
         collections.set(await asyncify(get_collections, client))
         return
-    roles = claims[config["auth"]["openid"].values()[0].roles_key]
+    roles = claims[list(config["auth"]["openid"].values())[0]["roles_key"]]
     # admin can get everything
     if "admin" in roles:
         collections.set(await asyncify(get_collections, client))

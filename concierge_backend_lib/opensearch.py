@@ -49,7 +49,11 @@ def ensure_collection(client: OpenSearch, collection_name: str):
                 }
             },
         }
-        client.indices.create(index_name, body=index_body)
+        print(f"creating {collection_name}")
+        try:
+            client.indices.create(index_name, body=index_body)
+        except Exception as e:
+            print(f"[ERROR]: {e}")
 
 
 def get_collections(client: OpenSearch, index_pattern="*"):
