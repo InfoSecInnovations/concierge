@@ -9,7 +9,6 @@ services:
       - cluster.initial_cluster_manager_nodes=opensearch-node1 # Nodes eligible to serve as cluster manager
       - bootstrap.memory_lock=true # Disable JVM heap memory swapping
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Set min and max JVM heap sizes to at least 50% of system RAM
-      - "DISABLE_INSTALL_DEMO_CONFIG=true" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
     ulimits:
       memlock:
         soft: -1 # Set memlock to unlimited (no soft or hard limit)
@@ -31,18 +30,8 @@ services:
   opensearch-node-enable-security:
     extends: opensearch-node-base
     environment:
-      - "DISABLE_INSTALL_DEMO_CONFIG=true"
-    volumes:
-      - ${OPENSEARCH_CONFIG}:/usr/share/opensearch/config/opensearch.yml
-      - ${OPENSEARCH_SECURITY_CONFIG}:/usr/share/opensearch/config/opensearch-security/config.yml
-      - ${OPENSEARCH_ROLES_MAPPING}:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml
-      - ${OPENSEARCH_ROLES}:/usr/share/opensearch/config/opensearch-security/roles.yml
-      - ${OPENSEARCH_INTERNAL_USERS}:/usr/share/opensearch/config/opensearch-security/internal_users.yml
-      - ./certificates/root-ca.pem:/usr/share/opensearch/config/root-ca.pem
-      - ./certificates/kirk.pem:/usr/share/opensearch/config/kirk.pem
-      - ./certificates/kirk-key.pem:/usr/share/opensearch/config/kirk-key.pem
-      - ./certificates/esnode.pem:/usr/share/opensearch/config/esnode.pem
-      - ./certificates/esnode-key.pem:/usr/share/opensearch/config/esnode-key.pem
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}    # Sets the demo admin user password when using demo configuration, required for OpenSearch 2.12 and later
+      - "DISABLE_INSTALL_DEMO_CONFIG=false" # For the moment we're just using the security demo config
 
   opensearch-dashboards-base:
     image: opensearchproject/opensearch-dashboards:latest # Make sure the version of opensearch-dashboards matches the version of opensearch installed on other nodes
@@ -62,8 +51,3 @@ services:
     extends: opensearch-dashboards-base
     environment:
       - 'OPENSEARCH_HOSTS=["https://opensearch-node1:9200"]' # use https when security is enabled
-    volumes:
-      - ${OPENSEARCH_DASHBOARDS_CONFIG}:/usr/share/opensearch-dashboards/config/opensearch_dashboards.yml
-      - ${OPENSEARCH_DASHBOARDS_CA}:/usr/share/opensearch-dashboards/config/root-ca.pem
-      - ${OPENSEARCH_DASHBOARDS_CERT}:/usr/share/opensearch-dashboards/config/client-cert.pem
-      - ${OPENSEARCH_DASHBOARDS_KEY}:/usr/share/opensearch-dashboards/config/client-cert-key.pem

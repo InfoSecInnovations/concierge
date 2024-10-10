@@ -10,9 +10,10 @@ from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
 import dotenv
-from auth import get_authorized_client
+from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
+from concierge_backend_lib.opensearch import get_client
 
 dotenv.load_dotenv()
 
@@ -25,17 +26,20 @@ app_ui = ui.page_auto(
     theme=shinyswatch.theme.pulse,
 )
 
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
+    "1"  # this is to use keycloak in localhost, TODO: be able to toggle
+)
+
 
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     config = load_config()
-    client, token, claims = get_authorized_client(session, config)
-    if not client:
-        return
+    token, claims = get_auth_tokens(session, config)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections = reactive.value([])
+    client = get_client()
 
     @render.ui
     def concierge_main():
@@ -70,7 +74,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status,
         client,
     )
-    status = status_server("status_widget", token)
+    status = status_server("status_widget")
 
     @reactive.effect
     def update_collections():

@@ -1,6 +1,5 @@
 from script_builder.argument_processor import ArgumentData, ArgumentProcessor
 from script_builder.util import get_default_directory
-from concierge_util import load_config
 import os
 
 
@@ -21,16 +20,6 @@ def logging_enabled(processor: ArgumentProcessor):
     return (
         "activity_logging" in processor.parameters
         and processor.parameters["activity_logging"]
-    )
-
-
-def security_config_exists(processor: ArgumentProcessor):
-    config = load_config()
-    return (
-        config
-        and "auth" in config
-        and "openid" in config["auth"]
-        and len(config["auth"]["openid"])
     )
 
 
@@ -101,37 +90,23 @@ install_arguments = [
         output_type=ArgumentData.OutputType.int,
     ),
     ArgumentData(
-        key="delete_auth",
-        help="Delete existing authentication configuration?",
-        condition=security_config_exists,
-        description=[
-            "A config file was detected with authentication already configured.",
-            'Select "Yes" to remove the authentication configuration from the file, or "No" to continue using it',
-        ],
-        default=False,
-        prompt="Delete existing authentication configuration?",
-        output_type=ArgumentData.OutputType.bool,
-        save_user_input=False,
-    ),
-    ArgumentData(
-        key="enable_openid",
-        help="Configure OpenID authentication?",
-        description=[
-            "You can use OpenID to provide user authentication with Concierge.",
-            "It's currently the only supported authentication platform.",
-            "You will be required to register an app with an OpenID provider to use this option.",
-            "If you already have an OpenID configuration set up this option will allow you to overwrite or add to it.",
-        ],
-        default=False,
-        prompt="Configure OpenID?",
-        output_type=ArgumentData.OutputType.bool,
-    ),
-    ArgumentData(
         key="port",
         help="Which port should the Concierge web UI be served on?",
         description=["Which port should the Concierge web UI be served on?"],
         default=15130,
         prompt="port?",
         output_type=ArgumentData.OutputType.int,
+    ),
+    ArgumentData(
+        key="enable_security",
+        help="Enable login and access controls for Concierge?",
+        description=[
+            "Enable login and access controls for Concierge?",
+            "If you don't do this anyone with access to this machine and/or the web UI will have full privileges to manage and use all data in Concierge.",
+            "We recommend enabling security if this isn't a development or test instance.",
+        ],
+        default=False,
+        prompt="Enable Security?",
+        output_type=ArgumentData.OutputType.bool,
     ),
 ]

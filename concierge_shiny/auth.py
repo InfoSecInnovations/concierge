@@ -1,5 +1,4 @@
 from shiny import ui, Inputs, Outputs, Session, render, reactive, module
-from concierge_backend_lib.opensearch import get_client
 from oauth2 import oauth_configs, oauth_config_data
 import json
 from requests_oauthlib import OAuth2Session
@@ -35,9 +34,9 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
             return ui.tags.script(f'window.location.href = "{url}"')
 
 
-def get_authorized_client(session, config):
+def get_auth_tokens(session, config):
     if not config or not config["auth"]:
-        return (get_client(), None, None)
+        return (None, None)
 
     if (
         "concierge_token_chunk_count" not in session.http_conn.cookies
@@ -70,7 +69,7 @@ def get_authorized_client(session, config):
                 gap="1em",
             )
 
-        return (None, None, None)
+        return (None, None)
 
     chunk_count = int(session.http_conn.cookies["concierge_token_chunk_count"])
     token = ""
@@ -100,7 +99,6 @@ def get_authorized_client(session, config):
         def concierge_main():
             return ui.tags.script('window.location.href = "/refresh"')
 
-        return (None, None, None)
+        return (None, None)
 
-    client = get_client(parsed_token["id_token"])
-    return (client, parsed_token["id_token"], jwt_claims)
+    return (parsed_token["id_token"], jwt_claims)

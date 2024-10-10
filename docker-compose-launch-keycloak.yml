@@ -1,0 +1,4 @@
+name: concierge
+
+include:
+  - ./concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-keycloak.yml

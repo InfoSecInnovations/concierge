@@ -3,6 +3,8 @@ import os
 import ctypes
 import subprocess
 import venv
+from getpass import getpass
+from zxcvbn import zxcvbn
 
 my_platform = platform.system()
 is_unix = my_platform == "Linux" or my_platform == "Darwin"
@@ -87,8 +89,8 @@ def get_install_status(apply_message, cancel_message):
     ).upper()
 
     if ready_to_rock == "YES":
-        # no further input is needed. Let's get to work.
-        print("installing...")
+        print("initiating install...\n")
+        print("depending on your choices there may be further questions.")
         return True
 
     elif ready_to_rock == "NO":
@@ -110,4 +112,16 @@ def get_valid_input(prompt):
         value = input(prompt).strip()
         if not value:
             print("please enter a valid value!")
+    return value
+
+
+def get_strong_password(prompt):
+    score = -1
+    while score < 4:
+        value = getpass(prompt)
+        strength = zxcvbn(value)
+        score = strength["score"]
+        if strength["score"] < 4:
+            print("Password does not meet the strength requirements")
+            print(*strength["feedback"]["suggestions"], sep="\n")
     return value

@@ -1,24 +1,23 @@
 import os
 from dotenv import load_dotenv
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from requests_oauth2client import BearerAuth
+from opensearchpy import OpenSearch
 
 load_dotenv()
-HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
+HOST = os.getenv("OPENSEARCH_HOST", "localhost")
+OPENSEARCH_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
 
 
-def get_client(token: str | None = None):
+def get_client():
     host = HOST
     port = 9200
 
-    if token:
+    if OPENSEARCH_ADMIN_PASSWORD:
         return OpenSearch(
             hosts=[{"host": host, "port": port}],
-            http_auth=BearerAuth(token),
+            http_auth=("admin", OPENSEARCH_ADMIN_PASSWORD),
             use_ssl=True,
             verify_certs=False,
             ssl_show_warn=False,
-            connection_class=RequestsHttpConnection,
         )
 
     return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)

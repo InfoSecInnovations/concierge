@@ -24,7 +24,7 @@ def configure_openid():
         config = {}
     existing = []
     if "auth" in config and "openid" in config["auth"]:
-        existing = config["auth"]["openid"].keys()[0]
+        existing = list(config["auth"]["openid"].keys())[0]
         if len(existing):
             print(f"Provider already configured: {existing}")
             print("If you enter new provider details this one will be overwritten.")

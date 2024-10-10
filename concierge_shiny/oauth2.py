@@ -16,7 +16,9 @@ oauth_config_data = None
 if config and "auth" in config and "openid" in config["auth"]:
     oauth_config_data = config["auth"]["openid"]
     oauth_configs = {
-        provider: requests.get(data["url"]).json()
+        provider: requests.get(
+            data["url"].replace("keycloak", "localhost")
+        ).json()  # this is a hack to grab keycloak config on localhost when running in dev mode
         for provider, data in oauth_config_data.items()
     }
 
