@@ -39,28 +39,35 @@ def do_install(
                 "-d",
             ]
         )
-        # TODO: wait for launch
-        response = requests.post(
-            "http://localhost:8080/realms/master/protocol/openid-connect/token",
-            {
-                "client_id": "admin-cli",
-                "grant_type": "password",
-                "username": "admin",
-                "password": keycloak_password,
-            },
-            verify=False,
-        )
-        token = response.json()["access_token"]
-        headers = {
-            "content-type": "application/json",
-            "Authorization": f"Bearer {token}",
-        }
-        # TODO: we should get the client ID from the realm JSON file to avoid errors
-        response = requests.get(
-            "http://localhost:8080/admin/realms/concierge/clients/7a3ec428-36f2-49c4-91b1-8288dc44acb0/client-secret",
-            headers=headers,
-        )
-        keycloak_secret = response.json()["value"]
+        # TODO: some kind of timeout on this?
+        print("Waiting for Keycloak to start so we can get the OpenID credentials...")
+        while True:
+            try:
+                response = requests.post(
+                    "http://localhost:8080/realms/master/protocol/openid-connect/token",
+                    {
+                        "client_id": "admin-cli",
+                        "grant_type": "password",
+                        "username": "admin",
+                        "password": keycloak_password,
+                    },
+                    verify=False,
+                )
+                token = response.json()["access_token"]
+                headers = {
+                    "content-type": "application/json",
+                    "Authorization": f"Bearer {token}",
+                }
+                # TODO: we should get the client ID from the realm JSON file to avoid errors
+                response = requests.get(
+                    "http://localhost:8080/admin/realms/concierge/clients/7a3ec428-36f2-49c4-91b1-8288dc44acb0/client-secret",
+                    headers=headers,
+                )
+                keycloak_secret = response.json()["value"]
+                break
+            except Exception:
+                pass
+
         # TODO: set keycloak secret env variable
         set_key(".env", "KEYCLOAK_CLIENT_ID", "concierge-auth")
         set_key(".env", "KEYCLOAK_CLIENT_SECRET", keycloak_secret)
