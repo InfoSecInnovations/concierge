@@ -1,5 +1,5 @@
 from shiny import ui, Inputs, Outputs, Session, render, reactive, module
-from oauth2 import oauth_configs, oauth_config_data
+from oauth2 import keycloak_config, keycloak_openid_config
 import json
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2 import TokenExpiredError
@@ -11,8 +11,6 @@ import requests
 
 dotenv.load_dotenv()
 
-client_id = os.getenv("OAUTH2_CLIENT_ID")
-client_secret = os.getenv("OAUTH2_CLIENT_SECRET")
 scope = ["openid profile email offline_access"]
 
 
@@ -38,33 +36,27 @@ def get_auth_tokens(session, config):
     if not config or not config["auth"]:
         return (None, None)
 
-    if (
-        "concierge_token_chunk_count" not in session.http_conn.cookies
-        or "concierge_auth_provider" not in session.http_conn.cookies
-    ):
-        urls = []
-        redirect_uri = f"{session.http_conn.headers["origin"]}/callback/"
-
-        for provider, data in oauth_config_data.items():
-            config = oauth_configs[provider]
-            oauth = OAuth2Session(
-                client_id=os.getenv(data["id_env_var"]),
-                redirect_uri=redirect_uri + provider,
-                scope=scope,
-            )
-            authorization_url, state = oauth.authorization_url(
-                config["authorization_endpoint"]
-            )
-            urls.append((provider, data["display_name"]))
-            login_button_server(f"login_openid_{provider}", authorization_url)
+    if "concierge_token_chunk_count" not in session.http_conn.cookies:
+        redirect_uri = f"{session.http_conn.headers["origin"]}/callback"
+        oauth = OAuth2Session(
+            client_id=os.getenv(keycloak_config["id_env_var"]),
+            redirect_uri=redirect_uri,
+            scope=scope,
+        )
+        authorization_url, state = oauth.authorization_url(
+            keycloak_openid_config["authorization_endpoint"]
+        )
+        login_button_server("login_openid_keycloak", authorization_url)
 
         @render.ui
         def concierge_main():
             return ui.page_fillable(
                 ui.markdown("# Data Concierge AI"),
                 [
-                    login_button_ui(f"login_openid_{url[0]}", f"Log in with {url[1]}")
-                    for url in urls
+                    login_button_ui(
+                        "login_openid_keycloak",
+                        f"Log in with {keycloak_config["display_name"]}",
+                    )
                 ],
                 gap="1em",
             )
@@ -75,21 +67,20 @@ def get_auth_tokens(session, config):
     token = ""
     for i in range(chunk_count):
         token += session.http_conn.cookies[f"concierge_auth_{i}"]
-    provider = session.http_conn.cookies["concierge_auth_provider"]
-    oidc_config = oauth_configs[provider]
-    data = oauth_config_data[provider]
     parsed_token = json.loads(token)
-    oauth = OAuth2Session(client_id=os.getenv(data["id_env_var"]), token=parsed_token)
+    oauth = OAuth2Session(
+        client_id=os.getenv(keycloak_config["id_env_var"]), token=parsed_token
+    )
     try:
         oauth.get(
-            oidc_config["userinfo_endpoint"]
+            keycloak_openid_config["userinfo_endpoint"]
         ).json()  # TODO: maybe do something with the user info?
-        jwks_url = oidc_config["jwks_uri"]
+        jwks_url = keycloak_openid_config["jwks_uri"]
         id_token_keys = jwcrypto.jwk.JWKSet.from_json(requests.get(jwks_url).text)
         jwt = jwcrypto.jwt.JWT(
             jwt=parsed_token["id_token"],
             key=id_token_keys,
-            algs=oidc_config["id_token_signing_alg_values_supported"],
+            algs=keycloak_openid_config["id_token_signing_alg_values_supported"],
         )
         jwt_claims = json.loads(jwt.claims)
         print(jwt_claims)

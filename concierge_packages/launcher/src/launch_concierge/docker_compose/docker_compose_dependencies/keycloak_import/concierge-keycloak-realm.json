@@ -333,8 +333,8 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "https://localhost:15130/callback/keycloak",
-        "http://localhost:15130/callback/keycloak"
+        "https://localhost:15130/callback",
+        "http://localhost:15130/callback"
       ],
       "webOrigins": [
         "https://localhost:15130",

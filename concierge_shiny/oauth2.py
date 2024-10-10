@@ -11,16 +11,18 @@ dotenv.load_dotenv()
 max_bytes = 3000  # setting a cookie adds escape characters to the stringified JSON so this allows a safe margin to avoid hitting the 4096 byte limit
 
 config = load_config()
-oauth_configs = None
-oauth_config_data = None
-if config and "auth" in config and "openid" in config["auth"]:
-    oauth_config_data = config["auth"]["openid"]
-    oauth_configs = {
-        provider: requests.get(
-            data["url"].replace("keycloak", "localhost")
-        ).json()  # this is a hack to grab keycloak config on localhost when running in dev mode
-        for provider, data in oauth_config_data.items()
-    }
+
+keycloak_config = {
+    # TODO: select HTTPS if enabled
+    # TODO: select keycloak host if running in container
+    "url": "http://localhost:8080/realms/concierge/.well-known/openid-configuration",
+    "display_name": "Keycloak",
+    "id_env_var": "KEYCLOAK_CLIENT_ID",
+    "roles_key": "roles",
+    "secret_env_var": "KEYCLOAK_CLIENT_SECRET",
+}
+
+keycloak_openid_config = requests.get(keycloak_config["url"]).json()
 
 
 def set_token_cookies(token, response):
@@ -35,23 +37,19 @@ def set_token_cookies(token, response):
 
 
 async def auth_callback(request: Request):
-    provider = request.path_params["provider"]
-    config = oauth_configs[provider]
-    data = oauth_config_data[provider]
-    redirect_uri = f"{request.base_url}callback/"
+    redirect_uri = f"{request.base_url}callback"
     oauth = OAuth2Session(
-        client_id=os.getenv(data["id_env_var"]),
+        client_id=os.getenv(keycloak_config["id_env_var"]),
         state=request.query_params.get("state"),
-        redirect_uri=redirect_uri + provider,
+        redirect_uri=redirect_uri,
     )
     token = oauth.fetch_token(
-        token_url=config["token_endpoint"],
-        client_secret=os.getenv(data["secret_env_var"]),
+        token_url=keycloak_openid_config["token_endpoint"],
+        client_secret=os.getenv(keycloak_config["secret_env_var"]),
         code=request.query_params.get("code"),
     )
     response = RedirectResponse(url="/")
     set_token_cookies(token, response)
-    response.set_cookie("concierge_auth_provider", provider, httponly=True)
     return response
 
 
@@ -59,19 +57,18 @@ async def refresh(request: Request):
     provider = request.cookies.get("concierge_auth_provider")
     if not provider:
         return logout(request)
-    config = oauth_configs[provider]
-    data = oauth_config_data[provider]
     chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
     token_string = ""
     for i in range(chunk_count):
         token_string += request.cookies.get(f"concierge_auth_{i}")
     oauth = OAuth2Session(
-        client_id=os.getenv(data["id_env_var"]), token=json.loads(token_string)
+        client_id=os.getenv(keycloak_config["id_env_var"]),
+        token=json.loads(token_string),
     )
     token = oauth.refresh_token(
-        config["token_endpoint"],
-        client_id=os.getenv(data["id_env_var"]),
-        client_secret=os.getenv(data["secret_env_var"]),
+        keycloak_openid_config["token_endpoint"],
+        client_id=os.getenv(keycloak_config["id_env_var"]),
+        client_secret=os.getenv(keycloak_config["secret_env_var"]),
     )
     response = RedirectResponse(url="/")
     set_token_cookies(token, response)
@@ -82,7 +79,6 @@ async def logout(request: Request):
     chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
     response = RedirectResponse(url="/")
     response.delete_cookie("concierge_token_chunk_count")
-    response.delete_cookie("concierge_auth_provider")
     for index in range(chunk_count):
         response.delete_cookie(f"concierge_auth_{index}")
     return response

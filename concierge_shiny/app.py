@@ -35,6 +35,8 @@ def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     config = load_config()
     token, claims = get_auth_tokens(session, config)
+    if config["auth"] and not token:
+        return
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -43,19 +45,25 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @render.ui
     def concierge_main():
-        return ui.navset_pill_list(
+        nav_items = [
             ui.nav_panel("Home", home_ui("home")),
             ui.nav_panel("Prompter", prompter_ui("prompter")),
             ui.nav_panel(
                 "Collection Management",
                 collection_management_ui("collection_management"),
             ),
-            ui.nav_control(
-                ui.input_action_button("openid_logout", "Log Out", class_="my-3")
+        ]
+        if token:
+            nav_items.append(
+                ui.nav_control(
+                    ui.input_action_button("openid_logout", "Log Out", class_="my-3")
+                )
             )
-            if token
-            else None,
-            ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
+        nav_items.append(
+            ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui())
+        )
+        return ui.navset_pill_list(
+            *nav_items,
             id="navbar",
         )
 
@@ -101,7 +109,7 @@ shiny_app = App(app_ui, server)
 
 
 routes = [
-    Route("/callback/{provider}", endpoint=auth_callback),
+    Route("/callback", endpoint=auth_callback),
     Route("/refresh", endpoint=refresh),
     Route("/logout", endpoint=logout),
     Route("/files/{collection_name}/{doc_type}/{doc_id}", endpoint=serve_binary),
