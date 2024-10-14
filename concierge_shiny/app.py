@@ -5,7 +5,7 @@ from collection_management import collection_management_ui, collection_managemen
 import shinyswatch
 from components import status_ui, status_server
 from opensearch_binary import serve_binary
-from oauth2 import auth_callback, refresh, logout
+from oauth2 import auth_callback, refresh, logout, get_keycloak_client
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
@@ -16,10 +16,6 @@ from concierge_util import load_config
 from concierge_backend_lib.opensearch import get_client
 
 dotenv.load_dotenv()
-
-client_id = os.getenv("OAUTH2_CLIENT_ID")
-client_secret = os.getenv("OAUTH2_CLIENT_SECRET")
-scope = ["openid profile email offline_access"]
 
 app_ui = ui.page_auto(
     ui.output_ui("concierge_main"),
@@ -37,6 +33,26 @@ def server(input: Inputs, output: Outputs, session: Session):
     token, claims = get_auth_tokens(session, config)
     if config["auth"] and not token:
         return
+    if config["auth"]:
+        keycloak_client = get_keycloak_client()
+        print(keycloak_client.uma_permissions(token["access_token"]))
+        print(
+            keycloak_client.uma_permissions(
+                token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
+            )
+        )
+        print(
+            keycloak_client.has_uma_access(
+                token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
+            )
+        )
+        print(
+            keycloak_client.has_uma_access(
+                token["access_token"], "ee9c0267-85cf-4471-9107-6897ebc98521#read"
+            )
+        )
+    else:
+        keycloak_client = None
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
