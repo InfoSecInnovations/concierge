@@ -1,10 +1,7 @@
 from shiny import ui, Inputs, Outputs, Session, render, reactive, module
-from oauth2 import keycloak_config, keycloak_openid_config, get_keycloak_client
+from concierge_backend_lib.authentication import keycloak_config, get_keycloak_client
 import json
 import dotenv
-import jwcrypto.jwk
-import jwcrypto.jwt
-import requests
 
 dotenv.load_dotenv()
 
@@ -31,7 +28,7 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
 
 def get_auth_tokens(session, config):
     if not config or not config["auth"]:
-        return (None, None)
+        return None
 
     if "concierge_token_chunk_count" not in session.http_conn.cookies:
         redirect_uri = f"{session.http_conn.headers["origin"]}/callback"
@@ -54,7 +51,7 @@ def get_auth_tokens(session, config):
                 gap="1em",
             )
 
-        return (None, None)
+        return None
 
     chunk_count = int(session.http_conn.cookies["concierge_token_chunk_count"])
     token = ""
@@ -66,15 +63,6 @@ def get_auth_tokens(session, config):
         keycloak_openid.userinfo(
             parsed_token["access_token"]
         )  # TODO: maybe do something with the user info?
-        jwks_url = keycloak_openid_config["jwks_uri"]
-        id_token_keys = jwcrypto.jwk.JWKSet.from_json(requests.get(jwks_url).text)
-        jwt = jwcrypto.jwt.JWT(
-            jwt=parsed_token["id_token"],
-            key=id_token_keys,
-            algs=keycloak_openid_config["id_token_signing_alg_values_supported"],
-        )
-        jwt_claims = json.loads(jwt.claims)
-        print(jwt_claims)
     except Exception as e:
         print(f"userinfo call failed: {e}")
 
@@ -82,6 +70,6 @@ def get_auth_tokens(session, config):
         def concierge_main():
             return ui.tags.script('window.location.href = "/refresh"')
 
-        return (None, None)
+        return None
 
-    return (parsed_token, jwt_claims)
+    return parsed_token

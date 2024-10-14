@@ -1,42 +1,12 @@
 from starlette.responses import RedirectResponse
 from starlette.requests import Request
-import dotenv
-import os
 import json
-import requests
 from concierge_util import load_config
-from keycloak import KeycloakOpenID
+from concierge_backend_lib.authentication import get_keycloak_client
 
-dotenv.load_dotenv()
 max_bytes = 3000  # setting a cookie adds escape characters to the stringified JSON so this allows a safe margin to avoid hitting the 4096 byte limit
 
 config = load_config()
-
-# TODO: select HTTPS if enabled
-# TODO: select keycloak host if running in container
-server_url = "http://localhost:8080"
-
-keycloak_config = {
-    # TODO: select HTTPS if enabled
-    # TODO: select keycloak host if running in container
-    "url": "http://localhost:8080/realms/concierge/.well-known/openid-configuration",
-    "display_name": "Keycloak",
-    "id_env_var": "KEYCLOAK_CLIENT_ID",
-    "roles_key": "roles",
-    "secret_env_var": "KEYCLOAK_CLIENT_SECRET",
-}
-
-keycloak_openid_config = requests.get(keycloak_config["url"]).json()
-
-
-def get_keycloak_client():
-    client = KeycloakOpenID(
-        server_url=server_url,
-        realm_name="concierge",
-        client_id=os.getenv(keycloak_config["id_env_var"]),
-        client_secret_key=os.getenv(keycloak_config["secret_env_var"]),
-    )
-    return client
 
 
 def set_token_cookies(token, response):
@@ -70,7 +40,10 @@ async def refresh(request: Request):
         token_string += request.cookies.get(f"concierge_auth_{i}")
     token = json.loads(token_string)
     keycloak_openid = get_keycloak_client()
-    token = keycloak_openid.refresh_token(token["refresh_token"])
+    try:
+        token = keycloak_openid.refresh_token(token["refresh_token"])
+    except Exception:
+        return await logout(request)
     response = RedirectResponse(url="/")
     set_token_cookies(token, response)
     return response

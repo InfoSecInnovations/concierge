@@ -82,24 +82,5 @@ async def load_llm_model(model_name):
 
 
 @reactive.extended_task
-async def set_collections(config, claims, client, collections):
-    # TODO: would be nice to do this in a less janky way, this solution is workaround for the fact the OpenSearch won't allow you to access indices with a pattern that isn't the authorized one
-    # if no auth get *
-    if not config or not claims:
-        collections.set(await asyncify(get_collections, client))
-        return
-    roles = claims[list(config["auth"]["openid"].values())[0]["roles_key"]]
-    # admin can get everything
-    if "admin" in roles:
-        collections.set(await asyncify(get_collections, client))
-        return
-    results = []
-    # if we have access to shared collections get those
-    if "shared_read" in roles or "shared_read_write" in roles:
-        results.extend(await asyncify(get_collections, client, "shared_*"))
-    # if we have access to private collections get those
-    if "private_collection" in roles:
-        results.extend(
-            await asyncify(get_collections, client, f"private_{claims["sub"]}_*")
-        )
-    collections.set(results)
+async def set_collections(client, collections):
+    collections.set(await asyncify(get_collections, client))

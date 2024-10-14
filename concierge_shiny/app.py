@@ -5,7 +5,7 @@ from collection_management import collection_management_ui, collection_managemen
 import shinyswatch
 from components import status_ui, status_server
 from opensearch_binary import serve_binary
-from oauth2 import auth_callback, refresh, logout, get_keycloak_client
+from oauth2 import auth_callback, refresh, logout
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
@@ -14,6 +14,9 @@ from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
 from concierge_backend_lib.opensearch import get_client
+from concierge_backend_lib.authentication import get_keycloak_client
+from concierge_backend_lib.authorization import authorize
+import json
 
 dotenv.load_dotenv()
 
@@ -30,29 +33,27 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     config = load_config()
-    token, claims = get_auth_tokens(session, config)
+    token = get_auth_tokens(session, config)
     if config["auth"] and not token:
         return
     if config["auth"]:
-        keycloak_client = get_keycloak_client()
-        print(keycloak_client.uma_permissions(token["access_token"]))
+        keycloak_openid = get_keycloak_client()
         print(
-            keycloak_client.uma_permissions(
-                token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
-            )
+            f"Authorization for read all: {authorize(token["access_token"], "all", "read")}"
         )
-        print(
-            keycloak_client.has_uma_access(
-                token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
-            )
+        token_info = keycloak_openid.decode_token(token["access_token"], validate=False)
+        print(json.dumps(token_info, indent=2))
+        print(keycloak_openid.uma_permissions(token["access_token"]))
+        permissions = keycloak_openid.uma_permissions(
+            token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
         )
-        print(
-            keycloak_client.has_uma_access(
-                token["access_token"], "ee9c0267-85cf-4471-9107-6897ebc98521#read"
-            )
+        print(permissions)
+        auth_status = keycloak_openid.has_uma_access(
+            token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
         )
+        print(auth_status)
     else:
-        keycloak_client = None
+        keycloak_openid = None
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -103,7 +104,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     def update_collections():
         if opensearch_status.get():
-            set_collections(config, claims, client, collections)
+            set_collections(client, collections)
         else:
             collections.set([])
 
