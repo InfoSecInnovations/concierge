@@ -10,4 +10,5 @@ services:
     restart: unless-stopped
     volumes:
       - ./keycloak_import:/opt/keycloak/data/import
-    command: start-dev --import-realm
+      - ./keycloak_javascript/concierge.jar:/opt/keycloak/providers/concierge.jar
+    command: start-dev --import-realm --auto-build --features=preview

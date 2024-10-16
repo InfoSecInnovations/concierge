@@ -90,13 +90,14 @@ def collection_management_server(
     collections,
     opensearch_status,
     client,
+    token,
 ):
     collection_create_server(
-        "collection_create", selected_collection, collections, client
+        "collection_create", selected_collection, collections, client, token
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server(
-        "ingester", selected_collection, collections, client
+        "ingester", selected_collection, collections, client, token
     )
 
     document_delete_trigger = reactive.value(0)

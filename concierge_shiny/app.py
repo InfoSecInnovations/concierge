@@ -14,9 +14,6 @@ from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
 from concierge_backend_lib.opensearch import get_client
-from concierge_backend_lib.authentication import get_keycloak_client
-from concierge_backend_lib.authorization import authorize
-import json
 
 dotenv.load_dotenv()
 
@@ -36,24 +33,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     token = get_auth_tokens(session, config)
     if config["auth"] and not token:
         return
-    if config["auth"]:
-        keycloak_openid = get_keycloak_client()
-        print(
-            f"Authorization for read all: {authorize(token["access_token"], "all", "read")}"
-        )
-        token_info = keycloak_openid.decode_token(token["access_token"], validate=False)
-        print(json.dumps(token_info, indent=2))
-        print(keycloak_openid.uma_permissions(token["access_token"]))
-        permissions = keycloak_openid.uma_permissions(
-            token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
-        )
-        print(permissions)
-        auth_status = keycloak_openid.has_uma_access(
-            token["access_token"], "41d7f2f6-58b0-4010-b1eb-a19406e619d9#read"
-        )
-        print(auth_status)
-    else:
-        keycloak_openid = None
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -98,6 +77,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         collections,
         opensearch_status,
         client,
+        token,
     )
     status = status_server("status_widget")
 

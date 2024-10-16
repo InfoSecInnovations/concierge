@@ -1,5 +1,5 @@
 import requests
-from keycloak import KeycloakOpenID
+from keycloak import KeycloakOpenID, KeycloakOpenIDConnection, KeycloakUMA
 import os
 from dotenv import load_dotenv
 
@@ -30,3 +30,20 @@ def get_keycloak_client():
         client_secret_key=os.getenv(keycloak_config["secret_env_var"]),
     )
     return client
+
+
+def get_keycloak_uma():
+    keycloak_connection = KeycloakOpenIDConnection(
+        server_url=server_url,
+        realm_name="concierge",
+        client_id=os.getenv(keycloak_config["id_env_var"]),
+        client_secret_key=os.getenv(keycloak_config["secret_env_var"]),
+        grant_type="client_credentials",
+    )
+    keycloak_uma = KeycloakUMA(connection=keycloak_connection)
+    return keycloak_uma
+
+
+def get_token_info(token):
+    keycloak_openid = get_keycloak_client()
+    return keycloak_openid.decode_token(token["access_token"], validate=False)

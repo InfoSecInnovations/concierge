@@ -29,13 +29,14 @@ def ingester_server(
     selected_collection,
     collections,
     client: OpenSearch,
+    token,
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
 
     collection_selector_server("collection_selector", selected_collection, collections)
     collection_create_server(
-        "collection_creator", selected_collection, collections, client
+        "collection_creator", selected_collection, collections, client, token
     )
     url_values = text_list_server("url_input_list", file_input_trigger)
 

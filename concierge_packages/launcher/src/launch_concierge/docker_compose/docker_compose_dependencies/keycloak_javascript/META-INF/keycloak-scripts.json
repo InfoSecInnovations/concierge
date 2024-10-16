@@ -1,0 +1,14 @@
+{
+    "policies": [
+        {
+            "name": "Owner Policy",
+            "fileName": "owner-policy.js",
+            "description": "The user owns the resource"
+        },
+        {
+            "name": "Test Policy",
+            "fileName": "test.js",
+            "description": "Testing"
+        }
+    ]
+}

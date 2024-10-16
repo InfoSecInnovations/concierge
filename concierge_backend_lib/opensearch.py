@@ -1,10 +1,13 @@
 import os
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch
+from concierge_util import load_config
+from .authorization import create_resource
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST", "localhost")
 OPENSEARCH_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
+config = load_config()
 
 
 def get_client():
@@ -23,7 +26,7 @@ def get_client():
     return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
 
 
-def ensure_collection(client: OpenSearch, collection_name: str):
+def ensure_collection(client: OpenSearch, collection_name: str, owner: str):
     index_name = f"{collection_name}.vectors"
     if not client.indices.exists(index_name):
         index_body = {
@@ -51,6 +54,10 @@ def ensure_collection(client: OpenSearch, collection_name: str):
         print(f"creating {collection_name}")
         try:
             client.indices.create(index_name, body=index_body)
+            if config and "auth" in config:
+                # TODO: verify if user can create collection
+                # TODO: select shared or private type
+                create_resource(collection_name, "collection:private", owner)
         except Exception as e:
             print(f"[ERROR]: {e}")
 
