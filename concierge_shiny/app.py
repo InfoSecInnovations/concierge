@@ -14,6 +14,7 @@ from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
 from concierge_backend_lib.opensearch import get_client
+from concierge_backend_lib.authentication import get_keycloak_client
 
 dotenv.load_dotenv()
 
@@ -33,6 +34,12 @@ def server(input: Inputs, output: Outputs, session: Session):
     token = get_auth_tokens(session, config)
     if config["auth"] and not token:
         return
+    if token:
+        try:
+            keycloak_openid = get_keycloak_client()
+            print(keycloak_openid.uma_permissions(token["access_token"]))
+        except Exception as e:
+            print(e)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")

@@ -11,4 +11,4 @@ services:
     volumes:
       - ./keycloak_import:/opt/keycloak/data/import
       - ./keycloak_javascript/concierge.jar:/opt/keycloak/providers/concierge.jar
-    command: start-dev --import-realm --auto-build --features=preview
+    command: start-dev --import-realm --auto-build --features=scripts

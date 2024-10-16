@@ -97,9 +97,13 @@
           "description": "",
           "composite": true,
           "composites": {
-            "realm": [
-              "default-roles-concierge"
-            ]
+            "client": {
+              "concierge-auth": [
+                "shared_read",
+                "shared_read_write",
+                "private_collection"
+              ]
+            }
           },
           "clientRole": true,
           "containerId": "7a3ec428-36f2-49c4-91b1-8288dc44acb0",
@@ -777,101 +781,22 @@
         "policyEnforcementMode": "ENFORCING",
         "resources": [
           {
-            "name": "collection 1",
-            "type": "collection:private",
+            "name": "collection:private:create",
+            "type": "collection:private:create",
             "ownerManagedAccess": false,
-            "displayName": "collection 1",
+            "displayName": "collection:private:create",
             "attributes": {},
             "uris": [],
-            "scopes": [
-              {
-                "name": "read"
-              },
-              {
-                "name": "update"
-              },
-              {
-                "name": "delete"
-              },
-              {
-                "name": "create"
-              }
-            ],
             "icon_uri": ""
           },
           {
-            "name": "collection 2",
-            "type": "collection:private",
+            "name": "collection:shared:create",
+            "type": "collection:shared:create",
             "ownerManagedAccess": false,
-            "displayName": "collection 2",
+            "displayName": "collection:shared:create",
             "attributes": {},
             "uris": [],
-            "scopes": [
-              {
-                "name": "read"
-              },
-              {
-                "name": "update"
-              },
-              {
-                "name": "delete"
-              },
-              {
-                "name": "create"
-              }
-            ],
             "icon_uri": ""
-          },
-          {
-            "name": "collection 3",
-            "type": "collection:shared",
-            "ownerManagedAccess": false,
-            "displayName": "collection 3",
-            "attributes": {
-              "shared": [
-                "true"
-              ]
-            },
-            "uris": [],
-            "scopes": [
-              {
-                "name": "read"
-              },
-              {
-                "name": "update"
-              },
-              {
-                "name": "delete"
-              },
-              {
-                "name": "create"
-              }
-            ],
-            "icon_uri": ""
-          },
-          {
-            "name": "test_collection_2",
-            "type": "collection:private",
-            "owner": {
-              "name": "testuser"
-            },
-            "ownerManagedAccess": false,
-            "attributes": {},
-            "uris": [],
-            "scopes": [
-              {
-                "name": "read"
-              },
-              {
-                "name": "update"
-              },
-              {
-                "name": "delete"
-              },
-              {
-                "name": "create"
-              }
-            ]
           }
         ],
         "policies": [
@@ -917,7 +842,18 @@
             }
           },
           {
-            "name": "private-read-write",
+            "name": "read-shared-policy",
+            "description": "",
+            "type": "role",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "fetchRoles": "false",
+              "roles": "[{\"id\":\"concierge-auth/shared_read\",\"required\":false}]"
+            }
+          },
+          {
+            "name": "private-read-edit",
             "description": "",
             "type": "scope",
             "logic": "POSITIVE",
@@ -925,11 +861,11 @@
             "config": {
               "defaultResourceType": "collection:private",
               "applyPolicies": "[\"admin-policy\"]",
-              "scopes": "[\"read\",\"create\",\"delete\",\"update\"]"
+              "scopes": "[\"delete\",\"read\",\"update\"]"
             }
           },
           {
-            "name": "shared-read-write",
+            "name": "shared-read-edit",
             "description": "",
             "type": "scope",
             "logic": "POSITIVE",
@@ -937,11 +873,11 @@
             "config": {
               "defaultResourceType": "collection:shared",
               "applyPolicies": "[\"shared-read-write-policy\"]",
-              "scopes": "[\"read\",\"create\",\"delete\",\"update\"]"
+              "scopes": "[\"delete\",\"read\",\"update\"]"
             }
           },
           {
-            "name": "own-collection-read-write",
+            "name": "own-collection-read-edit",
             "description": "",
             "type": "scope",
             "logic": "POSITIVE",
@@ -949,7 +885,41 @@
             "config": {
               "defaultResourceType": "collection:private",
               "applyPolicies": "[\"is-owner-policy\",\"access-own-collection-policy\"]",
-              "scopes": "[\"read\",\"create\",\"delete\",\"update\"]"
+              "scopes": "[\"delete\",\"read\",\"update\"]"
+            }
+          },
+          {
+            "name": "own-collection-create",
+            "description": "",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "defaultResourceType": "collection:private:create",
+              "applyPolicies": "[\"access-own-collection-policy\"]"
+            }
+          },
+          {
+            "name": "shared-create",
+            "description": "",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "defaultResourceType": "collection:shared:create",
+              "applyPolicies": "[\"shared-read-write-policy\"]"
+            }
+          },
+          {
+            "name": "shared-read",
+            "description": "",
+            "type": "scope",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "defaultResourceType": "collection:shared",
+              "applyPolicies": "[\"read-shared-policy\"]",
+              "scopes": "[\"read\"]"
             }
           }
         ],
@@ -963,18 +933,11 @@
             "iconUri": ""
           },
           {
-            "name": "create",
-            "iconUri": ""
-          },
-          {
             "name": "delete",
             "iconUri": ""
-          },
-          {
-            "name": "cread"
           }
         ],
-        "decisionStrategy": "UNANIMOUS"
+        "decisionStrategy": "AFFIRMATIVE"
       }
     },
     {
@@ -1796,14 +1759,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "saml-user-property-mapper",
             "oidc-address-mapper",
+            "oidc-usermodel-property-mapper",
             "oidc-full-name-mapper",
             "saml-role-list-mapper",
-            "saml-user-attribute-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "saml-user-property-mapper",
             "oidc-usermodel-attribute-mapper",
-            "oidc-usermodel-property-mapper",
-            "oidc-sha256-pairwise-sub-mapper"
+            "saml-user-attribute-mapper"
           ]
         }
       },
@@ -1850,14 +1813,14 @@
         "subComponents": {},
         "config": {
           "allowed-protocol-mapper-types": [
-            "saml-role-list-mapper",
             "oidc-usermodel-property-mapper",
+            "oidc-sha256-pairwise-sub-mapper",
+            "saml-role-list-mapper",
+            "oidc-address-mapper",
+            "saml-user-property-mapper",
             "oidc-full-name-mapper",
             "oidc-usermodel-attribute-mapper",
-            "saml-user-attribute-mapper",
-            "saml-user-property-mapper",
-            "oidc-address-mapper",
-            "oidc-sha256-pairwise-sub-mapper"
+            "saml-user-attribute-mapper"
           ]
         }
       }

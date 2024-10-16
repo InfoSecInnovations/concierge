@@ -63,13 +63,11 @@ def get_auth_tokens(session, config):
         keycloak_openid.userinfo(
             parsed_token["access_token"]
         )  # TODO: maybe do something with the user info?
-    except Exception as e:
-        print(f"userinfo call failed: {e}")
+    except Exception:
 
         @render.ui
         def concierge_main():
             return ui.tags.script('window.location.href = "/refresh"')
 
         return None
-
     return parsed_token
