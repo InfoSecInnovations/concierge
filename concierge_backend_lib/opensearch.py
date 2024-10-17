@@ -2,7 +2,6 @@ import os
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch
 from concierge_util import load_config
-from .authorization import create_resource
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST", "localhost")
@@ -26,40 +25,32 @@ def get_client():
     return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
 
 
-def ensure_collection(client: OpenSearch, collection_name: str, owner: str):
-    index_name = f"{collection_name}.vectors"
-    if not client.indices.exists(index_name):
-        index_body = {
-            "aliases": {collection_name: {"is_write_index": True}},
-            "settings": {"index": {"knn": True}},
-            "mappings": {
-                "properties": {
-                    "document_vector": {
-                        "type": "knn_vector",
-                        "dimension": 384,
-                        "method": {
-                            "name": "hnsw",
-                            "space_type": "cosinesimil",
-                            "engine": "lucene",
-                            "parameters": {},
-                        },
+def create_collection_index(collection_id):
+    client = get_client()
+    index_name = f"{collection_id}.vectors"
+    index_body = {
+        "aliases": {collection_id: {"is_write_index": True}},
+        "settings": {"index": {"knn": True}},
+        "mappings": {
+            "properties": {
+                "document_vector": {
+                    "type": "knn_vector",
+                    "dimension": 384,
+                    "method": {
+                        "name": "hnsw",
+                        "space_type": "cosinesimil",
+                        "engine": "lucene",
+                        "parameters": {},
                     },
-                    "page_index": {"type": "keyword"},
-                    "page_id": {"type": "keyword"},
-                    "doc_index": {"type": "keyword"},
-                    "doc_id": {"type": "keyword"},
-                }
-            },
-        }
-        print(f"creating {collection_name}")
-        try:
-            client.indices.create(index_name, body=index_body)
-            if config and "auth" in config:
-                # TODO: verify if user can create collection
-                # TODO: select shared or private type
-                create_resource(collection_name, "collection:private", owner)
-        except Exception as e:
-            print(f"[ERROR]: {e}")
+                },
+                "page_index": {"type": "keyword"},
+                "page_id": {"type": "keyword"},
+                "doc_index": {"type": "keyword"},
+                "doc_id": {"type": "keyword"},
+            }
+        },
+    }
+    client.indices.create(index_name, body=index_body)
 
 
 def get_collections(client: OpenSearch, index_pattern="*"):

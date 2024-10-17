@@ -1,8 +1,8 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from concierge_backend_lib.opensearch import get_collections, ensure_collection
-from concierge_backend_lib.authentication import get_token_info
+from concierge_backend_lib.opensearch import get_collections
+from concierge_backend_lib.collections import create_collection
 from isi_util.async_single import asyncify
 import os
 from markdown_renderer import md
@@ -248,12 +248,14 @@ def collection_create_server(
     new_collection_name = text_input_enter_server("new_collection", creating)
 
     @reactive.extended_task
-    async def create_collection(collection_name):
-        owner = None
-        if token:
-            token_info = get_token_info(token)
-            owner = token_info["preferred_username"]
-        await asyncify(ensure_collection, client, collection_name, owner)
+    async def create_concierge_collection(collection_name):
+        # TODO: select private or shared
+        await asyncify(
+            create_collection,
+            token and token["access_token"],
+            collection_name,
+            "private",
+        )
         selected_collection.set(collection_name)
         print(f"created collection {collection_name}")
         collections.set(await asyncify(get_collections, client))
@@ -267,4 +269,4 @@ def collection_create_server(
         if not new_name:
             return
         creating.set(True)
-        create_collection(new_name)
+        create_concierge_collection(new_name)
