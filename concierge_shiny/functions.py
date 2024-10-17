@@ -3,7 +3,7 @@ from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
-from concierge_backend_lib.opensearch import get_collections
+from concierge_backend_lib.collections import get_collections
 from isi_util.async_single import asyncify
 
 
@@ -82,5 +82,5 @@ async def load_llm_model(model_name):
 
 
 @reactive.extended_task
-async def set_collections(client, collections):
-    collections.set(await asyncify(get_collections, client))
+async def set_collections(token, collections):
+    collections.set(await asyncify(get_collections, token["access_token"]))

@@ -84,7 +84,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     def update_collections():
         if opensearch_status.get():
-            set_collections(client, collections)
+            set_collections(token, collections)
         else:
             collections.set([])
 

@@ -6,12 +6,13 @@ from components import (
     collection_selector_server,
 )
 from isi_util.async_single import asyncify
+from isi_util.list_util import find
 from concierge_backend_lib.opensearch import (
-    get_collections,
     delete_collection,
     get_documents,
     delete_document,
 )
+from concierge_backend_lib.collections import get_collections
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
@@ -122,7 +123,9 @@ def collection_management_server(
     def collection_view():
         if selected_collection.get():
             return ui.TagList(
-                ui.markdown(f"### Selected collection: {selected_collection.get()}"),
+                ui.markdown(
+                    f"### Selected collection: {find(collections.get(), lambda collection: collection['_id'] == selected_collection.get())['name']}"
+                ),
                 ui.accordion(
                     ingester_ui("ingester"),
                     ui.accordion_panel(
@@ -159,12 +162,12 @@ def collection_management_server(
     @reactive.extended_task
     async def delete(collection_name):
         await asyncify(delete_collection, client, collection_name)
-        new_collections = await asyncify(get_collections, client)
+        new_collections = await asyncify(get_collections, token)
         collections.set(new_collections)
         if not new_collections:
             selected_collection.set(None)
         else:
-            selected_collection.set(new_collections[0])
+            selected_collection.set(new_collections[0]["_id"])
 
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)

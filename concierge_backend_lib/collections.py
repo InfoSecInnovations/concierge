@@ -1,6 +1,6 @@
 from concierge_util import load_config
 from typing import Literal
-from .authorization import authorize, create_resource
+from .authorization import authorize, create_resource, list_resources
 from .authentication import get_token_info
 from uuid import uuid4
 from .opensearch import create_collection_index
@@ -20,8 +20,22 @@ class UnauthorizedOperationError(Exception):
         self.message = message
 
 
-def get_collections():
-    pass
+def get_collections(token):
+    if auth_enabled:
+        try:
+            available_resources = list_resources(token)
+            # TODO: filter by collection resource types
+            return [
+                resource
+                for resource in available_resources
+                if resource["type"] == "collection:shared"
+                or resource["type"] == "collection:private"
+            ]
+        except Exception:
+            traceback.print_exc()
+    else:
+        # TODO: get list directly from OpenSearch
+        pass
 
 
 type Location = Literal["private", "shared"]
@@ -42,6 +56,7 @@ def create_collection(token, display_name: str, location: Location):
             resource_id = uuid4()
         create_collection_index(resource_id)
         print(f"created {location} collection {display_name} with ID {resource_id}")
+        return resource_id
     except Exception:
         traceback.print_exc()
 

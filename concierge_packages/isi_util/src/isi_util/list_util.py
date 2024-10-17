@@ -3,3 +3,7 @@ def find_index(li, func):
         if func(v):
             return i
     return -1
+
+
+def find(li, func):
+    return next(iter(filter(func, li)), None)
