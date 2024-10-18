@@ -243,7 +243,6 @@ def collection_create_server(
     session: Session,
     selected_collection,
     collections,
-    client,
     token,
 ):
     creating = reactive.value(False)

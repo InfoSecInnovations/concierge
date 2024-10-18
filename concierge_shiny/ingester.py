@@ -36,7 +36,7 @@ def ingester_server(
 
     collection_selector_server("collection_selector", selected_collection, collections)
     collection_create_server(
-        "collection_creator", selected_collection, collections, client, token
+        "collection_creator", selected_collection, collections, token
     )
     url_values = text_list_server("url_input_list", file_input_trigger)
 

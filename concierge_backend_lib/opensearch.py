@@ -97,7 +97,8 @@ def delete_collection_indices(collection_id: str):
     return True
 
 
-def get_documents(client: OpenSearch, collection_name: str):
+def get_opensearch_documents(collection_name: str):
+    client = get_client()
     # get all indices in alias
     indices = client.indices.resolve_index(collection_name)["aliases"][0]["indices"]
     # locate top level indices in collection alias
@@ -157,9 +158,8 @@ def get_documents(client: OpenSearch, collection_name: str):
     return docs
 
 
-def delete_document(
-    client: OpenSearch, collection_name: str, doc_type: str, doc_id: str
-):
+def delete_opensearch_document(collection_name: str, doc_type: str, doc_id: str):
+    client = get_client()
     doc_index = f"{collection_name}.{doc_type}"
     query = {
         "query": {

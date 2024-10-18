@@ -9,6 +9,8 @@ from .opensearch import (
     create_index_mapping,
     delete_index_mapping,
     get_collection_mappings,
+    get_opensearch_documents,
+    delete_opensearch_document,
 )
 
 config = load_config()
@@ -83,8 +85,16 @@ def delete_collection(token, collection_id):
 
 
 def get_documents(token, collection_id):
-    pass
+    if auth_enabled:
+        authorized = authorize(token, collection_id, "read")
+        if not authorized:
+            raise UnauthorizedOperationError()
+    return get_opensearch_documents(collection_id)
 
 
 def delete_document(token, collection_id, document_type, document_id):
-    pass
+    if auth_enabled:
+        authorized = authorize(token, collection_id, "update")
+        if not authorized:
+            raise UnauthorizedOperationError()
+    return delete_opensearch_document(collection_id, document_type, document_id)

@@ -7,11 +7,12 @@ from components import (
 )
 from isi_util.async_single import asyncify
 from isi_util.list_util import find
-from concierge_backend_lib.opensearch import (
+from concierge_backend_lib.collections import (
+    get_collections,
+    delete_collection,
     get_documents,
     delete_document,
 )
-from concierge_backend_lib.collections import get_collections, delete_collection
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
@@ -42,7 +43,7 @@ def document_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client,
+    token,
     collection,
     doc,
     deletion_callback,
@@ -52,7 +53,9 @@ def document_server(
     @ui.bind_task_button(button_id="delete_doc")
     @reactive.extended_task
     async def delete():
-        await asyncify(delete_document, client, collection, doc["type"], doc["id"])
+        await asyncify(
+            delete_document, token["access_token"], collection, doc["type"], doc["id"]
+        )
         deleting.set(False)
 
     @reactive.effect
@@ -93,7 +96,7 @@ def collection_management_server(
     token,
 ):
     collection_create_server(
-        "collection_create", selected_collection, collections, client, token
+        "collection_create", selected_collection, collections, token
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server(
@@ -174,8 +177,8 @@ def collection_management_server(
         delete(selected_collection.get())
 
     @reactive.extended_task
-    async def get_documents_task(collection_name):
-        docs = await asyncify(get_documents, client, collection_name)
+    async def get_documents_task(collection_id):
+        docs = await asyncify(get_documents, token["access_token"], collection_id)
         fetching_docs.set(False)
         current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
 
@@ -194,5 +197,5 @@ def collection_management_server(
     def document_servers():
         for doc in current_docs.get():
             document_server(
-                doc["el_id"], client, selected_collection.get(), doc, on_delete_document
+                doc["el_id"], token, selected_collection.get(), doc, on_delete_document
             )
