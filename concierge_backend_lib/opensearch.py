@@ -6,6 +6,7 @@ from concierge_util import load_config
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST", "localhost")
 OPENSEARCH_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
+MAPPING_INDEX_NAME = "collection_mappings"
 config = load_config()
 
 
@@ -53,30 +54,45 @@ def create_collection_index(collection_id):
     client.indices.create(index_name, body=index_body)
 
 
-def get_collections(client: OpenSearch, index_pattern="*"):
-    try:
-        response = client.indices.get(index_pattern, allow_no_indices=True)
-        # TODO: can we do this in OpenSearch somehow?
-        response = [
-            list(index["aliases"].keys())[0]
-            for index in response.values()
-            if "document_vector" in index["mappings"]["properties"]
-            and index["mappings"]["properties"]["document_vector"]["type"]
-            == "knn_vector"
-        ]
-        return response
-    except Exception as e:
-        print(f"[ERROR]: {e}")
-        return []
+def create_index_mapping(collection_id, collection_name):
+    client = get_client()
+    if not client.indices.exists(MAPPING_INDEX_NAME):
+        index_body = {
+            "mappings": {"properties": {"collection_name": {"type": "keyword"}}}
+        }
+        client.indices.create(MAPPING_INDEX_NAME, body=index_body)
+    client.index(
+        MAPPING_INDEX_NAME, body={"collection_name": collection_name}, id=collection_id
+    )
 
 
-def delete_collection(client: OpenSearch, collection_name: str):
+def delete_index_mapping(collection_id):
+    client = get_client()
+    client.delete(MAPPING_INDEX_NAME, id=collection_id)
+
+
+def get_collection_mappings():
+    client = get_client()
+    query = {
+        "size": 10000,  # this is the maximum allowed value
+        "query": {"match_all": {}},
+    }
+    response = client.search(body=query, index=MAPPING_INDEX_NAME)
+    collections = [
+        {"name": hit["_source"]["name"], "_id": hit["_id"]}
+        for hit in response["hits"]["hits"]
+    ]
+    return collections
+
+
+def delete_collection_indices(collection_id: str):
+    client = get_client()
     # get all indices in alias
-    indices = client.indices.resolve_index(collection_name)["aliases"][0]["indices"]
+    indices = client.indices.resolve_index(collection_id)["aliases"][0]["indices"]
     # deleting all indices also removes the alias
     response = client.indices.delete(index=",".join(indices))
     if not response["acknowledged"]:
-        print(f"Failed to delete indices for {collection_name}")
+        print(f"Failed to delete indices for {collection_id}")
         return False
     return True
 
@@ -96,7 +112,7 @@ def get_documents(client: OpenSearch, collection_name: str):
         return []
     # get documents from all of these
     query = {
-        "size": 10000,  # this is the maximum number of results
+        "size": 10000,  # this is the maximum allowed value
         "query": {"match_all": {}},
     }
     response = client.search(body=query, index=",".join(top_level))

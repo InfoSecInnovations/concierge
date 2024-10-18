@@ -42,7 +42,6 @@ def create_resource(resource_name, resource_type, owner):
 
 
 def list_resources(token):
-    # try:
     keycloak_openid = get_keycloak_client()
     response = keycloak_openid.uma_permissions(token)
     admin_client = get_keycloak_admin_client()
@@ -54,5 +53,6 @@ def list_resources(token):
     return resources
 
 
-# except Exception as e:
-#     return []
+def delete_resource(resource_id):
+    keycloak_uma = get_keycloak_uma()
+    keycloak_uma.resource_set_delete(resource_id)

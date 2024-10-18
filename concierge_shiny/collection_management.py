@@ -8,11 +8,10 @@ from components import (
 from isi_util.async_single import asyncify
 from isi_util.list_util import find
 from concierge_backend_lib.opensearch import (
-    delete_collection,
     get_documents,
     delete_document,
 )
-from concierge_backend_lib.collections import get_collections
+from concierge_backend_lib.collections import get_collections, delete_collection
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
@@ -160,9 +159,9 @@ def collection_management_server(
 
     @ui.bind_task_button(button_id="delete")
     @reactive.extended_task
-    async def delete(collection_name):
-        await asyncify(delete_collection, client, collection_name)
-        new_collections = await asyncify(get_collections, token)
+    async def delete(collection_id):
+        await asyncify(delete_collection, token["access_token"], collection_id)
+        new_collections = await asyncify(get_collections, token["access_token"])
         collections.set(new_collections)
         if not new_collections:
             selected_collection.set(None)
