@@ -46,8 +46,8 @@ def prompter_server(
     selected_collection,
     collections,
     opensearch_status,
-    client,
     ollama_status,
+    token,
 ):
     llm_loaded = reactive.value(False)
     current_file_id = reactive.value(0)
@@ -122,13 +122,15 @@ def prompter_server(
             chat.update_user_input(placeholder=tasks[selected_task]["greeting"])
 
     def stream_response(
-        collection_name, user_input, task, persona, selected_enhancers, source_file
+        collection_id, user_input, task, persona, selected_enhancers, source_file
     ):
-        context = get_context(client, collection_name, REFERENCE_LIMIT, user_input)
+        context = get_context(
+            token["access_token"], collection_id, REFERENCE_LIMIT, user_input
+        )
         if len(context["sources"]):
             yield "Responding based on the following sources:\n\n"
             for source in context["sources"]:
-                yield f"{page_link(collection_name, source)}\n\n"
+                yield f"{page_link(collection_id, source)}\n\n"
             if "prompt" in tasks[task]:
                 yield get_response(
                     context["context"],
@@ -149,7 +151,7 @@ def prompter_server(
 
     @chat.on_user_submit
     async def on_chat_submit():
-        collection_name = selected_collection.get()
+        collection_id = selected_collection.get()
         task = input.task_select()
         persona = input.persona_select()
         selected_enhancers = input.enhancers_select()
@@ -160,7 +162,7 @@ def prompter_server(
                 file_contents = file.read()
         await chat.append_message_stream(
             stream_response(
-                collection_name,
+                collection_id,
                 chat.user_input(),
                 task,
                 persona,

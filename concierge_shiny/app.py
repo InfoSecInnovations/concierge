@@ -13,7 +13,6 @@ import dotenv
 from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
-from concierge_backend_lib.opensearch import get_client
 from collections_data import CollectionsData
 
 dotenv.load_dotenv()
@@ -38,7 +37,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections = reactive.value(CollectionsData(collections=[], loading=True))
-    client = get_client()
 
     @render.ui
     def concierge_main():
@@ -69,8 +67,8 @@ def server(input: Inputs, output: Outputs, session: Session):
         selected_collection,
         collections,
         opensearch_status,
-        client,
         ollama_status,
+        token,
     )
     collection_management_server(
         "collection_management",

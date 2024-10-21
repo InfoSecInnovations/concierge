@@ -9,7 +9,7 @@ from concierge_util import load_config
 
 
 class UnauthorizedOperationError(Exception):
-    def __init__(self, message):
+    def __init__(self, message=""):
         self.message = message
 
 

@@ -1,4 +1,4 @@
-from shiny import module, reactive, ui, render, Inputs, Outputs, Session
+from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from components import (
     collection_create_ui,
     collection_create_server,
@@ -192,6 +192,7 @@ def collection_management_server(
         ignore_none=False,
     )
     def on_collection_change():
+        req(selected_collection.get())
         fetching_docs.set(True)
         get_documents_task(selected_collection.get())
 

@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
-from opensearchpy import OpenSearch, helpers
+from opensearchpy import helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from tqdm import tqdm
 from concierge_backend_lib.embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument
 from dataclasses import fields
@@ -126,16 +125,3 @@ def insert(
         )
         yield (index, total)
     helpers.bulk(client, entries, refresh=True)
-
-
-def insert_with_tqdm(
-    client: OpenSearch,
-    collection_name: str,
-    document: ConciergeDocument,
-    binary: bytes | None = None,
-):
-    page_progress = tqdm(total=len(document.pages))
-    for x in insert(client, collection_name, document, binary):
-        page_progress.n = x[0] + 1
-        page_progress.refresh()
-    page_progress.close()

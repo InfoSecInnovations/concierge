@@ -97,10 +97,10 @@ def delete_collection_indices(collection_id: str):
     return True
 
 
-def get_opensearch_documents(collection_name: str):
+def get_opensearch_documents(collection_id: str):
     client = get_client()
     # get all indices in alias
-    indices = client.indices.resolve_index(collection_name)["aliases"][0]["indices"]
+    indices = client.indices.resolve_index(collection_id)["aliases"][0]["indices"]
     # locate top level indices in collection alias
     mappings = client.indices.get_mapping(",".join(indices))
     top_level = [
@@ -137,7 +137,7 @@ def get_opensearch_documents(collection_name: str):
                 }
             }
         }
-        doc["page_count"] = client.count(body=query, index=collection_name)["count"]
+        doc["page_count"] = client.count(body=query, index=collection_id)["count"]
         query = {
             "query": {
                 "bool": {
@@ -153,14 +153,14 @@ def get_opensearch_documents(collection_name: str):
                 }
             }
         }
-        doc["vector_count"] = client.count(body=query, index=collection_name)["count"]
+        doc["vector_count"] = client.count(body=query, index=collection_id)["count"]
 
     return docs
 
 
-def delete_opensearch_document(collection_name: str, doc_type: str, doc_id: str):
+def delete_opensearch_document(collection_id: str, doc_type: str, doc_id: str):
     client = get_client()
-    doc_index = f"{collection_name}.{doc_type}"
+    doc_index = f"{collection_id}.{doc_type}"
     query = {
         "query": {
             "bool": {
@@ -171,7 +171,7 @@ def delete_opensearch_document(collection_name: str, doc_type: str, doc_id: str)
             }
         }
     }
-    response = client.delete_by_query(body=query, index=collection_name)
+    response = client.delete_by_query(body=query, index=collection_id)
     deleted_count = response["deleted"]
     client.delete(doc_index, doc_id, refresh=True)
     return deleted_count + 1

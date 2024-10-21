@@ -2,68 +2,19 @@ import json
 import requests
 import os
 from dotenv import load_dotenv
-from opensearchpy import OpenSearch
-from concierge_backend_lib.embeddings import create_embeddings
+from .opensearch_prompting import get_context_from_opensearch
+from .authorization import auth_enabled, authorize, UnauthorizedOperationError
 
 load_dotenv()
 HOST = os.getenv("OLLAMA_HOST") or "localhost"
 
 
-def get_context(
-    client: OpenSearch, collection_name: str, reference_limit: int, user_input: str
-):
-    query = {
-        "size": reference_limit,
-        "query": {
-            "knn": {
-                "document_vector": {
-                    "vector": create_embeddings(user_input),
-                    "min_score": 0.8,  # this is quite a magic number, tweak as needed!
-                }
-            }
-        },
-        "_source": {"includes": ["page_index", "page_id", "text"]},
-    }
-
-    response = client.search(body=query, index=f"{collection_name}.vectors")
-
-    hits = [hit["_source"] for hit in response["hits"]["hits"]]
-
-    page_metadata = {}
-
-    for hit in hits:
-        if hit["page_index"] not in page_metadata:
-            page_metadata[hit["page_index"]] = {}
-        if hit["page_id"] not in page_metadata[hit["page_index"]]:
-            response = client.get(hit["page_index"], hit["page_id"])
-            page_metadata[hit["page_index"]][hit["page_id"]] = response["_source"]
-
-    doc_metadata = {}
-
-    for item in page_metadata.values():
-        for value in item.values():
-            if value["doc_index"] not in doc_metadata:
-                doc_metadata[value["doc_index"]] = {}
-            if value["doc_id"] not in doc_metadata[value["doc_index"]]:
-                response = client.get(value["doc_index"], value["doc_id"])
-                doc_metadata[value["doc_index"]][value["doc_id"]] = {
-                    **response["_source"],
-                    "id": value["doc_id"],
-                }
-
-    sources = []
-
-    for hit in hits:
-        page = page_metadata[hit["page_index"]][hit["page_id"]]
-        doc = doc_metadata[page["doc_index"]][page["doc_id"]]
-        sources.append(
-            {"type": doc["type"], "page_metadata": page, "doc_metadata": doc}
-        )
-
-    return {
-        "context": "\n".join([hit["text"] for hit in hits]),
-        "sources": sources,
-    }
+def get_context(token, collection_id: str, reference_limit: int, user_input: str):
+    if auth_enabled:
+        authorized = authorize(token, collection_id, "read")
+        if not authorized:
+            raise UnauthorizedOperationError()
+    return get_context_from_opensearch(collection_id, reference_limit, user_input)
 
 
 def prepare_prompt(
