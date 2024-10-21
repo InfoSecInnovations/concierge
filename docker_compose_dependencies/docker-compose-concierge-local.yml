@@ -5,6 +5,7 @@ services:
     environment:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
+      - KEYCLOAK_HOST=keycloak
     ports:
       - ${WEB_PORT:-15130}:15130
     restart: unless-stopped

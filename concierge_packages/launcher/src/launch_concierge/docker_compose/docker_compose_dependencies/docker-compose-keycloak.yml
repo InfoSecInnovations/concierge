@@ -7,6 +7,8 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - KC_BOOTSTRAP_ADMIN_PASSWORD=${KEYCLOAK_INITIAL_ADMIN_PASSWORD}
+      - CONCIERGE_HOST=${WEB_HOST:-localhost}
+      - CONCIERGE_PORT=${WEB_PORT:-15130}
     restart: unless-stopped
     volumes:
       - ./keycloak_import:/opt/keycloak/data/import

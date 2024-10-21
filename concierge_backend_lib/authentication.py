@@ -9,22 +9,21 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+KEYCLOAK_HOST = os.getenv("KEYCLOAK_HOST", "localhost")
+
+# TODO: select HTTPS if enabled
+server_url = f"http://{KEYCLOAK_HOST}:8080"
 
 keycloak_config = {
-    # TODO: select HTTPS if enabled
-    # TODO: select keycloak host if running in container
-    "url": "http://localhost:8080/realms/concierge/.well-known/openid-configuration",
     "display_name": "Keycloak",
     "id_env_var": "KEYCLOAK_CLIENT_ID",
     "roles_key": "roles",
     "secret_env_var": "KEYCLOAK_CLIENT_SECRET",
 }
 
-keycloak_openid_config = requests.get(keycloak_config["url"]).json()
-
-# TODO: select HTTPS if enabled
-# TODO: select keycloak host if running in container
-server_url = "http://localhost:8080"
+keycloak_openid_config = requests.get(
+    f"{server_url}/realms/concierge/.well-known/openid-configuration"
+).json()
 
 
 def get_keycloak_client():

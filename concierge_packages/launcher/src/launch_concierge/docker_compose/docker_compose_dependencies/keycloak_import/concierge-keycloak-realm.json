@@ -449,6 +449,9 @@
       "clientRoles": {
         "concierge-auth": [
           "uma_protection"
+        ],
+        "realm-management": [
+          "realm-admin"
         ]
       },
       "notBefore": 0,
@@ -680,12 +683,12 @@
       "alwaysDisplayInConsole": false,
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
-        "http://localhost:15130/callback",
-        "https://localhost:15130/callback"
+        "http://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback",
+        "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback"
       ],
       "webOrigins": [
-        "https://localhost:15130",
-        "http://localhost:15130"
+        "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}",
+        "http://${CONCIERGE_HOST}:${CONCIERGE_PORT}"
       ],
       "notBefore": 0,
       "bearerOnly": false,
@@ -797,6 +800,28 @@
             "attributes": {},
             "uris": [],
             "icon_uri": ""
+          },
+          {
+            "name": "gwanoose",
+            "type": "collection:private",
+            "owner": {
+              "name": "testadmin"
+            },
+            "ownerManagedAccess": false,
+            "displayName": "gwanoose",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+              {
+                "name": "read"
+              },
+              {
+                "name": "update"
+              },
+              {
+                "name": "delete"
+              }
+            ]
           }
         ],
         "policies": [

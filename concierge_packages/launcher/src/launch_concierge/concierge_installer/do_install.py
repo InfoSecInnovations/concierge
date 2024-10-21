@@ -19,6 +19,9 @@ def do_install(
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
+    # Keycloak needs the host and port to be set before as these are piped into the initial realm config
+    set_key(".env", "WEB_HOST", argument_processor.parameters["host"])
+    set_key(".env", "WEB_PORT", str(argument_processor.parameters["port"]))
     if argument_processor.parameters["enable_security"]:
         # TODO: if security is already enabled, we shouldn't set it up again, criteria? keycloak container exists?
         keycloak_password = get_strong_password(
@@ -88,7 +91,6 @@ def do_install(
         )
         set_key(".env", "KEYCLOAK_SERVICE_FILE", "docker-compose-blank.yml")
     set_key(".env", "ENVIRONMENT", environment)
-    set_key(".env", "WEB_PORT", str(argument_processor.parameters["port"]))
     set_key(".env", "CONCIERGE_VERSION", version("launch_concierge"))
     set_key(
         ".env",

@@ -90,6 +90,17 @@ install_arguments = [
         output_type=ArgumentData.OutputType.int,
     ),
     ArgumentData(
+        key="host",
+        help="Which host IP/name will you be using to access the Concierge web UI?",
+        description=[
+            "Which host IP/name will you be using to access the Concierge web UI?",
+            "Keep the default setting if you're using Concierge locally.",
+        ],
+        default="localhost",
+        prompt="host?",
+        case_sensitive=True,
+    ),
+    ArgumentData(
         key="port",
         help="Which port should the Concierge web UI be served on?",
         description=["Which port should the Concierge web UI be served on?"],

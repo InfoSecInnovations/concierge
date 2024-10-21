@@ -2,7 +2,7 @@ import json
 import requests
 import os
 
-HOST = os.getenv("OLLAMA_HOST") or "localhost"
+HOST = os.getenv("OLLAMA_HOST", "localhost")
 
 
 def create_embeddings(text):
