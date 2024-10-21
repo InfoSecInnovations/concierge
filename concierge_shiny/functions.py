@@ -5,6 +5,7 @@ from isi_util.async_generator import asyncify_generator
 import humanize
 from concierge_backend_lib.collections import get_collections
 from isi_util.async_single import asyncify
+from collections_data import CollectionsData
 
 
 def doc_url(collection_name, doc_type, doc_id):
@@ -83,4 +84,10 @@ async def load_llm_model(model_name):
 
 @reactive.extended_task
 async def set_collections(token, collections):
-    collections.set(await asyncify(get_collections, token["access_token"]))
+    collections.set(CollectionsData(collections=[], loading=True))
+    collections.set(
+        CollectionsData(
+            collections=await asyncify(get_collections, token["access_token"]),
+            loading=False,
+        )
+    )

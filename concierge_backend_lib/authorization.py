@@ -5,6 +5,16 @@ from .authentication import (
     get_keycloak_admin_client,
 )
 import requests
+from concierge_util import load_config
+
+
+class UnauthorizedOperationError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+
+config = load_config()
+auth_enabled = config and "auth" in config and config["auth"]
 
 
 def authorize(token, resource, scope: str | None = None):

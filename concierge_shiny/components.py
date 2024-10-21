@@ -5,6 +5,7 @@ from concierge_backend_lib.collections import create_collection, get_collections
 from isi_util.async_single import asyncify
 import os
 from markdown_renderer import md
+from collections_data import CollectionsData
 
 # --------
 # COLLECTION SELECTOR
@@ -32,7 +33,7 @@ def collection_selector_server(
             label="Select Collection",
             choices={
                 collection["_id"]: collection["name"]
-                for collection in collections.get()
+                for collection in collections.get().collections
             },
             selected=selected_collection.get(),
         )
@@ -257,7 +258,12 @@ def collection_create_server(
             collection_name,
             "private",
         )
-        collections.set(await asyncify(get_collections, token["access_token"]))
+        collections.set(
+            CollectionsData(
+                collections=await asyncify(get_collections, token["access_token"]),
+                loading=False,
+            )
+        )
         selected_collection.set(collection_id)
         creating.set(False)
 

@@ -17,6 +17,7 @@ from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
 from markdown_renderer import md
+from collections_data import CollectionsData
 
 # --------
 # DOCUMENT
@@ -92,7 +93,6 @@ def collection_management_server(
     selected_collection,
     collections,
     opensearch_status,
-    client,
     token,
 ):
     collection_create_server(
@@ -100,7 +100,7 @@ def collection_management_server(
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server(
-        "ingester", selected_collection, collections, client, token
+        "ingester", selected_collection, collections, token
     )
 
     document_delete_trigger = reactive.value(0)
@@ -126,7 +126,7 @@ def collection_management_server(
         if selected_collection.get():
             return ui.TagList(
                 ui.markdown(
-                    f"### Selected collection: {find(collections.get(), lambda collection: collection['_id'] == selected_collection.get())['name']}"
+                    f"### Selected collection: {find(collections.get().collections, lambda collection: collection['_id'] == selected_collection.get())['name']}"
                 ),
                 ui.accordion(
                     ingester_ui("ingester"),
@@ -140,6 +140,8 @@ def collection_management_server(
                 ),
                 ui.input_task_button(id="delete", label="Delete Collection"),
             )
+        if collections.get().loading:
+            return ui.markdown("Loading collections...")
         return ui.markdown("Please create a collection first!")
 
     @render.ui
@@ -165,7 +167,7 @@ def collection_management_server(
     async def delete(collection_id):
         await asyncify(delete_collection, token["access_token"], collection_id)
         new_collections = await asyncify(get_collections, token["access_token"])
-        collections.set(new_collections)
+        collections.set(CollectionsData(collections=new_collections, loading=False))
         if not new_collections:
             selected_collection.set(None)
         else:

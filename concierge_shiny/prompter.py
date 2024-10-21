@@ -73,7 +73,7 @@ def prompter_server(
     def prompter_ui():
         loaded = llm_loaded.get() and ollama_status.get() and opensearch_status.get()
         if loaded:
-            if not len(collections.get()):
+            if not len(collections.get().collections):
                 return ui.markdown(
                     "Please create a collection and ingest some documents into it first!"
                 )

@@ -1,6 +1,6 @@
 from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 from tqdm import tqdm
-from concierge_backend_lib.ingesting import insert
+from concierge_backend_lib.ingesting import insert_document
 from concierge_backend_lib.loading import load_file
 from loaders.web import WebLoader
 from loaders.base_loader import ConciergeDocument
@@ -11,7 +11,6 @@ from components import (
     text_list_ui,
     text_list_server,
 )
-from opensearchpy import OpenSearch
 
 
 @module.ui
@@ -28,7 +27,6 @@ def ingester_server(
     session: Session,
     selected_collection,
     collections,
-    client: OpenSearch,
     token,
 ):
     file_input_trigger = reactive.value(0)
@@ -57,7 +55,7 @@ def ingester_server(
 
     async def load_doc(
         doc: ConciergeDocument,
-        collection_name: str,
+        collection_id: str,
         label: str,
         binary: bytes | None = None,
     ):
@@ -65,14 +63,14 @@ def ingester_server(
         with ui.Progress(0, len(doc.pages)) as p:
             p.set(0, message=f"{label}: loading...")
             async for x in asyncify_generator(
-                insert(client, collection_name, doc, binary)
+                insert_document(token["access_token"], collection_id, doc, binary)
             ):
                 p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")
                 page_progress.n = x[0] + 1
                 page_progress.refresh()
         page_progress.close()
 
-    async def ingest_files(files: list[dict], collection_name: str):
+    async def ingest_files(files: list[dict], collection_id: str):
         for file in files:
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
@@ -81,16 +79,16 @@ def ingester_server(
             doc = load_file(file["datapath"])
             doc.metadata.filename = file["name"]
             if doc:
-                await load_doc(doc, collection_name, file["name"], binary)
+                await load_doc(doc, collection_id, file["name"], binary)
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
-    async def ingest_urls(urls: list[str], collection_name: str):
+    async def ingest_urls(urls: list[str], collection_id: str):
         for url in urls:
             print(url)
             ui.notification_show(f"Processing {url}")
             doc = WebLoader.load(url)
-            await load_doc(doc, collection_name, url)
+            await load_doc(doc, collection_id, url)
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 
@@ -112,11 +110,11 @@ def ingester_server(
             files = input.ingester_files()
         if (not urls or not len(urls)) and (not files or not len(files)):
             return
-        collection_name = selected_collection.get()
-        print(f"ingesting documents into collection {collection_name}")
+        collection_id = selected_collection.get()
+        print(f"ingesting documents into collection {collection_id}")
         del input.ingester_files
         file_input_trigger.set(file_input_trigger.get() + 1)
         # we have to pass reactive reads into an async function rather than calling from within
-        ingest(files, urls, collection_name, ingesting_done.get())
+        ingest(files, urls, collection_id, ingesting_done.get())
 
     return ingesting_done
