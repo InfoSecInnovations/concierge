@@ -44,7 +44,7 @@ def create_resource(resource_name, resource_type, owner):
             "name": resource_name,
             "displayName": resource_name,
             "type": resource_type,
-            "owner": owner,
+            "attributes": {"concierge_owner": owner},
             "scopes": ["read", "update", "delete"],
         }
     )

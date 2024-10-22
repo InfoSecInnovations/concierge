@@ -1,10 +1,10 @@
 var permission = $evaluation.getPermission()
 var resource = permission.getResource()
-var owner = resource.getOwner()
+var conciergeOwner = resource.getAttribute("concierge_owner").asString(0)
 var context = $evaluation.getContext()
 var identity = context.getIdentity()
 var id = identity.getId()
 
-if (owner == id) {
+if (conciergeOwner == id) {
     $evaluation.grant()
 }

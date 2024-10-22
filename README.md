@@ -40,13 +40,9 @@ You should perform the following system configuration steps according to your Op
 
 ## Setup
 
-The provided install scripts perform a lot of automated cleanup and ensure that all the components are configured correctly to work together, so we strongly recommend you use these instead of attempting the manual install. However if you need to customize the Docker environment the manual steps may help you find what you need to be able to do so.
+The provided install scripts perform a lot of automated cleanup and ensure that all the components are configured correctly to work together. However as this is an open source project you could create your own installation using the contents of this repository.
 
-### Quick install (Recommended)
-
-You no longer need to clone this repository.
-
-You have a couple of options depending on your preferences.
+You no longer need to clone this repository to run Concierge.
 
 > [!TIP]
 > Pay attention to the use of dashes and underscores in the commands!
@@ -68,39 +64,67 @@ If you prefer to keep things contained in a virtual environment you can use the 
 `install_concierge`
 
 Answer the questions and then the installer will ask if you are ready to make changes to the system.  
-Answer "yes" and let the downloading begin!
+Answer "yes" and let the installation begin!
+There may be additional questions during the installation depending on the options you selected.
 
-Please note that the package isn't the Concierge app itself, it's just a utility that helps you configure the environment and launch the correct Docker Compose file based on your choices, so it shouldn't be hugely risky to download it without using a virtual environment.
+Please note that this package isn't the Concierge app itself, it's just a utility that helps you configure the environment and launch the correct Docker Compose file based on your choices, so it shouldn't be hugely risky to download it without using a virtual environment.
 
-### Manual install
+## Configuring Authentication and Authorization
 
-If you would prefer to configure and launch the app without going through our utility script it is also fairly straightforward:
+If you chose to enable login and access controls during installation, you will have to configure the Keycloak instance we have provided to set up some users with the appropriate permissions.
 
-Create a file called `.env` following the template of `.env.example` in this repository.
+Start by opening up localhost:8080 in your browser. Here you should see the Keycloak login page, input the username `admin` and the password you set during installation.
 
-From `concierge_packages/launcher/src/launch_concierge/docker_compose` copy `docker_compose_dependencies`.
+You should refer to the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html) to find out how to configure the type of login you wish to support. You can enable a variety of social network logins, OpenID, LDAP or just username and password.
 
-From the same directory, if you wish to use the CPU only, copy `docker-compose.yml`, if you wish to use GPU acceleration where available, copy `docker-compose-gpu.yml` instead.
+The configuration we have supplied has already created the super admin user (the one you used to connect to Keycloak above), and a realm called `concierge` with some roles the provide various levels of access to Concierge. Make sure to configure logins and users in this realm and not the master realm.
 
-To launch the CPU compose file use `docker compose up -d`, to launch the GPU version you need to use `docker compose -f docker-compose-gpu.yml up -d`.
+The super admin user only serves to administrate the Keycloak instance, they do not have any permissions to access Concierge as a user.
+
+If using authorization, there are shared and private collections. A private collection can only be viewed by the user who created it, a shared collection can be viewed by any user with required role. In the future we will add options to switch a collection from private to shared. If you need more specific permissions you can configure those in the `concierge-auth` client using the resources that represent collections.
+
+### Roles
+
+The roles that grant access to Concierge collections can be found within the `concierge-auth` client in the `concierge` realm.
+
+- `admin` - can do everything including viewing, updating and deleting other users' private collections. This is different from the super admin user in the master realm.
+- `private_collection` - can create and manage personal collections not accessible by other users (except the admin).
+- `shared_read` - can query the shared collections, but not modify in any way.
+- `shared_read_write` - has full control of shared collections.
+
+### Creating users with roles
+
+If you want to quickly try out some of the options, you can go ahead and create some users in the Keycloak admin console and assign the above roles to them. We'd recommend using a more secure method of user registration for a production environment.
+
+Make sure to log in as the super admin account and switch the realm to "concierge" in the admin UI.
+
+Select the Users view in the menu.
+
+Click "Add user" and assign them a username, click "Create".
+
+If you're creating this user for testing purposes you can use the "Credentials" tab to set a password, and you can even toggle off "Temporary" so you won't have to change it when logging in.
+
+Go to the "Role mapping" tab, click "Assign role", make sure "Filter by clients" is selected, and locate the roles prefixed with `concierge-auth`. Assign the desired roles to your user.
+
+You will now be able to use the username and password you created to log into the web app.
+
+If you need to switch user you may need to revoke the session of the currently logged in user, which is available in the "Sessions" tab for that user, otherwise clicking the login button may just automatically log you in with the same user again.
 
 ## Usage
 
-Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:15130 or the port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
+Once you have completed the installation process above, Concierge will be running on localhost:15130 or the host and port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
 
 ## Update to new release
 
 If running a version prior to 0.3.0 you should delete the files you cloned from the repository, remove the related Docker containers and proceed with a fresh install following the instructions above.
 
-### Quick install (Recommended)
-
-#### Without virtual environment
+### Without virtual environment
 
 `python -m pip install launch-concierge --upgrade`
 
 `python -m launch_concierge.install`
 
-#### With virtual environment
+### With virtual environment
 
 Activate the environment if not already done
 
@@ -108,45 +132,15 @@ Activate the environment if not already done
 
 `install_concierge`
 
-### Manual install
-
-Make sure to grab the latest version of the Docker Compose files.
-
-`docker compose pull` or `docker compose -f docker-compose-gpu.yml pull` will get the latest versions of the containers being used.
-
-Then you can simply launch the containers again using the command from the install step.
-
 ## Setup: development environment
 
 git clone repo or extract zip. 
-
-### Quick install (Recommended)
 
 `cd concierge` go into the cloned project directory.
 
 You should not create a virtual environment as the script below will handle it for you.
 
 `python install_dev.py` to launch the installer (same steps as the user installer).
-
-### Manual install
-
-Configure the `.env` file like in the user install.
-
-Set `ENVIRONMENT` to `development`
-
-`python -m venv .` create a python virtual environment in the current directory.
-
-Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` enter into the virtual environment.
-
-`pip install -r requirements.txt -r dev_requirements.txt` install all dependencies.
-
-`pre-commit install` install the linting script that hooks into the commit command.
-
-`docker compose -f docker-compose-dev.yml up -d` will load the docker dependencies for developers.
-
-`docker compose -f docker-compose-dev-gpu.yml up -d` will load the docker dependencies for developers and use the GPU.
-
-If you want to build the code to a Docker container to simulate the production environment you can use the `docker-compose-local.yml` or `docker-compose-gpu-local.yml` files. On initial launch and when you've made changes to the code you'll need to use `docker compose -f <docker-compose-file.yml> build` to update the container and then launch the compose file again.
 
 ## Usage: development environment
 
@@ -158,47 +152,30 @@ Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more abo
 
 Install Shiny for Python VSCode extension.
 
-Run Shiny for Python VSCode extension from `concierge_shiny/app.py`. 
-
-At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this if after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
+Run Shiny for Python VSCode extension from `concierge_shiny/app.py`.
 
 You can also access the URL by pasting it into another browser.
+
+At this time it doesn't seem to be possible to use HTTPS while launching from VSCode.
 
 ### Launch script
 
 From the cloned project directory simply run `launch_dev.py`.
 
-If the Docker container dependencies aren't found, you will be given the option to launch with CPU or GPU.
+You will be given the option to launch with CPU or GPU.
 
-`python launch_local.py` will build and launch the code in a Docker container as if it were the production environment.
-
-### Manual launch
-
-If the above methods did not work:
-
-If you are not in the python virtual environment, please enter it by the correct method:  
-Linux and MacOS: `source ./bin/activate`  
-Windows PowerShell: `.\Scripts\Activate.ps1`
-
-To start the web UI, run the following command:
-
-`python -m shiny run --reload --launch-browser concierge_shiny/app.py`
+`python launch_local.py` will build and launch the code in a Docker container as if it were the production environment, this allows you to locally test interactions between the containers.
 
 ## Update to new release: development environment
 
 Clone the latest version of the repo.
 
-### Quick install
-
-Repeat the process used during install.
-
-### Manual update
-
-Use `docker compose -f <docker-compose-file.yml> pull` to update the Docker containers.
-
 Repeat the process used during install.
 
 ## CLI ##
+
+> [!WARNING]
+> We haven't yet updated the CLI scripts to work with authentication and authorization, it's likely some of them are broken.
 
 While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.
 
@@ -206,7 +183,7 @@ One notable feature is that the `loader` script loads an entire directory of doc
 
 To use them you can navigate to the `cli` subdirectory or append `cli.` to the script name from the parent directory.
 
-Make sure you are running inside the venv.
+Make sure you are running inside the virtual environment created during installation.
 
 Call commands like this: `python -m <script_name> <options>`. Use the `-h` or `--help` option to see what the options are.
 
