@@ -4,8 +4,8 @@ from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_backend_lib.collections import create_collection, get_collections
 from isi_util.async_single import asyncify
 import os
-from markdown_renderer import md
 from collections_data import CollectionsData
+from functions import format_collection_name
 
 # --------
 # COLLECTION SELECTOR
@@ -19,7 +19,12 @@ def collection_selector_ui():
 
 @module.server
 def collection_selector_server(
-    input: Inputs, output: Outputs, session: Session, selected_collection, collections
+    input: Inputs,
+    output: Outputs,
+    session: Session,
+    selected_collection,
+    collections,
+    user_info,
 ):
     @render.ui
     def collection_selector():
@@ -32,7 +37,7 @@ def collection_selector_server(
             id="internal_selected_collection",
             label="Select Collection",
             choices={
-                collection["_id"]: collection["name"]
+                collection["_id"]: format_collection_name(collection, user_info)
                 for collection in collections.get().collections
             },
             selected=selected_collection.get(),
@@ -230,10 +235,7 @@ COLLECTION_PLACEHOLDER = "new_collection_name"
 def collection_create_ui():
     return [
         text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER),
-        ui.markdown(
-            'Hint: Collection names must be lowercase and may not begin with underscores or hyphens. See [here](https://opensearch.org/docs/latest/api-reference/index-apis/create-index/#index-naming-restrictions){target="_blank"} for the full list of restrictions.',
-            render_func=md.render,
-        ),
+        ui.input_checkbox("toggle_shared", "Shared Collection"),
     ]
 
 
@@ -250,13 +252,13 @@ def collection_create_server(
     new_collection_name = text_input_enter_server("new_collection", creating)
 
     @reactive.extended_task
-    async def create_concierge_collection(collection_name):
+    async def create_concierge_collection(collection_name, location):
         # TODO: select private or shared
         collection_id = await asyncify(
             create_collection,
             token and token["access_token"],
             collection_name,
-            "private",
+            location,
         )
         collections.set(
             CollectionsData(
@@ -274,5 +276,6 @@ def collection_create_server(
         new_name = new_collection_name()
         if not new_name:
             return
+        location = "shared" if input.toggle_shared() else "private"
         creating.set(True)
-        create_concierge_collection(new_name)
+        create_concierge_collection(new_name, location)

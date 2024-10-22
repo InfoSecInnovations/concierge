@@ -94,13 +94,16 @@ def collection_management_server(
     collections,
     opensearch_status,
     token,
+    user_info,
 ):
     collection_create_server(
         "collection_create", selected_collection, collections, token
     )
-    collection_selector_server("collection_select", selected_collection, collections)
+    collection_selector_server(
+        "collection_select", selected_collection, collections, user_info
+    )
     ingestion_done_trigger = ingester_server(
-        "ingester", selected_collection, collections, token
+        "ingester", selected_collection, collections, token, user_info
     )
 
     document_delete_trigger = reactive.value(0)

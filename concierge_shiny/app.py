@@ -14,6 +14,7 @@ from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
 from collections_data import CollectionsData
+from concierge_backend_lib.authentication import get_token_info
 
 dotenv.load_dotenv()
 
@@ -33,6 +34,9 @@ def server(input: Inputs, output: Outputs, session: Session):
     token = get_auth_tokens(session, config)
     if config["auth"] and not token:
         return
+    user_info = None
+    if token:
+        user_info = get_token_info(token["access_token"])
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -69,6 +73,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status,
         ollama_status,
         token,
+        user_info,
     )
     collection_management_server(
         "collection_management",
@@ -76,6 +81,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         collections,
         opensearch_status,
         token,
+        user_info,
     )
     status = status_server("status_widget")
 

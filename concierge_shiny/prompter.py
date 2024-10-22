@@ -48,11 +48,14 @@ def prompter_server(
     opensearch_status,
     ollama_status,
     token,
+    user_info,
 ):
     llm_loaded = reactive.value(False)
     current_file_id = reactive.value(0)
 
-    collection_selector_server("collection_selector", selected_collection, collections)
+    collection_selector_server(
+        "collection_selector", selected_collection, collections, user_info
+    )
     chat = ui.Chat(id="prompter_chat")
 
     @chat.transform_assistant_response

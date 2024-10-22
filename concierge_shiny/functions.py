@@ -91,3 +91,12 @@ async def set_collections(token, collections):
             loading=False,
         )
     )
+
+
+def format_collection_name(collection_data, user_info):
+    if not collection_data["type"] or collection_data["type"] == "collection:shared":
+        return collection_data["name"]
+    username = user_info["preferred_username"]
+    if collection_data["owner"]["name"] == username:
+        return f"{collection_data["name"]} (private)"
+    return f"{collection_data["name"]} (private, belongs to {collection_data["owner"]["name"]})"

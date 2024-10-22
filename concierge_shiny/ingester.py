@@ -28,11 +28,14 @@ def ingester_server(
     selected_collection,
     collections,
     token,
+    user_info,
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
 
-    collection_selector_server("collection_selector", selected_collection, collections)
+    collection_selector_server(
+        "collection_selector", selected_collection, collections, user_info
+    )
     collection_create_server(
         "collection_creator", selected_collection, collections, token
     )
