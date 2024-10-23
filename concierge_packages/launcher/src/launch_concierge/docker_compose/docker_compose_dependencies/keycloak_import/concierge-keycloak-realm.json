@@ -800,28 +800,6 @@
             "attributes": {},
             "uris": [],
             "icon_uri": ""
-          },
-          {
-            "name": "gwanoose",
-            "type": "collection:private",
-            "owner": {
-              "name": "testadmin"
-            },
-            "ownerManagedAccess": false,
-            "displayName": "gwanoose",
-            "attributes": {},
-            "uris": [],
-            "scopes": [
-              {
-                "name": "read"
-              },
-              {
-                "name": "update"
-              },
-              {
-                "name": "delete"
-              }
-            ]
           }
         ],
         "policies": [
