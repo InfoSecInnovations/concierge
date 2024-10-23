@@ -37,14 +37,14 @@ def authorize(token, resource, scope: str | None = None):
         return False
 
 
-def create_resource(resource_name, resource_type, owner):
+def create_resource(resource_name, resource_type, owner_id):
     keycloak_uma = get_keycloak_uma()
     response = keycloak_uma.resource_set_create(
         {
             "name": resource_name,
             "displayName": resource_name,
             "type": resource_type,
-            "attributes": {"concierge_owner": owner},
+            "attributes": {"concierge_owner": [owner_id]},
             "scopes": ["read", "update", "delete"],
         }
     )

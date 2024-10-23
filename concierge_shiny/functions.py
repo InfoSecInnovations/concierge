@@ -4,6 +4,7 @@ from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
 from concierge_backend_lib.collections import get_collections
+from concierge_backend_lib.authentication import get_username
 from isi_util.async_single import asyncify
 from collections_data import CollectionsData
 
@@ -96,7 +97,12 @@ async def set_collections(token, collections):
 def format_collection_name(collection_data, user_info):
     if not collection_data["type"] or collection_data["type"] == "collection:shared":
         return collection_data["name"]
-    username = user_info["preferred_username"]
-    if collection_data["owner"]["name"] == username:
-        return f"{collection_data["name"]} (private)"
-    return f"{collection_data["name"]} (private, belongs to {collection_data["owner"]["name"]})"
+    user_id = user_info["sub"]
+    if (
+        "attributes" in collection_data
+        and "concierge_owner" in collection_data["attributes"]
+    ):
+        if collection_data["attributes"]["concierge_owner"][0] == user_id:
+            return f"{collection_data["name"]} (private)"
+        return f"{collection_data["name"]} (private, belongs to {get_username(collection_data["attributes"]["concierge_owner"][0])})"
+    return f"{collection_data["name"]} (private, owner unknown)"

@@ -62,3 +62,17 @@ def get_keycloak_admin_client():
 def get_token_info(token):
     keycloak_openid = get_keycloak_client()
     return keycloak_openid.decode_token(token, validate=False)
+
+
+username_cache = {}
+
+
+def get_username(user_id):
+    if user_id in username_cache:
+        return username_cache[user_id]
+    admin_client = get_keycloak_admin_client()
+    user_info = admin_client.get_user(user_id)
+    if "username" in user_info:
+        username_cache[user_id] = user_info["username"]
+        return username_cache[user_id]
+    return ""

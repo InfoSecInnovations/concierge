@@ -64,8 +64,10 @@ def create_collection(token, display_name: str, location: Location | None = None
             if not authorized:
                 raise UnauthorizedOperationError()
             token_info = get_token_info(token)
-            owner = token_info["preferred_username"]
-            resource_id = create_resource(display_name, f"collection:{location}", owner)
+            owner_id = token_info["sub"]
+            resource_id = create_resource(
+                display_name, f"collection:{location}", owner_id
+            )
         else:
             resource_id = uuid4()
             # if we don't have authz configured, we write the collection name mapping to OpenSearch
