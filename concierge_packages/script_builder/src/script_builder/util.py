@@ -3,8 +3,6 @@ import os
 import ctypes
 import subprocess
 import venv
-from getpass import getpass
-from zxcvbn import zxcvbn
 
 my_platform = platform.system()
 is_unix = my_platform == "Linux" or my_platform == "Darwin"
@@ -112,16 +110,4 @@ def get_valid_input(prompt):
         value = input(prompt).strip()
         if not value:
             print("please enter a valid value!")
-    return value
-
-
-def get_strong_password(prompt):
-    score = -1
-    while score < 4:
-        value = getpass(prompt)
-        strength = zxcvbn(value)
-        score = strength["score"]
-        if strength["score"] < 4:
-            print("Password does not meet the strength requirements")
-            print(*strength["feedback"]["suggestions"], sep="\n")
     return value

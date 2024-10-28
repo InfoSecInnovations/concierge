@@ -2,7 +2,7 @@ import subprocess
 import os
 import shutil
 from script_builder.argument_processor import ArgumentProcessor
-from script_builder.util import get_strong_password
+from script_builder.password import get_strong_password
 from importlib.metadata import version
 from .package_dir import package_dir
 from .docker_compose_helper import docker_compose_helper
