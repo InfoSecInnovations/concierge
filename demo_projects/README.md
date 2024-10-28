@@ -1,0 +1,1 @@
+this directory is used to create isolated example projects to illustrate issues we're having with dependencies.
