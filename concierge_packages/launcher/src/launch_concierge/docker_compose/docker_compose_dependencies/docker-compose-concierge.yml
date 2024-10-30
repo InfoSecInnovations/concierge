@@ -5,11 +5,19 @@ services:
     environment:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
-      - KEYCLOAK_HOST=keycloak
+      - CONCIERGE_SECURITY_ENABLED=False
     ports:
       - ${WEB_PORT:-15130}:15130
     restart: unless-stopped
     volumes:
+      - ../concierge.yml:/concierge.yml
+  concierge-enable-security:
+    extends: concierge
+    environment:
+      - KEYCLOAK_HOST=keycloak
+      - CONCIERGE_SECURITY_ENABLED=True
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+    volumes:
       - ${WEB_CERT:-../test_certs/cert.pem}:/web_certs/cert.pem
       - ${WEB_KEY:-../test_certs/key.pem}:/web_certs/key.pem
-      - ../concierge.yml:/concierge.yml

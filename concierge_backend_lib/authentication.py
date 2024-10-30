@@ -10,16 +10,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 KEYCLOAK_HOST = os.getenv("KEYCLOAK_HOST", "localhost")
+KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
 
 # TODO: select HTTPS if enabled
 server_url = f"http://{KEYCLOAK_HOST}:8080"
-
-keycloak_config = {
-    "display_name": "Keycloak",
-    "id_env_var": "KEYCLOAK_CLIENT_ID",
-    "roles_key": "roles",
-    "secret_env_var": "KEYCLOAK_CLIENT_SECRET",
-}
 
 keycloak_openid_config = requests.get(
     f"{server_url}/realms/concierge/.well-known/openid-configuration"
@@ -30,8 +25,8 @@ def get_keycloak_client():
     client = KeycloakOpenID(
         server_url=server_url,
         realm_name="concierge",
-        client_id=os.getenv(keycloak_config["id_env_var"]),
-        client_secret_key=os.getenv(keycloak_config["secret_env_var"]),
+        client_id=KEYCLOAK_CLIENT_ID,
+        client_secret_key=KEYCLOAK_CLIENT_SECRET,
     )
     return client
 
@@ -40,8 +35,8 @@ def get_service_account_connection():
     keycloak_connection = KeycloakOpenIDConnection(
         server_url=server_url,
         realm_name="concierge",
-        client_id=os.getenv(keycloak_config["id_env_var"]),
-        client_secret_key=os.getenv(keycloak_config["secret_env_var"]),
+        client_id=KEYCLOAK_CLIENT_ID,
+        client_secret_key=KEYCLOAK_CLIENT_SECRET,
         grant_type="client_credentials",
     )
     return keycloak_connection

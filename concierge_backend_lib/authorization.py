@@ -5,7 +5,8 @@ from .authentication import (
     get_keycloak_admin_client,
 )
 import requests
-from concierge_util import load_config
+import dotenv
+import os
 
 
 class UnauthorizedOperationError(Exception):
@@ -13,8 +14,8 @@ class UnauthorizedOperationError(Exception):
         self.message = message
 
 
-config = load_config()
-auth_enabled = config and "auth" in config and config["auth"]
+dotenv.load_dotenv()
+auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
 
 
 def authorize(token, resource, scope: str | None = None):

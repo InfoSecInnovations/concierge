@@ -1,9 +1,7 @@
 from shiny import ui, Inputs, Outputs, Session, render, reactive, module
-from concierge_backend_lib.authentication import keycloak_config, get_keycloak_client
+from concierge_backend_lib.authentication import get_keycloak_client
+from concierge_backend_lib.authorization import auth_enabled
 import json
-import dotenv
-
-dotenv.load_dotenv()
 
 scope = "profile email openid"
 
@@ -27,7 +25,7 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
 
 
 def get_auth_tokens(session, config):
-    if not config or not config["auth"]:
+    if not auth_enabled:
         return None
 
     if "concierge_token_chunk_count" not in session.http_conn.cookies:
@@ -45,7 +43,7 @@ def get_auth_tokens(session, config):
                 [
                     login_button_ui(
                         "login_openid_keycloak",
-                        f"Log in with {keycloak_config["display_name"]}",
+                        "Log in with Keycloak",
                     )
                 ],
                 gap="1em",

@@ -1,7 +1,8 @@
 name: concierge
 
+# this is a bit of a hack to conditionally include keycloak if we're running security, the blank compose stops Docker from complaining when doing an unsecured instance.
 include:
-  - ./docker_compose_dependencies/docker-compose-keycloak.yml
+  - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
 
 services:
   ollama:
@@ -15,7 +16,7 @@ services:
   concierge:
     extends:
       file: docker_compose_dependencies/docker-compose-concierge.yml
-      service: concierge
+      service: ${CONCIERGE_SERVICE:-concierge}
 
 volumes:
   opensearch-data1:

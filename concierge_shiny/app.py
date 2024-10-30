@@ -15,6 +15,7 @@ from functions import set_collections
 from concierge_util import load_config
 from collections_data import CollectionsData
 from concierge_backend_lib.authentication import get_token_info
+from concierge_backend_lib.authorization import auth_enabled
 
 dotenv.load_dotenv()
 
@@ -32,7 +33,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     config = load_config()
     token = get_auth_tokens(session, config)
-    if config["auth"] and not token:
+    if auth_enabled and not token:
         return
     user_info = None
     if token:

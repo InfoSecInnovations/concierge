@@ -25,7 +25,8 @@ def do_install(
     set_env("WEB_HOST", argument_processor.parameters["host"])
     set_env("WEB_PORT", str(argument_processor.parameters["port"]))
     if argument_processor.parameters["enable_security"]:
-        config["auth"] = True
+        set_env("CONCIERGE_SECURITY_ENABLED", "True")
+        set_env("CONCIERGE_SERVICE", "concierge-enable-security")
         # TODO: if security is already enabled, we shouldn't set it up again, criteria? keycloak container exists?
         keycloak_password = get_strong_password(
             "Enter password for initial Keycloak admin account: "
@@ -84,7 +85,8 @@ def do_install(
         )
         set_env("KEYCLOAK_SERVICE_FILE", "docker-compose-keycloak.yml")
     else:
-        del config["auth"]
+        set_env("CONCIERGE_SERVICE", "concierge")
+        set_env("CONCIERGE_SECURITY_ENABLED", "False")
         set_env("OPENSEARCH_SERVICE", "opensearch-node-disable-security")
         set_env(
             "OPENSEARCH_DASHBOARDS_SERVICE",
