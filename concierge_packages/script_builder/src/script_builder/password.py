@@ -1,5 +1,6 @@
 from getpass import getpass
 from zxcvbn import zxcvbn
+import secrets
 
 
 def get_strong_password(prompt):
@@ -16,4 +17,13 @@ def get_strong_password(prompt):
             if value != confirm:
                 print("passwords didn't match, please enter again!")
                 score = -1
+    return value
+
+
+def generate_strong_password():
+    score = -1
+    while score < 4:
+        value = secrets.token_urlsafe(20)
+        strength = zxcvbn(value)
+        score = strength["score"]
     return value

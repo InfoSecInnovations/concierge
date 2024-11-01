@@ -2,7 +2,7 @@ import subprocess
 import os
 import shutil
 from script_builder.argument_processor import ArgumentProcessor
-from script_builder.password import get_strong_password
+from script_builder.password import get_strong_password, generate_strong_password
 from importlib.metadata import version
 from .package_dir import package_dir
 from .docker_compose_helper import docker_compose_helper
@@ -31,10 +31,8 @@ def do_install(
         keycloak_password = get_strong_password(
             "Enter password for initial Keycloak admin account: "
         )
-        opensearch_password = get_strong_password(
-            "Enter password for OpenSearch admin account: "
-        )
-        db_password = get_strong_password("Enter password for Keycloak database:")
+        opensearch_password = generate_strong_password()
+        db_password = generate_strong_password()
         set_env("KEYCLOAK_INITIAL_ADMIN_PASSWORD", keycloak_password)
         set_env("POSTGRES_DB_PASSWORD", db_password)
         subprocess.run(
