@@ -34,7 +34,9 @@ def do_install(
         opensearch_password = get_strong_password(
             "Enter password for OpenSearch admin account: "
         )
+        db_password = get_strong_password("Enter password for Keycloak database:")
         set_env("KEYCLOAK_INITIAL_ADMIN_PASSWORD", keycloak_password)
+        set_env("POSTGRES_DB_PASSWORD", db_password)
         subprocess.run(
             [
                 "docker",

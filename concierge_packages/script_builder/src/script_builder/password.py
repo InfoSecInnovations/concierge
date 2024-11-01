@@ -14,5 +14,6 @@ def get_strong_password(prompt):
         else:
             confirm = getpass("Confirm password: ")
             if value != confirm:
+                print("passwords didn't match, please enter again!")
                 score = -1
     return value
