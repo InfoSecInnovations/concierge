@@ -17,8 +17,8 @@ def server_url():
 
 
 def keycloak_openid_config():
-    requests.get(
-        f"{server_url}/realms/concierge/.well-known/openid-configuration"
+    return requests.get(
+        f"{server_url()}/realms/concierge/.well-known/openid-configuration"
     ).json()
 
 
