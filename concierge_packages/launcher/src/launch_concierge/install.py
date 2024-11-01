@@ -6,6 +6,7 @@ from launch_concierge.concierge_installer import (
     prompt_concierge_install,
     clean_up_existing,
     do_install,
+    install_demo_users,
 )
 
 
@@ -15,6 +16,8 @@ def install(command="install_concierge"):
     prompt_for_parameters(argument_processor, command)
     prompt_concierge_install()
     do_install(argument_processor, "production")
+    if argument_processor.parameters["security_level"].lower() == "demo":
+        install_demo_users()
     print(
         f"\nInstall completed. After a couple of minutes you should be able to access the Concierge Web UI at localhost:{argument_processor.parameters['port']}\n"
     )

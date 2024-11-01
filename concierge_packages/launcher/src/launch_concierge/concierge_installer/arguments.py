@@ -109,15 +109,18 @@ install_arguments = [
         output_type=ArgumentData.OutputType.int,
     ),
     ArgumentData(
-        key="enable_security",
+        key="security_level",
         help="Enable login and access controls for Concierge?",
         description=[
             "Enable login and access controls for Concierge?",
             "If you don't do this anyone with access to this machine and/or the web UI will have full privileges to manage and use all data in Concierge.",
             "We recommend enabling security if this isn't a development or test instance.",
+            'If you select "Demo", you will be able to try out the RBAC features Concierge ships with, but you should never use this setting in a production environment!',
         ],
-        default=False,
-        prompt="Enable Security?",
-        output_type=ArgumentData.OutputType.bool,
+        default="None",
+        options=["None", "Demo", "Enabled"],
+        prompt="Security Level?",
+        case_sensitive=False,
+        output_type=ArgumentData.OutputType.string,
     ),
 ]

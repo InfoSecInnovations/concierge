@@ -9,6 +9,7 @@ from concierge_util import load_config, write_config
 from .clean_up_existing import clean_up_existing
 from .do_install import do_install
 from .docker_compose_helper import docker_compose_helper
+from .install_demo_users import install_demo_users
 
 __all__ = [
     "clean_up_existing",
@@ -18,6 +19,7 @@ __all__ = [
     "docker_compose_helper",
     "prompt_concierge_install",
     "set_compute",
+    "install_demo_users",
 ]
 
 

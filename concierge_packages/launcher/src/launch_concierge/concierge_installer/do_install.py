@@ -24,7 +24,7 @@ def do_install(
     # Keycloak needs the host and port to be set before as these are piped into the initial realm config
     set_env("WEB_HOST", argument_processor.parameters["host"])
     set_env("WEB_PORT", str(argument_processor.parameters["port"]))
-    if argument_processor.parameters["enable_security"]:
+    if argument_processor.parameters["security_level"] != "None":
         set_env("CONCIERGE_SECURITY_ENABLED", "True")
         set_env("CONCIERGE_SERVICE", "concierge-enable-security")
         # TODO: if security is already enabled, we shouldn't set it up again, criteria? keycloak container exists?

@@ -16,9 +16,11 @@ KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
 # TODO: select HTTPS if enabled
 server_url = f"http://{KEYCLOAK_HOST}:8080"
 
-keycloak_openid_config = requests.get(
-    f"{server_url}/realms/concierge/.well-known/openid-configuration"
-).json()
+
+def keycloak_openid_config():
+    requests.get(
+        f"{server_url}/realms/concierge/.well-known/openid-configuration"
+    ).json()
 
 
 def get_keycloak_client():

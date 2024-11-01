@@ -24,7 +24,7 @@ def authorize(token, resource, scope: str | None = None):
         if scope:
             permission += f"#{scope}"
         authorized = requests.post(
-            keycloak_openid_config["token_endpoint"],
+            keycloak_openid_config()["token_endpoint"],
             {
                 "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
                 "audience": "concierge-auth",
