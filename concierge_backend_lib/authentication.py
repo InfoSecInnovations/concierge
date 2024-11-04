@@ -8,17 +8,23 @@ from keycloak import (
 import os
 from dotenv import load_dotenv
 import traceback
+import urllib3
 
 
-# TODO: select HTTPS if enabled
+urllib3.disable_warnings()
+
+
 def server_url():
     load_dotenv()
     keycloak_host = os.getenv("KEYCLOAK_HOST", "localhost")
-    return f"http://{keycloak_host}:8080"
+    return f"https://{keycloak_host}:8443"
 
 
 def keycloak_openid_config():
-    return requests.get(
+    # this disables TLS verification and warning
+    session = requests.Session()
+    session.verify = False
+    return session.get(
         f"{server_url()}/realms/concierge/.well-known/openid-configuration"
     ).json()
 
@@ -32,6 +38,7 @@ def get_keycloak_client():
         realm_name="concierge",
         client_id=keycloak_client_id,
         client_secret_key=keycloak_client_secret,
+        verify=False,
     )
     return client
 
@@ -46,6 +53,7 @@ def get_service_account_connection():
         client_id=keycloak_client_id,
         client_secret_key=keycloak_client_secret,
         grant_type="client_credentials",
+        verify=False,
     )
     return keycloak_connection
 

@@ -73,7 +73,7 @@ Please note that this package isn't the Concierge app itself, it's just a utilit
 
 If you chose to enable login and access controls during installation, you will have to configure the Keycloak instance we have provided to set up some users with the appropriate permissions.
 
-Start by opening up localhost:8080 in your browser. Here you should see the Keycloak login page, input the username `admin` and the password you set during installation.
+Start by opening up https://localhost:8443 in your browser. Here you should see the Keycloak login page, input the username `admin` and the password you set during installation.
 
 You should refer to the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html) to find out how to configure the type of login you wish to support. You can enable a variety of social network logins, OpenID, LDAP or just username and password.
 

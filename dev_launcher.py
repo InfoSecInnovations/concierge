@@ -40,8 +40,8 @@ run_app(
     # launch_browser currently doesn't work with HTTPS
     # launch_browser=True,
     host="localhost",
-    ssl_keyfile="test_certs/key.pem",
-    ssl_certfile="test_certs/cert.pem",
+    ssl_keyfile="concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/test_certs/key.pem",
+    ssl_certfile="concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/test_certs/cert.pem",
 )
 
 # subprocess.run(

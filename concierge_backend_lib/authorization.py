@@ -19,11 +19,14 @@ auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
 
 
 def authorize(token, resource, scope: str | None = None):
+    # this disables TLS verification and warning
+    session = requests.Session()
+    session.verify = False
     try:
         permission = resource
         if scope:
             permission += f"#{scope}"
-        authorized = requests.post(
+        authorized = session.post(
             keycloak_openid_config()["token_endpoint"],
             {
                 "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",

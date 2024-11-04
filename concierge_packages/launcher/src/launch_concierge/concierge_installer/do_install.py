@@ -14,6 +14,9 @@ from .set_env import set_env
 def do_install(
     argument_processor: ArgumentProcessor, environment="production", is_local=False
 ):
+    # this disables TLS verification and warning
+    session = requests.Session()
+    session.verify = False
     # the development environment uses different docker compose files which should already be in the cwd
     if environment != "development":
         # for production we need to copy the compose files from the package into the cwd because docker compose reads the .env file from the same directory as the launched files
@@ -50,15 +53,14 @@ def do_install(
         print("This can take a few minutes, please be patient!")
         while True:
             try:
-                response = requests.post(
-                    "http://localhost:8080/realms/master/protocol/openid-connect/token",
+                response = session.post(
+                    "https://localhost:8443/realms/master/protocol/openid-connect/token",
                     {
                         "client_id": "admin-cli",
                         "grant_type": "password",
                         "username": "admin",
                         "password": keycloak_password,
                     },
-                    verify=False,
                 )
                 token = response.json()["access_token"]
                 headers = {
@@ -66,8 +68,8 @@ def do_install(
                     "Authorization": f"Bearer {token}",
                 }
                 # TODO: we should get the client ID from the realm JSON file to avoid errors
-                response = requests.get(
-                    "http://localhost:8080/admin/realms/concierge/clients/7a3ec428-36f2-49c4-91b1-8288dc44acb0/client-secret",
+                response = session.get(
+                    "https://localhost:8443/admin/realms/concierge/clients/7a3ec428-36f2-49c4-91b1-8288dc44acb0/client-secret",
                     headers=headers,
                 )
                 keycloak_secret = response.json()["value"]
