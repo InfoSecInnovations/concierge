@@ -7,6 +7,7 @@ from keycloak import (
 )
 import os
 from dotenv import load_dotenv
+import traceback
 
 
 # TODO: select HTTPS if enabled
@@ -78,3 +79,28 @@ def get_username(user_id):
         username_cache[user_id] = user_info["username"]
         return username_cache[user_id]
     return ""
+
+
+def execute_with_token(token, func):
+    try:
+        func(token)
+        return token
+    except Exception:
+        keycloak_openid = get_keycloak_client()
+        token = keycloak_openid.refresh_token(token["refresh_token"])
+        func(token)
+        return token
+
+
+async def execute_async_with_token(token, func):
+    try:
+        try:
+            await func(token)
+            return token
+        except Exception:
+            keycloak_openid = get_keycloak_client()
+            token = await keycloak_openid.a_refresh_token(token["refresh_token"])
+            await func(token)
+            return token
+    except Exception:
+        traceback.print_exc()

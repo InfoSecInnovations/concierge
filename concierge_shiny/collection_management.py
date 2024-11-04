@@ -7,12 +7,13 @@ from components import (
 )
 from isi_util.async_single import asyncify
 from isi_util.list_util import find
-from concierge_backend_lib.collections import (
+from concierge_backend_lib.document_collections import (
     get_collections,
     delete_collection,
     get_documents,
     delete_document,
 )
+from concierge_backend_lib.authentication import execute_async_with_token
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
@@ -53,17 +54,24 @@ def document_server(
 
     @ui.bind_task_button(button_id="delete_doc")
     @reactive.extended_task
-    async def delete():
-        await asyncify(
-            delete_document, token["access_token"], collection, doc["type"], doc["id"]
-        )
+    async def delete(token_value):
+        async def do_delete(token):
+            await asyncify(
+                delete_document,
+                token["access_token"],
+                collection,
+                doc["type"],
+                doc["id"],
+            )
+
+        token.set(await execute_async_with_token(token_value, do_delete))
         deleting.set(False)
 
     @reactive.effect
     @reactive.event(input.delete_doc, ignore_init=True)
     def on_delete():
         deleting.set(True)
-        delete()
+        delete(token.get())
 
     @reactive.effect
     @reactive.event(deleting, ignore_none=False, ignore_init=True)
@@ -167,25 +175,31 @@ def collection_management_server(
 
     @ui.bind_task_button(button_id="delete")
     @reactive.extended_task
-    async def delete(collection_id):
-        await asyncify(delete_collection, token["access_token"], collection_id)
-        new_collections = await asyncify(get_collections, token["access_token"])
-        collections.set(CollectionsData(collections=new_collections, loading=False))
-        if not new_collections:
-            selected_collection.set(None)
-        else:
-            selected_collection.set(new_collections[0]["_id"])
+    async def delete(collection_id, token_value):
+        async def do_delete(token):
+            await asyncify(delete_collection, token["access_token"], collection_id)
+            new_collections = await asyncify(get_collections, token["access_token"])
+            collections.set(CollectionsData(collections=new_collections, loading=False))
+            if not new_collections:
+                selected_collection.set(None)
+            else:
+                selected_collection.set(new_collections[0]["_id"])
+
+        token.set(await execute_async_with_token(token_value, do_delete))
 
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
     def on_delete():
-        delete(selected_collection.get())
+        delete(selected_collection.get(), token.get())
 
     @reactive.extended_task
-    async def get_documents_task(collection_id):
-        docs = await asyncify(get_documents, token["access_token"], collection_id)
-        fetching_docs.set(False)
-        current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
+    async def get_documents_task(collection_id, token_value):
+        async def do_get_documents(token):
+            docs = await asyncify(get_documents, token["access_token"], collection_id)
+            fetching_docs.set(False)
+            current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
+
+        token.set(await execute_async_with_token(token_value, do_get_documents))
 
     @reactive.effect
     @reactive.event(
@@ -197,7 +211,7 @@ def collection_management_server(
     def on_collection_change():
         req(selected_collection.get())
         fetching_docs.set(True)
-        get_documents_task(selected_collection.get())
+        get_documents_task(selected_collection.get(), token.get())
 
     @reactive.effect
     def document_servers():

@@ -11,6 +11,7 @@ from components import (
     text_list_ui,
     text_list_server,
 )
+from concierge_backend_lib.authentication import execute_async_with_token
 
 
 @module.ui
@@ -60,6 +61,7 @@ def ingester_server(
         doc: ConciergeDocument,
         collection_id: str,
         label: str,
+        token,
         binary: bytes | None = None,
     ):
         page_progress = tqdm(total=len(doc.pages))
@@ -73,7 +75,7 @@ def ingester_server(
                 page_progress.refresh()
         page_progress.close()
 
-    async def ingest_files(files: list[dict], collection_id: str):
+    async def ingest_files(files: list[dict], collection_id: str, token):
         for file in files:
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
@@ -82,27 +84,30 @@ def ingester_server(
             doc = load_file(file["datapath"])
             doc.metadata.filename = file["name"]
             if doc:
-                await load_doc(doc, collection_id, file["name"], binary)
+                await load_doc(doc, collection_id, file["name"], token, binary)
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
-    async def ingest_urls(urls: list[str], collection_id: str):
+    async def ingest_urls(urls: list[str], collection_id: str, token):
         for url in urls:
             print(url)
             ui.notification_show(f"Processing {url}")
             doc = WebLoader.load(url)
-            await load_doc(doc, collection_id, url)
+            await load_doc(doc, collection_id, url, token)
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 
     @ui.bind_task_button(button_id="ingest")
     @reactive.extended_task
-    async def ingest(files, urls, collection_name, ingesting_index):
-        if files and len(files):
-            await ingest_files(files, collection_name)
-        if urls and len(urls):
-            await ingest_urls(urls, collection_name)
-        ingesting_done.set(ingesting_index + 1)
+    async def ingest(files, urls, collection_name, ingesting_index, token_value):
+        async def do_ingest(token):
+            if files and len(files):
+                await ingest_files(files, collection_name, token)
+            if urls and len(urls):
+                await ingest_urls(urls, collection_name, token)
+            ingesting_done.set(ingesting_index + 1)
+
+        token.set(await execute_async_with_token(token_value, do_ingest))
 
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
@@ -118,6 +123,6 @@ def ingester_server(
         del input.ingester_files
         file_input_trigger.set(file_input_trigger.get() + 1)
         # we have to pass reactive reads into an async function rather than calling from within
-        ingest(files, urls, collection_id, ingesting_done.get())
+        ingest(files, urls, collection_id, ingesting_done.get(), token.get())
 
     return ingesting_done

@@ -14,7 +14,7 @@ from auth import get_auth_tokens
 from functions import set_collections
 from concierge_util import load_config
 from collections_data import CollectionsData
-from concierge_backend_lib.authentication import get_token_info
+from concierge_backend_lib.authentication import get_token_info, execute_with_token
 from concierge_backend_lib.authorization import auth_enabled
 
 dotenv.load_dotenv()
@@ -32,12 +32,17 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     config = load_config()
-    token = get_auth_tokens(session, config)
-    if auth_enabled and not token:
+    auth_token = get_auth_tokens(session, config)
+    user_info = reactive.value()
+    if auth_enabled and not auth_token:
         return
-    user_info = None
-    if token:
-        user_info = get_token_info(token["access_token"])
+    if auth_enabled:
+
+        def set_user_info(token):
+            user_info.set(get_token_info(token["access_token"]))
+
+        auth_token = execute_with_token(auth_token, set_user_info)
+    token = reactive.value(auth_token)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -53,7 +58,7 @@ def server(input: Inputs, output: Outputs, session: Session):
                 collection_management_ui("collection_management"),
             ),
         ]
-        if token:
+        if token.get():
             nav_items.append(
                 ui.nav_control(
                     ui.input_action_button("openid_logout", "Log Out", class_="my-3")
@@ -89,7 +94,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     def update_collections():
         if opensearch_status.get():
-            set_collections(token, collections)
+            set_collections(token, token.get(), collections)
         else:
             collections.set(CollectionsData(collections=[], loading=False))
 

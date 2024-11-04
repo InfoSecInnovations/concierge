@@ -26,7 +26,9 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
 
 def get_auth_tokens(session, config):
     if not auth_enabled:
-        return None
+        return {
+            "access_token": None
+        }  # this is a dummy token that has the access_token key to not break functions that require it to be there
 
     if "concierge_token_chunk_count" not in session.http_conn.cookies:
         redirect_uri = f"{session.http_conn.headers["origin"]}/callback"

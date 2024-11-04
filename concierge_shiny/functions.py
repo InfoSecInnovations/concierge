@@ -3,8 +3,8 @@ from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
-from concierge_backend_lib.collections import get_collections
-from concierge_backend_lib.authentication import get_username
+from concierge_backend_lib.document_collections import get_collections
+from concierge_backend_lib.authentication import get_username, execute_async_with_token
 from isi_util.async_single import asyncify
 from collections_data import CollectionsData
 
@@ -84,14 +84,17 @@ async def load_llm_model(model_name):
 
 
 @reactive.extended_task
-async def set_collections(token, collections):
-    collections.set(CollectionsData(collections=[], loading=True))
-    collections.set(
-        CollectionsData(
-            collections=await asyncify(get_collections, token["access_token"]),
-            loading=False,
+async def set_collections(token, token_value, collections):
+    async def do_set(token):
+        collections.set(CollectionsData(collections=[], loading=True))
+        collections.set(
+            CollectionsData(
+                collections=await asyncify(get_collections, token["access_token"]),
+                loading=False,
+            )
         )
-    )
+
+    token.set(await execute_async_with_token(token_value, do_set))
 
 
 def format_collection_name(collection_data, user_info):

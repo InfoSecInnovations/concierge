@@ -9,6 +9,7 @@ from components import (
 )
 from functions import page_link, load_llm_model
 from markdown_renderer import md
+from concierge_backend_lib.authentication import execute_async_with_token
 
 REFERENCE_LIMIT = 5
 
@@ -125,7 +126,7 @@ def prompter_server(
             chat.update_user_input(placeholder=tasks[selected_task]["greeting"])
 
     def stream_response(
-        collection_id, user_input, task, persona, selected_enhancers, source_file
+        token, collection_id, user_input, task, persona, selected_enhancers, source_file
     ):
         context = get_context(
             token["access_token"], collection_id, REFERENCE_LIMIT, user_input
@@ -163,16 +164,21 @@ def prompter_server(
         if input_files and len(input_files):
             with open(input_files[0]["datapath"], "r") as file:
                 file_contents = file.read()
-        await chat.append_message_stream(
-            stream_response(
-                collection_id,
-                chat.user_input(),
-                task,
-                persona,
-                selected_enhancers,
-                file_contents,
+
+        async def do_append(token):
+            await chat.append_message_stream(
+                stream_response(
+                    token,
+                    collection_id,
+                    chat.user_input(),
+                    task,
+                    persona,
+                    selected_enhancers,
+                    file_contents,
+                )
             )
-        )
+
+        token.set(await execute_async_with_token(token.get(), do_append))
         # this will clear the file input
         current_file_id.set(current_file_id.get() + 1)
 

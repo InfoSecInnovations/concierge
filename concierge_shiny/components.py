@@ -1,11 +1,15 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from concierge_backend_lib.collections import create_collection, get_collections
+from concierge_backend_lib.document_collections import (
+    create_collection,
+    get_collections,
+)
 from isi_util.async_single import asyncify
 import os
 from collections_data import CollectionsData
 from functions import format_collection_name
+from concierge_backend_lib.authentication import execute_async_with_token
 
 # --------
 # COLLECTION SELECTOR
@@ -37,7 +41,7 @@ def collection_selector_server(
             id="internal_selected_collection",
             label="Select Collection",
             choices={
-                collection["_id"]: format_collection_name(collection, user_info)
+                collection["_id"]: format_collection_name(collection, user_info.get())
                 for collection in collections.get().collections
             },
             selected=selected_collection.get(),
@@ -252,21 +256,23 @@ def collection_create_server(
     new_collection_name = text_input_enter_server("new_collection", creating)
 
     @reactive.extended_task
-    async def create_concierge_collection(collection_name, location):
-        # TODO: select private or shared
-        collection_id = await asyncify(
-            create_collection,
-            token and token["access_token"],
-            collection_name,
-            location,
-        )
-        collections.set(
-            CollectionsData(
-                collections=await asyncify(get_collections, token["access_token"]),
-                loading=False,
+    async def create_concierge_collection(collection_name, location, current_token):
+        async def do_create(token):
+            collection_id = await asyncify(
+                create_collection,
+                token["access_token"],
+                collection_name,
+                location,
             )
-        )
-        selected_collection.set(collection_id)
+            collections.set(
+                CollectionsData(
+                    collections=await asyncify(get_collections, token["access_token"]),
+                    loading=False,
+                )
+            )
+            selected_collection.set(collection_id)
+
+        token.set(await execute_async_with_token(current_token, do_create))
         creating.set(False)
 
     @reactive.effect
@@ -278,4 +284,4 @@ def collection_create_server(
             return
         location = "shared" if input.toggle_shared() else "private"
         creating.set(True)
-        create_concierge_collection(new_name, location)
+        create_concierge_collection(new_name, location, token.get())

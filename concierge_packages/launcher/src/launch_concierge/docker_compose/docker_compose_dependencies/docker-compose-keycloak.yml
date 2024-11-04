@@ -4,6 +4,7 @@ services:
     image: postgres:15.5-alpine3.19
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
