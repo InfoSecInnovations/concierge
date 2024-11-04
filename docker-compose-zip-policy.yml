@@ -1,0 +1,7 @@
+services:
+  zip:
+    image: javieraviles/zip
+    volumes:
+      - ./keycloak_javascript:/input
+      - ./concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/keycloak_javascript:/output
+    command: sh -c "cd /input; zip -r /output/concierge.jar ."

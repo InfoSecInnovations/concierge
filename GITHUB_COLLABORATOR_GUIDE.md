@@ -61,3 +61,7 @@ Make sure to use the exact same version number as the PyPI package otherwise the
 ### TODO
 
 Use script to automate publishing a release!
+
+## Building the Keycloak JavaScript archive
+
+Keycloak requires policies and other JavaScript providers to be zipped to a `.jar` file and placed in a specific directory. You can run the Docker compose file called `docker-compose-zip-policy.yml` which will zip the contents of `keycloak_javascript` and place them in the file that gets mounted to the Keycloak container.
