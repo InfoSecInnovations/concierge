@@ -110,6 +110,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status,
         token,
         user_info,
+        permissions,
     )
     status = status_server("status_widget")
 

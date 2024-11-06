@@ -6,8 +6,6 @@ from loaders.web import WebLoader
 from loaders.base_loader import ConciergeDocument
 from isi_util.async_generator import asyncify_generator
 from components import (
-    collection_selector_server,
-    collection_create_server,
     text_list_ui,
     text_list_server,
 )
@@ -33,13 +31,6 @@ def ingester_server(
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
-
-    collection_selector_server(
-        "collection_selector", selected_collection, collections, user_info
-    )
-    collection_create_server(
-        "collection_creator", selected_collection, collections, token
-    )
     url_values = text_list_server("url_input_list", file_input_trigger)
 
     @render.ui

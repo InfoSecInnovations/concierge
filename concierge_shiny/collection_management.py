@@ -14,6 +14,7 @@ from concierge_backend_lib.document_collections import (
     delete_document,
 )
 from concierge_backend_lib.authentication import execute_async_with_token
+from concierge_backend_lib.authorization import auth_enabled
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link, set_collections
@@ -104,9 +105,10 @@ def collection_management_server(
     opensearch_status,
     token,
     user_info,
+    permissions,
 ):
     collection_create_server(
-        "collection_create", selected_collection, collections, token
+        "collection_create", selected_collection, collections, token, permissions
     )
     collection_selector_server(
         "collection_select", selected_collection, collections, user_info
@@ -126,8 +128,14 @@ def collection_management_server(
     @render.ui
     def collection_management_content():
         if opensearch_status.get():
+
+            def show_toggle():
+                if not auth_enabled:
+                    return False
+                return len(permissions.get()) > 1
+
             return ui.TagList(
-                collection_create_ui("collection_create"),
+                collection_create_ui("collection_create", show_toggle()),
                 collection_selector_ui("collection_select"),
                 ui.output_ui("collection_view"),
             )

@@ -6,6 +6,7 @@ from isi_util.async_single import asyncify
 import os
 from functions import format_collection_name, set_collections
 from concierge_backend_lib.authentication import execute_async_with_token
+from concierge_backend_lib.authorization import auth_enabled
 
 # --------
 # COLLECTION SELECTOR
@@ -232,11 +233,13 @@ COLLECTION_PLACEHOLDER = "new_collection_name"
 
 
 @module.ui
-def collection_create_ui():
-    return [
-        text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER),
-        ui.input_checkbox("toggle_shared", "Shared Collection"),
+def collection_create_ui(show_toggle):
+    elements = [
+        text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER)
     ]
+    if show_toggle:
+        elements.append(ui.input_checkbox("toggle_shared", "Shared Collection"))
+    return elements
 
 
 @module.server
@@ -247,6 +250,7 @@ def collection_create_server(
     selected_collection,
     collections,
     token,
+    permissions,
 ):
     creating = reactive.value(False)
     new_collection_name = text_input_enter_server("new_collection", creating)
@@ -276,6 +280,15 @@ def collection_create_server(
         new_name = new_collection_name()
         if not new_name:
             return
-        location = "shared" if input.toggle_shared() else "private"
+        if not auth_enabled:
+            location = None
+        else:
+            perms = permissions.get()
+            if "collection:private:create" not in perms:
+                location = "shared"
+            elif "collection:shared:create" not in perms:
+                location = "private"
+            else:
+                location = "shared" if input.toggle_shared() else "private"
         creating.set(True)
         create_concierge_collection(new_name, location, token.get())
