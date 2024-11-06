@@ -3,6 +3,7 @@ from .authorization import (
     authorize,
     create_resource,
     list_resources,
+    list_scopes,
     delete_resource,
     auth_enabled,
     UnauthorizedOperationError,
@@ -115,5 +116,14 @@ def delete_document(token, collection_id, document_type, document_id):
             if not authorized:
                 raise UnauthorizedOperationError()
         return delete_opensearch_document(collection_id, document_type, document_id)
+    except Exception:
+        print(traceback.format_exc())
+
+
+def get_collection_scopes(token, collection_id):
+    if not auth_enabled:
+        return {"read", "update", "delete"}
+    try:
+        return set(list_scopes(token, collection_id))
     except Exception:
         print(traceback.format_exc())

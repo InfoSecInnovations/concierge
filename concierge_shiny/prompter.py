@@ -10,6 +10,7 @@ from components import (
 from functions import page_link, load_llm_model
 from markdown_renderer import md
 from concierge_backend_lib.authentication import execute_async_with_token
+from concierge_backend_lib.authorization import auth_enabled
 
 REFERENCE_LIMIT = 5
 
@@ -50,6 +51,7 @@ def prompter_server(
     ollama_status,
     token,
     user_info,
+    permissions,
 ):
     llm_loaded = reactive.value(False)
     current_file_id = reactive.value(0)
@@ -78,9 +80,27 @@ def prompter_server(
         loaded = llm_loaded.get() and ollama_status.get() and opensearch_status.get()
         if loaded:
             if not len(collections.get().collections):
-                return ui.markdown(
-                    "Please create a collection and ingest some documents into it first!"
-                )
+
+                def can_create_collection():
+                    if not auth_enabled:
+                        return True
+                    perms = permissions.get()
+                    if (
+                        "collection:private:create" in perms
+                        or "collection:shared:create" in perms
+                    ):
+                        return True
+                    return False
+
+                if can_create_collection():
+                    return ui.markdown(
+                        "Please create a collection and ingest some documents into it first!"
+                    )
+                else:
+                    return ui.markdown(
+                        "You do not have access to any collections, you will need someone else to grant access or allow you to create collections."
+                    )
+            # TODO: if selected collection isn't readable, don't display chat (theoretically a user could be able to edit but not read a collection?)
             return ui.output_ui("chat_area")
         if not ollama_status.get() or not opensearch_status.get():
             return ui.markdown("Requirements are not online, see sidebar!")

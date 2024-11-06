@@ -85,16 +85,19 @@ async def load_llm_model(model_name):
 
 @reactive.extended_task
 async def set_collections(token, token_value, collections):
+    collections_data = None
+
     async def do_set(token):
+        global collections_data
         collections.set(CollectionsData(collections=[], loading=True))
-        collections.set(
-            CollectionsData(
-                collections=await asyncify(get_collections, token["access_token"]),
-                loading=False,
-            )
+        collections_data = CollectionsData(
+            collections=await asyncify(get_collections, token["access_token"]),
+            loading=False,
         )
+        collections.set(collections_data)
 
     token.set(await execute_async_with_token(token_value, do_set))
+    return collections_data
 
 
 def format_collection_name(collection_data, user_info):

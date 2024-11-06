@@ -4,6 +4,7 @@ from starlette.requests import Request
 
 
 async def serve_binary(request: Request):
+    # TODO: only serve file if user has read access to the collection
     client = get_client()
     collection_name = request.path_params["collection_name"]
     doc_id = request.path_params["doc_id"]

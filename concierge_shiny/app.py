@@ -15,7 +15,7 @@ from functions import set_collections
 from concierge_util import load_config
 from collections_data import CollectionsData
 from concierge_backend_lib.authentication import get_token_info, execute_with_token
-from concierge_backend_lib.authorization import auth_enabled
+from concierge_backend_lib.authorization import auth_enabled, list_permissions
 
 dotenv.load_dotenv()
 
@@ -34,6 +34,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     config = load_config()
     auth_token = get_auth_tokens(session, config)
     user_info = reactive.value()
+    permissions = reactive.value({})
     if auth_enabled and not auth_token:
         return
     if auth_enabled:
@@ -42,6 +43,11 @@ def server(input: Inputs, output: Outputs, session: Session):
             user_info.set(get_token_info(token["access_token"]))
 
         auth_token = execute_with_token(auth_token, set_user_info)
+
+        def set_permissions(token):
+            permissions.set(list_permissions(token["access_token"]))
+
+        auth_token = execute_with_token(auth_token, set_permissions)
     token = reactive.value(auth_token)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
@@ -53,11 +59,26 @@ def server(input: Inputs, output: Outputs, session: Session):
         nav_items = [
             ui.nav_panel("Home", home_ui("home")),
             ui.nav_panel("Prompter", prompter_ui("prompter")),
-            ui.nav_panel(
-                "Collection Management",
-                collection_management_ui("collection_management"),
-            ),
         ]
+
+        def management_enabled():
+            if not auth_enabled:
+                return True
+            perms = permissions.get()
+            if (
+                "collection:private:shared" in perms
+                or "collection:shared:create" in perms
+            ):
+                return True
+            return False
+
+        if management_enabled():
+            nav_items.append(
+                ui.nav_panel(
+                    "Collection Management",
+                    collection_management_ui("collection_management"),
+                )
+            )
         if token.get():
             nav_items.append(
                 ui.nav_control(
@@ -80,6 +101,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         ollama_status,
         token,
         user_info,
+        permissions,
     )
     collection_management_server(
         "collection_management",

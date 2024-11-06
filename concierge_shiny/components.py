@@ -1,14 +1,10 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from concierge_backend_lib.document_collections import (
-    create_collection,
-    get_collections,
-)
+from concierge_backend_lib.document_collections import create_collection
 from isi_util.async_single import asyncify
 import os
-from collections_data import CollectionsData
-from functions import format_collection_name
+from functions import format_collection_name, set_collections
 from concierge_backend_lib.authentication import execute_async_with_token
 
 # --------
@@ -257,22 +253,20 @@ def collection_create_server(
 
     @reactive.extended_task
     async def create_concierge_collection(collection_name, location, current_token):
+        collection_id = None
+
         async def do_create(token):
+            global collection_id
             collection_id = await asyncify(
                 create_collection,
                 token["access_token"],
                 collection_name,
                 location,
             )
-            collections.set(
-                CollectionsData(
-                    collections=await asyncify(get_collections, token["access_token"]),
-                    loading=False,
-                )
-            )
-            selected_collection.set(collection_id)
 
-        token.set(await execute_async_with_token(current_token, do_create))
+        current_token = await execute_async_with_token(current_token, do_create)
+        await set_collections(token, current_token, collections)
+        selected_collection.set(collection_id)
         creating.set(False)
 
     @reactive.effect

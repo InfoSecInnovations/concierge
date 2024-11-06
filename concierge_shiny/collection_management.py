@@ -8,7 +8,7 @@ from components import (
 from isi_util.async_single import asyncify
 from isi_util.list_util import find
 from concierge_backend_lib.document_collections import (
-    get_collections,
+    get_collection_scopes,
     delete_collection,
     get_documents,
     delete_document,
@@ -16,9 +16,8 @@ from concierge_backend_lib.document_collections import (
 from concierge_backend_lib.authentication import execute_async_with_token
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-from functions import doc_link
+from functions import doc_link, set_collections
 from markdown_renderer import md
-from collections_data import CollectionsData
 
 # --------
 # DOCUMENT
@@ -26,8 +25,8 @@ from collections_data import CollectionsData
 
 
 @module.ui
-def document_ui(collection_name, doc):
-    return ui.card(
+def document_ui(collection_name, doc, can_delete):
+    card_elements = [
         ui.markdown(
             f"""
 {doc_link(collection_name, doc)}
@@ -35,9 +34,11 @@ def document_ui(collection_name, doc):
 {doc['vector_count']} vectors
 """,
             render_func=md.render,
-        ),
-        ui.input_task_button("delete_doc", "Delete"),
-    )
+        )
+    ]
+    if can_delete:
+        card_elements.append(ui.input_task_button("delete_doc", "Delete"))
+    return ui.card(*card_elements)
 
 
 @module.server
@@ -116,6 +117,7 @@ def collection_management_server(
 
     document_delete_trigger = reactive.value(0)
     current_docs = reactive.value([])
+    current_scopes = reactive.value({})
     fetching_docs = reactive.value(False)
 
     def on_delete_document():
@@ -135,28 +137,51 @@ def collection_management_server(
     @render.ui
     def collection_view():
         if selected_collection.get():
-            return ui.TagList(
+            accordion_elements = []
+            if "update" in current_scopes.get():
+                accordion_elements.append(ingester_ui("ingester"))
+            elif fetching_docs.get():
+                accordion_elements.append(
+                    ui.accordion_panel(ui.markdown("#### Loading collection..."))
+                )
+            else:
+                accordion_elements.append(
+                    ui.accordion_panel(
+                        ui.markdown(
+                            "#### You don't have permission to ingest documents into this collection"
+                        )
+                    )
+                )
+            accordion_elements.append(
+                ui.accordion_panel(
+                    ui.output_ui("documents_title"),
+                    ui.output_ui("collection_documents"),
+                    value="manage_documents",
+                )
+            )
+            items = [
                 ui.markdown(
                     f"### Selected collection: {find(collections.get().collections, lambda collection: collection['_id'] == selected_collection.get())['name']}"
                 ),
                 ui.accordion(
-                    ingester_ui("ingester"),
-                    ui.accordion_panel(
-                        ui.output_ui("documents_title"),
-                        ui.output_ui("collection_documents"),
-                        value="manage_documents",
-                    ),
+                    *accordion_elements,
                     id="collection_management_accordion",
                     class_="mb-3",
                 ),
-                ui.input_task_button(id="delete", label="Delete Collection"),
-            )
+            ]
+            if "delete" in current_scopes.get():
+                items.append(
+                    ui.input_task_button(id="delete", label="Delete Collection")
+                )
+            return ui.TagList(*items)
         if collections.get().loading:
             return ui.markdown("Loading collections...")
         return ui.markdown("Please create a collection first!")
 
     @render.ui
     def documents_title():
+        if fetching_docs.get():
+            return ui.markdown("#### Loading collection...")
         return ui.div(
             ui.markdown("#### Manage Documents"),
             ui.markdown(f"({len(current_docs.get())} documents in collection)"),
@@ -165,10 +190,15 @@ def collection_management_server(
     @render.ui
     def collection_documents():
         if fetching_docs.get():
-            return ui.markdown("#### Fetching documents in collection...")
+            return ui.markdown("#### Loading collection...")
         return ui.TagList(
             *[
-                document_ui(doc["el_id"], selected_collection.get(), doc)
+                document_ui(
+                    doc["el_id"],
+                    selected_collection.get(),
+                    doc,
+                    "update" in current_scopes.get(),
+                )
                 for doc in current_docs.get()
             ],
         )
@@ -178,14 +208,13 @@ def collection_management_server(
     async def delete(collection_id, token_value):
         async def do_delete(token):
             await asyncify(delete_collection, token["access_token"], collection_id)
-            new_collections = await asyncify(get_collections, token["access_token"])
-            collections.set(CollectionsData(collections=new_collections, loading=False))
-            if not new_collections:
-                selected_collection.set(None)
-            else:
-                selected_collection.set(new_collections[0]["_id"])
 
-        token.set(await execute_async_with_token(token_value, do_delete))
+        token_value = await execute_async_with_token(token_value, do_delete)
+        new_collections = await set_collections(token, token_value, collections)
+        if len(new_collections):
+            selected_collection.set(new_collections[0]["_id"])
+        else:
+            selected_collection.set(None)
 
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
@@ -195,6 +224,11 @@ def collection_management_server(
     @reactive.extended_task
     async def get_documents_task(collection_id, token_value):
         async def do_get_documents(token):
+            current_scopes.set(
+                await asyncify(
+                    get_collection_scopes, token["access_token"], collection_id
+                )
+            )
             docs = await asyncify(get_documents, token["access_token"], collection_id)
             fetching_docs.set(False)
             current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
