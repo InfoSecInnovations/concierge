@@ -12,7 +12,8 @@ def insert_document(token, collection_id, document, binary):
                 raise UnauthorizedOperationError()
         yield from insert(collection_id, document, binary)
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
 
 
 def insert_with_tqdm(token, collection_id, document, binary):

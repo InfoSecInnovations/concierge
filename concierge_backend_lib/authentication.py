@@ -112,3 +112,4 @@ async def execute_async_with_token(token, func):
             return token
     except Exception:
         traceback.print_exc()
+        raise

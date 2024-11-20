@@ -8,7 +8,6 @@ import requests
 import dotenv
 import os
 from keycloak import KeycloakPostError
-import traceback
 
 
 class UnauthorizedOperationError(Exception):
@@ -25,24 +24,20 @@ def authorize(token, resource, scope: str | None = None):
     # TODO: enable verify if using production settings
     session = requests.Session()
     session.verify = False
-    try:
-        permission = resource
-        if scope:
-            permission += f"#{scope}"
-        authorized = session.post(
-            keycloak_openid_config()["token_endpoint"],
-            {
-                "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
-                "audience": "concierge-auth",
-                "permission": permission,
-                "response_mode": "decision",
-            },
-            headers={"Authorization": f"Bearer {token}"},
-        ).json()
-        return authorized["result"]
-    except Exception:
-        traceback.print_exc()
-        return False
+    permission = resource
+    if scope:
+        permission += f"#{scope}"
+    authorized = session.post(
+        keycloak_openid_config()["token_endpoint"],
+        {
+            "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
+            "audience": "concierge-auth",
+            "permission": permission,
+            "response_mode": "decision",
+        },
+        headers={"Authorization": f"Bearer {token}"},
+    ).json()
+    return authorized["result"]
 
 
 def create_resource(resource_name, resource_type, owner_id):

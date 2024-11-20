@@ -46,7 +46,8 @@ def get_collections(token):
             # if not using authz we get the collection info from OpenSearch
             return get_collection_mappings()
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
 
 
 type Location = Literal["private", "shared"]
@@ -79,7 +80,8 @@ def create_collection(token, display_name: str, location: Location | None = None
         )
         return resource_id
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
 
 
 def delete_collection(token, collection_id):
@@ -95,7 +97,8 @@ def delete_collection(token, collection_id):
         delete_collection_indices(collection_id)
         print(f"deleted collection with ID {collection_id}")
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
 
 
 def get_documents(token, collection_id):
@@ -106,7 +109,8 @@ def get_documents(token, collection_id):
                 raise UnauthorizedOperationError()
         return get_opensearch_documents(collection_id)
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
 
 
 def delete_document(token, collection_id, document_type, document_id):
@@ -117,7 +121,8 @@ def delete_document(token, collection_id, document_type, document_id):
                 raise UnauthorizedOperationError()
         return delete_opensearch_document(collection_id, document_type, document_id)
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
 
 
 def get_collection_scopes(token, collection_id):
@@ -126,4 +131,5 @@ def get_collection_scopes(token, collection_id):
     try:
         return set(list_scopes(token, collection_id))
     except Exception:
-        print(traceback.format_exc())
+        traceback.print_exc()
+        raise
