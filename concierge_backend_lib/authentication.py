@@ -113,3 +113,18 @@ async def execute_async_with_token(token, func):
     except Exception:
         traceback.print_exc()
         raise
+
+
+async def get_async_result_with_token(token, func):
+    try:
+        try:
+            result = await func(token)
+            return (token, result)
+        except Exception:
+            keycloak_openid = get_keycloak_client()
+            token = await keycloak_openid.a_refresh_token(token["refresh_token"])
+            result = await func(token)
+            return (token, result)
+    except Exception:
+        traceback.print_exc()
+        raise

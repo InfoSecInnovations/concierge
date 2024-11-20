@@ -12,13 +12,18 @@ from concierge_backend_lib.document_collections import (
     delete_collection,
     get_documents,
     delete_document,
+    get_collections,
 )
-from concierge_backend_lib.authentication import execute_async_with_token
+from concierge_backend_lib.authentication import (
+    execute_async_with_token,
+    get_async_result_with_token,
+)
 from concierge_backend_lib.authorization import auth_enabled
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-from functions import doc_link, set_collections
+from functions import doc_link
 from markdown_renderer import md
+from collections_data import CollectionsData
 
 # --------
 # DOCUMENT
@@ -222,8 +227,25 @@ def collection_management_server(
         async def do_delete(token):
             await asyncify(delete_collection, token["access_token"], collection_id)
 
+        async def do_get_collections(token):
+            return await asyncify(get_collections, token["access_token"])
+
         token_value = await execute_async_with_token(token_value, do_delete)
-        new_collections = await set_collections(token, token_value, collections)
+        token_value, new_collections = await get_async_result_with_token(
+            token_value, do_get_collections
+        )
+        return (token_value, new_collections)
+
+    @reactive.effect
+    def delete_effect():
+        token_value, new_collections = delete.result()
+        token.set(token_value)
+        collections.set(
+            CollectionsData(
+                collections=new_collections,
+                loading=False,
+            )
+        )
         if len(new_collections):
             selected_collection.set(new_collections[0]["_id"])
         else:
@@ -237,16 +259,23 @@ def collection_management_server(
     @reactive.extended_task
     async def get_documents_task(collection_id, token_value):
         async def do_get_documents(token):
-            current_scopes.set(
-                await asyncify(
-                    get_collection_scopes, token["access_token"], collection_id
-                )
+            scopes = await asyncify(
+                get_collection_scopes, token["access_token"], collection_id
             )
             docs = await asyncify(get_documents, token["access_token"], collection_id)
-            fetching_docs.set(False)
-            current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
+            return (scopes, docs)
 
-        token.set(await execute_async_with_token(token_value, do_get_documents))
+        token_value, scopes, docs = await get_async_result_with_token(
+            token_value, do_get_documents
+        )
+        return (token_value, scopes, docs)
+
+    def get_documents_effect():
+        token_value, scopes, docs = get_documents_task.result()
+        token.set(token_value)
+        current_scopes.set(scopes)
+        fetching_docs.set(False)
+        current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
 
     @reactive.effect
     @reactive.event(
