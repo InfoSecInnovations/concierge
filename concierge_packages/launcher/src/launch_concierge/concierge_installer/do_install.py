@@ -38,12 +38,15 @@ def do_install(
         db_password = generate_strong_password()
         set_env("KEYCLOAK_INITIAL_ADMIN_PASSWORD", keycloak_password)
         set_env("POSTGRES_DB_PASSWORD", db_password)
+        full_path = os.path.join(os.getcwd(), "docker-compose-launch-keycloak.yml")
+        # pull latest versions before launching Keycloak, otherwise the instance gets broken if new images are pulled during the next step
+        subprocess.run(["docker", "compose", "-f", full_path, "pull"])
         subprocess.run(
             [
                 "docker",
                 "compose",
                 "-f",
-                os.path.join(os.getcwd(), "docker-compose-launch-keycloak.yml"),
+                full_path,
                 "up",
                 "-d",
             ]

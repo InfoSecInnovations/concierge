@@ -8,6 +8,7 @@ import requests
 import dotenv
 import os
 from keycloak import KeycloakPostError
+import traceback
 
 
 class UnauthorizedOperationError(Exception):
@@ -21,6 +22,7 @@ auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
 
 def authorize(token, resource, scope: str | None = None):
     # this disables TLS verification and warning
+    # TODO: enable verify if using production settings
     session = requests.Session()
     session.verify = False
     try:
@@ -39,6 +41,7 @@ def authorize(token, resource, scope: str | None = None):
         ).json()
         return authorized["result"]
     except Exception:
+        traceback.print_exc()
         return False
 
 
