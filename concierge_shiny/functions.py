@@ -1,12 +1,9 @@
-from shiny import ui, reactive
+from shiny import ui
 from concierge_backend_lib.ollama import load_model
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
-from concierge_backend_lib.document_collections import get_collections
-from concierge_backend_lib.authentication import get_username, execute_async_with_token
-from isi_util.async_single import asyncify
-from collections_data import CollectionsData
+from concierge_backend_lib.authentication import get_username
 
 
 def doc_url(collection_name, doc_type, doc_id):
@@ -81,23 +78,6 @@ async def load_llm_model(model_name):
         pbar.close()
     print(f"{model_name} language model loaded.\n")
     ui.notification_show(f"{model_name} Language Model loaded")
-
-
-@reactive.extended_task
-async def set_collections(token, token_value, collections):
-    collections_data = None
-
-    async def do_set(token):
-        global collections_data
-        collections.set(CollectionsData(collections=[], loading=True))
-        collections_data = CollectionsData(
-            collections=await asyncify(get_collections, token["access_token"]),
-            loading=False,
-        )
-        collections.set(collections_data)
-
-    token.set(await execute_async_with_token(token_value, do_set))
-    return collections_data
 
 
 def format_collection_name(collection_data, user_info):

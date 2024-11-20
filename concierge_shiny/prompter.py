@@ -68,6 +68,10 @@ def prompter_server(
     @reactive.extended_task
     async def load_prompting_llm_model(model_name):
         await load_llm_model(model_name)
+
+    @reactive.effect
+    def load_model_effect():
+        load_prompting_llm_model.result()
         llm_loaded.set(True)
 
     @reactive.effect

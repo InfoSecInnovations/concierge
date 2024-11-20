@@ -1,12 +1,16 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from shiny._utils import rand_hex
 from concierge_backend_lib.status import check_ollama, check_opensearch
-from concierge_backend_lib.document_collections import create_collection
+from concierge_backend_lib.document_collections import (
+    create_collection,
+    get_collections,
+)
 from isi_util.async_single import asyncify
 import os
-from functions import format_collection_name, set_collections
-from concierge_backend_lib.authentication import execute_async_with_token
+from functions import format_collection_name
+from concierge_backend_lib.authentication import get_async_result_with_token
 from concierge_backend_lib.authorization import auth_enabled
+from collections_data import CollectionsData
 
 # --------
 # COLLECTION SELECTOR
@@ -256,20 +260,38 @@ def collection_create_server(
     new_collection_name = text_input_enter_server("new_collection", creating)
 
     @reactive.extended_task
-    async def create_concierge_collection(collection_name, location, current_token):
-        collection_id = None
-
+    async def create_concierge_collection(collection_name, location, token_value):
         async def do_create(token):
-            global collection_id
-            collection_id = await asyncify(
+            return await asyncify(
                 create_collection,
                 token["access_token"],
                 collection_name,
                 location,
             )
 
-        current_token = await execute_async_with_token(current_token, do_create)
-        await set_collections(token, current_token, collections)
+        async def do_get_collections(token):
+            return await asyncify(get_collections, token["access_token"])
+
+        token_value, collection_id = await get_async_result_with_token(
+            token_value, do_create
+        )
+        token_value, new_collections = await get_async_result_with_token(
+            token_value, do_get_collections
+        )
+        return (token_value, new_collections, collection_id)
+
+    @reactive.effect
+    def create_collection_effect():
+        token_value, new_collections, collection_id = (
+            create_concierge_collection.result()
+        )
+        token.set(token_value)
+        collections.set(
+            CollectionsData(
+                collections=new_collections,
+                loading=False,
+            )
+        )
         selected_collection.set(collection_id)
         creating.set(False)
 

@@ -90,15 +90,22 @@ def ingester_server(
 
     @ui.bind_task_button(button_id="ingest")
     @reactive.extended_task
-    async def ingest(files, urls, collection_name, ingesting_index, token_value):
+    async def ingest(files, urls, collection_name, token_value):
         async def do_ingest(token):
             if files and len(files):
                 await ingest_files(files, collection_name, token)
             if urls and len(urls):
                 await ingest_urls(urls, collection_name, token)
-            ingesting_done.set(ingesting_index + 1)
 
-        token.set(await execute_async_with_token(token_value, do_ingest))
+        return await execute_async_with_token(token_value, do_ingest)
+
+    @reactive.effect
+    def ingest_effect():
+        token_value = ingest.result()
+        print("yo")
+        token.set(token_value)
+        with reactive.isolate():
+            ingesting_done.set(ingesting_done.get() + 1)
 
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
@@ -114,6 +121,6 @@ def ingester_server(
         del input.ingester_files
         file_input_trigger.set(file_input_trigger.get() + 1)
         # we have to pass reactive reads into an async function rather than calling from within
-        ingest(files, urls, collection_id, ingesting_done.get(), token.get())
+        ingest(files, urls, collection_id, token.get())
 
     return ingesting_done

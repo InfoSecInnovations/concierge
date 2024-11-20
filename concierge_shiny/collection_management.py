@@ -265,11 +265,12 @@ def collection_management_server(
             docs = await asyncify(get_documents, token["access_token"], collection_id)
             return (scopes, docs)
 
-        token_value, scopes, docs = await get_async_result_with_token(
+        token_value, (scopes, docs) = await get_async_result_with_token(
             token_value, do_get_documents
         )
         return (token_value, scopes, docs)
 
+    @reactive.effect
     def get_documents_effect():
         token_value, scopes, docs = get_documents_task.result()
         token.set(token_value)

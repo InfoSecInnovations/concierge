@@ -11,11 +11,16 @@ from starlette.routing import Mount, Route
 import os
 import dotenv
 from auth import get_auth_tokens
-from functions import set_collections
 from concierge_util import load_config
 from collections_data import CollectionsData
-from concierge_backend_lib.authentication import get_token_info, execute_with_token
+from concierge_backend_lib.authentication import (
+    get_token_info,
+    execute_with_token,
+    get_async_result_with_token,
+)
 from concierge_backend_lib.authorization import auth_enabled, list_permissions
+from concierge_backend_lib.document_collections import get_collections
+from isi_util.async_single import asyncify
 
 dotenv.load_dotenv()
 
@@ -114,10 +119,26 @@ def server(input: Inputs, output: Outputs, session: Session):
     )
     status = status_server("status_widget")
 
+    @reactive.extended_task
+    async def fetch_collections(token_value):
+        async def do_fetch_collections(token):
+            return await asyncify(get_collections, token["access_token"])
+
+        token_value, new_collections = await get_async_result_with_token(
+            token_value, do_fetch_collections
+        )
+        return (token_value, new_collections)
+
+    @reactive.effect
+    def fetch_collections_effect():
+        token_value, new_collections = fetch_collections.result()
+        token.set(token_value)
+        collections.set(CollectionsData(collections=new_collections, loading=False))
+
     @reactive.effect
     def update_collections():
         if opensearch_status.get():
-            set_collections(token, token.get(), collections)
+            fetch_collections(token.get())
         else:
             collections.set(CollectionsData(collections=[], loading=False))
 
