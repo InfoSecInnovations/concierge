@@ -66,7 +66,12 @@ def document_server(
                 doc["id"],
             )
 
-        token.set(await execute_async_with_token(token_value, do_delete))
+        return await execute_async_with_token(token_value, do_delete)
+
+    @reactive.effect()
+    def delete_effect():
+        token_value = delete.result()
+        token.set(token_value)
         deleting.set(False)
 
     @reactive.effect

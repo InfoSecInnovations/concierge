@@ -1,4 +1,4 @@
-# This is a demo app to show the Shiny team the issue with "SilentException" which is incredibly annoying.
+# This is the response from the dev team about the proper way to implement the app with extended tasks
 
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
 from asyncio import sleep
@@ -19,19 +19,30 @@ def server(input: Inputs, output: Outputs, session: Session):
     async def set_number_bad():
         print("setting number to 1/0")
         await sleep(0.2)
-        broken_number.set(1 / 0)
-        print("number set to 1/0")
+        return 1 / 0
+
+    @reactive.effect()
+    def _():
+        x = set_number_bad.result()
+        broken_number.set(x)
+        print(f"number set to {x}")
 
     @reactive.extended_task
     async def set_number_good():
         print("setting number to 42")
         await sleep(0.2)
-        good_number.set(42)
-        print("number set to 42")
+        return 42
+
+    @reactive.effect()
+    def _():
+        x = set_number_good.result()
+        good_number.set(x)
+        print(f"number set to {x}")
 
     @render.ui
     def silent_exception():
-        return ui.markdown(f"number is {broken_number.get()}")
+        x = broken_number.get()
+        return ui.markdown(f"number is {x}")
 
     @render.ui
     def working_number():
