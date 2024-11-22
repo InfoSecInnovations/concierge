@@ -15,7 +15,7 @@ class WebAppAsyncTokenTaskRunner:
 
     async def run_async_task(self, func):
         _, result = await self.runner.run_with_token(func)
-        # TODO: refresh cookie token using AJAX somehow
+        # TODO: refresh cookie token using AJAX somehow? This doesn't seem to be required, maybe the refresh tokens remain valid?
         return result
 
 

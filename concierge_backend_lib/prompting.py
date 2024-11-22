@@ -4,17 +4,22 @@ import os
 from dotenv import load_dotenv
 from .opensearch_prompting import get_context_from_opensearch
 from .authorization import auth_enabled, authorize, UnauthorizedOperationError
+from isi_util.async_single import asyncify
+from .httpx_client import httpx_client
+import traceback
 
 load_dotenv()
 HOST = os.getenv("OLLAMA_HOST") or "localhost"
 
 
-def get_context(token, collection_id: str, reference_limit: int, user_input: str):
+async def get_context(token, collection_id: str, reference_limit: int, user_input: str):
     if auth_enabled:
-        authorized = authorize(token, collection_id, "read")
+        authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
-    return get_context_from_opensearch(collection_id, reference_limit, user_input)
+    return await asyncify(
+        get_context_from_opensearch, collection_id, reference_limit, user_input
+    )
 
 
 def prepare_prompt(
@@ -42,7 +47,7 @@ def prepare_prompt(
     return prompt
 
 
-def get_response(
+async def get_response(
     context,
     task_prompt,
     user_input,
@@ -60,12 +65,16 @@ def get_response(
     )
 
     data = {"model": "mistral", "prompt": prompt, "stream": False}
-
-    response = requests.post(f"http://{HOST}:11434/api/generate", data=json.dumps(data))
-
-    print(f"Response: {response}")
+    # Ollama doesn't like the data in JSON, we have to dump it to string
+    try:
+        response = await httpx_client.post(
+            f"http://{HOST}:11434/api/generate", data=json.dumps(data)
+        )
+    except Exception:
+        traceback.print_exc()
 
     if response.status_code != 200:
+        print(response.content)
         return f"ollama status: {response.status_code}"
 
     return json.loads(response.text)["response"]

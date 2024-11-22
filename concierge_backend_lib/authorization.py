@@ -4,11 +4,11 @@ from .authentication import (
     get_keycloak_client,
     get_keycloak_admin_client,
 )
-import httpx
 import dotenv
 import os
 from keycloak import KeycloakPostError
 from keycloak.exceptions import raise_error_from_response
+from .httpx_client import httpx_client
 
 
 class UnauthorizedOperationError(Exception):
@@ -18,15 +18,13 @@ class UnauthorizedOperationError(Exception):
 
 dotenv.load_dotenv()
 auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
-# TODO: enable verify if using production settings
-client = httpx.AsyncClient(verify=False)
 
 
 async def authorize(token, resource, scope: str | None = None):
     permission = resource
     if scope:
         permission += f"#{scope}"
-    resp = await client.post(
+    resp = await httpx_client.post(
         keycloak_openid_config()["token_endpoint"],
         data={
             "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",

@@ -149,18 +149,21 @@ def prompter_server(
         if selected_task in task_list:
             chat.update_user_input(placeholder=tasks[selected_task]["greeting"])
 
-    def stream_response(
-        token, collection_id, user_input, task, persona, selected_enhancers, source_file
+    async def stream_response(
+        collection_id, user_input, task, persona, selected_enhancers, source_file
     ):
-        context = get_context(
-            token["access_token"], collection_id, REFERENCE_LIMIT, user_input
-        )
+        async def do_get_context(token):
+            return await get_context(
+                token["access_token"], collection_id, REFERENCE_LIMIT, user_input
+            )
+
+        context = await task_runner.run_async_task(do_get_context)
         if len(context["sources"]):
             yield "Responding based on the following sources:\n\n"
             for source in context["sources"]:
                 yield f"{page_link(collection_id, source)}\n\n"
             if "prompt" in tasks[task]:
-                yield get_response(
+                yield await get_response(
                     context["context"],
                     tasks[task]["prompt"],
                     user_input,
@@ -189,20 +192,17 @@ def prompter_server(
             with open(input_files[0]["datapath"], "r") as file:
                 file_contents = file.read()
 
-        async def do_append(token):
-            await chat.append_message_stream(
-                stream_response(
-                    token,
-                    collection_id,
-                    chat.user_input(),
-                    task,
-                    persona,
-                    selected_enhancers,
-                    file_contents,
-                )
+        await chat.append_message_stream(
+            stream_response(
+                collection_id,
+                chat.user_input(),
+                task,
+                persona,
+                selected_enhancers,
+                file_contents,
             )
+        )
 
-        await task_runner.run_async_task(do_append)
         # this will clear the file input
         current_file_id.set(current_file_id.get() + 1)
 
