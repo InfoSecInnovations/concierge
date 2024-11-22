@@ -4,11 +4,14 @@ from keycloak import (
     KeycloakOpenIDConnection,
     KeycloakUMA,
     KeycloakAdmin,
+    KeycloakAuthenticationError,
 )
 import os
 from dotenv import load_dotenv
 import traceback
 import urllib3
+from asyncio import create_task, Task
+from typing import Any
 
 
 urllib3.disable_warnings()
@@ -22,6 +25,7 @@ def server_url():
 
 def keycloak_openid_config():
     # this disables TLS verification and warning
+    # TODO: enable verification when using production settings
     session = requests.Session()
     session.verify = False
     return session.get(
@@ -70,9 +74,9 @@ def get_keycloak_admin_client():
     return client
 
 
-def get_token_info(token):
+async def get_token_info(token):
     keycloak_openid = get_keycloak_client()
-    return keycloak_openid.decode_token(token, validate=False)
+    return await keycloak_openid.a_decode_token(token, validate=False)
 
 
 username_cache = {}
@@ -128,3 +132,59 @@ async def get_async_result_with_token(token, func):
     except Exception:
         traceback.print_exc()
         raise
+
+
+class AsyncTokenTaskRunner:
+    """
+    A task runner that stores a Keycloak Oauth token and uses it to run tasks that require authentication.
+    The token will automatically be refreshed as needed.
+    """
+
+    def __init__(self, token) -> None:
+        self.tasks: set[Task] = set()
+        self.token = token
+        self.currentId = 0
+        self.refresh_task: Task | None = None
+
+    async def run_with_token(self, func, task_id=None) -> tuple[dict, Any]:
+        if task_id is None:
+            task_id = self.currentId
+            self.currentId += 1
+        token = self.token
+        task = create_task(func(token))
+        self.tasks.add(task)
+
+        def on_done(task):
+            self.tasks.remove(task)
+
+        task.add_done_callback(on_done)
+
+        try:
+            if self.refresh_task:
+                await self.refresh_task
+            result = await task
+            return (self.token, result)
+        except KeycloakAuthenticationError:
+            # if the token being used is still the same as the stored one, it probably expired
+            if token == self.token:
+                # if we're not already refreshing, we should launch the refresh task
+                if self.refresh_task is None:
+
+                    async def do_refresh():
+                        keycloak_openid = get_keycloak_client()
+                        self.token = await keycloak_openid.a_refresh_token(
+                            self.token["refresh_token"]
+                        )
+
+                    self.refresh_task = create_task(do_refresh())
+
+                    # unset refresh task when done
+                    def on_done(_):
+                        self.refresh_task = None
+
+                    self.refresh_task.add_done_callback(on_done)
+                # once we've ensured a refresh task is running, wait for it to complete
+                await self.refresh_task
+            # if not it has probably been refreshed and we're good to go
+            # try to rerun using current token
+            return await self.run_with_token(func, task_id)

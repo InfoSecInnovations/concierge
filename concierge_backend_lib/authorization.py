@@ -4,10 +4,11 @@ from .authentication import (
     get_keycloak_client,
     get_keycloak_admin_client,
 )
-import requests
+import httpx
 import dotenv
 import os
 from keycloak import KeycloakPostError
+from keycloak.exceptions import raise_error_from_response
 
 
 class UnauthorizedOperationError(Exception):
@@ -17,32 +18,34 @@ class UnauthorizedOperationError(Exception):
 
 dotenv.load_dotenv()
 auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
+# TODO: enable verify if using production settings
+client = httpx.AsyncClient(verify=False)
 
 
-def authorize(token, resource, scope: str | None = None):
-    # this disables TLS verification and warning
-    # TODO: enable verify if using production settings
-    session = requests.Session()
-    session.verify = False
+async def authorize(token, resource, scope: str | None = None):
     permission = resource
     if scope:
         permission += f"#{scope}"
-    authorized = session.post(
+    resp = await client.post(
         keycloak_openid_config()["token_endpoint"],
-        {
+        data={
             "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
             "audience": "concierge-auth",
             "permission": permission,
             "response_mode": "decision",
         },
         headers={"Authorization": f"Bearer {token}"},
-    ).json()
+    )
+
+    # this will cause us to get a new token if needed
+    raise_error_from_response(resp, KeycloakPostError)
+    authorized = resp.json()
     return authorized["result"]
 
 
-def create_resource(resource_name, resource_type, owner_id):
+async def create_resource(resource_name, resource_type, owner_id):
     keycloak_uma = get_keycloak_uma()
-    response = keycloak_uma.resource_set_create(
+    response = await keycloak_uma.a_resource_set_create(
         {
             "name": resource_name,
             "displayName": resource_name,
@@ -54,27 +57,27 @@ def create_resource(resource_name, resource_type, owner_id):
     return response["_id"]
 
 
-def list_resources(token):
+async def list_resources(token):
     keycloak_openid = get_keycloak_client()
     try:
-        response = keycloak_openid.uma_permissions(token)
+        response = await keycloak_openid.a_uma_permissions(token)
     except KeycloakPostError as e:
         # 403 means not authorized, so we can return an empty list
         if e.response_code == 403:
             return []
     admin_client = get_keycloak_admin_client()
-    client_id = admin_client.get_client_id("concierge-auth")
+    client_id = await admin_client.a_get_client_id("concierge-auth")
     resources = [
-        admin_client.get_client_authz_resource(client_id, resource["rsid"])
+        await admin_client.a_get_client_authz_resource(client_id, resource["rsid"])
         for resource in response
     ]
     return resources
 
 
-def list_permissions(token):
+async def list_permissions(token):
     keycloak_openid = get_keycloak_client()
     try:
-        response = keycloak_openid.uma_permissions(
+        response = await keycloak_openid.a_uma_permissions(
             token, ["collection:private:create", "collection:shared:create"]
         )
     except KeycloakPostError as e:
@@ -82,18 +85,18 @@ def list_permissions(token):
         if e.response_code == 403:
             return {}
     admin_client = get_keycloak_admin_client()
-    client_id = admin_client.get_client_id("concierge-auth")
+    client_id = await admin_client.a_get_client_id("concierge-auth")
     resources = [
-        admin_client.get_client_authz_resource(client_id, resource["rsid"])
+        await admin_client.a_get_client_authz_resource(client_id, resource["rsid"])
         for resource in response
     ]
     return {resource["name"] for resource in resources}
 
 
-def list_scopes(token, resource_id):
+async def list_scopes(token, resource_id):
     keycloak_openid = get_keycloak_client()
     try:
-        response = keycloak_openid.uma_permissions(token, resource_id)
+        response = await keycloak_openid.a_uma_permissions(token, resource_id)
         if not len(response):
             return []
         return response[0]["scopes"]
@@ -103,6 +106,6 @@ def list_scopes(token, resource_id):
             return []
 
 
-def delete_resource(resource_id):
+async def delete_resource(resource_id):
     keycloak_uma = get_keycloak_uma()
-    keycloak_uma.resource_set_delete(resource_id)
+    await keycloak_uma.a_resource_set_delete(resource_id)

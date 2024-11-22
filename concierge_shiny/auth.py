@@ -1,9 +1,22 @@
 from shiny import ui, Inputs, Outputs, Session, render, reactive, module
-from concierge_backend_lib.authentication import get_keycloak_client
+from concierge_backend_lib.authentication import (
+    get_keycloak_client,
+    AsyncTokenTaskRunner,
+)
 from concierge_backend_lib.authorization import auth_enabled
 import json
 
 scope = "profile email openid"
+
+
+class WebAppAsyncTokenTaskRunner:
+    def __init__(self, token) -> None:
+        self.runner = AsyncTokenTaskRunner(token)
+
+    async def run_async_task(self, func):
+        _, result = await self.runner.run_with_token(func)
+        # TODO: refresh cookie token using AJAX somehow
+        return result
 
 
 @module.ui
@@ -24,7 +37,7 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
             return ui.tags.script(f'window.location.href = "{url}"')
 
 
-def get_auth_tokens(session, config):
+def get_auth_token(session):
     if not auth_enabled:
         return {
             "access_token": None
@@ -71,3 +84,10 @@ def get_auth_tokens(session, config):
 
         return None
     return parsed_token
+
+
+def get_task_runner(session):
+    token = get_auth_token(session)
+    if token is None:
+        return None
+    return WebAppAsyncTokenTaskRunner(token)

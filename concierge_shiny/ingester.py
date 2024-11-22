@@ -4,12 +4,11 @@ from concierge_backend_lib.ingesting import insert_document
 from concierge_backend_lib.loading import load_file
 from loaders.web import WebLoader
 from loaders.base_loader import ConciergeDocument
-from isi_util.async_generator import asyncify_generator
 from components import (
     text_list_ui,
     text_list_server,
 )
-from concierge_backend_lib.authentication import execute_async_with_token
+from auth import WebAppAsyncTokenTaskRunner
 
 
 @module.ui
@@ -26,7 +25,7 @@ def ingester_server(
     session: Session,
     selected_collection,
     collections,
-    token,
+    task_runner: WebAppAsyncTokenTaskRunner,
     user_info,
 ):
     file_input_trigger = reactive.value(0)
@@ -52,21 +51,26 @@ def ingester_server(
         doc: ConciergeDocument,
         collection_id: str,
         label: str,
-        token,
         binary: bytes | None = None,
     ):
+        print("load doc")
         page_progress = tqdm(total=len(doc.pages))
         with ui.Progress(0, len(doc.pages)) as p:
             p.set(0, message=f"{label}: loading...")
-            async for x in asyncify_generator(
-                insert_document(token["access_token"], collection_id, doc, binary)
-            ):
-                p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")
-                page_progress.n = x[0] + 1
-                page_progress.refresh()
+
+            async def do_load(token):
+                async for x in insert_document(
+                    token["access_token"], collection_id, doc, binary
+                ):
+                    p.set(x[0] + 1, message=f"{label}: part {x[0] + 1} of {x[1]}.")
+                    page_progress.n = x[0] + 1
+                    page_progress.refresh()
+
+            await task_runner.run_async_task(do_load)
         page_progress.close()
 
-    async def ingest_files(files: list[dict], collection_id: str, token):
+    async def ingest_files(files: list[dict], collection_id: str):
+        print("ingest files")
         for file in files:
             print(file["name"])
             ui.notification_show(f"Processing {file['name']}")
@@ -75,35 +79,30 @@ def ingester_server(
             doc = load_file(file["datapath"])
             doc.metadata.filename = file["name"]
             if doc:
-                await load_doc(doc, collection_id, file["name"], token, binary)
+                await load_doc(doc, collection_id, file["name"], binary)
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
-    async def ingest_urls(urls: list[str], collection_id: str, token):
+    async def ingest_urls(urls: list[str], collection_id: str):
         for url in urls:
             print(url)
             ui.notification_show(f"Processing {url}")
             doc = WebLoader.load(url)
-            await load_doc(doc, collection_id, url, token)
+            await load_doc(doc, collection_id, url)
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 
     @ui.bind_task_button(button_id="ingest")
     @reactive.extended_task
-    async def ingest(files, urls, collection_name, token_value):
-        async def do_ingest(token):
-            if files and len(files):
-                await ingest_files(files, collection_name, token)
-            if urls and len(urls):
-                await ingest_urls(urls, collection_name, token)
-
-        return await execute_async_with_token(token_value, do_ingest)
+    async def ingest(files, urls, collection_name):
+        if files and len(files):
+            await ingest_files(files, collection_name)
+        if urls and len(urls):
+            await ingest_urls(urls, collection_name)
 
     @reactive.effect
     def ingest_effect():
-        token_value = ingest.result()
-        print("yo")
-        token.set(token_value)
+        ingest.result()
         with reactive.isolate():
             ingesting_done.set(ingesting_done.get() + 1)
 
@@ -120,7 +119,6 @@ def ingester_server(
         print(f"ingesting documents into collection {collection_id}")
         del input.ingester_files
         file_input_trigger.set(file_input_trigger.get() + 1)
-        # we have to pass reactive reads into an async function rather than calling from within
-        ingest(files, urls, collection_id, token.get())
+        ingest(files, urls, collection_id)
 
     return ingesting_done

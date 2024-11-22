@@ -9,8 +9,8 @@ from components import (
 )
 from functions import page_link, load_llm_model
 from markdown_renderer import md
-from concierge_backend_lib.authentication import execute_async_with_token
 from concierge_backend_lib.authorization import auth_enabled
+from auth import WebAppAsyncTokenTaskRunner
 
 REFERENCE_LIMIT = 5
 
@@ -49,7 +49,7 @@ def prompter_server(
     collections,
     opensearch_status,
     ollama_status,
-    token,
+    task_runner: WebAppAsyncTokenTaskRunner,
     user_info,
     permissions,
 ):
@@ -202,7 +202,7 @@ def prompter_server(
                 )
             )
 
-        token.set(await execute_async_with_token(token.get(), do_append))
+        await task_runner.run_async_task(do_append)
         # this will clear the file input
         current_file_id.set(current_file_id.get() + 1)
 

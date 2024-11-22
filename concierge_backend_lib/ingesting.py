@@ -1,24 +1,21 @@
 from .opensearch_ingesting import insert
 from .authorization import auth_enabled, authorize, UnauthorizedOperationError
 from tqdm import tqdm
-import traceback
+from isi_util.async_generator import asyncify_generator
 
 
-def insert_document(token, collection_id, document, binary):
-    try:
-        if auth_enabled:
-            authorized = authorize(token, collection_id, "update")
-            if not authorized:
-                raise UnauthorizedOperationError()
-        yield from insert(collection_id, document, binary)
-    except Exception:
-        traceback.print_exc()
-        raise
+async def insert_document(token, collection_id, document, binary):
+    if auth_enabled:
+        authorized = await authorize(token, collection_id, "update")
+        if not authorized:
+            raise UnauthorizedOperationError()
+    async for x in asyncify_generator(insert(collection_id, document, binary)):
+        yield x
 
 
-def insert_with_tqdm(token, collection_id, document, binary):
+async def insert_with_tqdm(token, collection_id, document, binary):
     page_progress = tqdm(total=len(document.pages))
-    for x in insert_document(token, collection_id, document, binary):
+    async for x in insert_document(token, collection_id, document, binary):
         page_progress.n = x[0] + 1
         page_progress.refresh()
     page_progress.close()

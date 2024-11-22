@@ -10,17 +10,11 @@ from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
 import dotenv
-from auth import get_auth_tokens
-from concierge_util import load_config
+from auth import get_task_runner
 from collections_data import CollectionsData
-from concierge_backend_lib.authentication import (
-    get_token_info,
-    execute_with_token,
-    get_async_result_with_token,
-)
+from concierge_backend_lib.authentication import get_token_info
 from concierge_backend_lib.authorization import auth_enabled, list_permissions
 from concierge_backend_lib.document_collections import get_collections
-from isi_util.async_single import asyncify
 
 dotenv.load_dotenv()
 
@@ -36,24 +30,41 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
 
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
-    config = load_config()
-    auth_token = get_auth_tokens(session, config)
     user_info = reactive.value()
     permissions = reactive.value({})
-    if auth_enabled and not auth_token:
+    task_runner = get_task_runner(session)
+    if auth_enabled and not task_runner:
         return
     if auth_enabled:
 
-        def set_user_info(token):
-            user_info.set(get_token_info(token["access_token"]))
+        @reactive.extended_task
+        async def get_info():
+            async def do_get_info(token):
+                return await get_token_info(token["access_token"])
 
-        auth_token = execute_with_token(auth_token, set_user_info)
+            return await task_runner.run_async_task(do_get_info)
 
-        def set_permissions(token):
-            permissions.set(list_permissions(token["access_token"]))
+        @reactive.effect
+        def get_info_effect():
+            info = get_info.result()
+            user_info.set(info)
 
-        auth_token = execute_with_token(auth_token, set_permissions)
-    token = reactive.value(auth_token)
+        get_info()
+
+        @reactive.extended_task
+        async def get_permissions():
+            async def do_get_permissions(token):
+                return await list_permissions(token["access_token"])
+
+            return await task_runner.run_async_task(do_get_permissions)
+
+        @reactive.effect
+        def get_permissions_effect():
+            permissions_value = get_permissions.result()
+            permissions.set(permissions_value)
+
+        get_permissions()
+
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -84,7 +95,7 @@ def server(input: Inputs, output: Outputs, session: Session):
                     collection_management_ui("collection_management"),
                 )
             )
-        if token.get():
+        if auth_enabled:
             nav_items.append(
                 ui.nav_control(
                     ui.input_action_button("openid_logout", "Log Out", class_="my-3")
@@ -104,7 +115,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         collections,
         opensearch_status,
         ollama_status,
-        token,
+        task_runner,
         user_info,
         permissions,
     )
@@ -113,32 +124,28 @@ def server(input: Inputs, output: Outputs, session: Session):
         selected_collection,
         collections,
         opensearch_status,
-        token,
+        task_runner,
         user_info,
         permissions,
     )
     status = status_server("status_widget")
 
     @reactive.extended_task
-    async def fetch_collections(token_value):
+    async def fetch_collections():
         async def do_fetch_collections(token):
-            return await asyncify(get_collections, token["access_token"])
+            return await get_collections(token["access_token"])
 
-        token_value, new_collections = await get_async_result_with_token(
-            token_value, do_fetch_collections
-        )
-        return (token_value, new_collections)
+        return await task_runner.run_async_task(do_fetch_collections)
 
     @reactive.effect
     def fetch_collections_effect():
-        token_value, new_collections = fetch_collections.result()
-        token.set(token_value)
+        new_collections = fetch_collections.result()
         collections.set(CollectionsData(collections=new_collections, loading=False))
 
     @reactive.effect
     def update_collections():
         if opensearch_status.get():
-            fetch_collections(token.get())
+            fetch_collections()
         else:
             collections.set(CollectionsData(collections=[], loading=False))
 

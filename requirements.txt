@@ -16,3 +16,4 @@ shinyswatch~=0.7.0
 isi-util
 concierge-util
 python-keycloak~=4.6.2
+httpx~=0.27.2

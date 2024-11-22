@@ -5,7 +5,6 @@ from components import (
     collection_selector_ui,
     collection_selector_server,
 )
-from isi_util.async_single import asyncify
 from isi_util.list_util import find
 from concierge_backend_lib.document_collections import (
     get_collection_scopes,
@@ -14,16 +13,13 @@ from concierge_backend_lib.document_collections import (
     delete_document,
     get_collections,
 )
-from concierge_backend_lib.authentication import (
-    execute_async_with_token,
-    get_async_result_with_token,
-)
 from concierge_backend_lib.authorization import auth_enabled
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from functions import doc_link
 from markdown_renderer import md
 from collections_data import CollectionsData
+from auth import WebAppAsyncTokenTaskRunner
 
 # --------
 # DOCUMENT
@@ -52,7 +48,7 @@ def document_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    token,
+    task_runner: WebAppAsyncTokenTaskRunner,
     collection,
     doc,
     deletion_callback,
@@ -61,29 +57,27 @@ def document_server(
 
     @ui.bind_task_button(button_id="delete_doc")
     @reactive.extended_task
-    async def delete(token_value):
+    async def delete():
         async def do_delete(token):
-            await asyncify(
-                delete_document,
+            await delete_document(
                 token["access_token"],
                 collection,
                 doc["type"],
                 doc["id"],
             )
 
-        return await execute_async_with_token(token_value, do_delete)
+        return await task_runner.run_async_task(do_delete)
 
     @reactive.effect()
     def delete_effect():
-        token_value = delete.result()
-        token.set(token_value)
+        delete.result()
         deleting.set(False)
 
     @reactive.effect
     @reactive.event(input.delete_doc, ignore_init=True)
     def on_delete():
         deleting.set(True)
-        delete(token.get())
+        delete()
 
     @reactive.effect
     @reactive.event(deleting, ignore_none=False, ignore_init=True)
@@ -113,18 +107,18 @@ def collection_management_server(
     selected_collection,
     collections,
     opensearch_status,
-    token,
+    task_runner: WebAppAsyncTokenTaskRunner,
     user_info,
     permissions,
 ):
     collection_create_server(
-        "collection_create", selected_collection, collections, token, permissions
+        "collection_create", selected_collection, collections, task_runner, permissions
     )
     collection_selector_server(
         "collection_select", selected_collection, collections, user_info
     )
     ingestion_done_trigger = ingester_server(
-        "ingester", selected_collection, collections, token, user_info
+        "ingester", selected_collection, collections, task_runner, user_info
     )
 
     document_delete_trigger = reactive.value(0)
@@ -223,23 +217,16 @@ def collection_management_server(
 
     @ui.bind_task_button(button_id="delete")
     @reactive.extended_task
-    async def delete(collection_id, token_value):
+    async def delete(collection_id):
         async def do_delete(token):
-            await asyncify(delete_collection, token["access_token"], collection_id)
+            await delete_collection(token["access_token"], collection_id)
+            return await get_collections(token["access_token"])
 
-        async def do_get_collections(token):
-            return await asyncify(get_collections, token["access_token"])
-
-        token_value = await execute_async_with_token(token_value, do_delete)
-        token_value, new_collections = await get_async_result_with_token(
-            token_value, do_get_collections
-        )
-        return (token_value, new_collections)
+        return await task_runner.run_async_task(do_delete)
 
     @reactive.effect
     def delete_effect():
-        token_value, new_collections = delete.result()
-        token.set(token_value)
+        new_collections = delete.result()
         collections.set(
             CollectionsData(
                 collections=new_collections,
@@ -254,26 +241,20 @@ def collection_management_server(
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
     def on_delete():
-        delete(selected_collection.get(), token.get())
+        delete(selected_collection.get())
 
     @reactive.extended_task
-    async def get_documents_task(collection_id, token_value):
+    async def get_documents_task(collection_id):
         async def do_get_documents(token):
-            scopes = await asyncify(
-                get_collection_scopes, token["access_token"], collection_id
-            )
-            docs = await asyncify(get_documents, token["access_token"], collection_id)
+            scopes = await get_collection_scopes(token["access_token"], collection_id)
+            docs = await get_documents(token["access_token"], collection_id)
             return (scopes, docs)
 
-        token_value, (scopes, docs) = await get_async_result_with_token(
-            token_value, do_get_documents
-        )
-        return (token_value, scopes, docs)
+        return await task_runner.run_async_task(do_get_documents)
 
     @reactive.effect
     def get_documents_effect():
-        token_value, scopes, docs = get_documents_task.result()
-        token.set(token_value)
+        scopes, docs = get_documents_task.result()
         current_scopes.set(scopes)
         fetching_docs.set(False)
         current_docs.set([{**doc, "el_id": rand_hex(4)} for doc in docs])
@@ -288,11 +269,15 @@ def collection_management_server(
     def on_collection_change():
         req(selected_collection.get())
         fetching_docs.set(True)
-        get_documents_task(selected_collection.get(), token.get())
+        get_documents_task(selected_collection.get())
 
     @reactive.effect
     def document_servers():
         for doc in current_docs.get():
             document_server(
-                doc["el_id"], token, selected_collection.get(), doc, on_delete_document
+                doc["el_id"],
+                task_runner,
+                selected_collection.get(),
+                doc,
+                on_delete_document,
             )
