@@ -8,7 +8,6 @@ from keycloak import (
 )
 import os
 from dotenv import load_dotenv
-import traceback
 import urllib3
 from asyncio import create_task, Task
 from typing import Any
@@ -74,6 +73,11 @@ def get_keycloak_admin_client():
     return client
 
 
+def get_keycloak_admin_openid_token(client: KeycloakOpenID):
+    token = client.token(grant_type="client_credentials")
+    return token
+
+
 async def get_token_info(token):
     keycloak_openid = get_keycloak_client()
     return await keycloak_openid.a_decode_token(token, validate=False)
@@ -106,32 +110,24 @@ def execute_with_token(token, func):
 
 async def execute_async_with_token(token, func):
     try:
-        try:
-            await func(token)
-            return token
-        except Exception:
-            keycloak_openid = get_keycloak_client()
-            token = await keycloak_openid.a_refresh_token(token["refresh_token"])
-            await func(token)
-            return token
-    except Exception:
-        traceback.print_exc()
-        raise
+        await func(token)
+        return token
+    except KeycloakAuthenticationError:
+        keycloak_openid = get_keycloak_client()
+        token = await keycloak_openid.a_refresh_token(token["refresh_token"])
+        await func(token)
+        return token
 
 
 async def get_async_result_with_token(token, func):
     try:
-        try:
-            result = await func(token)
-            return (token, result)
-        except Exception:
-            keycloak_openid = get_keycloak_client()
-            token = await keycloak_openid.a_refresh_token(token["refresh_token"])
-            result = await func(token)
-            return (token, result)
-    except Exception:
-        traceback.print_exc()
-        raise
+        result = await func(token)
+        return (token, result)
+    except KeycloakAuthenticationError:
+        keycloak_openid = get_keycloak_client()
+        token = await keycloak_openid.a_refresh_token(token["refresh_token"])
+        result = await func(token)
+        return (token, result)
 
 
 class AsyncTokenTaskRunner:

@@ -448,7 +448,8 @@
       "requiredActions": [],
       "clientRoles": {
         "concierge-auth": [
-          "uma_protection"
+          "uma_protection",
+          "admin"
         ],
         "realm-management": [
           "realm-admin"
