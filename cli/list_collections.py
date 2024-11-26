@@ -1,19 +1,20 @@
 import sys
 import os
 import asyncio
+from .get_token import get_token
 
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from concierge_backend_lib.authentication import (
-    get_keycloak_client,
-    get_keycloak_admin_openid_token,
     get_async_result_with_token,
+    get_username,
 )
+from concierge_backend_lib.authorization import auth_enabled
 from concierge_backend_lib.document_collections import get_collections
 
-client = get_keycloak_client()
-token = get_keycloak_admin_openid_token(client)
+
+token = get_token()
 
 
 async def display_collections():
@@ -21,8 +22,19 @@ async def display_collections():
         return await get_collections(token["access_token"])
 
     _, collections = await get_async_result_with_token(token, do_get_collections)
-    for collection_name in collections:
-        print(collection_name)
+    if auth_enabled:
+        for collection in collections:
+            collection["owner_name"] = get_username(
+                collection["attributes"]["concierge_owner"][0]
+            )
+    for collection in collections:
+        print(f"{collection['name']}")
+        if auth_enabled:
+            print(
+                f"{collection['type'].replace('collection:', '')} collection owned by {collection['owner_name']}"
+            )
+        print(f"collection ID: {collection['_id']}")
+        print("")
 
 
 asyncio.run(display_collections())

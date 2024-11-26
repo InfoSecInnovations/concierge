@@ -1,27 +1,43 @@
 import sys
 import os
+from .get_token import get_token
 
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import argparse
-from concierge_backend_lib.opensearch import get_client, get_documents
+from concierge_backend_lib.authentication import get_async_result_with_token
+from concierge_backend_lib.document_collections import get_documents
+import asyncio
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-c",
     "--collection",
     required=True,
-    help="Collection containing the vectorized data.",
+    help="Collection ID where the documents are stored.",
 )
 args = parser.parse_args()
 
-collection_name = args.collection
+collection_id = args.collection
 
-client = get_client()
-documents = get_documents(client, collection_name)
+token = get_token()
 
-for document in documents:
-    print(
-        f"id: {document['id']}, source: {document['source']}, type: {document['type']}, pages: {document['page_count']}, vectors: {document['vector_count']}"
-    )
+
+async def display_documents():
+    async def do_get_documents(token):
+        return await get_documents(token["access_token"], collection_id)
+
+    _, documents = await get_async_result_with_token(token, do_get_documents)
+    for document in documents:
+        if "filename" in document:
+            print(document["filename"])
+        else:
+            print(document["source"])
+        print(
+            f"id: {document['id']}, type: {document['type']}, pages: {document['page_count']}, vectors: {document['vector_count']}"
+        )
+        print("")
+
+
+asyncio.run(display_documents())
