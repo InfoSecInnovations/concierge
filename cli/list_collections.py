@@ -27,6 +27,8 @@ async def display_collections():
             collection["owner_name"] = get_username(
                 collection["attributes"]["concierge_owner"][0]
             )
+    if not collections:
+        print("no collections found")
     for collection in collections:
         print(f"{collection['name']}")
         if auth_enabled:
