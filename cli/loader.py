@@ -30,7 +30,6 @@ source_path = args.source
 collection_id = args.collection
 
 source_files = os.listdir(source_path)
-token = get_token()
 
 
 async def load_files(token):
@@ -50,4 +49,4 @@ async def load_files(token):
             token = await execute_async_with_token(token, do_load)
 
 
-asyncio.run(load_files(token))
+asyncio.run(load_files(get_token()))

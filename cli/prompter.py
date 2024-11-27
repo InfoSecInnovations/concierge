@@ -1,5 +1,6 @@
 import sys
 import os
+from .get_token import get_token
 
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -7,9 +8,10 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 import argparse
 from configobj import ConfigObj
 from tqdm import tqdm
+import asyncio
 from concierge_backend_lib.prompting import get_context, get_response
 from concierge_backend_lib.ollama import load_model
-from concierge_backend_lib.opensearch import get_client
+from concierge_backend_lib.authentication import get_async_result_with_token
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -19,7 +21,7 @@ parser.add_argument(
     "-c",
     "--collection",
     required=True,
-    help="Collection containing the vectorized data.",
+    help="Collection ID containing the documents to query.",
 )
 parser.add_argument(
     "-p", "--persona", help="What personality or tone you want as the response."
@@ -62,10 +64,9 @@ if args.file:
     else:
         source_file = open(args.file, "r")
 
-collection_name = args.collection
+collection_id = args.collection
 
-### VARs ###
-# TODO will want to make this a select later
+# TODO: will want to make this a select later
 references = 5
 
 
@@ -91,39 +92,49 @@ def load_model_with_progress(model_name):
 
 load_model_with_progress("mistral")
 
-client = get_client()
 
-while True:
-    print(task["greeting"])
-    user_input = input()
+async def loop_prompter(token):
+    while True:
+        print(task["greeting"])
+        user_input = input()
 
-    context = get_context(client, collection_name, references, user_input)
-
-    print("\nResponding based on the following sources:")
-    for source in context["sources"]:
-        doc_metadata = source["doc_metadata"]
-        page_metadata = source["page_metadata"]
-        if source["type"] == "pdf":
-            print(
-                f'   PDF File: page {page_metadata["page"]} of {doc_metadata["source"]}'
+        async def do_get_context(token):
+            return await get_context(
+                token["access_token"], collection_id, references, user_input
             )
-        if source["type"] == "web":
-            print(
-                f'   Web page: {page_metadata["source"]} scraped {doc_metadata["ingest_date"]}, top level URL: {doc_metadata["source"]}'
+
+        token, context = await get_async_result_with_token(token, do_get_context)
+
+        print("\nResponding based on the following sources:")
+        for source in context["sources"]:
+            doc_metadata = source["doc_metadata"]
+            page_metadata = source["page_metadata"]
+            if source["type"] == "pdf":
+                print(
+                    f'   PDF File: page {page_metadata["page"]} of {doc_metadata["source"]}'
+                )
+            if source["type"] == "web":
+                print(
+                    f'   Web page: {page_metadata["source"]} scraped {doc_metadata["ingest_date"]}, top level URL: {doc_metadata["source"]}'
+                )
+        print("\n\n")
+
+        if "prompt" in task:
+            response = await get_response(
+                context["context"],
+                task["prompt"],
+                user_input,
+                None if not persona else persona["prompt"],
+                None
+                if not enhancers
+                else [enhancer["prompt"] for enhancer in enhancers],
+                None if not source_file else source_file.read(),
             )
-    print("\n\n")
 
-    if "prompt" in task:
-        response = get_response(
-            context["context"],
-            task["prompt"],
-            user_input,
-            None if not persona else persona["prompt"],
-            None if not enhancers else [enhancer["prompt"] for enhancer in enhancers],
-            None if not source_file else source_file.read(),
-        )
+            print(response)
+            print("\n\n")
+        else:
+            print("\n\n")
 
-        print(response)
-        print("\n\n")
-    else:
-        print("\n\n")
+
+asyncio.run(loop_prompter(get_token()))
