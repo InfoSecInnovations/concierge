@@ -123,5 +123,5 @@ def insert(
                 for index, vect in enumerate(vects)
             ]
         )
-        yield (index, total)
+        yield (index, total, doc_id)
     helpers.bulk(client, entries, refresh=True)

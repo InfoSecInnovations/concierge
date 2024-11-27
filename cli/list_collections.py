@@ -6,22 +6,13 @@ from .get_token import get_token
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from concierge_backend_lib.authentication import (
-    get_async_result_with_token,
-    get_username,
-)
+from concierge_backend_lib.authentication import get_username
 from concierge_backend_lib.authorization import auth_enabled
 from concierge_backend_lib.document_collections import get_collections
 
 
-token = get_token()
-
-
 async def display_collections():
-    async def do_get_collections(token):
-        return await get_collections(token["access_token"])
-
-    _, collections = await get_async_result_with_token(token, do_get_collections)
+    collections = await get_collections(get_token()["access_token"])
     if auth_enabled:
         for collection in collections:
             collection["owner_name"] = get_username(

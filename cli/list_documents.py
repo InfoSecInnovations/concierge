@@ -6,7 +6,6 @@ from .get_token import get_token
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import argparse
-from concierge_backend_lib.authentication import get_async_result_with_token
 from concierge_backend_lib.document_collections import get_documents
 import asyncio
 
@@ -21,14 +20,9 @@ args = parser.parse_args()
 
 collection_id = args.collection
 
-token = get_token()
-
 
 async def display_documents():
-    async def do_get_documents(token):
-        return await get_documents(token["access_token"], collection_id)
-
-    _, documents = await get_async_result_with_token(token, do_get_documents)
+    documents = await get_documents(get_token()["access_token"], collection_id)
     for document in documents:
         if "filename" in document:
             print(document["filename"])

@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 import argparse
 from concierge_backend_lib.document_collections import delete_collection
-from concierge_backend_lib.authentication import execute_async_with_token
 import asyncio
 
 parser = argparse.ArgumentParser()
@@ -20,14 +19,5 @@ parser.add_argument(
 args = parser.parse_args()
 
 collection_id = args.collection
-token = get_token()
 
-
-async def delete_selected_collection():
-    async def do_delete(token):
-        await delete_collection(token["access_token"], collection_id)
-
-    await execute_async_with_token(token, do_delete)
-
-
-asyncio.run(delete_selected_collection())
+asyncio.run(delete_collection(get_token()["access_token"], collection_id))

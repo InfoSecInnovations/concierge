@@ -15,7 +15,10 @@ async def insert_document(token, collection_id, document, binary=None):
 
 async def insert_with_tqdm(token, collection_id, document, binary=None):
     page_progress = tqdm(total=len(document.pages))
-    async for x in insert_document(token, collection_id, document, binary):
-        page_progress.n = x[0] + 1
+    async for progress, total, doc_id in insert_document(
+        token, collection_id, document, binary
+    ):
+        page_progress.n = progress + 1
         page_progress.refresh()
     page_progress.close()
+    return doc_id

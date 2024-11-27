@@ -9,7 +9,6 @@ import argparse
 import asyncio
 from concierge_backend_lib.ingesting import insert_with_tqdm
 from concierge_backend_lib.loading import load_file
-from concierge_backend_lib.authentication import execute_async_with_token
 
 
 parser = argparse.ArgumentParser()
@@ -32,7 +31,7 @@ collection_id = args.collection
 source_files = os.listdir(source_path)
 
 
-async def load_files(token):
+async def load_files():
     for file in source_files:
         print(file)
         full_path = os.path.join(source_path, file)
@@ -40,13 +39,11 @@ async def load_files(token):
             binary = f.read()
         doc = load_file(full_path)
         if doc:
-
-            async def do_load(token):
-                await insert_with_tqdm(
-                    token["access_token"], collection_id, doc, binary
-                )
-
-            token = await execute_async_with_token(token, do_load)
+            # we should just get token each iteration to avoid refresh issues
+            doc_id = await insert_with_tqdm(
+                get_token()["access_token"], collection_id, doc, binary
+            )
+            print(f"inserted with document ID {doc_id}")
 
 
-asyncio.run(load_files(get_token()))
+asyncio.run(load_files())

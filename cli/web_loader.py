@@ -7,7 +7,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from loaders.web import WebLoader
 from concierge_backend_lib.ingesting import insert_with_tqdm
-from concierge_backend_lib.authentication import execute_async_with_token
 import argparse
 import asyncio
 
@@ -27,16 +26,8 @@ parser.add_argument(
 args = parser.parse_args()
 url = args.url
 collection_id = args.collection
-token = get_token()
 
 pages = WebLoader.load(url)
 print(url)
 if pages:
-
-    async def insert_url():
-        async def do_insert(token):
-            await insert_with_tqdm(token["access_token"], collection_id, pages)
-
-        await execute_async_with_token(token, do_insert)
-
-    asyncio.run(insert_url())
+    asyncio.run(insert_with_tqdm(get_token()["access_token"], collection_id, pages))

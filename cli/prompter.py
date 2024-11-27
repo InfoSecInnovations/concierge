@@ -11,7 +11,6 @@ from tqdm import tqdm
 import asyncio
 from concierge_backend_lib.prompting import get_context, get_response
 from concierge_backend_lib.ollama import load_model
-from concierge_backend_lib.authentication import get_async_result_with_token
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -93,17 +92,15 @@ def load_model_with_progress(model_name):
 load_model_with_progress("mistral")
 
 
-async def loop_prompter(token):
+async def loop_prompter():
     while True:
         print(task["greeting"])
         user_input = input()
 
-        async def do_get_context(token):
-            return await get_context(
-                token["access_token"], collection_id, references, user_input
-            )
-
-        token, context = await get_async_result_with_token(token, do_get_context)
+        # we just get a new token each time to avoid running into refresh issues
+        context = get_context(
+            get_token()["access_token"], collection_id, references, user_input
+        )
 
         print("\nResponding based on the following sources:")
         for source in context["sources"]:
@@ -137,4 +134,4 @@ async def loop_prompter(token):
             print("\n\n")
 
 
-asyncio.run(loop_prompter(get_token()))
+asyncio.run(loop_prompter())
