@@ -1,35 +1,42 @@
 import sys
 import os
+from .get_token import get_token
 
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from loaders.web import WebLoader
-from concierge_backend_lib.opensearch import get_client, ensure_collection
 from concierge_backend_lib.ingesting import insert_with_tqdm
+from concierge_backend_lib.authentication import execute_async_with_token
 import argparse
+import asyncio
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-u",
     "--url",
     required=True,
-    help="Required: the URL of the website you wish to scrape.",
+    help="The URL of the website you wish to scrape.",
 )
 parser.add_argument(
     "-c",
     "--collection",
     required=True,
-    help="Collection containing the vectorized data.",
+    help="Collection ID of document collection to load into.",
 )
 args = parser.parse_args()
 url = args.url
-collection_name = args.collection
-
-client = get_client()
-ensure_collection(client, collection_name)
+collection_id = args.collection
+token = get_token()
 
 pages = WebLoader.load(url)
 print(url)
 if pages:
-    insert_with_tqdm(client, collection_name, pages)
+
+    async def insert_url():
+        async def do_insert(token):
+            await insert_with_tqdm(token["access_token"], collection_id, pages)
+
+        await execute_async_with_token(token, do_insert)
+
+    asyncio.run(insert_url())
