@@ -30,4 +30,7 @@ collection_id = args.collection
 pages = WebLoader.load(url)
 print(url)
 if pages:
-    asyncio.run(insert_with_tqdm(get_token()["access_token"], collection_id, pages))
+    doc_id = asyncio.run(
+        insert_with_tqdm(get_token()["access_token"], collection_id, pages)
+    )
+    print(f"inserted with document ID {doc_id}")
