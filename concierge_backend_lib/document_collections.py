@@ -97,7 +97,7 @@ async def get_documents(token, collection_id):
 
 async def delete_document(token, collection_id, document_type, document_id):
     if auth_enabled:
-        authorized = await authorize(token, collection_id, "update")
+        authorized = await authorize(token, collection_id, "delete")
         if not authorized:
             raise UnauthorizedOperationError()
     return await asyncify(
