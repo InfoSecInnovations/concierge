@@ -111,16 +111,28 @@ def status_server(input: Inputs, output: Outputs, session: Session):
 
 @module.ui
 def text_list_ui():
-    container_id = module.resolve_id("input_list_container")
-    list_id = module.resolve_id("input_list")
-    return ui.div(ui.div(ui.input_text("input_0", None), id=list_id), id=container_id)
+    return ui.output_ui("text_list")
 
 
 @module.server
 def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger):
-    input_ids = reactive.value(["input_0"])
+    input_ids = reactive.value([f"input_{rand_hex(4)}"])
     container_id = module.resolve_id("input_list_container")
     list_id = module.resolve_id("input_list")
+    init = reactive.value(0)
+
+    @render.ui
+    # this is a bit of a hack to make the UI only render once
+    # we can't rely on the module UI to display at the same time the server is called, so we use this instead
+    @reactive.event(init, ignore_none=False)
+    def text_list():
+        return ui.div(
+            ui.div(
+                *[ui.input_text(input_id, None) for input_id in input_ids.get()],
+                id=list_id,
+            ),
+            id=container_id,
+        )
 
     @reactive.calc
     def input_values():
@@ -129,22 +141,40 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
     @reactive.effect
     @reactive.event(input_values, ignore_none=False, ignore_init=False)
     def handle_inputs():
+        print("handle inputs")
         # if IDs were deleted, remake the whole input list
         if not len(input_ids.get()):
             ui.remove_ui(selector=f"#{container_id} *", multiple=True, immediate=True)
             ui.insert_ui(
                 ui.div(id=list_id), selector=f"#{container_id}", immediate=True
             )
+            print("remake UI")
 
-        # if there's already an empty input we don't need more
-        if not all([len(x) > 0 for x in input_values()]):
+        filled = []
+        empty = []
+        for id in input_ids.get():
+            if input[id]():
+                filled.append(id)
+            else:
+                empty.append(id)
+        # if there's already one empty input we're good to go
+        if len(empty) == 1:
+            print("1 empty element found")
             return
 
-        # insert new ID and corresponding element if all existing ones have values
+        # in any other situation we should take the filled elements and remove the others
         idx = rand_hex(4)
         new_id = f"input_{idx}"
-        input_ids.set([*input_ids.get(), new_id])
-        ui.insert_ui(ui.input_text(new_id, None), selector=f"#{list_id}")
+        with reactive.isolate():
+            print("adding new ID")
+            input_ids.set([*filled, new_id])
+            for id in empty:
+                print("removing empty")
+                del input[id]
+                ui.remove_ui(
+                    selector=f"div:has(> #{module.resolve_id(id)})", immediate=True
+                )
+            ui.insert_ui(ui.input_text(new_id, None), selector=f"#{list_id}")
 
     @reactive.effect
     @reactive.event(clear_trigger, ignore_init=True)
