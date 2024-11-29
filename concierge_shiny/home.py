@@ -68,7 +68,6 @@ def home_server(
     @render.ui
     def profile():
         info = user_info.get()
-        print(info)
         contents = []
         if "name" in info:
             contents.append(ui.card_header(ui.markdown(f"Hello **{info['name']}**")))

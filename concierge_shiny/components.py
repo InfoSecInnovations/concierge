@@ -141,14 +141,12 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
     @reactive.effect
     @reactive.event(input_values, ignore_none=False, ignore_init=False)
     def handle_inputs():
-        print("handle inputs")
         # if IDs were deleted, remake the whole input list
         if not len(input_ids.get()):
             ui.remove_ui(selector=f"#{container_id} *", multiple=True, immediate=True)
             ui.insert_ui(
                 ui.div(id=list_id), selector=f"#{container_id}", immediate=True
             )
-            print("remake UI")
 
         filled = []
         empty = []
@@ -159,17 +157,14 @@ def text_list_server(input: Inputs, output: Outputs, session: Session, clear_tri
                 empty.append(id)
         # if there's already one empty input we're good to go
         if len(empty) == 1:
-            print("1 empty element found")
             return
 
         # in any other situation we should take the filled elements and remove the others
         idx = rand_hex(4)
         new_id = f"input_{idx}"
         with reactive.isolate():
-            print("adding new ID")
             input_ids.set([*filled, new_id])
             for id in empty:
-                print("removing empty")
                 del input[id]
                 ui.remove_ui(
                     selector=f"div:has(> #{module.resolve_id(id)})", immediate=True
