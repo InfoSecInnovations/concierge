@@ -1,5 +1,5 @@
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
-from home import home_ui
+from home import home_ui, home_server
 from prompter import prompter_ui, prompter_server
 from collection_management import collection_management_ui, collection_management_server
 import shinyswatch
@@ -15,6 +15,7 @@ from collections_data import CollectionsData
 from concierge_backend_lib.authentication import get_token_info
 from concierge_backend_lib.authorization import auth_enabled, list_permissions
 from concierge_backend_lib.document_collections import get_collections
+from functions import has_edit_access, has_read_access
 
 dotenv.load_dotenv()
 
@@ -72,23 +73,12 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @render.ui
     def concierge_main():
-        nav_items = [
-            ui.nav_panel("Home", home_ui("home")),
-            ui.nav_panel("Prompter", prompter_ui("prompter")),
-        ]
+        nav_items = [ui.nav_panel("Home", home_ui("home"))]
 
-        def management_enabled():
-            if not auth_enabled:
-                return True
-            perms = permissions.get()
-            if (
-                "collection:private:shared" in perms
-                or "collection:shared:create" in perms
-            ):
-                return True
-            return False
+        if has_read_access(permissions):
+            nav_items.append(ui.nav_panel("Prompter", prompter_ui("prompter")))
 
-        if management_enabled():
+        if has_edit_access(permissions):
             nav_items.append(
                 ui.nav_panel(
                     "Collection Management",
@@ -108,6 +98,8 @@ def server(input: Inputs, output: Outputs, session: Session):
             *nav_items,
             id="navbar",
         )
+
+    home_server("home", permissions, user_info)
 
     prompter_server(
         "prompter",

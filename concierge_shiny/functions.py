@@ -4,6 +4,7 @@ from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
 from concierge_backend_lib.authentication import get_username
+from concierge_backend_lib.authorization import auth_enabled
 
 
 def doc_url(collection_name, doc_type, doc_id):
@@ -92,3 +93,22 @@ def format_collection_name(collection_data, user_info):
             return f"{collection_data["name"]} (private)"
         return f"{collection_data["name"]} (private, belongs to {get_username(collection_data["attributes"]["concierge_owner"][0])})"
     return f"{collection_data["name"]} (private, owner unknown)"
+
+
+def has_edit_access(permissions):
+    if not auth_enabled:
+        return True
+    perms = permissions.get()
+    if "collection:private:create" in perms or "collection:shared:create" in perms:
+        return True
+    # TODO: check for update and delete permissions, see read access TODO below
+    return False
+
+
+def has_read_access(permissions):
+    if not auth_enabled:
+        return True
+    # TODO: if the user has read access to any resource this should be true
+    # TODO: if no resources are created yet, we need a way to check if the user would have read access
+    # TODO: checking roles isn't enough, because custom roles may have been created
+    return True

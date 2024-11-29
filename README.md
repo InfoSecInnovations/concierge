@@ -158,6 +158,15 @@ You can also access the URL by pasting it into another browser.
 
 At this time it doesn't seem to be possible to use HTTPS while launching from VSCode.
 
+#### With authentication
+
+Authentication doesn't play very nicely with VSCode, however it is still possible to use it.
+
+- Manually configure the port used by Shiny in the extension configuration to match the one you chose during install.
+- Access the web app through your browser, not through the built-in VSCode one.
+
+This does offer the advantage of being able to use the debugger while testing authentication.
+
 ### Launch script
 
 From the cloned project directory simply run `launch_dev.py`.
