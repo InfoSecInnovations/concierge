@@ -1,3 +1,7 @@
+# We've been struggling with silent exceptions (see silent_exception_test), and one remaining one was after chat submit
+# You should never set a reactive inside an async function, including the chat submit
+# It's possible to listen to the chat messages reactive to trigger something after message is submitted
+
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
 from asyncio import sleep
 
@@ -26,11 +30,20 @@ def server(input: Inputs, output: Outputs, session: Session):
         await chat.append_message_stream(
             stream_response_broken(chat.user_input(), test_value.get())
         )
-        after_chat_trigger.set(after_chat_trigger.get() + 1)
+        print("chat submitted")
+
+    # if you set a reactive here the exception from the stream will be silent
 
     @render.ui
     def chat_trigger():
         return ui.markdown(f"chat trigger is {after_chat_trigger.get()}")
+
+    # listening to chat.messages with a reactive allows us to trigger setting a reactive after chat has been submitted
+    @reactive.effect
+    @reactive.event(chat.messages, ignore_none=False, ignore_init=True)
+    def on_messages():
+        print("on messages")
+        after_chat_trigger.set(after_chat_trigger.get() + 1)
 
 
 app = App(app_ui, server)

@@ -21,6 +21,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         await sleep(0.2)
         return 1 / 0
 
+    # listen to the result of the extended task instead of setting inside the task
     @reactive.effect()
     def _():
         x = set_number_bad.result()

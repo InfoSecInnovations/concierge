@@ -205,6 +205,10 @@ def prompter_server(
             )
         )
 
+    # this will trigger after the chat message has been submitted
+    @reactive.effect
+    @reactive.event(chat.messages, ignore_none=False, ignore_init=True)
+    def on_message():
         # this will clear the file input
         current_file_id.set(current_file_id.get() + 1)
 

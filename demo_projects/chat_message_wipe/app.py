@@ -1,3 +1,6 @@
+# There previously wasn't a way to avoid wiping the chat messages when re-displaying the chat UI
+# Version 1.2.1 of Shiny allows us to rectify this (see fix below)
+
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
 
 app_ui = ui.page_auto(
