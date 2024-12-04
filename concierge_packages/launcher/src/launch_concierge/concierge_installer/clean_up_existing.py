@@ -1,15 +1,21 @@
 import subprocess
 import os
 import shutil
-from script_builder.util import (
-    get_lines,
-)
 from importlib.metadata import version
 from launch_concierge.concierge_installer.upgrade_scripts import scripts
 from isi_util.list_util import find_index
 from packaging.version import Version
 from dotenv import load_dotenv
 from .package_dir import package_dir
+from .docker_containers import (
+    opensearch_exists,
+    keycloak_exists,
+    ollama_exists,
+    remove_opensearch,
+    remove_keycloak,
+    remove_ollama,
+    volume_exists,
+)
 
 
 def clean_up_existing():
@@ -115,45 +121,35 @@ def clean_up_existing():
                 if approve_to_delete == "yes":
                     shutil.rmtree(concierge_volumes)
 
-            def check_dependencies(
-                check_command, label, remove_command, remove_info=""
-            ):
-                result = get_lines(check_command)
-                if result:
-                    if remove_info:
-                        print(remove_info)
-                    print(f"The following docker {label} were discovered:")
-                    print(" ".join(result))
+            # we also check the volumes here because the user needs the opportunity to remove a dependency completely even if they already deleted the containers
 
-                    print("\nWould you like to have the installer remove any for you?")
-                    to_remove = input(
-                        f"Please give a space separated list of the {label} you would like removed or press enter to skip: "
-                    )
-                    print("\n")
-                    if to_remove != "":
-                        subprocess.run(
-                            [*remove_command, *to_remove.split(" ")],
-                            stdout=subprocess.DEVNULL,
-                        )
-                else:
-                    print(f"No existing docker {label} were found.\n")
+            if opensearch_exists() or volume_exists("opensearch-data1"):
+                print("Existing OpenSearch installation found")
+                print("If you remove this you will lose all your document collections!")
+                approve_to_delete = input(
+                    "Type 'yes' to remove OpenSearch installation or press enter to skip: "
+                )
+                if approve_to_delete:
+                    remove_opensearch()
 
-            # docker containers
-            check_dependencies(
-                ["docker", "container", "ls", "--all", "--format", "{{.Names}}"],
-                "containers",
-                ["docker", "container", "rm", "--force"],
-                "If you intend to remove a volume belonging to a container, you will need to remove the container here first!",
-            )
-            # docker volumes
-            check_dependencies(
-                ["docker", "volume", "ls", "--format", "{{.Name}}"],
-                "volumes",
-                ["docker", "volume", "rm", "--force"],
-            )
-            # docker networks
-            check_dependencies(
-                ["docker", "network", "ls", "--format", "{{.Name}}"],
-                "networks",
-                ["docker", "network", "rm"],
-            )
+            if ollama_exists() or volume_exists("ollama"):
+                print("Existing Ollama installation found")
+                print(
+                    "If you remove this you will need to redownload the language model(s) used by the prompter"
+                )
+                approve_to_delete = input(
+                    "Type 'yes' to remove Ollama installation or press enter to skip: "
+                )
+                if approve_to_delete:
+                    remove_ollama()
+
+            if keycloak_exists() or volume_exists("postgres_data"):
+                print("Existing Keycloak installation found")
+                print(
+                    "If you remove this you will lose all configured users and access controls!"
+                )
+                approve_to_delete = input(
+                    "Type 'yes' to remove Keycloak installation or press enter to skip: "
+                )
+                if approve_to_delete:
+                    remove_keycloak()

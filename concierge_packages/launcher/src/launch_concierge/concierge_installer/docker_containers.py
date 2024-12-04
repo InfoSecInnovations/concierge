@@ -2,10 +2,10 @@ import subprocess
 import json
 
 
-def container_exists(container_name):
+def item_exists(item_name, item_type):
     try:
         result = subprocess.run(
-            ["docker", "inspect", "--type=container", container_name],
+            ["docker", "inspect", f"--type={item_type}", item_name],
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -23,12 +23,28 @@ def container_exists(container_name):
         return False
 
 
+def container_exists(container_name):
+    return item_exists(container_name, "container")
+
+
+def volume_exists(volume_name):
+    return item_exists(f"concierge_{volume_name}", "volume")
+
+
 def remove_container(container_name):
-    subprocess.run(["docker", "container", "rm", "--force", container_name])
+    subprocess.run(
+        ["docker", "container", "rm", "--force", container_name],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def remove_volume(volume_name):
-    subprocess.run(["docker", "volume", "rm", "--force", f"concierge_{volume_name}"])
+    subprocess.run(
+        ["docker", "volume", "rm", "--force", f"concierge_{volume_name}"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def keycloak_exists():
