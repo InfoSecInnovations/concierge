@@ -116,7 +116,9 @@ def prompter_server(
         selected_task = task_list[0] if "question" not in tasks else "question"
         return ui.TagList(
             ui.chat_ui(
-                id="prompter_chat", placeholder=tasks[selected_task]["greeting"]
+                id="prompter_chat",
+                placeholder=tasks[selected_task]["greeting"],
+                messages=chat.messages(),
             ),
             collection_selector_ui("collection_selector"),
             ui.layout_columns(

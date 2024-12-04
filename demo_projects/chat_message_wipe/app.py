@@ -18,7 +18,8 @@ def server(input: Inputs, output: Outputs, session: Session):
     @render.ui
     def chat_area():
         if show_chat.get():
-            return ui.chat_ui("test_chat")
+            # recent versions allow us to set the messages in the UI element, this fixes the issue!
+            return ui.chat_ui("test_chat", messages=chat.messages())
         else:
             return ui.markdown("Chat hidden")
 
@@ -26,11 +27,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.event(input.toggle_chat, ignore_none=False, ignore_init=True)
     def toggle_chat():
         show_chat.set(not show_chat.get())
-
-    @reactive.effect
-    @reactive.event(chat.messages)
-    def on_message():
-        print(chat.messages())
 
 
 app = App(app_ui, server)
