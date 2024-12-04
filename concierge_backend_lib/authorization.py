@@ -72,6 +72,18 @@ async def list_resources(token):
     return resources
 
 
+async def has_scope(token, scope):
+    """check if we have any resources available with the given scope"""
+    keycloak_openid = get_keycloak_client()
+    try:
+        response = await keycloak_openid.a_uma_permissions(token, f"#{scope}")
+    except KeycloakPostError as e:
+        # 403 means not authorized, so we can return False
+        if e.response_code == 403:
+            return False
+    return len(response) != 0
+
+
 async def list_permissions(token):
     keycloak_openid = get_keycloak_client()
     try:

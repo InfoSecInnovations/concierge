@@ -4,7 +4,8 @@ from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
 import humanize
 from concierge_backend_lib.authentication import get_username
-from concierge_backend_lib.authorization import auth_enabled
+from concierge_backend_lib.authorization import auth_enabled, has_scope
+from auth import WebAppAsyncTokenTaskRunner
 
 
 def doc_url(collection_name, doc_type, doc_id):
@@ -95,20 +96,34 @@ def format_collection_name(collection_data, user_info):
     return f"{collection_data["name"]} (private, owner unknown)"
 
 
-def has_edit_access(permissions):
+async def has_edit_access(permissions, task_runner: WebAppAsyncTokenTaskRunner):
     if not auth_enabled:
         return True
-    perms = permissions.get()
-    if "collection:private:create" in perms or "collection:shared:create" in perms:
+    if (
+        "collection:private:create" in permissions
+        or "collection:shared:create" in permissions
+    ):
         return True
-    # TODO: check for update and delete permissions, see read access TODO below
+
+    async def has_update(token):
+        return await has_scope(token["access_token"], "update")
+
+    async def has_delete(token):
+        return await has_scope(token["access_token"], "delete")
+
+    if await task_runner.run_async_task(has_update):
+        return True
+    if await task_runner.run_async_task(has_delete):
+        return True
     return False
 
 
-def has_read_access(permissions):
+async def has_read_access(task_runner: WebAppAsyncTokenTaskRunner):
     if not auth_enabled:
         return True
-    # TODO: if the user has read access to any resource this should be true
-    # TODO: if no resources are created yet, we need a way to check if the user would have read access
-    # TODO: checking roles isn't enough, because custom roles may have been created
-    return True
+
+    # TODO: how to determine that the user could read a collection if no collections have been created yet
+    async def has_read(token):
+        return await has_scope(token["access_token"], "read")
+
+    return await task_runner.run_async_task(has_read)

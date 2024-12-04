@@ -1,4 +1,4 @@
-from shiny import ui, Inputs, Outputs, Session, render, module
+from shiny import ui, Inputs, Outputs, Session, render, module, reactive
 from markdown_renderer import md
 from functions import has_edit_access, has_read_access
 from concierge_backend_lib.authorization import auth_enabled
@@ -63,8 +63,32 @@ def home_ui():
 
 @module.server
 def home_server(
-    input: Inputs, output: Outputs, session: Session, permissions, user_info
+    input: Inputs,
+    output: Outputs,
+    session: Session,
+    permissions,
+    user_info,
+    task_runner,
 ):
+    read_access = reactive.value(False)
+    edit_access = reactive.value(False)
+
+    @reactive.extended_task
+    async def get_read_access():
+        return await has_read_access(task_runner)
+
+    @reactive.extended_task
+    async def get_edit_access(permissions):
+        return await has_edit_access(permissions, task_runner)
+
+    @reactive.effect
+    def on_get_read_access():
+        read_access.set(get_read_access.result())
+
+    @reactive.effect
+    def on_get_edit_access():
+        edit_access.set(get_edit_access.result())
+
     @render.ui
     def profile():
         info = user_info.get()
@@ -87,9 +111,9 @@ def home_server(
     @render.ui
     def home_text():
         items = [title]
-        if has_edit_access(permissions):
+        if read_access.get():
             items.append(quickstart)
-        elif has_read_access(permissions):
+        elif edit_access.get():
             items.append(quickstart_readonly)
         else:
             items.append(quickstart_no_access)
@@ -110,3 +134,8 @@ def home_server(
             elements.append(ui.output_ui("profile"))
         elements.append(ui.markdown("\n".join(items), render_func=md.render))
         return elements
+
+    @reactive.effect
+    def startup():
+        get_read_access()
+        get_edit_access(permissions.get())

@@ -70,15 +70,33 @@ def server(input: Inputs, output: Outputs, session: Session):
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections = reactive.value(CollectionsData(collections=[], loading=True))
+    read_access = reactive.value(False)
+    edit_access = reactive.value(False)
+
+    @reactive.extended_task
+    async def get_read_access():
+        return await has_read_access(task_runner)
+
+    @reactive.extended_task
+    async def get_edit_access(permissions):
+        return await has_edit_access(permissions, task_runner)
+
+    @reactive.effect
+    def on_get_read_access():
+        read_access.set(get_read_access.result())
+
+    @reactive.effect
+    def on_get_edit_access():
+        edit_access.set(get_edit_access.result())
 
     @render.ui
     def concierge_main():
         nav_items = [ui.nav_panel("Home", home_ui("home"))]
 
-        if has_read_access(permissions):
+        if read_access.get():
             nav_items.append(ui.nav_panel("Prompter", prompter_ui("prompter")))
 
-        if has_edit_access(permissions):
+        if edit_access.get():
             nav_items.append(
                 ui.nav_panel(
                     "Collection Management",
@@ -99,7 +117,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             id="navbar",
         )
 
-    home_server("home", permissions, user_info)
+    home_server("home", permissions, user_info, task_runner)
 
     prompter_server(
         "prompter",
@@ -146,6 +164,11 @@ def server(input: Inputs, output: Outputs, session: Session):
         current_status = status()
         opensearch_status.set(current_status["opensearch"])
         ollama_status.set(current_status["ollama"])
+
+    @reactive.effect
+    def update_access():
+        get_read_access()
+        get_edit_access(permissions.get())
 
     @reactive.effect
     @reactive.event(input.openid_logout, ignore_init=True, ignore_none=True)
