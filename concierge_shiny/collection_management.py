@@ -154,7 +154,10 @@ def collection_management_server(
                 accordion_elements.append(ingester_ui("ingester"))
             elif fetching_docs.get():
                 accordion_elements.append(
-                    ui.accordion_panel(ui.markdown("#### Loading collection..."))
+                    ui.accordion_panel(
+                        ui.markdown("#### Loading collection..."),
+                        value="ingest_documents",
+                    )
                 )
             else:
                 accordion_elements.append(
@@ -162,7 +165,8 @@ def collection_management_server(
                         ui.markdown(
                             "#### You don't have permission to ingest documents into this collection"
                         )
-                    )
+                    ),
+                    value="ingest_documents",
                 )
             accordion_elements.append(
                 ui.accordion_panel(

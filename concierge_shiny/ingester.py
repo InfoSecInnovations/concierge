@@ -14,7 +14,9 @@ from auth import WebAppAsyncTokenTaskRunner
 @module.ui
 def ingester_ui():
     return ui.accordion_panel(
-        ui.markdown("#### Ingest Documents"), ui.output_ui("ingester_content")
+        ui.markdown("#### Ingest Documents"),
+        ui.output_ui("ingester_content"),
+        value="ingest_documents",
     )
 
 
