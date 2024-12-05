@@ -124,7 +124,7 @@ def clean_up_existing():
             # we also check the volumes here because the user needs the opportunity to remove a dependency completely even if they already deleted the containers
 
             if opensearch_exists() or volume_exists("opensearch-data1"):
-                print("Existing OpenSearch installation found")
+                print("\nExisting OpenSearch installation found")
                 print("If you remove this you will lose all your document collections!")
                 approve_to_delete = input(
                     "Type 'yes' to remove OpenSearch installation or press enter to skip: "
@@ -133,7 +133,7 @@ def clean_up_existing():
                     remove_opensearch()
 
             if ollama_exists() or volume_exists("ollama"):
-                print("Existing Ollama installation found")
+                print("\nExisting Ollama installation found")
                 print(
                     "If you remove this you will need to redownload the language model(s) used by the prompter"
                 )
@@ -144,7 +144,7 @@ def clean_up_existing():
                     remove_ollama()
 
             if keycloak_exists() or volume_exists("postgres_data"):
-                print("Existing Keycloak installation found")
+                print("\nExisting Keycloak installation found")
                 print(
                     "If you remove this you will lose all configured users and access controls!"
                 )

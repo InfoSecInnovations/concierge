@@ -111,9 +111,9 @@ def home_server(
     @render.ui
     def home_text():
         items = [title]
-        if read_access.get():
+        if edit_access.get():
             items.append(quickstart)
-        elif edit_access.get():
+        elif read_access.get():
             items.append(quickstart_readonly)
         else:
             items.append(quickstart_no_access)

@@ -38,8 +38,13 @@ async def get_collections(token):
         return [
             resource
             for resource in available_resources
-            if resource["type"] == "collection:shared"
-            or resource["type"] == "collection:private"
+            if (
+                resource["type"] == "collection:shared"
+                or resource["type"] == "collection:private"
+            )
+            and not resource["_id"].startswith(
+                "default-"
+            )  # the default resources are just there to show permissions if no collections are present
         ]
     else:
         # if not using authz we get the collection info from OpenSearch

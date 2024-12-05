@@ -801,6 +801,48 @@
             "attributes": {},
             "uris": [],
             "icon_uri": ""
+          },
+          {
+            "_id": "default-1",
+            "name": "collection:private:default",
+            "type": "collection:private",
+            "ownerManagedAccess": false,
+            "displayName": "collection:private:default",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+              {
+                "name": "read"
+              },
+              {
+                "name": "update"
+              },
+              {
+                "name": "delete"
+              }
+            ],
+            "icon_uri": ""
+          },
+          {
+            "_id": "default-2",
+            "name": "collection:shared:default",
+            "type": "collection:shared",
+            "ownerManagedAccess": false,
+            "displayName": "collection:shared:default",
+            "attributes": {},
+            "uris": [],
+            "scopes": [
+              {
+                "name": "read"
+              },
+              {
+                "name": "update"
+              },
+              {
+                "name": "delete"
+              }
+            ],
+            "icon_uri": ""
           }
         ],
         "policies": [
