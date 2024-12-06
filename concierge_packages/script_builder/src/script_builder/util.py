@@ -69,7 +69,6 @@ def install_requirements(filename="requirements.txt"):
 def setup_pip():
     working_dir = os.getcwd()
     venv.create(working_dir, with_pip=True)
-    install_requirements()
 
 
 def get_lines(command):

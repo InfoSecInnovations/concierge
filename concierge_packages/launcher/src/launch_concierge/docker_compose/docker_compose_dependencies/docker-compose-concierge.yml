@@ -18,6 +18,7 @@ services:
       - CONCIERGE_SECURITY_ENABLED=True
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
     volumes:
-      - ${WEB_CERT:-../test_certs/cert.pem}:/web_certs/cert.pem
-      - ${WEB_KEY:-../test_certs/key.pem}:/web_certs/key.pem
+      - ${WEB_CERT:-./test_certs/cert.pem}:/web_certs/cert.pem
+      - ${WEB_KEY:-./test_certs/key.pem}:/web_certs/key.pem

@@ -1,27 +1,15 @@
 name: concierge
 
+include:
+  - ./docker-compose-dev.yml
+
 services:
-  ollama:
-    extends:
-      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-ollama.yml
-      service: ${OLLAMA_SERVICE:-ollama}
-  opensearch-node1:
-    extends:
-      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
-      service: ${OPENSEARCH_SERVICE:-opensearch-node-disable-security}
-  opensearch-dashboards:
-    extends:
-      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
-      service: ${OPENSEARCH_DASHBOARDS_SERVICE:-opensearch-dashboards-disable-security}
   concierge:
     extends:
       file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-concierge.yml
       service: ${CONCIERGE_SERVICE:-concierge}
-    build: .
-
-volumes:
-  opensearch-data1:
-  ollama:
+    build:
+      dockerfile: Dockerfile.local
 
 networks:
   default:
