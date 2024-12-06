@@ -36,15 +36,15 @@ in the package's `pyproject.toml` increment the version to match the release num
 	
 #### Publish python package
 
-You will need to have the correct permissions on PyPI
+You will need to have the correct permissions on PyPI and get your API token to use with the script.
 
-Enter the venv
+Set the version in the package's `pyproject.toml`.
 
-`pip install twine` into the venv if not done already
+Be in the root directory of the repository and make sure the virtual environment isn't activated otherwise the build command won't work.
 
-delete files from older versions in `dist`
+Run the script `python publish_package.py <package_name>` where `<package_name>` is the name of the subdirectory in `concierge_packages` containing the package to publish.
 
-`twine upload dist/*`
+Enter your API token when prompted.
 
 ### Publishing app updates to Docker Hub
 
