@@ -1,7 +1,10 @@
 [project]
 name = "concierge-util"
-version = "0.2a0"
+version = "0.2a1"
 requires-python = ">=3.10"
+dependencies = [
+    "yaml"
+]
 
 [build-system]
 requires = ["hatchling"]
