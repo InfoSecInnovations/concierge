@@ -103,23 +103,26 @@ def clean_up_existing():
             # option to remove volumes directory
             if concierge_root:
                 concierge_volumes = os.path.join(concierge_root, "volumes")
-                print(
-                    "Detected older version of Concierge using volume mapping, we no longer support this configuration."
-                )
-                print(
-                    "Removing the Concierge volumes will delete all ingested data and any language models you downloaded."
-                )
-                print(
-                    "Apologies for the inconvenience, you will have to redownload the language models and recreate your collections."
-                )
-                print("This type of issue is to be expected during our alpha phase!")
-                print("Remove Concierge volumes?")
-                approve_to_delete = input(
-                    f"Type 'yes' to delete {concierge_volumes} or press enter to skip: "
-                )
-                print("\n")
-                if approve_to_delete == "yes":
-                    shutil.rmtree(concierge_volumes)
+                if os.path.exists(concierge_volumes):
+                    print(
+                        "Detected older version of Concierge using volume mapping, we no longer support this configuration."
+                    )
+                    print(
+                        "Removing the Concierge volumes will delete all ingested data and any language models you downloaded."
+                    )
+                    print(
+                        "Apologies for the inconvenience, you will have to redownload the language models and recreate your collections."
+                    )
+                    print(
+                        "This type of issue is to be expected during our alpha phase!"
+                    )
+                    print("Remove Concierge volumes?")
+                    approve_to_delete = input(
+                        f"Type 'yes' to delete {concierge_volumes} or press enter to skip: "
+                    )
+                    print("\n")
+                    if approve_to_delete == "yes":
+                        shutil.rmtree(concierge_volumes)
 
             # we also check the volumes here because the user needs the opportunity to remove a dependency completely even if they already deleted the containers
 
