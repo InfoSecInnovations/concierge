@@ -49,7 +49,7 @@ install_arguments = [
         key="language_model",
         help="What language model will this Concierge instance use?",
         description=[
-            "NOTE: this feature is not implement yet, Concierge will always use mistral, model selection coming soon™!"
+            "NOTE: this feature is not implement yet, Concierge will always use mistral, model selection coming soon™!",
             "Which language model do you want to use? ",
             "note: the current recommended default for Concierge is mistral.",
             "For more info on language models available please go here:",
