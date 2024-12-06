@@ -1,11 +1,11 @@
 [project]
 name = "launch-concierge"
-version = "0.5a2"
+version = "0.5a3"
 requires-python = ">=3.10"
 dependencies = [
     "script-builder~=0.2a0",
     "isi-util~=0.2a0",
-    "concierge-util~=0.2a1",
+    "concierge-util~=0.2a2",
     "packaging",
     "python-dotenv"
 ]
