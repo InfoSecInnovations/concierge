@@ -13,12 +13,17 @@ def item_exists(item_name, item_type):
         parsed = json.loads(result.stdout)
         try:
             # ensure the container was created by the concierge docker compose
-            return (
-                parsed[0]["Config"]["Labels"]["com.docker.compose.project"]
-                == "concierge"
-            )
+            if parsed[0]["Labels"]["com.docker.compose.project"] == "concierge":
+                return True
+
         except KeyError:
-            return False
+            try:
+                return (
+                    parsed[0]["Config"]["Labels"]["com.docker.compose.project"]
+                    == "concierge"
+                )
+            except KeyError:
+                return False
     except subprocess.CalledProcessError:
         return False
 
