@@ -10,6 +10,7 @@ import requests
 from concierge_util import load_config, write_config
 from .set_env import set_env
 from .docker_containers import keycloak_exists, opensearch_exists
+from .create_certificates import create_certificates
 
 
 def do_install(
@@ -31,6 +32,12 @@ def do_install(
     if argument_processor.parameters["security_level"] != "None":
         set_env("CONCIERGE_SECURITY_ENABLED", "True")
         set_env("CONCIERGE_SERVICE", "concierge-enable-security")
+        # TODO: handle existing certificates
+        # TODO: handle certificates supplied by the user
+        cert_dir = os.path.join(os.getcwd(), "self_signed_certificates")
+        create_certificates(cert_dir)
+        set_env("KEYCLOAK_CERT", os.path.join(cert_dir, "keycloak-cert.pem"))
+        set_env("KEYCLOAK_CERT_KEY", os.path.join(cert_dir, "keycloak-key.pem"))
         # we only configure Keycloak if it wasn't already present
         if not keycloak_exists():
             keycloak_password = get_strong_password(
