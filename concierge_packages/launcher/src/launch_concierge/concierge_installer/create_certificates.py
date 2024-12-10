@@ -190,3 +190,8 @@ def create_certificates(cert_dir):
         [],
         "opensearch-admin",
     )
+
+    create_signed_cert(
+        [x509.DNSName("opensearch-admin-client")],
+        "opensearch-admin-client",
+    )

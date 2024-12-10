@@ -5,6 +5,9 @@ concierge.yml
 concierge.example.yml
 ruff.toml
 
+# generated certificates
+self_signed_certificates
+
 # files that appear to be due to installing dependencies, try un-ignoring these if needed
 share
 etc
@@ -32,7 +35,6 @@ pip-selfcheck.json
 .pytest_cache
 .vscode
 contribution_guides
-test_certs
 *.md
 install_dev.py
 dev_installer.py

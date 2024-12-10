@@ -9,7 +9,7 @@ from .docker_compose_helper import docker_compose_helper
 import requests
 from concierge_util import load_config, write_config
 from .set_env import set_env
-from .docker_containers import keycloak_exists, opensearch_exists
+from .docker_containers import keycloak_exists
 from .create_certificates import create_certificates
 
 
@@ -36,6 +36,35 @@ def do_install(
         # TODO: handle certificates supplied by the user
         cert_dir = os.path.join(os.getcwd(), "self_signed_certificates")
         create_certificates(cert_dir)
+        set_env("ROOT_CA", os.path.join(cert_dir, "root-ca.pem"))
+        set_env(
+            "OPENSEARCH_CLIENT_CERT",
+            os.path.join(cert_dir, "opensearch-admin-client-cert.pem"),
+        )
+        set_env(
+            "OPENSEARCH_CLIENT_KEY",
+            os.path.join(cert_dir, "opensearch-admin-client-key.pem"),
+        )
+        set_env(
+            "OPENSEARCH_ADMIN_KEY", os.path.join(cert_dir, "opensearch-admin-key.pem")
+        )
+        set_env(
+            "OPENSEARCH_ADMIN_CERT", os.path.join(cert_dir, "opensearch-admin-cert.pem")
+        )
+        set_env(
+            "OPENSEARCH_NODE_CERT", os.path.join(cert_dir, "opensearch-node1-cert.pem")
+        )
+        set_env(
+            "OPENSEARCH_NODE_KEY", os.path.join(cert_dir, "opensearch-node1-key.pem")
+        )
+        set_env(
+            "OPENSEARCH_DASHBOARDS_CERT",
+            os.path.join(cert_dir, "opensearch-dashboards-cert.pem"),
+        )
+        set_env(
+            "OPENSEARCH_DASHBOARDS_KEY",
+            os.path.join(cert_dir, "opensearch-dashboards-key.pem"),
+        )
         set_env("KEYCLOAK_CERT", os.path.join(cert_dir, "keycloak-cert.pem"))
         set_env("KEYCLOAK_CERT_KEY", os.path.join(cert_dir, "keycloak-key.pem"))
         set_env("WEB_CERT", os.path.join(cert_dir, "concierge-cert.pem"))
@@ -94,13 +123,6 @@ def do_install(
 
             set_env("KEYCLOAK_CLIENT_ID", "concierge-auth")
             set_env("KEYCLOAK_CLIENT_SECRET", keycloak_secret)
-        # we only configure OpenSearch if it's missing or running the security disabled version
-        if (
-            not opensearch_exists()
-            or os.getenv("OPENSEARCH_SERVICE") != "opensearch-node-enable-security"
-        ):
-            opensearch_password = generate_strong_password()
-            set_env("OPENSEARCH_INITIAL_ADMIN_PASSWORD", opensearch_password)
         set_env("OPENSEARCH_SERVICE", "opensearch-node-enable-security")
         set_env(
             "OPENSEARCH_DASHBOARDS_SERVICE",

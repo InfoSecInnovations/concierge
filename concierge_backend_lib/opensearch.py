@@ -1,26 +1,37 @@
 import os
 from dotenv import load_dotenv
-from opensearchpy import OpenSearch
-from concierge_util import load_config
+from opensearchpy import OpenSearch, RequestsHttpConnection
+from .authorization import auth_enabled
+import requests
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST", "localhost")
-OPENSEARCH_ADMIN_PASSWORD = os.getenv("OPENSEARCH_INITIAL_ADMIN_PASSWORD")
 MAPPING_INDEX_NAME = "collection_mappings"
-config = load_config()
+
+
+def test_request():
+    response = requests.get(
+        f"https://{HOST}:9200",
+        cert=(os.getenv("OPENSEARCH_CLIENT_CERT"), os.getenv("OPENSEARCH_CLIENT_KEY")),
+        verify=False,
+    )
+    print(response.text)
 
 
 def get_client():
     host = HOST
     port = 9200
 
-    if OPENSEARCH_ADMIN_PASSWORD:
+    if auth_enabled:
         return OpenSearch(
             hosts=[{"host": host, "port": port}],
-            http_auth=("admin", OPENSEARCH_ADMIN_PASSWORD),
             use_ssl=True,
-            verify_certs=False,
+            verify_certs=True,
             ssl_show_warn=False,
+            client_cert=os.getenv("OPENSEARCH_CLIENT_CERT"),
+            client_key=os.getenv("OPENSEARCH_CLIENT_KEY"),
+            ca_certs=os.getenv("ROOT_CA"),
+            connection_class=RequestsHttpConnection,
         )
 
     return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)

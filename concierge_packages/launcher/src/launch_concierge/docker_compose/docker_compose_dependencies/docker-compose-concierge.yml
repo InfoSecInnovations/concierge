@@ -18,7 +18,12 @@ services:
       - CONCIERGE_SECURITY_ENABLED=True
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - ROOT_CA=opensearch_certs/root-ca.pem
+      - OPENSEARCH_CLIENT_CERT=opensearch_certs/opensearch-admin-client-cert.pem
+      - OPENSEARCH_CLIENT_KEY=opensearch_certs/opensearch-admin-client-key.pem
     volumes:
-      - ${WEB_CERT:-./test_certs/cert.pem}:/web_certs/cert.pem
-      - ${WEB_KEY:-./test_certs/key.pem}:/web_certs/key.pem
+      - ${WEB_CERT}:/web_certs/cert.pem
+      - ${WEB_KEY}:/web_certs/key.pem
+      - ${ROOT_CA}:/opensearch_certs/root-ca.pem
+      - ${OPENSEARCH_CLIENT_CERT}:/opensearch_certs/opensearch-admin-client-cert.pem
+      - ${OPENSEARCH_CLIENT_KEY}:/opensearch_certs/opensearch-admin-client-key.pem

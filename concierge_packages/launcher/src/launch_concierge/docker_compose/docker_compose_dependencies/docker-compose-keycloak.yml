@@ -38,8 +38,8 @@ services:
     volumes:
       - ./keycloak_import:/opt/keycloak/data/import
       - ./keycloak_javascript/concierge.jar:/opt/keycloak/providers/concierge.jar
-      - ${KEYCLOAK_CERT:-./test_certs/cert.pem}:/opt/keycloak/tls/cert.pem
-      - ${KEYCLOAK_CERT_KEY:-./test_certs/key.pem}:/opt/keycloak/tls/key.pem
+      - ${KEYCLOAK_CERT}:/opt/keycloak/tls/cert.pem
+      - ${KEYCLOAK_CERT_KEY}:/opt/keycloak/tls/key.pem
     command: start --import-realm --auto-build --features=scripts
 
 volumes:
