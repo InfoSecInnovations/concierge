@@ -38,6 +38,8 @@ def do_install(
         create_certificates(cert_dir)
         set_env("KEYCLOAK_CERT", os.path.join(cert_dir, "keycloak-cert.pem"))
         set_env("KEYCLOAK_CERT_KEY", os.path.join(cert_dir, "keycloak-key.pem"))
+        set_env("WEB_CERT", os.path.join(cert_dir, "concierge-cert.pem"))
+        set_env("WEB_KEY", os.path.join(cert_dir, "concierge-key.pem"))
         # we only configure Keycloak if it wasn't already present
         if not keycloak_exists():
             keycloak_password = get_strong_password(

@@ -85,7 +85,7 @@ def create_certificates(cert_dir):
                 x509.NameAttribute(NameOID.COMMON_NAME, cert_name),
             ]
         )
-        ee_cert = (
+        builder = (
             x509.CertificateBuilder()
             .subject_name(subject)
             .issuer_name(root_cert.subject)
@@ -96,10 +96,6 @@ def create_certificates(cert_dir):
                 # Our cert will be valid for 1 year
                 datetime.datetime.now(datetime.timezone.utc)
                 + datetime.timedelta(days=365)
-            )
-            .add_extension(
-                x509.SubjectAlternativeName(alt_names),
-                critical=False,
             )
             .add_extension(
                 x509.BasicConstraints(ca=False, path_length=None),
@@ -140,8 +136,13 @@ def create_certificates(cert_dir):
                 ),
                 critical=False,
             )
-            .sign(root_key, hashes.SHA256())
         )
+        if alt_names:
+            builder.add_extension(
+                x509.SubjectAlternativeName(alt_names),
+                critical=False,
+            )
+        ee_cert = builder.sign(root_key, hashes.SHA256())
         with open(os.path.join(cert_dir, f"{cert_name}-cert.pem"), "wb") as f:
             f.write(ee_cert.public_bytes(serialization.Encoding.PEM))
         with open(os.path.join(cert_dir, f"{cert_name}-key.pem"), "wb") as f:
@@ -159,14 +160,6 @@ def create_certificates(cert_dir):
             x509.DNSName("keycloak"),
         ],
         "keycloak",
-    )
-
-    create_signed_cert(
-        [
-            x509.DNSName("localhost"),
-            x509.DNSName("ollama"),
-        ],
-        "ollama",
     )
 
     create_signed_cert(
@@ -194,9 +187,6 @@ def create_certificates(cert_dir):
     )
 
     create_signed_cert(
-        [
-            x509.DNSName("localhost"),
-            x509.DNSName("opensearch-node1"),
-        ],
+        [],
         "opensearch-admin",
     )
