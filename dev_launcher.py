@@ -8,6 +8,7 @@ from launch_concierge.concierge_launcher import get_launch_arguments
 import argparse
 import dotenv
 import os
+from concierge_backend_lib.authorization import auth_enabled
 from shiny import run_app
 
 parser = argparse.ArgumentParser()
@@ -32,32 +33,28 @@ docker_compose_helper(
 if environment == "production":
     exit()  # in production we use the docker container to host the Shiny app so our work is done here
 
-run_app(
-    app_dir="concierge_shiny",
-    port=int(os.getenv("WEB_PORT", "15130")),
-    # reload currently reruns this script instead of the app
-    # reload=environment == "development",
-    # launch_browser currently doesn't work with HTTPS
-    # launch_browser=True,
-    host="localhost",
-    ssl_keyfile="concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/test_certs/key.pem",
-    ssl_certfile="concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/test_certs/cert.pem",
-)
+app_dir = "concierge_shiny"
+port = int(os.getenv("WEB_PORT", "15130"))
+host = "localhost"
 
-# subprocess.run(
-#     [
-#         get_venv_executable(),
-#         "-m",
-#         "shiny",
-#         "run",
-#         "--port",
-#         os.getenv("WEB_PORT", "15130"),
-#         *(["--reload"] if environment == "development" else []),
-#         "--launch-browser",
-#         "--ssl-keyfile",
-#         "test_certs/key.pem",
-#         "--ssl-certfile",
-#         "test_certs/cert.pem",
-#         "concierge_shiny/app.py"
-#     ]
-# )
+if auth_enabled:
+    run_app(
+        app_dir=app_dir,
+        port=port,
+        # reload currently reruns this script instead of the app
+        # reload=environment == "development",
+        # launch_browser currently doesn't work with HTTPS
+        # launch_browser=True,
+        host=host,
+        ssl_keyfile=os.getenv("WEB_KEY"),
+        ssl_certfile=os.getenv("WEB_CERT"),
+    )
+else:
+    run_app(
+        app_dir=app_dir,
+        port=port,
+        # reload currently reruns this script instead of the app
+        # reload=environment == "development",
+        launch_browser=True,
+        host=host,
+    )
