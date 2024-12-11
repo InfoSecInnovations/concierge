@@ -57,14 +57,6 @@ def do_install(
         set_env(
             "OPENSEARCH_NODE_KEY", os.path.join(cert_dir, "opensearch-node1-key.pem")
         )
-        set_env(
-            "OPENSEARCH_DASHBOARDS_CERT",
-            os.path.join(cert_dir, "opensearch-dashboards-cert.pem"),
-        )
-        set_env(
-            "OPENSEARCH_DASHBOARDS_KEY",
-            os.path.join(cert_dir, "opensearch-dashboards-key.pem"),
-        )
         set_env("KEYCLOAK_CERT", os.path.join(cert_dir, "keycloak-cert.pem"))
         set_env("KEYCLOAK_CERT_KEY", os.path.join(cert_dir, "keycloak-key.pem"))
         set_env("WEB_CERT", os.path.join(cert_dir, "concierge-cert.pem"))
@@ -124,20 +116,12 @@ def do_install(
             set_env("KEYCLOAK_CLIENT_ID", "concierge-auth")
             set_env("KEYCLOAK_CLIENT_SECRET", keycloak_secret)
         set_env("OPENSEARCH_SERVICE", "opensearch-node-enable-security")
-        set_env(
-            "OPENSEARCH_DASHBOARDS_SERVICE",
-            "opensearch-dashboards-enable-security",
-        )
 
         set_env("KEYCLOAK_SERVICE_FILE", "docker-compose-keycloak.yml")
     else:
         set_env("CONCIERGE_SERVICE", "concierge")
         set_env("CONCIERGE_SECURITY_ENABLED", "False")
         set_env("OPENSEARCH_SERVICE", "opensearch-node-disable-security")
-        set_env(
-            "OPENSEARCH_DASHBOARDS_SERVICE",
-            "opensearch-dashboards-disable-security",
-        )
         set_env("KEYCLOAK_SERVICE_FILE", "docker-compose-blank.yml")
     set_env("ENVIRONMENT", environment)
     set_env("CONCIERGE_VERSION", version("launch_concierge"))

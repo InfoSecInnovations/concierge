@@ -23,7 +23,7 @@ def get_strong_password(prompt):
 def generate_strong_password():
     score = -1
     while score < 4:
-        value = secrets.token_urlsafe(20)
+        value = secrets.token_hex(25)
         strength = zxcvbn(value)
         score = strength["score"]
     return value

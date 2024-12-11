@@ -179,14 +179,6 @@ def create_certificates(cert_dir):
     )
 
     create_signed_cert(
-        [
-            x509.DNSName("localhost"),
-            x509.DNSName("opensearch-dashboards"),
-        ],
-        "opensearch-dashboards",
-    )
-
-    create_signed_cert(
         [],
         "opensearch-admin",
     )

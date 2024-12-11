@@ -77,5 +77,4 @@ def opensearch_exists():
 
 def remove_opensearch():
     remove_container("opensearch-node1")
-    remove_container("opensearch-dashboards")
     remove_volume("opensearch-data1")

@@ -13,10 +13,6 @@ services:
     extends:
       file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
       service: ${OPENSEARCH_SERVICE:-opensearch-node-disable-security}
-  opensearch-dashboards:
-    extends:
-      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
-      service: ${OPENSEARCH_DASHBOARDS_SERVICE:-opensearch-dashboards-disable-security}
 
 volumes:
   opensearch-data1:
