@@ -66,7 +66,7 @@ def create_certificates(cert_dir):
         f.write(
             root_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
-                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                format=serialization.PrivateFormat.PKCS8,
                 encryption_algorithm=serialization.NoEncryption(),
             )
         )
@@ -138,7 +138,7 @@ def create_certificates(cert_dir):
             )
         )
         if alt_names:
-            builder.add_extension(
+            builder = builder.add_extension(
                 x509.SubjectAlternativeName(alt_names),
                 critical=False,
             )
@@ -149,7 +149,7 @@ def create_certificates(cert_dir):
             f.write(
                 ee_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
-                    format=serialization.PrivateFormat.TraditionalOpenSSL,
+                    format=serialization.PrivateFormat.PKCS8,
                     encryption_algorithm=serialization.NoEncryption(),
                 )
             )

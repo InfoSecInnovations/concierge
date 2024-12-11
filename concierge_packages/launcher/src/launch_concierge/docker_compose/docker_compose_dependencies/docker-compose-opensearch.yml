@@ -41,7 +41,7 @@ services:
       - ./opensearch_config/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
       - ./opensearch_config/opensearch-security/config.yml:/usr/share/opensearch/config/opensearch-security/config.yml
       - ./opensearch_config/opensearch-security/roles_mapping.yml:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml
-            - ./opensearch_config/opensearch-security/internal_users.yml:/usr/share/opensearch/config/opensearch-security/internal_users.yml
+      - ./opensearch_config/opensearch-security/internal_users.yml:/usr/share/opensearch/config/opensearch-security/internal_users.yml
 
   opensearch-dashboards-base:
     image: opensearchproject/opensearch-dashboards:latest # Make sure the version of opensearch-dashboards matches the version of opensearch installed on other nodes

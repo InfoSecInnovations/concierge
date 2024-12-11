@@ -41,7 +41,7 @@ def get_keycloak_client():
         realm_name="concierge",
         client_id=keycloak_client_id,
         client_secret_key=keycloak_client_secret,
-        verify=False,
+        verify=os.getenv("ROOT_CA"),
     )
     return client
 
@@ -56,7 +56,7 @@ def get_service_account_connection():
         client_id=keycloak_client_id,
         client_secret_key=keycloak_client_secret,
         grant_type="client_credentials",
-        verify=False,
+        verify=os.getenv("ROOT_CA"),
     )
     return keycloak_connection
 
