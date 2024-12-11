@@ -8,12 +8,8 @@ from keycloak import (
 )
 import os
 from dotenv import load_dotenv
-import urllib3
 from asyncio import create_task, Task
 from typing import Any
-
-
-urllib3.disable_warnings()
 
 
 def server_url():
@@ -23,10 +19,8 @@ def server_url():
 
 
 def keycloak_openid_config():
-    # this disables TLS verification and warning
-    # TODO: enable verification when using production settings
     session = requests.Session()
-    session.verify = False
+    session.verify = os.getenv("ROOT_CA")
     return session.get(
         f"{server_url()}/realms/concierge/.well-known/openid-configuration"
     ).json()

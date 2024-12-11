@@ -2,20 +2,10 @@ import os
 from dotenv import load_dotenv
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from .authorization import auth_enabled
-import requests
 
 load_dotenv()
 HOST = os.getenv("OPENSEARCH_HOST", "localhost")
 MAPPING_INDEX_NAME = "collection_mappings"
-
-
-def test_request():
-    response = requests.get(
-        f"https://{HOST}:9200",
-        cert=(os.getenv("OPENSEARCH_CLIENT_CERT"), os.getenv("OPENSEARCH_CLIENT_KEY")),
-        verify=False,
-    )
-    print(response.text)
 
 
 def get_client():
@@ -27,7 +17,6 @@ def get_client():
             hosts=[{"host": host, "port": port}],
             use_ssl=True,
             verify_certs=True,
-            ssl_show_warn=False,
             client_cert=os.getenv("OPENSEARCH_CLIENT_CERT"),
             client_key=os.getenv("OPENSEARCH_CLIENT_KEY"),
             ca_certs=os.getenv("ROOT_CA"),
