@@ -47,21 +47,11 @@ You no longer need to clone this repository to run Concierge.
 > [!TIP]
 > Pay attention to the use of dashes and underscores in the commands!
 
-If you're not concerned about using a virtual environment you can just use the 2 commands below in the directory of your choosing:
+Run the following while not being in a virtual environment. This command will create the virtual environment and run the installer from within it.
 
 `python -m pip install launch-concierge`
 
 `python -m launch_concierge.install`
-
-If you prefer to keep things contained in a virtual environment you can use the 4 commands below:
-
-`python -m venv .`
-
-`.\scripts\activate.ps1` or `source bin/activate` depending on your Operating System
-
-`pip install launch-concierge`
-
-`install_concierge`
 
 Answer the questions and then the installer will ask if you are ready to make changes to the system.  
 Answer "yes" and let the installation begin!

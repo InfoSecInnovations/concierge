@@ -1,18 +1,16 @@
 [project]
 name = "install-concierge"
-version = "0.5a5"
+version = "0.5a12"
 requires-python = ">=3.10"
 dependencies = [
     "script-builder~=0.2a0",
     "isi-util~=0.2a0",
     "concierge-util~=0.2a2",
     "packaging",
-    "python-dotenv"
+    "python-dotenv",
+    "requests",
+    "cryptography"
 ]
-
-[project.scripts]
-install_concierge = "install_concierge.install:install"
-relaunch_concierge = "install_concierge.relaunch:relaunch"
 
 [build-system]
 requires = ["hatchling"]

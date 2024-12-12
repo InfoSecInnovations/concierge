@@ -12,7 +12,7 @@ package_name = args.package_name
 cwd = os.getcwd()
 package_dir = os.path.join(cwd, "concierge_packages", package_name)
 os.chdir(package_dir)
-shutil.rmtree("dist")
+shutil.rmtree("dist", ignore_errors=True)
 subprocess.run(["python", "-m", "build"])
 os.chdir(cwd)
 subprocess.run(

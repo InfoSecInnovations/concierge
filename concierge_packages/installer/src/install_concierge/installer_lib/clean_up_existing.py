@@ -65,7 +65,7 @@ def clean_up_existing():
             print("Concierge instance discovered.")
             print("This script can help reset your system for a re-install.\n")
 
-            new_version = version("launch_concierge")
+            new_version = version("install_concierge")
             if existing_version and new_version != existing_version:
                 # find if we have any upgrade scripts between the existing and new version
                 start_index = find_index(

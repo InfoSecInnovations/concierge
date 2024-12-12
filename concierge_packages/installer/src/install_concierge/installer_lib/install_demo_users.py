@@ -8,6 +8,8 @@ def install_demo_users():
             "exec",
             "-d",
             "concierge",
-            "python -m concierge_scripts.add_keycloak_demo_users",
+            "python",
+            "-m",
+            "concierge_scripts.add_keycloak_demo_users",
         ]
     )

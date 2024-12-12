@@ -1,6 +1,8 @@
+from script_builder.util import run_in_venv
+
+
 def relaunch():
-    # TODO: run relaunch_concierge in venv
-    pass
+    run_in_venv("install_concierge.relaunch")
 
 
 if __name__ == "__main__":
