@@ -6,7 +6,7 @@ include:
 services:
   concierge:
     extends:
-      file: concierge_packages/launcher/src/launch_concierge/docker_compose/docker_compose_dependencies/docker-compose-concierge.yml
+      file: concierge_packages/install_concierge/src/install_concierge/docker_compose/docker_compose_dependencies/docker-compose-concierge.yml
       service: ${CONCIERGE_SERVICE:-concierge}
     build:
       dockerfile: Dockerfile.local

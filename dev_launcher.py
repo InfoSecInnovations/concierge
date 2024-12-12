@@ -1,10 +1,9 @@
 # import subprocess
-# from script_builder.util import get_venv_executable
-from launch_concierge.concierge_installer import (
+from install_concierge.installer_lib import (
     docker_compose_helper,
     set_compute,
 )
-from launch_concierge.concierge_launcher import get_launch_arguments
+from install_concierge.installer_lib.concierge_launcher import get_launch_arguments
 import argparse
 import dotenv
 import os

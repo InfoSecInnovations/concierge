@@ -1,10 +1,7 @@
 [project]
 name = "script-builder"
-version = "0.2a0"
+version = "0.2a1"
 requires-python = ">=3.10"
-dependencies = [
-    "zxcvbn",
-]
 
 [build-system]
 requires = ["hatchling"]

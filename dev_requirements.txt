@@ -5,5 +5,5 @@ twine~=5.1.1
 zxcvbn~=4.4.28
 pytest
 -e concierge_packages/script_builder
--e concierge_packages/launcher
+-e concierge_packages/installer
 -r local_requirements.txt

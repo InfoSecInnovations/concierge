@@ -2,7 +2,7 @@ import subprocess
 import os
 import shutil
 from importlib.metadata import version
-from launch_concierge.concierge_installer.upgrade_scripts import scripts
+from .upgrade_scripts import scripts
 from isi_util.list_util import find_index
 from packaging.version import Version
 from dotenv import load_dotenv

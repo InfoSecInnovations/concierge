@@ -2,7 +2,7 @@ import subprocess
 import os
 import shutil
 from script_builder.argument_processor import ArgumentProcessor
-from script_builder.password import get_strong_password, generate_strong_password
+from isi_util.password import get_strong_password, generate_strong_password
 from importlib.metadata import version
 from .package_dir import package_dir
 from .docker_compose_helper import docker_compose_helper
@@ -123,7 +123,7 @@ def do_install(
         set_env("OPENSEARCH_SERVICE", "opensearch-node-disable-security")
         set_env("KEYCLOAK_SERVICE_FILE", "docker-compose-blank.yml")
     set_env("ENVIRONMENT", environment)
-    set_env("CONCIERGE_VERSION", version("launch_concierge"))
+    set_env("CONCIERGE_VERSION", version("install_concierge"))
     set_env(
         "OLLAMA_SERVICE",
         "ollama-gpu"

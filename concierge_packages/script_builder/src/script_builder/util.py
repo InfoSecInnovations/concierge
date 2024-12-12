@@ -66,6 +66,28 @@ def install_requirements(filename="requirements.txt"):
     )
 
 
+def install_package(package_name):
+    subprocess.run(
+        [
+            get_venv_executable(),
+            "-m",
+            "pip",
+            "install",
+            package_name,
+        ]
+    )
+
+
+def run_in_venv(command):
+    subprocess.run(
+        [
+            get_venv_executable(),
+            "-m",
+            command,
+        ]
+    )
+
+
 def setup_pip():
     working_dir = os.getcwd()
     venv.create(working_dir, with_pip=True)
