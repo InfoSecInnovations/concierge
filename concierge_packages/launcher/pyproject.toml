@@ -1,6 +1,6 @@
 [project]
 name = "launch-concierge"
-version = "0.5a12"
+version = "0.5a13"
 requires-python = ">=3.10"
 dependencies = [
     "script-builder~=0.2a1"

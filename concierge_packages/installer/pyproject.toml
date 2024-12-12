@@ -1,10 +1,10 @@
 [project]
 name = "install-concierge"
-version = "0.5a12"
+version = "0.5a13"
 requires-python = ">=3.10"
 dependencies = [
-    "script-builder~=0.2a0",
-    "isi-util~=0.2a0",
+    "script-builder~=0.2a1",
+    "isi-util~=0.2a1",
     "concierge-util~=0.2a2",
     "packaging",
     "python-dotenv",
