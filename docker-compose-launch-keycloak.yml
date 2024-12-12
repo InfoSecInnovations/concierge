@@ -1,7 +1,7 @@
 name: concierge
 
 include:
-  - ./concierge_packages/install_concierge/src/install_concierge/docker_compose/docker_compose_dependencies/docker-compose-keycloak.yml
+  - ./concierge_packages/installer/src/install_concierge/docker_compose/docker_compose_dependencies/docker-compose-keycloak.yml
 
 networks:
   default:
