@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 from .opensearch_prompting import get_context_from_opensearch
 from .authorization import auth_enabled, authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
-from .httpx_client import httpx_client
-import traceback
+import httpx
 
 load_dotenv()
 HOST = os.getenv("OLLAMA_HOST") or "localhost"
@@ -66,13 +65,12 @@ async def get_response(
 
     data = {"model": "mistral", "prompt": prompt, "stream": False}
     # Ollama doesn't like the data in JSON, we have to dump it to string
-    try:
+    async with httpx.AsyncClient(
+        verify=os.getenv("ROOT_CA"), timeout=None
+    ) as httpx_client:
         response = await httpx_client.post(
             f"http://{HOST}:11434/api/generate", data=json.dumps(data)
         )
-    except Exception:
-        traceback.print_exc()
-
     if response.status_code != 200:
         print(response.content)
         return f"ollama status: {response.status_code}"

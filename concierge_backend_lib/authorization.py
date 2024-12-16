@@ -8,7 +8,7 @@ import dotenv
 import os
 from keycloak import KeycloakPostError
 from keycloak.exceptions import raise_error_from_response
-from .httpx_client import httpx_client
+import httpx
 
 
 class UnauthorizedOperationError(Exception):
@@ -24,16 +24,19 @@ async def authorize(token, resource, scope: str | None = None):
     permission = resource
     if scope:
         permission += f"#{scope}"
-    resp = await httpx_client.post(
-        keycloak_openid_config()["token_endpoint"],
-        data={
-            "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
-            "audience": "concierge-auth",
-            "permission": permission,
-            "response_mode": "decision",
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    async with httpx.AsyncClient(
+        verify=os.getenv("ROOT_CA"), timeout=None
+    ) as httpx_client:
+        resp = await httpx_client.post(
+            keycloak_openid_config()["token_endpoint"],
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
+                "audience": "concierge-auth",
+                "permission": permission,
+                "response_mode": "decision",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     # this will cause us to get a new token if needed
     raise_error_from_response(resp, KeycloakPostError)

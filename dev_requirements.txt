@@ -4,6 +4,7 @@ pipdeptree~=2.23.3
 twine~=5.1.1
 zxcvbn~=4.4.28
 pytest
+pytest-asyncio
 -e concierge_packages/script_builder
 -e concierge_packages/installer
 -r local_requirements.txt
