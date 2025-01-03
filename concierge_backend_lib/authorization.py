@@ -9,6 +9,7 @@ import os
 from keycloak import KeycloakPostError
 from keycloak.exceptions import raise_error_from_response
 import httpx
+import ssl
 
 
 class UnauthorizedOperationError(Exception):
@@ -25,7 +26,7 @@ async def authorize(token, resource, scope: str | None = None):
     if scope:
         permission += f"#{scope}"
     async with httpx.AsyncClient(
-        verify=os.getenv("ROOT_CA"), timeout=None
+        verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")), timeout=None
     ) as httpx_client:
         resp = await httpx_client.post(
             keycloak_openid_config()["token_endpoint"],

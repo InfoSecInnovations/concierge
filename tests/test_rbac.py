@@ -130,6 +130,23 @@ async def test_can_ingest_document(user, collection_name):
     assert await ingest_document(user, collection_name)
 
 
+@pytest.mark.parametrize(
+    "user,collection_name",
+    [
+        ("testsharedread", "testadmin's private collection"),
+        ("testsharedread", "testadmin's shared collection"),
+        ("testshared", "testadmin's private collection"),
+        ("testprivate", "testadmin's private collection"),
+        ("testprivate", "testadmin's shared collection"),
+        ("testnothing", "testadmin's shared collection"),
+        ("testnothing", "testadmin's private collection"),
+    ],
+)
+async def test_cannot_ingest_document(user, collection_name):
+    with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
+        await ingest_document(user, collection_name)
+
+
 async def teardown():
     token = get_keycloak_admin_openid_token()
     for id in collection_lookup.values():
