@@ -12,9 +12,12 @@ from concierge_backend_lib.document_collections import (
     delete_collection,
     get_documents,
 )
+from concierge_backend_lib.ingesting import insert_document
+from concierge_backend_lib.loading import load_file
 import pytest
 from keycloak import KeycloakPostError
 import asyncio
+import os
 
 keycloak_client = get_keycloak_client()
 
@@ -95,6 +98,36 @@ async def test_cannot_read_collection(user, collection_name):
     with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
         token = keycloak_client.token(user, "test")
         await get_documents(token["access_token"], collection_lookup[collection_name])
+
+
+# we will use the documents created in the next tests
+document_lookup = {}
+# we will use the same file for each test
+doc = load_file(os.path.join(os.path.dirname(__file__), "test_doc.txt"))
+
+
+async def ingest_document(user, collection_name):
+    token = keycloak_client.token(user, "test")
+    async for _, _, doc_id in insert_document(
+        token["access_token"], collection_lookup[collection_name], doc
+    ):
+        pass
+    document_lookup[f"{collection_name} document"] = doc_id
+    return doc_id
+
+
+@pytest.mark.parametrize(
+    "user,collection_name",
+    [
+        ("testadmin", "testadmin's shared collection"),
+        ("testadmin", "testadmin's private collection"),
+        ("testadmin", "testprivate's private collection"),
+        ("testshared", "testadmin's shared collection"),
+        ("testprivate", "testprivate's private collection"),
+    ],
+)
+async def test_can_ingest_document(user, collection_name):
+    assert await ingest_document(user, collection_name)
 
 
 async def teardown():
