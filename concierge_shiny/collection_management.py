@@ -164,9 +164,9 @@ def collection_management_server(
                     ui.accordion_panel(
                         ui.markdown(
                             "#### You don't have permission to ingest documents into this collection"
-                        )
-                    ),
-                    value="ingest_documents",
+                        ),
+                        value="ingest_documents",
+                    )
                 )
             accordion_elements.append(
                 ui.accordion_panel(
