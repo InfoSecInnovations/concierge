@@ -84,16 +84,16 @@ async def load_llm_model(model_name):
 
 def format_collection_name(collection_data, user_info):
     if not collection_data["type"] or collection_data["type"] == "collection:shared":
-        return collection_data["name"]
+        return collection_data["displayName"]
     user_id = user_info["sub"]
     if (
         "attributes" in collection_data
         and "concierge_owner" in collection_data["attributes"]
     ):
         if collection_data["attributes"]["concierge_owner"][0] == user_id:
-            return f"{collection_data["name"]} (private)"
-        return f"{collection_data["name"]} (private, belongs to {get_username(collection_data["attributes"]["concierge_owner"][0])})"
-    return f"{collection_data["name"]} (private, owner unknown)"
+            return f"{collection_data["displayName"]} (private)"
+        return f"{collection_data["displayName"]} (private, belongs to {get_username(collection_data["attributes"]["concierge_owner"][0])})"
+    return f"{collection_data["displayName"]} (private, owner unknown)"
 
 
 async def has_edit_access(permissions, task_runner: WebAppAsyncTokenTaskRunner):

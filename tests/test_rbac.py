@@ -24,6 +24,8 @@ keycloak_client = get_keycloak_client()
 
 # we will use the collections created in the first tests for the subsequent tests
 collection_lookup = {}
+# track all created collection IDs here (some of the lookup may get overwritten)
+collection_ids = []
 
 
 async def create_collection_for_user(user, location):
@@ -33,6 +35,7 @@ async def create_collection_for_user(user, location):
         token["access_token"], f"{user}'s {location} collection", location
     )
     collection_lookup[collection_name] = collection_id
+    collection_ids.append(collection_id)
     return collection_id
 
 
@@ -187,9 +190,29 @@ async def test_cannot_delete_document(user, collection_name):
         await delete_document_with_user(user, collection_name)
 
 
+async def delete_collection_with_user(user, owner, location):
+    # we will create a collection each time to avoid trying to delete an already deleted one
+    collection_id = await create_collection_for_user(owner, location)
+    token = keycloak_client.token(user, "test")
+    await delete_collection(token["access_token"], collection_id)
+
+
+@pytest.mark.parametrize(
+    "user,owner,location",
+    [
+        ("testadmin", "testadmin", "shared"),
+        ("testadmin", "testadmin", "private"),
+        ("testadmin", "testshared", "shared"),
+        ("testadmin", "testprivate", "private"),
+    ],
+)
+async def test_can_delete_collection(user, owner, location):
+    await delete_collection_with_user(user, owner, location)
+
+
 async def teardown():
     token = get_keycloak_admin_openid_token()
-    for id in collection_lookup.values():
+    for id in collection_ids:
         token = get_keycloak_admin_openid_token()
         await delete_collection(token["access_token"], id)
 
