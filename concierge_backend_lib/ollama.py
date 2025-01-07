@@ -6,8 +6,6 @@ HOST = os.getenv("OLLAMA_HOST", "localhost")
 
 
 def load_model(model_name):
-    # TODO several revs in the future... allow users to pick model.
-    # very much low priority atm
     def is_loaded():
         models = requests.get(f"http://{HOST}:11434/api/tags")
         model_list = json.loads(models.text)["models"]

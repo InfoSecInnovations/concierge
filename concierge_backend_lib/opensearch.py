@@ -62,7 +62,10 @@ def create_index_mapping(collection_id, collection_name):
         }
         client.indices.create(MAPPING_INDEX_NAME, body=index_body)
     client.index(
-        MAPPING_INDEX_NAME, body={"collection_name": collection_name}, id=collection_id
+        MAPPING_INDEX_NAME,
+        body={"collection_name": collection_name},
+        id=collection_id,
+        refresh=True,
     )
 
 
@@ -73,13 +76,15 @@ def delete_index_mapping(collection_id):
 
 def get_collection_mappings():
     client = get_client()
+    if not client.indices.exists(MAPPING_INDEX_NAME):
+        return []
     query = {
         "size": 10000,  # this is the maximum allowed value
         "query": {"match_all": {}},
     }
     response = client.search(body=query, index=MAPPING_INDEX_NAME)
     collections = [
-        {"name": hit["_source"]["name"], "_id": hit["_id"]}
+        {"name": hit["_source"]["collection_name"], "_id": hit["_id"]}
         for hit in response["hits"]["hits"]
     ]
     return collections
@@ -87,7 +92,12 @@ def get_collection_mappings():
 
 def get_collection_mapping(collection_name):
     client = get_client()
-    query = {"size": 1, "query": {"bool": {"filter": [{"name": collection_name}]}}}
+    if not client.indices.exists(MAPPING_INDEX_NAME):
+        return None
+    query = {
+        "size": 1,
+        "query": {"bool": {"filter": [{"term": {"collection_name": collection_name}}]}},
+    }
     response = client.search(body=query, index=MAPPING_INDEX_NAME)
     ids = [hit["_id"] for hit in response["hits"]["hits"]]
     if ids:

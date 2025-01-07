@@ -79,9 +79,10 @@ async def create_collection(token, display_name: str, location: Location | None 
                 raise e
     else:
         existing = get_collection_mapping(display_name)
+        # print(f"existing: {existing}")
         if existing:
             raise CollectionExistsError()
-        resource_id = uuid4()
+        resource_id = str(uuid4())
         # if we don't have authz configured, we write the collection name mapping to OpenSearch
         await asyncify(create_index_mapping, resource_id, display_name)
     await asyncify(create_collection_index, resource_id)
