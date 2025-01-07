@@ -93,15 +93,6 @@ def setup_pip():
     venv.create(working_dir, with_pip=True)
 
 
-def get_lines(command):
-    return list(
-        filter(
-            None,
-            subprocess.run(command, capture_output=True, text=True).stdout.split("\n"),
-        )
-    )
-
-
 def get_install_status(apply_message, cancel_message):
     ready_to_rock = input(
         f'{apply_message} Please type "yes" to continue. (yes/no): '

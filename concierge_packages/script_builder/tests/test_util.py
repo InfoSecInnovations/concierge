@@ -1,4 +1,4 @@
-from script_builder.util import get_venv_executable, is_unix, get_lines
+from script_builder.util import get_venv_executable, is_unix
 
 
 def test_get_venv_executable():
@@ -7,17 +7,3 @@ def test_get_venv_executable():
         assert path == "bin/python"
     else:
         assert path == "Scripts\\python"
-
-
-def test_get_lines():
-    lines = get_lines(
-        [
-            get_venv_executable(),
-            "script_builder_package/tests/printer.py",
-            "line1",
-            "",
-            " ",
-            "line2",
-        ]
-    )
-    assert lines == ["line1", "line2"]
