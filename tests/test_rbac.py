@@ -4,11 +4,9 @@
 
 from concierge_backend_lib.authentication import (
     get_keycloak_client,
-    get_keycloak_admin_openid_token,
 )
 from concierge_backend_lib.authorization import UnauthorizedOperationError
 from concierge_backend_lib.document_collections import (
-    create_collection,
     delete_collection,
     get_documents,
     delete_document,
@@ -20,26 +18,12 @@ from keycloak import KeycloakPostError
 import asyncio
 import os
 import secrets
+from .lib import create_collection_for_user, clean_up_collections
 
 keycloak_client = get_keycloak_client()
 
 # we will use the collections created in the first tests for the subsequent tests
 collection_lookup = {}
-# track all created collection IDs here (some of the lookup may get overwritten)
-collection_ids = []
-
-
-async def create_collection_for_user(user, location, identifier=""):
-    token = keycloak_client.token(user, "test")
-    collection_name = f"{user}'s {location} collection"
-    if identifier:
-        collection_name += f" {identifier}"
-    collection_id = await create_collection(
-        token["access_token"], collection_name, location
-    )
-    collection_lookup[collection_name] = collection_id
-    collection_ids.append(collection_id)
-    return collection_id
 
 
 @pytest.mark.parametrize(
@@ -52,7 +36,9 @@ async def create_collection_for_user(user, location, identifier=""):
     ],
 )
 async def test_can_create_collection(user, location):
-    assert await create_collection_for_user(user, location)
+    assert await create_collection_for_user(
+        user, location, collection_lookup, f"{user}'s {location} collection"
+    )
 
 
 @pytest.mark.parametrize(
@@ -68,7 +54,9 @@ async def test_can_create_collection(user, location):
 )
 async def test_cannot_create_collection(user, location):
     with pytest.raises(KeycloakPostError):
-        await create_collection_for_user(user, location)
+        await create_collection_for_user(
+            user, location, collection_lookup, f"{user}'s {location} collection"
+        )
 
 
 @pytest.mark.parametrize(
@@ -196,7 +184,7 @@ async def test_cannot_delete_document(user, collection_name):
 async def delete_collection_with_user(user, owner, location):
     # we will create a collection each time to avoid trying to delete an already deleted one
     collection_id = await create_collection_for_user(
-        owner, location, secrets.token_hex(8)
+        owner, location, collection_lookup, secrets.token_hex(8)
     )  # we add a unique identifier to avoid running into name collision issues
     token = keycloak_client.token(user, "test")
     await delete_collection(token["access_token"], collection_id)
@@ -234,16 +222,5 @@ async def test_cannot_delete_collection(user, owner, location):
         await delete_collection_with_user(user, owner, location)
 
 
-async def teardown():
-    token = get_keycloak_admin_openid_token()
-    for id in collection_ids:
-        token = get_keycloak_admin_openid_token()
-        # the deletion test should have deleted some of these, so we allow exceptions here
-        try:
-            await delete_collection(token["access_token"], id)
-        except Exception:
-            pass
-
-
 def teardown_module():
-    asyncio.run(teardown())
+    asyncio.run(clean_up_collections())
