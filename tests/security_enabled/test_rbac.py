@@ -96,7 +96,7 @@ async def test_cannot_read_collection(user, collection_name):
 
 
 # we will use the same file for each test
-doc = load_file(os.path.join(os.path.dirname(__file__), "test_doc.txt"))
+doc = load_file(os.path.join(os.path.dirname(__file__), "..", "assets", "test_doc.txt"))
 
 
 async def ingest_document(user, collection_name):
