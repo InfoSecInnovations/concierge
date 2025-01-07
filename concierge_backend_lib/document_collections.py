@@ -16,6 +16,7 @@ from .opensearch import (
     create_index_mapping,
     delete_index_mapping,
     get_collection_mappings,
+    get_collection_mapping,
     get_opensearch_documents,
     delete_opensearch_document,
 )
@@ -57,7 +58,6 @@ type Location = Literal["private", "shared"]
 # in an unsecured instance collections don't have a location, so None is valid in that case
 async def create_collection(token, display_name: str, location: Location | None = None):
     print(f"creating {location or ''} collection {display_name}")
-    # TODO: check if we already have a collection with same name and location
     if auth_enabled:
         # when using authz collections should always have a location
         if not location:
@@ -67,10 +67,16 @@ async def create_collection(token, display_name: str, location: Location | None 
             raise UnauthorizedOperationError()
         token_info = await get_token_info(token)
         owner_id = token_info["sub"]
+        # if shared check for any shared collection with the same name
+        # if private check for any private collection with the same name and owner
+
         resource_id = await create_resource(
             display_name, f"collection:{location}", owner_id
         )
     else:
+        existing = get_collection_mapping(display_name)
+        if existing:
+            raise CollectionExistsError()
         resource_id = uuid4()
         # if we don't have authz configured, we write the collection name mapping to OpenSearch
         await asyncify(create_index_mapping, resource_id, display_name)

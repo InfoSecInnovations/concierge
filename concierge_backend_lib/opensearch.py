@@ -85,6 +85,16 @@ def get_collection_mappings():
     return collections
 
 
+def get_collection_mapping(collection_name):
+    client = get_client()
+    query = {"size": 1, "query": {"bool": {"filter": [{"name": collection_name}]}}}
+    response = client.search(body=query, index=MAPPING_INDEX_NAME)
+    ids = [hit["_id"] for hit in response["hits"]["hits"]]
+    if ids:
+        return ids[0]
+    return None
+
+
 def delete_collection_indices(collection_id: str):
     client = get_client()
     # get all indices in alias

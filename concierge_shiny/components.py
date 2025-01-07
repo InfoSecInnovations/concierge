@@ -4,6 +4,7 @@ from concierge_backend_lib.status import check_ollama, check_opensearch
 from concierge_backend_lib.document_collections import (
     create_collection,
     get_collections,
+    CollectionExistsError,
 )
 from isi_util.async_single import asyncify
 import os
@@ -299,14 +300,19 @@ def collection_create_server(
 
     @reactive.effect
     def create_collection_effect():
-        collection_id, new_collections = create_concierge_collection.result()
-        collections.set(
-            CollectionsData(
-                collections=new_collections,
-                loading=False,
+        try:
+            collection_id, new_collections = create_concierge_collection.result()
+            collections.set(
+                CollectionsData(
+                    collections=new_collections,
+                    loading=False,
+                )
             )
-        )
-        selected_collection.set(collection_id)
+            selected_collection.set(collection_id)
+        except CollectionExistsError:
+            ui.notification_show(
+                "Collection with this name already exists", type="error"
+            )
         creating.set(False)
 
     @reactive.effect
