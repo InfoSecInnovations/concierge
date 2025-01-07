@@ -21,6 +21,7 @@ from .opensearch import (
     delete_opensearch_document,
 )
 from isi_util.async_single import asyncify
+from keycloak import KeycloakPostError
 
 
 class CollectionExistsError(Exception):
@@ -67,12 +68,15 @@ async def create_collection(token, display_name: str, location: Location | None 
             raise UnauthorizedOperationError()
         token_info = await get_token_info(token)
         owner_id = token_info["sub"]
-        # if shared check for any shared collection with the same name
-        # if private check for any private collection with the same name and owner
-
-        resource_id = await create_resource(
-            display_name, f"collection:{location}", owner_id
-        )
+        try:
+            resource_id = await create_resource(
+                display_name, f"collection:{location}", owner_id
+            )
+        except KeycloakPostError as e:
+            if e.response_code == 409:
+                raise CollectionExistsError()
+            else:
+                raise e
     else:
         existing = get_collection_mapping(display_name)
         if existing:

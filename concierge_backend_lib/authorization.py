@@ -10,7 +10,6 @@ from keycloak import KeycloakPostError
 from keycloak.exceptions import raise_error_from_response
 import httpx
 import ssl
-import secrets
 
 
 class UnauthorizedOperationError(Exception):
@@ -48,9 +47,13 @@ async def authorize(token, resource, scope: str | None = None):
 
 async def create_resource(resource_name, resource_type, owner_id):
     keycloak_uma = get_keycloak_uma()
+    # this identifier allows us to only get name collisions if the collection has the same access permissions
+    identifier = resource_type
+    if resource_type == "collection:private":
+        identifier = f"{identifier}_{owner_id}"
     response = await keycloak_uma.a_resource_set_create(
         {
-            "name": f"{resource_type}_{secrets.token_hex(8)}",  # use a unique identifier to avoid name collisions
+            "name": f"{identifier}_{resource_name}",
             "displayName": resource_name,
             "type": resource_type,
             "attributes": {"concierge_owner": [owner_id]},
