@@ -19,6 +19,7 @@ import pytest
 from keycloak import KeycloakPostError
 import asyncio
 import os
+import secrets
 
 keycloak_client = get_keycloak_client()
 
@@ -28,11 +29,13 @@ collection_lookup = {}
 collection_ids = []
 
 
-async def create_collection_for_user(user, location):
+async def create_collection_for_user(user, location, identifier=""):
     token = keycloak_client.token(user, "test")
     collection_name = f"{user}'s {location} collection"
+    if identifier:
+        collection_name += f" {identifier}"
     collection_id = await create_collection(
-        token["access_token"], f"{user}'s {location} collection", location
+        token["access_token"], collection_name, location
     )
     collection_lookup[collection_name] = collection_id
     collection_ids.append(collection_id)
@@ -192,7 +195,9 @@ async def test_cannot_delete_document(user, collection_name):
 
 async def delete_collection_with_user(user, owner, location):
     # we will create a collection each time to avoid trying to delete an already deleted one
-    collection_id = await create_collection_for_user(owner, location)
+    collection_id = await create_collection_for_user(
+        owner, location, secrets.token_hex(8)
+    )  # we add a unique identifier to avoid running into name collision issues
     token = keycloak_client.token(user, "test")
     await delete_collection(token["access_token"], collection_id)
 
@@ -204,17 +209,40 @@ async def delete_collection_with_user(user, owner, location):
         ("testadmin", "testadmin", "private"),
         ("testadmin", "testshared", "shared"),
         ("testadmin", "testprivate", "private"),
+        ("testshared", "testadmin", "shared"),
+        ("testprivate", "testprivate", "private"),
     ],
 )
 async def test_can_delete_collection(user, owner, location):
     await delete_collection_with_user(user, owner, location)
 
 
+@pytest.mark.parametrize(
+    "user,owner,location",
+    [
+        ("testsharedread", "testadmin", "shared"),
+        ("testsharedread", "testadmin", "private"),
+        ("testshared", "testadmin", "private"),
+        ("testprivate", "testadmin", "private"),
+        ("testprivate", "testadmin", "shared"),
+        ("testnothing", "testadmin", "shared"),
+        ("testnothing", "testadmin", "private"),
+    ],
+)
+async def test_cannot_delete_collection(user, owner, location):
+    with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
+        await delete_collection_with_user(user, owner, location)
+
+
 async def teardown():
     token = get_keycloak_admin_openid_token()
     for id in collection_ids:
         token = get_keycloak_admin_openid_token()
-        await delete_collection(token["access_token"], id)
+        # the deletion test should have deleted some of these, so we allow exceptions here
+        try:
+            await delete_collection(token["access_token"], id)
+        except Exception:
+            pass
 
 
 def teardown_module():
