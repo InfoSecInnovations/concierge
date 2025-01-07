@@ -67,7 +67,8 @@ def get_keycloak_admin_client():
     return client
 
 
-def get_keycloak_admin_openid_token(client: KeycloakOpenID):
+def get_keycloak_admin_openid_token():
+    client = get_keycloak_client()
     token = client.token(grant_type="client_credentials")
     return token
 

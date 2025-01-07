@@ -16,7 +16,7 @@ from concierge_backend_lib.document_collections import (
 from concierge_backend_lib.authorization import auth_enabled
 from ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-from functions import doc_link
+from functions import doc_link, format_collection_name
 from markdown_renderer import md
 from collections_data import CollectionsData
 from auth import WebAppAsyncTokenTaskRunner
@@ -164,9 +164,9 @@ def collection_management_server(
                     ui.accordion_panel(
                         ui.markdown(
                             "#### You don't have permission to ingest documents into this collection"
-                        )
-                    ),
-                    value="ingest_documents",
+                        ),
+                        value="ingest_documents",
+                    )
                 )
             accordion_elements.append(
                 ui.accordion_panel(
@@ -177,7 +177,7 @@ def collection_management_server(
             )
             items = [
                 ui.markdown(
-                    f"### Selected collection: {find(collections.get().collections, lambda collection: collection['_id'] == selected_collection.get())['name']}"
+                    f"### Selected collection: {format_collection_name(find(collections.get().collections, lambda collection: collection['_id'] == selected_collection.get()), user_info.get())}"
                 ),
                 ui.accordion(
                     *accordion_elements,

@@ -8,7 +8,9 @@ import dotenv
 import os
 from keycloak import KeycloakPostError
 from keycloak.exceptions import raise_error_from_response
-from .httpx_client import httpx_client
+import httpx
+import ssl
+import secrets
 
 
 class UnauthorizedOperationError(Exception):
@@ -24,16 +26,19 @@ async def authorize(token, resource, scope: str | None = None):
     permission = resource
     if scope:
         permission += f"#{scope}"
-    resp = await httpx_client.post(
-        keycloak_openid_config()["token_endpoint"],
-        data={
-            "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
-            "audience": "concierge-auth",
-            "permission": permission,
-            "response_mode": "decision",
-        },
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    async with httpx.AsyncClient(
+        verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")), timeout=None
+    ) as httpx_client:
+        resp = await httpx_client.post(
+            keycloak_openid_config()["token_endpoint"],
+            data={
+                "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
+                "audience": "concierge-auth",
+                "permission": permission,
+                "response_mode": "decision",
+            },
+            headers={"Authorization": f"Bearer {token}"},
+        )
 
     # this will cause us to get a new token if needed
     raise_error_from_response(resp, KeycloakPostError)
@@ -45,7 +50,7 @@ async def create_resource(resource_name, resource_type, owner_id):
     keycloak_uma = get_keycloak_uma()
     response = await keycloak_uma.a_resource_set_create(
         {
-            "name": resource_name,
+            "name": f"{resource_type}_{secrets.token_hex(8)}",  # use a unique identifier to avoid name collisions
             "displayName": resource_name,
             "type": resource_type,
             "attributes": {"concierge_owner": [owner_id]},
