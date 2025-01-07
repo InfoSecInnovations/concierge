@@ -58,27 +58,6 @@ arguments = [
 inputs = ["default1", "testing", "", "blah"]
 
 
-# TODO:
-def test_input_prompt():
-    # processor = ArgumentProcessor(arguments)
-    # input_parameters = processor._ArgumentProcessor__get_argument_input_parameters(
-    #     arguments[0].input
-    # )
-    # assert (
-    #     input_parameters.text == "[default1] or non_default: "
-    # )  # check that options lists are joined by "or"
-    # input_parameters = processor._ArgumentProcessor__get_argument_input_parameters(
-    #     arguments[1].input
-    # )
-    # assert input_parameters.text == "prompt2? [default2]: "
-    # processor.parameters["key_1"] = "testing"
-    # input_parameters = processor._ArgumentProcessor__get_argument_input_parameters(
-    #     arguments[2].input
-    # )
-    # assert input_parameters.text == "what is key 1? [testing]: "
-    pass
-
-
 def test_user_input(monkeypatch):
     processor = ArgumentProcessor(arguments)
     mock_input = iter(inputs)
