@@ -19,6 +19,7 @@ def server_url():
 
 
 def keycloak_openid_config():
+    print(server_url())
     session = requests.Session()
     session.verify = os.getenv("ROOT_CA")
     return session.get(

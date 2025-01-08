@@ -7,43 +7,35 @@ import asyncio
 import pytest
 from concierge_backend_lib.document_collections import CollectionExistsError
 
-collection_lookup = {}
-
 
 async def test_own_private_collection_with_same_name():
-    await create_collection_for_user("testadmin", "private", collection_lookup, "1")
+    await create_collection_for_user("testadmin", "private", "1")
     with pytest.raises(CollectionExistsError):
-        await create_collection_for_user("testadmin", "private", collection_lookup, "1")
+        await create_collection_for_user("testadmin", "private", "1")
 
 
 async def test_private_collection_with_different_name():
-    collection_id = await create_collection_for_user(
-        "testadmin", "private", collection_lookup, "2"
-    )
+    collection_id = await create_collection_for_user("testadmin", "private", "2")
     assert collection_id
 
 
 async def test_shared_collection_with_existing_private_name():
-    collection_id = await create_collection_for_user(
-        "testadmin", "shared", collection_lookup, "1"
-    )
+    collection_id = await create_collection_for_user("testadmin", "shared", "1")
     assert collection_id
 
 
 async def test_shared_collection_with_existing_name():
     with pytest.raises(CollectionExistsError):
-        await create_collection_for_user("testadmin", "shared", collection_lookup, "1")
+        await create_collection_for_user("testadmin", "shared", "1")
 
 
 async def test_shared_collection_with_existing_name_and_different_user():
     with pytest.raises(CollectionExistsError):
-        await create_collection_for_user("testshared", "shared", collection_lookup, "1")
+        await create_collection_for_user("testshared", "shared", "1")
 
 
 async def test_private_collection_with_existing_name_and_different_user():
-    collection_id = await create_collection_for_user(
-        "testprivate", "private", collection_lookup, "1"
-    )
+    collection_id = await create_collection_for_user("testprivate", "private", "1")
     assert collection_id
 
 
