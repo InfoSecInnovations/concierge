@@ -14,7 +14,7 @@ from concierge_backend_lib.document_collections import (
 from concierge_backend_lib.ingesting import insert_document
 from concierge_backend_lib.loading import load_file
 import pytest
-from keycloak import KeycloakPostError
+from keycloak import KeycloakPostError, KeycloakAuthenticationError
 import asyncio
 import os
 import secrets
@@ -53,7 +53,7 @@ async def test_can_create_collection(user, location):
     ],
 )
 async def test_cannot_create_collection(user, location):
-    with pytest.raises(KeycloakPostError):
+    with pytest.raises(KeycloakPostError, KeycloakAuthenticationError):
         await create_collection_for_user(
             user, location, collection_lookup, f"{user}'s {location} collection"
         )
@@ -90,7 +90,9 @@ async def test_can_read_collection(user, collection_name):
     ],
 )
 async def test_cannot_read_collection(user, collection_name):
-    with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
+    with pytest.raises(
+        (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
+    ):
         token = keycloak_client.token(user, "test")
         await get_documents(token["access_token"], collection_lookup[collection_name])
 
@@ -135,7 +137,9 @@ async def test_can_ingest_document(user, collection_name):
     ],
 )
 async def test_cannot_ingest_document(user, collection_name):
-    with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
+    with pytest.raises(
+        (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
+    ):
         await ingest_document(user, collection_name)
 
 
@@ -177,7 +181,9 @@ async def test_can_delete_document(user, collection_name):
     ],
 )
 async def test_cannot_delete_document(user, collection_name):
-    with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
+    with pytest.raises(
+        (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
+    ):
         await delete_document_with_user(user, collection_name)
 
 
@@ -218,7 +224,9 @@ async def test_can_delete_collection(user, owner, location):
     ],
 )
 async def test_cannot_delete_collection(user, owner, location):
-    with pytest.raises((UnauthorizedOperationError, KeycloakPostError)):
+    with pytest.raises(
+        (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
+    ):
         await delete_collection_with_user(user, owner, location)
 
 

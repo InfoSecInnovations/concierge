@@ -6,7 +6,7 @@ from .authentication import (
 )
 import dotenv
 import os
-from keycloak import KeycloakPostError
+from keycloak import KeycloakPostError, KeycloakAuthenticationError
 from keycloak.exceptions import raise_error_from_response
 import httpx
 import ssl
@@ -67,9 +67,9 @@ async def list_resources(token):
     keycloak_openid = get_keycloak_client()
     try:
         response = await keycloak_openid.a_uma_permissions(token)
-    except KeycloakPostError as e:
-        # 403 means not authorized, so we can return an empty list
-        if e.response_code == 403:
+    except (KeycloakPostError, KeycloakAuthenticationError) as e:
+        # 401 means no authorization provided, 403 means not authorized, so we can return an empty list
+        if e.response_code == 401 or e.response_code == 403:
             return []
     admin_client = get_keycloak_admin_client()
     client_id = await admin_client.a_get_client_id("concierge-auth")
@@ -85,9 +85,9 @@ async def has_scope(token, scope):
     keycloak_openid = get_keycloak_client()
     try:
         response = await keycloak_openid.a_uma_permissions(token, f"#{scope}")
-    except KeycloakPostError as e:
-        # 403 means not authorized, so we can return False
-        if e.response_code == 403:
+    except (KeycloakPostError, KeycloakAuthenticationError) as e:
+        # 401 means no authorization provided, 403 means not authorized, so we can return False
+        if e.response_code == 401 or e.response_code == 403:
             return False
     return len(response) != 0
 
@@ -98,9 +98,9 @@ async def list_permissions(token):
         response = await keycloak_openid.a_uma_permissions(
             token, ["collection:private:create", "collection:shared:create"]
         )
-    except KeycloakPostError as e:
-        # 403 means not authorized, so we can return an empty set
-        if e.response_code == 403:
+    except (KeycloakPostError, KeycloakAuthenticationError) as e:
+        # 401 means no authorization provided, 403 means not authorized, so we can return an empty set
+        if e.response_code == 401 or e.response_code == 403:
             return {}
     admin_client = get_keycloak_admin_client()
     client_id = await admin_client.a_get_client_id("concierge-auth")
@@ -118,9 +118,9 @@ async def list_scopes(token, resource_id):
         if not len(response):
             return []
         return response[0]["scopes"]
-    except KeycloakPostError as e:
-        # 403 means not authorized, so we can return an empty list
-        if e.response_code == 403:
+    except (KeycloakPostError, KeycloakAuthenticationError) as e:
+        # 401 means no authorization provided, 403 means not authorized, so we can return an empty list
+        if e.response_code == 401 or e.response_code == 403:
             return []
 
 

@@ -37,13 +37,31 @@ def login_button_server(input: Inputs, output: Outputs, session: Session, url: s
             return ui.tags.script(f'window.location.href = "{url}"')
 
 
+class CookieNotPresentError(Exception):
+    def __init__(self, message=""):
+        self.message = message
+
+
+def load_token_from_cookies(cookies):
+    if "concierge_token_chunk_count" not in cookies:
+        raise CookieNotPresentError()
+    chunk_count = int(cookies["concierge_token_chunk_count"])
+    token = ""
+    for i in range(chunk_count):
+        token += cookies[f"concierge_auth_{i}"]
+    parsed_token = json.loads(token)
+    return parsed_token
+
+
 def get_auth_token(session):
     if not auth_enabled:
         return {
             "access_token": None
         }  # this is a dummy token that has the access_token key to not break functions that require it to be there
 
-    if "concierge_token_chunk_count" not in session.http_conn.cookies:
+    try:
+        token = load_token_from_cookies(session.http_conn.cookies)
+    except CookieNotPresentError:
         redirect_uri = f"{session.http_conn.headers["origin"]}/callback"
         keycloak_openid = get_keycloak_client()
         authorization_url = keycloak_openid.auth_url(
@@ -65,17 +83,9 @@ def get_auth_token(session):
             )
 
         return None
-
-    chunk_count = int(session.http_conn.cookies["concierge_token_chunk_count"])
-    token = ""
-    for i in range(chunk_count):
-        token += session.http_conn.cookies[f"concierge_auth_{i}"]
-    parsed_token = json.loads(token)
     try:
         keycloak_openid = get_keycloak_client()
-        keycloak_openid.userinfo(
-            parsed_token["access_token"]
-        )  # TODO: maybe do something with the user info?
+        keycloak_openid.userinfo(token["access_token"])
     except Exception:
 
         @render.ui
@@ -83,7 +93,7 @@ def get_auth_token(session):
             return ui.tags.script('window.location.href = "/refresh"')
 
         return None
-    return parsed_token
+    return token
 
 
 def get_task_runner(session):
