@@ -15,6 +15,8 @@ from .docker_containers import (
     remove_keycloak,
     remove_ollama,
     volume_exists,
+    concierge_exists,
+    remove_concierge,
 )
 
 
@@ -53,6 +55,8 @@ def clean_up_existing():
                 proceed = True
             else:
                 print("Please enter yes or no!")
+
+    print("checking for existing configuration file...\n")
 
     # Check if Concierge is already configured
     if os.path.isfile(".env"):
@@ -124,35 +128,49 @@ def clean_up_existing():
                     if approve_to_delete == "yes":
                         shutil.rmtree(concierge_volumes)
 
-            # we also check the volumes here because the user needs the opportunity to remove a dependency completely even if they already deleted the containers
+    print(
+        "\nChecking for existing Docker containers and volumes related to Concierge..."
+    )
 
-            if opensearch_exists() or volume_exists("opensearch-data1"):
-                print("\nExisting OpenSearch installation found")
-                print("If you remove this you will lose all your document collections!")
-                approve_to_delete = input(
-                    "Type 'yes' to remove OpenSearch installation or press enter to skip: "
-                )
-                if approve_to_delete:
-                    remove_opensearch()
+    if concierge_exists():
+        print("\nExisting Concierge container found")
+        approve_to_delete = input(
+            "Type 'yes' to remove Concierge container or press enter to skip: "
+        )
+        if approve_to_delete:
+            remove_concierge()
 
-            if ollama_exists() or volume_exists("ollama"):
-                print("\nExisting Ollama installation found")
-                print(
-                    "If you remove this you will need to redownload the language model(s) used by the prompter"
-                )
-                approve_to_delete = input(
-                    "Type 'yes' to remove Ollama installation or press enter to skip: "
-                )
-                if approve_to_delete:
-                    remove_ollama()
+    # we also check the volumes here because the user needs the opportunity to remove a dependency completely even if they already deleted the containers
 
-            if keycloak_exists() or volume_exists("postgres_data"):
-                print("\nExisting Keycloak installation found")
-                print(
-                    "If you remove this you will lose all configured users and access controls!"
-                )
-                approve_to_delete = input(
-                    "Type 'yes' to remove Keycloak installation or press enter to skip: "
-                )
-                if approve_to_delete:
-                    remove_keycloak()
+    if opensearch_exists() or volume_exists("opensearch-data1"):
+        print("\nExisting OpenSearch installation found")
+        print("If you remove this you will lose all your document collections!")
+        approve_to_delete = input(
+            "Type 'yes' to remove OpenSearch installation or press enter to skip: "
+        )
+        if approve_to_delete:
+            remove_opensearch()
+
+    if ollama_exists() or volume_exists("ollama"):
+        print("\nExisting Ollama installation found")
+        print(
+            "If you remove this you will need to redownload the language model(s) used by the prompter"
+        )
+        approve_to_delete = input(
+            "Type 'yes' to remove Ollama installation or press enter to skip: "
+        )
+        if approve_to_delete:
+            remove_ollama()
+
+    if keycloak_exists() or volume_exists("postgres_data"):
+        print("\nExisting Keycloak installation found")
+        print(
+            "If you remove this you will lose all configured users and access controls!"
+        )
+        approve_to_delete = input(
+            "Type 'yes' to remove Keycloak installation or press enter to skip: "
+        )
+        if approve_to_delete:
+            remove_keycloak()
+
+    print("\nCompleted pre-install clean up process.\n")

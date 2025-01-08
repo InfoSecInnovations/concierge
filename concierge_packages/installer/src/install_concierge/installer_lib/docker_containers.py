@@ -78,3 +78,11 @@ def opensearch_exists():
 def remove_opensearch():
     remove_container("opensearch-node1")
     remove_volume("opensearch-data1")
+
+
+def concierge_exists():
+    return container_exists("concierge")
+
+
+def remove_concierge():
+    remove_container("concierge")
