@@ -1,5 +1,4 @@
 from .authentication import (
-    get_keycloak_uma,
     get_keycloak_client,
     get_keycloak_admin_client,
     server_url,
@@ -46,19 +45,21 @@ async def authorize(token, resource, scope: str | None = None):
 
 
 async def create_resource(resource_name, resource_type, owner_id):
-    keycloak_uma = get_keycloak_uma()
+    admin_client = get_keycloak_admin_client()
     # this identifier allows us to only get name collisions if the collection has the same access permissions
     identifier = resource_type
     if resource_type == "collection:private":
         identifier = f"{identifier}_{owner_id}"
-    response = await keycloak_uma.a_resource_set_create(
+    client_id = await admin_client.a_get_client_id("concierge-auth")
+    response = await admin_client.a_create_client_authz_resource(
+        client_id,
         {
             "name": f"{identifier}_{resource_name}",
             "displayName": resource_name,
             "type": resource_type,
             "attributes": {"concierge_owner": [owner_id]},
             "scopes": ["read", "update", "delete"],
-        }
+        },
     )
     return response["_id"]
 
@@ -125,5 +126,6 @@ async def list_scopes(token, resource_id):
 
 
 async def delete_resource(resource_id):
-    keycloak_uma = get_keycloak_uma()
-    await keycloak_uma.a_resource_set_delete(resource_id)
+    admin_client = get_keycloak_admin_client()
+    client_id = await admin_client.a_get_client_id("concierge-auth")
+    await admin_client.a_delete_client_authz_resource(client_id, resource_id)

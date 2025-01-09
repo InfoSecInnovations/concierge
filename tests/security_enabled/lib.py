@@ -24,14 +24,17 @@ async def create_collection_for_user(user, location, collection_name):
     return collection_id
 
 
+file_path = os.path.join(os.path.dirname(__file__), "..", "assets", "test_doc.txt")
 # we will use the same file for each test
-doc = load_file(os.path.join(os.path.dirname(__file__), "..", "assets", "test_doc.txt"))
+doc = load_file(file_path)
+with open(file_path, "rb") as f:
+    binary = f.read()
 
 
 async def ingest_document(user, collection_id):
     token = keycloak_client.token(user, "test")
     async for _, _, doc_id in insert_document(
-        token["access_token"], collection_id, doc
+        token["access_token"], collection_id, doc, binary
     ):
         pass
     return doc_id

@@ -22,6 +22,8 @@ async def create_collection_and_doc():
         "testadmin", "private", "test_docs"
     )
     doc_id = await ingest_document("testadmin", collection_id)
+    print("doc ID")
+    print(doc_id)
 
 
 def setup_module():
@@ -47,7 +49,7 @@ def request_with_user(username, url):
 def test_can_access_files_route():
     response = request_with_user(
         "testadmin",
-        f"https://localhost:15130/files/{collection_id}/plaintext/${doc_id}",
+        f"https://localhost:15130/files/{collection_id}/plaintext/{doc_id}",
     )
     assert response.status_code == 200
 
@@ -55,7 +57,7 @@ def test_can_access_files_route():
 def test_other_user_cannot_access_files_route():
     response = request_with_user(
         "testshared",
-        f"https://localhost:15130/files/{collection_id}/plaintext/${doc_id}",
+        f"https://localhost:15130/files/{collection_id}/plaintext/{doc_id}",
     )
     assert response.status_code == 403
 

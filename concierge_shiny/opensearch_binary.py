@@ -19,11 +19,9 @@ async def serve_binary(request: Request):
         try:
 
             def check_authorized(token):
-                return authorize(token, collection_id, "read")
+                return authorize(token["access_token"], collection_id, "read")
 
-            authorized = await execute_async_with_token(
-                token["access_token"], check_authorized
-            )
+            authorized = await execute_async_with_token(token, check_authorized)
             status_code = 403
         except (KeycloakPostError, KeycloakAuthenticationError) as e:
             authorized = False

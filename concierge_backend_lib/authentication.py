@@ -1,7 +1,6 @@
 from keycloak import (
     KeycloakOpenID,
     KeycloakOpenIDConnection,
-    KeycloakUMA,
     KeycloakAdmin,
     KeycloakAuthenticationError,
 )
@@ -44,12 +43,6 @@ def get_service_account_connection():
         verify=os.getenv("ROOT_CA"),
     )
     return keycloak_connection
-
-
-def get_keycloak_uma():
-    keycloak_connection = get_service_account_connection()
-    keycloak_uma = KeycloakUMA(connection=keycloak_connection)
-    return keycloak_uma
 
 
 def get_keycloak_admin_client():
