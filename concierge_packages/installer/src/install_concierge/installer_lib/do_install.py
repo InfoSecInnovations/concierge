@@ -7,7 +7,6 @@ from importlib.metadata import version
 from .package_dir import package_dir
 from .docker_compose_helper import docker_compose_helper
 import requests
-from concierge_util import load_config, write_config
 from .set_env import set_env
 from .docker_containers import keycloak_exists
 from .create_certificates import create_certificates
@@ -22,7 +21,6 @@ def do_install(
         shutil.copytree(
             os.path.join(package_dir, "docker_compose"), os.getcwd(), dirs_exist_ok=True
         )
-    config = load_config()
     # Keycloak needs the host and port to be set before as these are piped into the initial realm config
     set_env("WEB_HOST", argument_processor.parameters["host"])
     set_env("WEB_PORT", str(argument_processor.parameters["port"]))
@@ -130,7 +128,6 @@ def do_install(
         if argument_processor.parameters["compute_method"].lower() == "gpu"
         else "ollama",
     )
-    write_config(config)
     # docker compose
     docker_compose_helper(environment, is_local, True)
     # ollama model load

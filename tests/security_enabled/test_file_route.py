@@ -10,7 +10,6 @@ from concierge_backend_lib.authentication import (
     get_keycloak_client,
 )
 
-keycloak_client = get_keycloak_client()
 collection_id = None
 doc_id = None
 
@@ -39,6 +38,7 @@ class DummyResponse:
 
 
 def request_with_user(username, url):
+    keycloak_client = get_keycloak_client()
     token = keycloak_client.token(username, "test")
     cookie_response = DummyResponse()
     set_token_cookies(token, cookie_response)

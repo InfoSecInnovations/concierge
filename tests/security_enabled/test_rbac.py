@@ -17,7 +17,6 @@ import asyncio
 import secrets
 from .lib import create_collection_for_user, clean_up_collections, ingest_document
 
-keycloak_client = get_keycloak_client()
 
 # we will use the collections created in the first tests for the subsequent tests
 collection_lookup = {}
@@ -69,6 +68,7 @@ async def test_cannot_create_collection(user, location):
     ],
 )
 async def test_can_read_collection(user, collection_name):
+    keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     docs = await get_documents(
         token["access_token"], collection_lookup[collection_name]
@@ -91,6 +91,7 @@ async def test_cannot_read_collection(user, collection_name):
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
+        keycloak_client = get_keycloak_client()
         token = keycloak_client.token(user, "test")
         await get_documents(token["access_token"], collection_lookup[collection_name])
 
@@ -133,6 +134,7 @@ async def delete_document_with_user(user, collection_name):
     doc_id = await ingest_document(
         "testadmin", collection_lookup[collection_name]
     )  # testadmin should be able to ingest documents into any collection
+    keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     return await delete_document(
         token["access_token"], collection_lookup[collection_name], "plaintext", doc_id
@@ -177,6 +179,7 @@ async def delete_collection_with_user(user, owner, location):
     collection_id = await create_collection_for_user(
         owner, location, secrets.token_hex(8)
     )  # we add a unique identifier to avoid running into name collision issues
+    keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     await delete_collection(token["access_token"], collection_id)
 
