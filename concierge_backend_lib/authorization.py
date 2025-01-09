@@ -2,6 +2,7 @@ from .authentication import (
     get_keycloak_uma,
     get_keycloak_client,
     get_keycloak_admin_client,
+    server_url,
 )
 import dotenv
 import os
@@ -18,8 +19,6 @@ class UnauthorizedOperationError(Exception):
 
 dotenv.load_dotenv()
 auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
-keycloak_openid_config = get_keycloak_client().well_known()
-print(keycloak_openid_config["token_endpoint"])
 
 
 async def authorize(token, resource, scope: str | None = None):
@@ -30,7 +29,7 @@ async def authorize(token, resource, scope: str | None = None):
         verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")), timeout=None
     ) as httpx_client:
         resp = await httpx_client.post(
-            keycloak_openid_config["token_endpoint"],
+            f"{server_url()}/realms/concierge/protocol/openid-connect/token",
             data={
                 "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
                 "audience": "concierge-auth",

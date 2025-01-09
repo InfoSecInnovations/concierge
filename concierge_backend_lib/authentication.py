@@ -1,4 +1,3 @@
-import requests
 from keycloak import (
     KeycloakOpenID,
     KeycloakOpenIDConnection,
@@ -16,15 +15,6 @@ def server_url():
     load_dotenv()
     keycloak_host = os.getenv("KEYCLOAK_HOST", "localhost")
     return f"https://{keycloak_host}:8443"
-
-
-def keycloak_openid_config():
-    print(server_url())
-    session = requests.Session()
-    session.verify = os.getenv("ROOT_CA")
-    return session.get(
-        f"{server_url()}/realms/concierge/.well-known/openid-configuration"
-    ).json()
 
 
 def get_keycloak_client():
