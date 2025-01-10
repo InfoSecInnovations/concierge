@@ -36,7 +36,7 @@ app_dir = "concierge_shiny"
 port = int(os.getenv("WEB_PORT", "15130"))
 host = "localhost"
 
-if auth_enabled:
+if auth_enabled():
     run_app(
         app_dir=app_dir,
         port=port,

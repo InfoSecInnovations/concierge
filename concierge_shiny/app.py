@@ -34,9 +34,9 @@ def server(input: Inputs, output: Outputs, session: Session):
     user_info = reactive.value()
     permissions = reactive.value({})
     task_runner = get_task_runner(session)
-    if auth_enabled and not task_runner:
+    if auth_enabled() and not task_runner:
         return
-    if auth_enabled:
+    if auth_enabled():
 
         @reactive.extended_task
         async def get_info():
@@ -103,7 +103,7 @@ def server(input: Inputs, output: Outputs, session: Session):
                     collection_management_ui("collection_management"),
                 )
             )
-        if auth_enabled:
+        if auth_enabled():
             nav_items.append(
                 ui.nav_control(
                     ui.input_action_button("openid_logout", "Log Out", class_="my-3")

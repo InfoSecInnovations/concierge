@@ -134,7 +134,7 @@ def collection_management_server(
         if opensearch_status.get():
 
             def show_toggle():
-                if not auth_enabled:
+                if not auth_enabled():
                     return False
                 return len(permissions.get()) > 1
 

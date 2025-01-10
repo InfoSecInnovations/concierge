@@ -322,7 +322,7 @@ def collection_create_server(
         new_name = new_collection_name()
         if not new_name:
             return
-        if not auth_enabled:
+        if not auth_enabled():
             location = None
         else:
             perms = permissions.get()

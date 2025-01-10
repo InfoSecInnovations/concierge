@@ -97,7 +97,7 @@ def format_collection_name(collection_data, user_info):
 
 
 async def has_edit_access(permissions, task_runner: WebAppAsyncTokenTaskRunner):
-    if not auth_enabled:
+    if not auth_enabled():
         return True
     if (
         "collection:private:create" in permissions
@@ -119,7 +119,7 @@ async def has_edit_access(permissions, task_runner: WebAppAsyncTokenTaskRunner):
 
 
 async def has_read_access(task_runner: WebAppAsyncTokenTaskRunner):
-    if not auth_enabled:
+    if not auth_enabled():
         return True
 
     # TODO: how to determine that the user could read a collection if no collections have been created yet

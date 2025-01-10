@@ -86,7 +86,7 @@ def prompter_server(
             if not len(collections.get().collections):
 
                 def can_create_collection():
-                    if not auth_enabled:
+                    if not auth_enabled():
                         return True
                     perms = permissions.get()
                     if (

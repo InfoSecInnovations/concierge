@@ -2,7 +2,7 @@
 
 This is for internal use for those who have permissions to manage the repository, but is published here for transparency and easy access by ourselves.
 
-Please also make sure to have read the [Contribution Guidelines](CONTRIBUTING.md) thoroughly.
+Please also make sure to have read the [Contribution Guidelines](CONTRIBUTING.md) thoroughly as this applies to everyone!
 
 ## Versioning
 

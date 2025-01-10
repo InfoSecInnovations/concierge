@@ -13,7 +13,7 @@ HOST = os.getenv("OLLAMA_HOST") or "localhost"
 
 
 async def get_context(token, collection_id: str, reference_limit: int, user_input: str):
-    if auth_enabled:
+    if auth_enabled():
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()

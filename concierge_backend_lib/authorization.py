@@ -17,7 +17,10 @@ class UnauthorizedOperationError(Exception):
 
 
 dotenv.load_dotenv()
-auth_enabled = os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
+
+
+def auth_enabled():
+    return os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
 
 
 async def authorize(token, resource, scope: str | None = None):

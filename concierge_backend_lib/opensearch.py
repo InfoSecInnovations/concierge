@@ -12,7 +12,7 @@ def get_client():
     host = HOST
     port = 9200
 
-    if auth_enabled:
+    if auth_enabled():
         return OpenSearch(
             hosts=[{"host": host, "port": port}],
             use_ssl=True,

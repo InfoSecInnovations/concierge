@@ -13,7 +13,7 @@ from concierge_backend_lib.document_collections import get_collections
 
 async def display_collections():
     collections = await get_collections(get_token()["access_token"])
-    if auth_enabled:
+    if auth_enabled():
         for collection in collections:
             collection["owner_name"] = get_username(
                 collection["attributes"]["concierge_owner"][0]
@@ -22,7 +22,7 @@ async def display_collections():
         print("no collections found")
     for collection in collections:
         print(f"{collection['name']}")
-        if auth_enabled:
+        if auth_enabled():
             print(
                 f"{collection['type'].replace('collection:', '')} collection owned by {collection['owner_name']}"
             )

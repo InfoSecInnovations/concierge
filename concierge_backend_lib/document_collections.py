@@ -35,7 +35,7 @@ class InvalidLocationError(Exception):
 
 
 async def get_collections(token):
-    if auth_enabled:
+    if auth_enabled():
         available_resources = await list_resources(token)
         return [
             resource
@@ -59,7 +59,7 @@ type Location = Literal["private", "shared"]
 # in an unsecured instance collections don't have a location, so None is valid in that case
 async def create_collection(token, display_name: str, location: Location | None = None):
     print(f"creating {location or ''} collection {display_name}")
-    if auth_enabled:
+    if auth_enabled():
         # when using authz collections should always have a location
         if not location:
             raise InvalidLocationError()
@@ -92,7 +92,7 @@ async def create_collection(token, display_name: str, location: Location | None 
 
 async def delete_collection(token, collection_id):
     print(f"deleting collection with ID {collection_id}")
-    if auth_enabled:
+    if auth_enabled():
         authorized = await authorize(token, collection_id, "delete")
         if not authorized:
             raise UnauthorizedOperationError()
@@ -104,7 +104,7 @@ async def delete_collection(token, collection_id):
 
 
 async def get_documents(token, collection_id):
-    if auth_enabled:
+    if auth_enabled():
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
@@ -112,7 +112,7 @@ async def get_documents(token, collection_id):
 
 
 async def delete_document(token, collection_id, document_type, document_id):
-    if auth_enabled:
+    if auth_enabled():
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
             raise UnauthorizedOperationError()
@@ -122,6 +122,6 @@ async def delete_document(token, collection_id, document_type, document_id):
 
 
 async def get_collection_scopes(token, collection_id):
-    if not auth_enabled:
+    if not auth_enabled():
         return {"read", "update", "delete"}
     return set(await list_scopes(token, collection_id))

@@ -54,7 +54,7 @@ def load_token_from_cookies(cookies):
 
 
 def get_auth_token(session):
-    if not auth_enabled:
+    if not auth_enabled():
         return {
             "access_token": None
         }  # this is a dummy token that has the access_token key to not break functions that require it to be there

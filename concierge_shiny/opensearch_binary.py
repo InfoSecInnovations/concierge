@@ -11,7 +11,7 @@ async def serve_binary(request: Request):
     collection_id = request.path_params["collection_id"]
     doc_id = request.path_params["doc_id"]
     doc_type = request.path_params["doc_type"]
-    if auth_enabled:
+    if auth_enabled():
         try:
             token = load_token_from_cookies(request.cookies)
         except CookieNotPresentError:

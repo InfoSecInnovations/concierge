@@ -5,7 +5,7 @@ from isi_util.async_generator import asyncify_generator
 
 
 async def insert_document(token, collection_id, document, binary=None):
-    if auth_enabled:
+    if auth_enabled():
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
             raise UnauthorizedOperationError()

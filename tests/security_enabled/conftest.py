@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import os
 import requests
 from requests import ConnectionError
+from concierge_backend_lib.status import check_opensearch
 
 load_dotenv()
 
@@ -26,18 +27,21 @@ class InputArguments:
         }
 
 
-@pytest.fixture(scope="module", autouse=True)
+@pytest.fixture(scope="session", autouse=True)
 def security_enabled_instance():
     destroy_instance()
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(isi_util.password, "getpass", lambda _: "ThisIsJustATest151")
         do_install(InputArguments(), "development", True)
-        install_demo_users()
+    install_demo_users()
+    load_dotenv()
+    # we need both Concierge and OpenSearch to be up (Ollama should already be up after running the installer)
     while True:
         try:
             requests.get("https://localhost:15130", verify=False)
-            break
+            if check_opensearch():
+                break
         except ConnectionError:
             continue
     yield
-    destroy_instance()
+    # destroy_instance()

@@ -130,7 +130,7 @@ def home_server(
                 pass
         items.append(contributing)
         elements = []
-        if auth_enabled:
+        if auth_enabled():
             elements.append(ui.output_ui("profile"))
         elements.append(ui.markdown("\n".join(items), render_func=md.render))
         return elements
