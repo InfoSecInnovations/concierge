@@ -1,12 +1,10 @@
-from shiny import ui, Inputs, Outputs, Session, render, reactive, module
+from shiny import ui, render
 from concierge_backend_lib.authentication import (
     get_keycloak_client,
     AsyncTokenTaskRunner,
 )
 from concierge_backend_lib.authorization import auth_enabled
 import json
-
-scope = "profile email openid"
 
 
 class WebAppAsyncTokenTaskRunner:
@@ -17,24 +15,6 @@ class WebAppAsyncTokenTaskRunner:
         _, result = await self.runner.run_with_token(func)
         # TODO: refresh cookie token using AJAX somehow? This doesn't seem to be required, maybe the refresh tokens remain valid?
         return result
-
-
-@module.ui
-def login_button_ui(text):
-    return [
-        ui.output_ui("script_output"),
-        ui.input_action_button("login_openid_button", text),
-    ]
-
-
-@module.server
-def login_button_server(input: Inputs, output: Outputs, session: Session, url: str):
-    @reactive.effect
-    @reactive.event(input.login_openid_button, ignore_init=True)
-    def on_click():
-        @render.ui
-        def script_output():
-            return ui.tags.script(f'window.location.href = "{url}"')
 
 
 class CookieNotPresentError(Exception):
@@ -62,25 +42,10 @@ def get_auth_token(session):
     try:
         token = load_token_from_cookies(session.http_conn.cookies)
     except CookieNotPresentError:
-        redirect_uri = f"{session.http_conn.headers["origin"]}/callback"
-        keycloak_openid = get_keycloak_client()
-        authorization_url = keycloak_openid.auth_url(
-            redirect_uri=redirect_uri, scope=scope
-        )
-        login_button_server("login_openid_keycloak", authorization_url)
 
         @render.ui
-        def concierge_main():
-            return ui.page_fillable(
-                ui.markdown("# Data Concierge AI"),
-                [
-                    login_button_ui(
-                        "login_openid_keycloak",
-                        "Log in with Keycloak",
-                    )
-                ],
-                gap="1em",
-            )
+        def script_output():
+            return ui.tags.script('window.location.href = "/login/"')
 
         return None
     try:
@@ -89,7 +54,7 @@ def get_auth_token(session):
     except Exception:
 
         @render.ui
-        def concierge_main():
+        def script_output():
             return ui.tags.script('window.location.href = "/refresh"')
 
         return None

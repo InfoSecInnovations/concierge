@@ -59,6 +59,10 @@ There may be additional questions during the installation depending on the optio
 
 Please note that this package isn't the Concierge app itself, it's just a utility that helps you configure the environment and launch the correct Docker Compose file based on your choices, so it shouldn't be hugely risky to download it without using a virtual environment.
 
+### Reinstalling
+
+The above commands also allow you to remove an existing version of Concierge before installing. At the start of the installer if you're changing any settings or need to remove the existing services, it's generally recommended to remove all services except for Ollama, which you can usually keep as it's configured the same way regardless of your Concierge settings, and redownloading the model can take a long time.
+
 ## Configuring Authentication and Authorization
 
 If you chose to enable login and access controls during installation, you will have to configure the Keycloak instance we have provided to set up some users with the appropriate permissions.
@@ -106,21 +110,13 @@ Once you have completed the installation process above, Concierge will be runnin
 
 ## Update to new release
 
-If running a version prior to 0.3.0 you should delete the files you cloned from the repository, remove the related Docker containers and proceed with a fresh install following the instructions above.
-
-### Without virtual environment
+If running a version prior to 0.3.0 you should delete the files you cloned from the repository (unless you're installing the development environment), remove the related Docker containers and proceed with a fresh install following the instructions above.
 
 `python -m pip install launch-concierge --upgrade`
 
 `python -m launch_concierge.install`
 
-### With virtual environment
-
-Activate the environment if not already done
-
-`pip install launch-concierge --upgrade`
-
-`install_concierge`
+This will make sure to grab the latest version of Concierge, and re-run the installer
 
 ## Setup: development environment
 
@@ -155,7 +151,7 @@ Authentication doesn't play very nicely with VSCode, however it is still possibl
 - Manually configure the port used by Shiny in the extension configuration to match the one you chose during install.
 - Access the web app through your browser, not through the built-in VSCode one.
 
-This does offer the advantage of being able to use the debugger while testing authentication.
+This does offer the advantage of hot reloading and being able to use the debugger while testing authentication.
 
 ### Launch script
 

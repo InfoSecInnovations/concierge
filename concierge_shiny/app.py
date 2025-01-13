@@ -16,10 +16,12 @@ from concierge_backend_lib.authentication import get_token_info
 from concierge_backend_lib.authorization import auth_enabled, list_permissions
 from concierge_backend_lib.document_collections import get_collections
 from functions import has_edit_access, has_read_access
+from app_login import app as app_login
 
 dotenv.load_dotenv()
 
 app_ui = ui.page_auto(
+    ui.output_ui("script_output"),
     ui.output_ui("concierge_main"),
     theme=shinyswatch.theme.pulse,
 )
@@ -89,8 +91,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     def on_get_edit_access():
         edit_access.set(get_edit_access.result())
 
-    @render.ui
-    def concierge_main():
+    def old_concierge_main():
         nav_items = [ui.nav_panel("Home", home_ui("home"))]
 
         if read_access.get():
@@ -115,6 +116,13 @@ def server(input: Inputs, output: Outputs, session: Session):
         return ui.navset_pill_list(
             *nav_items,
             id="navbar",
+        )
+
+    @render.ui
+    def concierge_main():
+        return ui.navset_pill_list(
+            ui.nav_panel("Home", home_ui("home")),
+            ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
         )
 
     home_server("home", permissions, user_info, task_runner)
@@ -186,6 +194,7 @@ routes = [
     Route("/refresh", endpoint=refresh),
     Route("/logout", endpoint=logout),
     Route("/files/{collection_id}/{doc_type}/{doc_id}", endpoint=serve_binary),
+    Mount("/login", app=app_login),
     Mount("/", app=shiny_app),
 ]
 
