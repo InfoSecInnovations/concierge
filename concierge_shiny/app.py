@@ -32,7 +32,6 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-    shinyswatch.theme_picker_server()
     user_info = reactive.value()
     permissions = reactive.value({})
     task_runner = get_task_runner(session)
@@ -72,6 +71,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections = reactive.value(CollectionsData(collections=[], loading=True))
+    # access = reactive.value(None)
     read_access = reactive.value(False)
     edit_access = reactive.value(False)
 
@@ -91,38 +91,46 @@ def server(input: Inputs, output: Outputs, session: Session):
     def on_get_edit_access():
         edit_access.set(get_edit_access.result())
 
-    def old_concierge_main():
-        nav_items = [ui.nav_panel("Home", home_ui("home"))]
+    # @reactive.extended_task
+    # async def check_access(permissions):
+    #     print("wot")
+    #     async with asyncio.TaskGroup() as tg:
+    #         read_access_task = tg.create_task(has_read_access(task_runner))
+    #         edit_access_task = tg.create_task(has_edit_access(permissions, task_runner))
+    #     return {"read": read_access_task.result(), "edit": edit_access_task.result()}
+
+    # @reactive.effect
+    # def on_check_access():
+    #     access.set(check_access.result())
+
+    @reactive.calc
+    def nav_items():
+        items = [ui.nav_panel("Home", home_ui("home"))]
 
         if read_access.get():
-            nav_items.append(ui.nav_panel("Prompter", prompter_ui("prompter")))
-
+            items.append(ui.nav_panel("Prompter", prompter_ui("prompter")))
         if edit_access.get():
-            nav_items.append(
+            items.append(
                 ui.nav_panel(
                     "Collection Management",
                     collection_management_ui("collection_management"),
                 )
             )
         if auth_enabled():
-            nav_items.append(
+            items.append(
                 ui.nav_control(
                     ui.input_action_button("openid_logout", "Log Out", class_="my-3")
                 )
             )
-        nav_items.append(
-            ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui())
-        )
-        return ui.navset_pill_list(
-            *nav_items,
-            id="navbar",
-        )
+        return items
 
     @render.ui
     def concierge_main():
+        shinyswatch.theme_picker_server()
         return ui.navset_pill_list(
-            ui.nav_panel("Home", home_ui("home")),
+            *nav_items(),
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
+            id="concierge_nav",
         )
 
     home_server("home", permissions, user_info, task_runner)
@@ -174,7 +182,9 @@ def server(input: Inputs, output: Outputs, session: Session):
         ollama_status.set(current_status["ollama"])
 
     @reactive.effect
+    @reactive.event(permissions, ignore_init=True)
     def update_access():
+        # check_access(permissions.get())
         get_read_access()
         get_edit_access(permissions.get())
 

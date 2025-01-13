@@ -12,8 +12,6 @@ app_ui = ui.page_fillable(
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-    print("wags")
-
     @reactive.effect
     @reactive.event(input.login_button, ignore_init=True)
     def on_click():

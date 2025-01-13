@@ -1,39 +1,36 @@
-# This shows how it's possible to break the theme picker by disabling and enabling it
-# The documentation suggests that maybe you shouldn't do this, so the solution is to always have it in the app
+# This shows how it's possible to break the theme picker by recreating it
 
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
 import shinyswatch
 
 app_ui = ui.page_auto(
-    ui.markdown("# Hello World!"),
-    ui.card(
-        ui.card_header("This is some UI"),
-        ui.card_body(
-            "This is some more UI",
-            ui.input_action_button("test", "This isn't a real button"),
-        ),
-        ui.card_footer("And this too"),
-    ),
-    ui.output_ui("conditional_ui"),
-    ui.input_action_button("enable_picker", "Toggle picker"),
+    ui.output_ui("main_page"),
+    ui.input_action_button("change_nav", "Change Nav"),
     theme=shinyswatch.theme.darkly,
 )
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-    picker_enabled = reactive.value(False)
     shinyswatch.theme_picker_server()
+    nav_state = reactive.value(1)
+
+    @reactive.calc
+    def nav_items():
+        return [
+            ui.nav_panel(f"Page{i}", ui.markdown(f"# Page{i}"))
+            for i in range(nav_state.get())
+        ]
 
     @render.ui
-    def conditional_ui():
-        if picker_enabled.get():
-            return shinyswatch.theme_picker_ui()
-        return ui.markdown("No picker")
+    def main_page():
+        return ui.navset_pill_list(
+            *nav_items(), ui.nav_control(shinyswatch.theme_picker_ui())
+        )
 
     @reactive.effect
-    @reactive.event(input.enable_picker)
-    def toggle_picker():
-        picker_enabled.set(not picker_enabled.get())
+    @reactive.event(input.change_nav)
+    def change_state():
+        nav_state.set(1 if nav_state.get() == 2 else 2)
 
 
 app = App(app_ui, server)
