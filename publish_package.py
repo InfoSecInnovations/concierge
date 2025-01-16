@@ -21,6 +21,6 @@ subprocess.run(
         "-m",
         "twine",
         "upload",
-        f"{os.path.join(package_dir, "dist")}/*",
+        f"{os.path.join(package_dir, 'dist')}/*",
     ]
 )

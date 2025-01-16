@@ -22,34 +22,36 @@ def page_link(collection_name, page):
     doc_metadata = page["doc_metadata"]
     page_metadata = page["page_metadata"]
     if page["type"] == "pdf":
-        return f'PDF File: {md_link(
-            f"{doc_url(collection_name, page["type"], doc_metadata["id"])}#page={page_metadata["page"]}", 
-            f"page {page_metadata["page"]} of {doc_metadata["filename"]}"
-        )}'
+        return f"PDF File: {
+            md_link(
+                f'{doc_url(collection_name, page["type"], doc_metadata["id"])}#page={page_metadata["page"]}',
+                f'page {page_metadata["page"]} of {doc_metadata["filename"]}',
+            )
+        }"
     if page["type"] == "web":
-        return f'Web page: {md_link(page_metadata["source"])} scraped {doc_metadata["ingest_date"]} from parent URL {md_link(doc_metadata["source"])}'
+        return f"Web page: {md_link(page_metadata['source'])} scraped {doc_metadata['ingest_date']} from parent URL {md_link(doc_metadata['source'])}"
     if "filename" in doc_metadata:
-        return f'{doc_metadata["extension"]} file {md_link(
-            doc_url(collection_name, doc_metadata["type"], doc_metadata["id"]),
-            doc_metadata["filename"]
-        )}'
-    return f'{doc_metadata["type"]} type document from {doc_metadata["source"]}'
+        return f"{doc_metadata['extension']} file {
+            md_link(
+                doc_url(collection_name, doc_metadata['type'], doc_metadata['id']),
+                doc_metadata['filename'],
+            )
+        }"
+    return f"{doc_metadata['type']} type document from {doc_metadata['source']}"
 
 
 def doc_link(collection_name, doc):
     if doc["type"] == "pdf":
-        return f'PDF File: {md_link(
-            doc_url(collection_name, doc["type"], doc["id"]),
-            doc["filename"]
-        )}'
+        return f"PDF File: {
+            md_link(doc_url(collection_name, doc['type'], doc['id']), doc['filename'])
+        }"
     if doc["type"] == "web":
-        return f'Web page: {md_link(doc["source"])}'
+        return f"Web page: {md_link(doc['source'])}"
     if "filename" in doc:
-        return f'{doc["extension"] if "extension" in doc else doc["type"]} file {md_link(
-            doc_url(collection_name, doc["type"], doc["id"]),
-            doc["filename"]
-        )}'
-    return f'{doc["type"]} type document from {doc["source"]}'
+        return f"{doc['extension'] if 'extension' in doc else doc['type']} file {
+            md_link(doc_url(collection_name, doc['type'], doc['id']), doc['filename'])
+        }"
+    return f"{doc['type']} type document from {doc['source']}"
 
 
 async def load_llm_model(model_name):
@@ -91,9 +93,9 @@ def format_collection_name(collection_data, user_info):
         and "concierge_owner" in collection_data["attributes"]
     ):
         if collection_data["attributes"]["concierge_owner"][0] == user_id:
-            return f"{collection_data["displayName"]} (private)"
-        return f"{collection_data["displayName"]} (private, belongs to {get_username(collection_data["attributes"]["concierge_owner"][0])})"
-    return f"{collection_data["displayName"]} (private, owner unknown)"
+            return f"{collection_data['displayName']} (private)"
+        return f"{collection_data['displayName']} (private, belongs to {get_username(collection_data['attributes']['concierge_owner'][0])})"
+    return f"{collection_data['displayName']} (private, owner unknown)"
 
 
 async def has_edit_access(permissions, task_runner: WebAppAsyncTokenTaskRunner):

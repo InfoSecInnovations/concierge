@@ -33,7 +33,7 @@ def document_ui(collection_name, doc, can_delete):
             f"""
 {doc_link(collection_name, doc)}
 
-{doc['vector_count']} vectors
+{doc["vector_count"]} vectors
 """,
             render_func=md.render,
         )

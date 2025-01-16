@@ -17,7 +17,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     def on_click():
         @render.ui
         def script_output():
-            redirect_uri = f"{session.http_conn.headers["origin"]}/callback"
+            redirect_uri = f"{session.http_conn.headers['origin']}/callback"
             keycloak_openid = get_keycloak_client()
             authorization_url = keycloak_openid.auth_url(
                 redirect_uri=redirect_uri, scope=scope

@@ -21,7 +21,7 @@ def add_users():
                     client_id,
                     [client.get_client_role(client_id, role) for role in roles],
                 )
-        print(f"Added user {user["username"]}")
+        print(f"Added user {user['username']}")
 
 
 if __name__ == "__main__":

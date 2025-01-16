@@ -108,11 +108,11 @@ async def loop_prompter():
             page_metadata = source["page_metadata"]
             if source["type"] == "pdf":
                 print(
-                    f'   PDF File: page {page_metadata["page"]} of {doc_metadata["source"]}'
+                    f"   PDF File: page {page_metadata['page']} of {doc_metadata['source']}"
                 )
             if source["type"] == "web":
                 print(
-                    f'   Web page: {page_metadata["source"]} scraped {doc_metadata["ingest_date"]}, top level URL: {doc_metadata["source"]}'
+                    f"   Web page: {page_metadata['source']} scraped {doc_metadata['ingest_date']}, top level URL: {doc_metadata['source']}"
                 )
         print("\n\n")
 
