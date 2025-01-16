@@ -1,4 +1,4 @@
-ruff~=0.6.4
+ruff~=0.9.1
 pre-commit~=3.8.0
 pipdeptree~=2.23.3
 twine~=5.1.1
