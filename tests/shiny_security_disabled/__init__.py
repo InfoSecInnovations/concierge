@@ -1,3 +1,6 @@
 import pytest
 
-pytest.skip(reason="need to resolve Shiny timeout issues", allow_module_level=True)
+pytest.skip(
+    reason="need to resolve issues with page items loading async",
+    allow_module_level=True,
+)
