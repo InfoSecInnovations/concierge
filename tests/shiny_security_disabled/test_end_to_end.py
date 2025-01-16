@@ -1,11 +1,18 @@
 from shiny.run import ShinyAppProc
 from playwright.sync_api import Page
-from shiny.pytest import create_app_fixture
+from shiny.run import run_shiny_app
+import pytest
 
-app = create_app_fixture("./concierge_shiny/app.py")
+
+@pytest.fixture(scope="module")
+def no_timeout_app():
+    sa: ShinyAppProc = run_shiny_app(
+        "./concierge_shiny/app.py",
+        wait_for_start=True,
+        timeout_secs=300,
+    )
+    return sa
 
 
-def test_basic_app(page: Page, app: ShinyAppProc):
-    page.goto(app.url)
-    # nav = controller.NavsetPillList(page, "navbar")
-    # nav.expect_nav_titles(["Home", "Prompter", "Collection Management"])
+def test_basic_app(page: Page, no_timeout_app: ShinyAppProc):
+    page.goto(no_timeout_app.url)

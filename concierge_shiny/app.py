@@ -71,7 +71,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections = reactive.value(CollectionsData(collections=[], loading=True))
-    # access = reactive.value(None)
     read_access = reactive.value(False)
     edit_access = reactive.value(False)
 
@@ -90,18 +89,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     def on_get_edit_access():
         edit_access.set(get_edit_access.result())
-
-    # @reactive.extended_task
-    # async def check_access(permissions):
-    #     print("wot")
-    #     async with asyncio.TaskGroup() as tg:
-    #         read_access_task = tg.create_task(has_read_access(task_runner))
-    #         edit_access_task = tg.create_task(has_edit_access(permissions, task_runner))
-    #     return {"read": read_access_task.result(), "edit": edit_access_task.result()}
-
-    # @reactive.effect
-    # def on_check_access():
-    #     access.set(check_access.result())
 
     @reactive.calc
     def nav_items():
@@ -184,7 +171,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     @reactive.event(permissions, ignore_init=True)
     def update_access():
-        # check_access(permissions.get())
         get_read_access()
         get_edit_access(permissions.get())
 
