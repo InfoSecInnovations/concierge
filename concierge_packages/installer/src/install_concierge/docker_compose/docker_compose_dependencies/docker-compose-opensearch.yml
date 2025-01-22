@@ -33,11 +33,12 @@ services:
       - "DISABLE_SECURITY_PLUGIN=false"
       - "DISABLE_INSTALL_DEMO_CONFIG=true"
     volumes:
-      - ${ROOT_CA}:/usr/share/opensearch/config/root-ca.pem
-      - ${OPENSEARCH_ADMIN_CERT}:/usr/share/opensearch/config/admin.pem
-      - ${OPENSEARCH_ADMIN_KEY}:/usr/share/opensearch/config/admin-key.pem
-      - ${OPENSEARCH_NODE_CERT}:/usr/share/opensearch/config/node1.pem
-      - ${OPENSEARCH_NODE_KEY}:/usr/share/opensearch/config/node1-key.pem
+      # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
+      - ${ROOT_CA:-empty}:/usr/share/opensearch/config/root-ca.pem
+      - ${OPENSEARCH_ADMIN_CERT:-empty}:/usr/share/opensearch/config/admin.pem
+      - ${OPENSEARCH_ADMIN_KEY:-empty}:/usr/share/opensearch/config/admin-key.pem
+      - ${OPENSEARCH_NODE_CERT:-empty}:/usr/share/opensearch/config/node1.pem
+      - ${OPENSEARCH_NODE_KEY:-empty}:/usr/share/opensearch/config/node1-key.pem
       - ./opensearch_config/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
       - ./opensearch_config/opensearch-security/config.yml:/usr/share/opensearch/config/opensearch-security/config.yml
       - ./opensearch_config/opensearch-security/roles_mapping.yml:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml

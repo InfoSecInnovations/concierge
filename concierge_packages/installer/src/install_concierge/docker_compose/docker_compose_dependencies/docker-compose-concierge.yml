@@ -20,8 +20,9 @@ services:
       - OPENSEARCH_CLIENT_CERT=opensearch_certs/opensearch-admin-client-cert.pem
       - OPENSEARCH_CLIENT_KEY=opensearch_certs/opensearch-admin-client-key.pem
     volumes:
-      - ${WEB_CERT}:/web_certs/cert.pem
-      - ${WEB_KEY}:/web_certs/key.pem
-      - ${ROOT_CA}:/opensearch_certs/root-ca.pem
-      - ${OPENSEARCH_CLIENT_CERT}:/opensearch_certs/opensearch-admin-client-cert.pem
-      - ${OPENSEARCH_CLIENT_KEY}:/opensearch_certs/opensearch-admin-client-key.pem
+      # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
+      - ${WEB_CERT:-empty}:/web_certs/cert.pem
+      - ${WEB_KEY:-empty}:/web_certs/key.pem
+      - ${ROOT_CA:-empty}:/opensearch_certs/root-ca.pem
+      - ${OPENSEARCH_CLIENT_CERT:-empty}:/opensearch_certs/opensearch-admin-client-cert.pem
+      - ${OPENSEARCH_CLIENT_KEY:-empty}:/opensearch_certs/opensearch-admin-client-key.pem

@@ -49,15 +49,15 @@ export const InstallOptionsForm = () => (
         <fieldset>
             <legend>Security Level</legend>
             <p>
-                <input type="radio" value="none" id="security_none" name="security" checked></input>
+                <input type="radio" value="none" id="security_none" name="security_level" checked></input>
                 <label for="security_none">None</label>
             </p>
             <p>
-                <input type="radio" value="demo" id="security_demo" name="security"></input>
+                <input type="radio" value="demo" id="security_demo" name="security_level"></input>
                 <label for="security_demo">Demo</label>
             </p>
             <p>
-                <input type="radio" value="enabled" id="security_enabled" name="security"></input>
+                <input type="radio" value="enabled" id="security_enabled" name="security_level"></input>
                 <label for="security_enabled">Enabled</label>
             </p>
             <p>If you don't enable security anyone who can access the web UI will have full privileges to interact with your Concierge instance!</p>
