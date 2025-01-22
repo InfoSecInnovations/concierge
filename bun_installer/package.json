@@ -1,0 +1,17 @@
+{
+  "name": "bun_installer",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "hono": "^4.6.17"
+  },
+  "scripts": {
+    "dev": "bun run --hot index.tsx"
+  }
+}
