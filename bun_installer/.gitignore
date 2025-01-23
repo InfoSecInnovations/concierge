@@ -2,6 +2,10 @@
 
 docker_compose/
 
+# Self-signed certificates generated during install
+
+self_signed_certificates/
+
 # Based on https://raw.githubusercontent.com/github/gitignore/main/Node.gitignore
 
 # Logs

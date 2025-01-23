@@ -4,14 +4,16 @@
   "type": "module",
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node-forge": "^1.3.11"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
     "adm-zip": "^0.5.16",
-    "hono": "^4.6.17"
+    "hono": "^4.6.17",
+    "node-forge": "^1.3.1"
   },
   "scripts": {
     "dev": "bun run --watch index.tsx"
