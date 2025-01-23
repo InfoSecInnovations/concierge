@@ -1,6 +1,7 @@
 import dockerComposeZip from "../docker_compose.zip" with { type: "file" }
 import { file, $ } from "bun"
 import AdmZip from "adm-zip"
+import createCertificates from "./createCertificates"
 
 export default async (options: FormData) => {
     // we need the compose files to be available outside of the executable bundle so the shell can use them
@@ -20,7 +21,7 @@ export default async (options: FormData) => {
     if (securityLevel && securityLevel != "none") {
         envs.CONCIERGE_SECURITY_ENABLED = "True"
         envs.CONCIERGE_SERVICE = "concierge-enable-security"
-        // TODO: certificate generation
+        await createCertificates()
         // TODO: set cert env vars
         // TODO: if keycloak isn't running
             // TODO: configure keycloak and postgres initial passwords
