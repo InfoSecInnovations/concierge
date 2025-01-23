@@ -125,6 +125,7 @@ def collection_management_server(
     current_docs = reactive.value([])
     current_scopes = reactive.value({})
     fetching_docs = reactive.value(False)
+    auth_is_enabled = auth_enabled()
 
     def on_delete_document():
         document_delete_trigger.set(document_delete_trigger.get() + 1)
@@ -134,7 +135,7 @@ def collection_management_server(
         if opensearch_status.get():
 
             def show_toggle():
-                if not auth_enabled():
+                if not auth_is_enabled:
                     return False
                 return len(permissions.get()) > 1
 
@@ -150,15 +151,16 @@ def collection_management_server(
     def collection_view():
         if selected_collection.get():
             accordion_elements = []
-            if "update" in current_scopes.get():
-                accordion_elements.append(ingester_ui("ingester"))
-            elif fetching_docs.get():
+            fetching = fetching_docs.get()
+            if fetching:
                 accordion_elements.append(
                     ui.accordion_panel(
                         ui.markdown("#### Loading collection..."),
                         value="ingest_documents",
                     )
                 )
+            elif not auth_is_enabled or "update" in current_scopes.get():
+                accordion_elements.append(ingester_ui("ingester"))
             else:
                 accordion_elements.append(
                     ui.accordion_panel(
@@ -185,7 +187,7 @@ def collection_management_server(
                     class_="mb-3",
                 ),
             ]
-            if "delete" in current_scopes.get():
+            if not auth_is_enabled or "delete" in current_scopes.get():
                 items.append(
                     ui.input_task_button(id="delete", label="Delete Collection")
                 )
@@ -213,7 +215,7 @@ def collection_management_server(
                     doc["el_id"],
                     selected_collection.get(),
                     doc,
-                    "update" in current_scopes.get(),
+                    not auth_is_enabled or "update" in current_scopes.get(),
                 )
                 for doc in current_docs.get()
             ],
