@@ -110,27 +110,29 @@ def home_server(
 
     @render.ui
     def home_text():
+        auth_is_enabled = auth_enabled()
         items = [title]
-        if edit_access.get():
+        if not auth_is_enabled or edit_access.get():
             items.append(quickstart)
         elif read_access.get():
             items.append(quickstart_readonly)
         else:
             items.append(quickstart_no_access)
         items.append(tips)
-        info = user_info.get()
-        if info:
-            try:
-                has_admin = (
-                    "admin" in info["resource_access"]["concierge-auth"]["roles"]
-                )
-                if has_admin:
-                    items.append(admin_tips)
-            except KeyError:
-                pass
+        if auth_is_enabled:
+            info = user_info.get()
+            if info:
+                try:
+                    has_admin = (
+                        "admin" in info["resource_access"]["concierge-auth"]["roles"]
+                    )
+                    if has_admin:
+                        items.append(admin_tips)
+                except KeyError:
+                    pass
         items.append(contributing)
         elements = []
-        if auth_enabled():
+        if auth_is_enabled:
             elements.append(ui.output_ui("profile"))
         elements.append(ui.markdown("\n".join(items), render_func=md.render))
         return elements

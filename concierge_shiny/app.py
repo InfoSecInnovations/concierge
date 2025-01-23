@@ -33,11 +33,12 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
 
 def server(input: Inputs, output: Outputs, session: Session):
     user_info = reactive.value()
-    permissions = reactive.value({})
+    permissions = reactive.value(None)
     task_runner = get_task_runner(session)
-    if auth_enabled() and not task_runner:
+    auth_is_enabled = auth_enabled()
+    if auth_is_enabled and not task_runner:
         return
-    if auth_enabled():
+    if auth_is_enabled:
 
         @reactive.extended_task
         async def get_info():
@@ -94,16 +95,16 @@ def server(input: Inputs, output: Outputs, session: Session):
     def nav_items():
         items = [ui.nav_panel("Home", home_ui("home"))]
 
-        if read_access.get():
+        if not auth_is_enabled or read_access.get():
             items.append(ui.nav_panel("Prompter", prompter_ui("prompter")))
-        if edit_access.get():
+        if not auth_is_enabled or edit_access.get():
             items.append(
                 ui.nav_panel(
                     "Collection Management",
                     collection_management_ui("collection_management"),
                 )
             )
-        if auth_enabled():
+        if auth_is_enabled:
             items.append(
                 ui.nav_control(
                     ui.input_action_button("openid_logout", "Log Out", class_="my-3")

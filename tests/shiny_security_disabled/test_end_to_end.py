@@ -17,5 +17,5 @@ def no_timeout_app():
 
 def test_basic_app(page: Page, no_timeout_app: ShinyAppProc):
     page.goto(no_timeout_app.url)
-    nav = controller.NavsetPillList("concierge_nav")
+    nav = controller.NavsetPillList(page, "concierge_nav")
     nav.expect_nav_titles(["Home", "Prompter", "Collection Management"], timeout=30000)
