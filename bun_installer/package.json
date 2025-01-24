@@ -11,6 +11,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@keycloak/keycloak-admin-client": "^26.1.0",
     "adm-zip": "^0.5.16",
     "hono": "^4.6.17",
     "node-forge": "^1.3.1"

@@ -62,6 +62,15 @@ export const InstallOptionsForm = () => (
             </p>
             <p>If you don't enable security anyone who can access the web UI will have full privileges to interact with your Concierge instance!</p>
             <p>The demo configuration should never be used for production as it is a very insecure configuration designed to show off the different access levels using test users.</p>
+            <p>
+                {/* TODO: client side validation of strong password 
+                TODO: client side validation of matching password
+                */}
+                <label for="keycloak_password_first">Keycloak Admin Password</label>
+                <input type="password" id="keycloak_password_first"></input>
+                <label for="keycloak_password">Confirm Keycloak Admin Password</label>
+                <input type="password" id="keycloak_password" name="keycloak_password"></input>
+            </p>
         </fieldset>
         <button type="submit">Start Installation!</button>
 
