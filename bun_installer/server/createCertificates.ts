@@ -1,9 +1,9 @@
-import { pki } from "node-forge"
+import * as forge from "node-forge"
 import path from "path"
 
 export default async (certDir: string) => {
-  const rootKeys = pki.rsa.generateKeyPair(4096);
-  const rootCert = pki.createCertificate();
+  const rootKeys = forge.pki.rsa.generateKeyPair(4096);
+  const rootCert = forge.pki.createCertificate();
   
   rootCert.publicKey = rootKeys.publicKey;
   // serial number doesn't really matter for self signed?
@@ -43,14 +43,14 @@ export default async (certDir: string) => {
   }, {
     name: 'subjectKeyIdentifier'
   }])
-  rootCert.sign(rootKeys.privateKey)
+  rootCert.sign(rootKeys.privateKey, forge.md.sha256.create())
 
-  await Bun.write(path.join(certDir, "root-ca.pem"), pki.certificateToPem(rootCert))
-  await Bun.write(path.join(certDir, "root-ca-key.pem"), pki.privateKeyToPem(rootKeys.privateKey))
+  await Bun.write(path.join(certDir, "root-ca.pem"), forge.pki.certificateToPem(rootCert))
+  await Bun.write(path.join(certDir, "root-ca-key.pem"), forge.pki.privateKeyToPem(rootKeys.privateKey))
 
   const createSignedCert = async (certName: string, altNames?: string[]) => {
-    const keys = pki.rsa.generateKeyPair(4096);
-    const cert = pki.createCertificate();
+    const keys = forge.pki.rsa.generateKeyPair(4096);
+    const cert = forge.pki.createCertificate();
     cert.publicKey = keys.publicKey;
     // serial number doesn't really matter for self signed?
     cert.serialNumber = '01';
@@ -109,10 +109,10 @@ export default async (certDir: string) => {
       })
     }
     cert.setExtensions(extensions);
-    cert.sign(rootKeys.privateKey);
+    cert.sign(rootKeys.privateKey, forge.md.sha256.create());
 
-    await Bun.write(path.join(certDir, `${certName}-cert.pem`), pki.certificateToPem(cert))
-    await Bun.write(path.join(certDir, `${certName}-key.pem`), pki.privateKeyToPem(keys.privateKey))
+    await Bun.write(path.join(certDir, `${certName}-cert.pem`), forge.pki.certificateToPem(cert))
+    await Bun.write(path.join(certDir, `${certName}-key.pem`), forge.pki.privateKeyToPem(keys.privateKey))
   }
 
   await Promise.all([
