@@ -7,6 +7,9 @@ from concierge_backend_lib.document_collections import (
     create_collection,
     delete_collection,
 )
+import nest_asyncio
+
+nest_asyncio.apply()
 
 
 @pytest.fixture(scope="module")
@@ -38,5 +41,6 @@ async def test_prompter_with_collection(page: Page, no_timeout_app: ShinyAppProc
         ["Home", "Prompter", "Collection Management"], timeout=timeout
     )
     nav.set("Prompter")
-    # TODO: test for chat input
+    chat = controller.Chat(page, "prompter-prompter_chat")
+    chat.expect.to_have_count(1, timeout=timeout)
     await delete_collection(None, collection_id)
