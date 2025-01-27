@@ -1,5 +1,5 @@
 from shiny.run import ShinyAppProc
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 from shiny.run import run_shiny_app
 import pytest
 from shiny.playwright import controller
@@ -31,6 +31,20 @@ def test_sidebar(page: Page, no_timeout_app: ShinyAppProc):
     nav.expect_nav_titles(
         ["Home", "Prompter", "Collection Management"], timeout=timeout
     )
+
+
+def test_prompter_without_collection(page: Page, no_timeout_app: ShinyAppProc):
+    page.goto(no_timeout_app.url)
+    nav = controller.NavsetPillList(page, "concierge_nav")
+    nav.expect_nav_titles(
+        ["Home", "Prompter", "Collection Management"], timeout=timeout
+    )
+    nav.set("Prompter")
+    prompter_ui = controller.OutputUi(page, "prompter-prompter_ui")
+    expect.set_options(timeout=timeout)
+    expect(prompter_ui.loc.locator("p")).to_have_count(1)
+    chat = controller.Chat(page, "prompter-prompter_chat")
+    chat.expect.to_have_count(0, timeout=timeout)
 
 
 async def test_prompter_with_collection(page: Page, no_timeout_app: ShinyAppProc):
