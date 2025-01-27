@@ -26,6 +26,7 @@ class InputArguments:
 @pytest.fixture(scope="session", autouse=True)
 def security_disabled_instance():
     destroy_instance()
+    # install as development because we're going to run the shiny app from pytest not Docker
     do_install(InputArguments(), "development", False)
     load_dotenv()
     # we just need OpenSearch to be up (Ollama should already be up after running the installer)

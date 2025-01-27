@@ -85,7 +85,7 @@ async def load_llm_model(model_name):
 
 
 def format_collection_name(collection_data, user_info):
-    if not collection_data["type"] or collection_data["type"] == "collection:shared":
+    if "type" not in collection_data or collection_data["type"] == "collection:shared":
         return collection_data["displayName"]
     user_id = user_info["sub"]
     if (

@@ -84,7 +84,11 @@ def get_collection_mappings():
     }
     response = client.search(body=query, index=MAPPING_INDEX_NAME)
     collections = [
-        {"name": hit["_source"]["collection_name"], "_id": hit["_id"]}
+        {
+            "name": hit["_source"]["collection_name"],
+            "displayName": hit["_source"]["collection_name"],
+            "_id": hit["_id"],
+        }
         for hit in response["hits"]["hits"]
     ]
     return collections
