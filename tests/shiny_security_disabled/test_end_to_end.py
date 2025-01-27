@@ -1,5 +1,5 @@
 from shiny.run import ShinyAppProc
-from playwright.sync_api import Page, expect
+from playwright.sync_api import Page
 from shiny.run import run_shiny_app
 import pytest
 from shiny.playwright import controller
@@ -41,10 +41,14 @@ def test_prompter_without_collection(page: Page, no_timeout_app: ShinyAppProc):
     )
     nav.set("Prompter")
     prompter_ui = controller.OutputUi(page, "prompter-prompter_ui")
-    expect.set_options(timeout=timeout)
-    expect(prompter_ui.loc.locator("p")).to_have_count(1)
+    # text prompting use to create a collection should appear
+    prompter_ui.expect.to_have_text(
+        "Please create a collection and ingest some documents into it first!"
+    )
+    # once that state has been reached, we check that there is no chat
     chat = controller.Chat(page, "prompter-prompter_chat")
     chat.expect.to_have_count(0, timeout=timeout)
+    # TODO: check for prompter options selectors
 
 
 async def test_prompter_with_collection(page: Page, no_timeout_app: ShinyAppProc):
@@ -57,4 +61,5 @@ async def test_prompter_with_collection(page: Page, no_timeout_app: ShinyAppProc
     nav.set("Prompter")
     chat = controller.Chat(page, "prompter-prompter_chat")
     chat.expect.to_have_count(1, timeout=timeout)
+    # TODO: check for prompter options selectors
     await delete_collection(None, collection_id)
