@@ -3,8 +3,10 @@ from playwright.sync_api import Page
 from shiny.run import run_shiny_app
 import pytest
 from shiny.playwright import controller
-
-collection_ids = []
+from concierge_backend_lib.document_collections import (
+    create_collection,
+    delete_collection,
+)
 
 
 @pytest.fixture(scope="module")
@@ -26,3 +28,15 @@ def test_sidebar(page: Page, no_timeout_app: ShinyAppProc):
     nav.expect_nav_titles(
         ["Home", "Prompter", "Collection Management"], timeout=timeout
     )
+
+
+async def test_prompter_with_collection(page: Page, no_timeout_app: ShinyAppProc):
+    collection_id = await create_collection(None, "collection_1")
+    page.goto(no_timeout_app.url)
+    nav = controller.NavsetPillList(page, "concierge_nav")
+    nav.expect_nav_titles(
+        ["Home", "Prompter", "Collection Management"], timeout=timeout
+    )
+    nav.set("Prompter")
+    # TODO: test for chat input
+    await delete_collection(None, collection_id)

@@ -32,7 +32,7 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = (
 
 
 def server(input: Inputs, output: Outputs, session: Session):
-    user_info = reactive.value()
+    user_info = reactive.value(None)
     permissions = reactive.value(None)
     task_runner = get_task_runner(session)
     auth_is_enabled = auth_enabled()
@@ -155,6 +155,10 @@ def server(input: Inputs, output: Outputs, session: Session):
     def fetch_collections_effect():
         new_collections = fetch_collections.result()
         collections.set(CollectionsData(collections=new_collections, loading=False))
+        if len(new_collections):
+            selected_collection.set(new_collections[0]["_id"])
+        else:
+            selected_collection.set(None)
 
     @reactive.effect
     def update_collections():

@@ -191,6 +191,7 @@ def collection_management_server(
                 items.append(
                     ui.input_task_button(id="delete", label="Delete Collection")
                 )
+            print("sup")
             return ui.TagList(*items)
         if collections.get().loading:
             return ui.markdown("Loading collections...")
