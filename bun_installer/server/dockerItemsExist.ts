@@ -1,6 +1,6 @@
 import { $ } from "bun"
 
-const dockerItemExists = async (itemName: string, itemType: string) => {
+export const dockerItemExists = async (itemName: string, itemType: string) => {
     try {
         const data = await $`docker inspect --type=${itemType} ${itemName}`.json()
         // depending on the item type the compose project is in a different place

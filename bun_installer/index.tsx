@@ -5,6 +5,8 @@ import dockerIsRunning from "./server/dockerIsRunning"
 import conciergeIsConfigured from "./server/conciergeIsConfigured"
 import { RelaunchForm } from "./server/relaunchForm"
 import doLaunch from "./server/doLaunch"
+import { ExistingRemover } from "./server/existingRemover"
+import { stream } from 'hono/streaming'
 
 const app = new Hono()
 
@@ -25,7 +27,7 @@ app.get('/', async c => {
           <p>Concierge appears to be configured on this system. You can (re)launch here if needed.</p>
           <RelaunchForm></RelaunchForm>
         </> : null}
-        <h3>TODO: there will be an option to remove an existing installation here</h3>
+        <ExistingRemover></ExistingRemover>
         <h3>Install Concierge</h3>
         <InstallOptionsForm></InstallOptionsForm>
       </> : <>
@@ -39,12 +41,25 @@ app.get('/', async c => {
   </html>)
 })
 app.post("/install", c => c.req.formData()
-  .then(data => doInstall(data))
-  .then(() => c.redirect("/"))
+  .then(data => {
+    const resp = stream(c, async stream => {
+      await stream.writeln(await <head>
+        <meta http-equiv="Refresh" content="0; URL=/" />
+      </head>)
+      for await (const message of doInstall(data)) {
+        await stream.writeln(await <p>{message}</p>)
+      }
+    })
+    resp.headers.set('Content-Type', 'text/html; charset=UTF-8')
+    resp.headers.set('Transfer-Encoding', 'chunked')
+    return resp
+  })
 )
 app.post("/launch", c => c.req.formData()
   .then(data => doLaunch(data))
   .then(() => c.redirect("/"))
 )
 
-export default app
+console.log("Concierge Configurator")
+console.log(process.env.npm_package_version)
+Bun.serve({...app, idleTimeout: 0})
