@@ -6,8 +6,9 @@ import path from "node:path"
 import { keycloakExists } from "./dockerItemsExist"
 import crypto from "node:crypto"
 import KcAdminClient from '@keycloak/keycloak-admin-client'
+import getEnvPath from "./getEnvPath"
 
-export default async (options: FormData) => {
+export default async (options: FormData, environment = "production") => {
     // we need the compose files to be available outside of the executable bundle so the shell can use them
     const buf = await file(dockerComposeZip).arrayBuffer()
     const zip = new AdmZip(Buffer.from(buf))
@@ -17,7 +18,7 @@ export default async (options: FormData) => {
     const envs: {[key: string]: string} = {}
     const updateEnv = () => {
         Object.entries(envs).forEach(([key, value]) => process.env[key] = value)
-        return Bun.write(path.join(import.meta.dir, "..", "docker_compose", ".env"), Object.entries(envs).map(([key, value]) => `${key}='${value}'`).join("\n"))
+        return Bun.write(getEnvPath(), Object.entries(envs).map(([key, value]) => `${key}='${value}'`).join("\n"))
     }
     envs.WEB_HOST = options.get("host")?.toString() || "localhost"
     envs.WEB_PORT = options.get("port")?.toString() || "15130"
@@ -57,6 +58,7 @@ export default async (options: FormData) => {
             // TODO: we need to stream this information to the web UI?
             console.log("Waiting for Keycloak to start so we can get the OpenID credentials...")
             console.log("This can take a few minutes, please be patient!")
+            // TODO: we need to use the root CA certs rather than disabling verification!
             process.env.NODE_TLS_REJECT_UNAUTHORIZED='0'
             // keep trying this until keycloak is up
             while(true) {
@@ -76,7 +78,6 @@ export default async (options: FormData) => {
                     break
                 }  
                 catch (error) {
-                    console.error(error)
                     continue
                 }
             }
@@ -90,9 +91,13 @@ export default async (options: FormData) => {
         envs.OPENSEARCH_SERVICE = "opensearch-node-disable-security"
         envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml"
     }
-    envs.ENVIRONMENT = "production"
-    envs.CONCIERGE_VERSION = "0.5a13"
+    envs.ENVIRONMENT = environment
+    envs.CONCIERGE_VERSION = process.env.npm_package_version!
     envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
     await updateEnv()
     await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
+    if (securityLevel == "demo") {
+        console.log("adding demo users")
+        await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
+    }
 }
