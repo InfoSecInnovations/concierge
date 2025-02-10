@@ -3090,6 +3090,9 @@ zxcvbnOptions.setOptions(options);
 var password1El = document.getElementById("keycloak_password_first");
 var password2El = document.getElementById("keycloak_password");
 var formSubmitEl = document.getElementById("install_submit");
+var loggingEls = document.querySelectorAll(".logging_element");
+var loggingToggle = document.getElementById("activity_logging");
+var formEl = document.getElementById("install_form");
 var passwordStatus = toVNode(document.getElementById("password_status"));
 var formErrors = toVNode(document.getElementById("form_errors"));
 var patchPassword = (contents) => {
@@ -3133,7 +3136,15 @@ var checkPasswords = () => {
   enableSubmit();
 };
 password2El.oninput = checkPasswords;
-var formEl = document.getElementById("install_form");
+var setLoggingVisibility = () => {
+  if (loggingToggle.checked) {
+    loggingEls.forEach((el) => el.classList.remove("hidden"));
+  } else {
+    loggingEls.forEach((el) => el.classList.add("hidden"));
+  }
+};
+setLoggingVisibility();
+loggingToggle.onchange = setLoggingVisibility;
 var setFormVisibility = () => {
   const formData = new FormData(formEl);
   const keycloakConfig = document.getElementById("keycloak_config");

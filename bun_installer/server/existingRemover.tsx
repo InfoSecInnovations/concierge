@@ -18,7 +18,7 @@ export const ExistingRemover = async () => {
         ]).then(res => res.some(exists => exists))
     ])
     if (!conciergeExists && !ollamaExists && !keycloakExists && !opensearchExists) return <></>
-    return (<>
+    return (<section>
         <h3>Remove existing Docker services (containers and related volumes)</h3>
         <p>This can help you if your installation appears to be broken or you want to create a fresh install.</p>
         <p>If you're switching between having security enabled and disabled or vice-versa, it's strongly recommended that you remove all existing containers except for Ollama.</p>
@@ -43,5 +43,5 @@ export const ExistingRemover = async () => {
                 <button type="submit">Remove OpenSearch service</button>
             </form>           
         </>}
-    </>)
+    </section>)
 }

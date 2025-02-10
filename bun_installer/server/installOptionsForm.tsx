@@ -31,11 +31,11 @@ export const InstallOptionsForm = async () => {
                     <input type="checkbox" id="activity_logging" name="activity_logging"></input>
                     <label for="activity_logging">Enable Activity Logging</label>
                 </p>
-                <p>
+                <p class="logging_element">
                     <label for="logging_directory">Logging Directory</label>
                     <input type="text" name="logging_directory" id="logging_directory" value={path.join(getDefaultDirectory()!, "logs")}></input>
                 </p>
-                <p>
+                <p class="logging_element">
                     <label for="logging_retention">Logging Retention</label>
                     <input type="number" name="logging_retention" id="logging_retention" value="90"></input>
                     days

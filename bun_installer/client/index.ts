@@ -37,6 +37,9 @@ zxcvbnOptions.setOptions(options)
 const password1El = document.getElementById("keycloak_password_first")! as HTMLInputElement
 const password2El = document.getElementById("keycloak_password")! as HTMLInputElement
 const formSubmitEl = document.getElementById("install_submit")! as HTMLButtonElement
+const loggingEls = document.querySelectorAll(".logging_element")
+const loggingToggle = document.getElementById("activity_logging")! as HTMLInputElement
+const formEl = document.getElementById("install_form") as HTMLFormElement
 let passwordStatus: VNode = toVNode(document.getElementById("password_status")!)
 let formErrors: VNode = toVNode(document.getElementById("form_errors")!)
 
@@ -88,7 +91,17 @@ const checkPasswords = () => {
 
 password2El.oninput = checkPasswords
 
-const formEl = document.getElementById("install_form") as HTMLFormElement
+const setLoggingVisibility = () => {
+    if (loggingToggle.checked) {
+        loggingEls.forEach(el => el.classList.remove("hidden"))
+    }
+    else {
+        loggingEls.forEach(el => el.classList.add("hidden"))
+    }
+}
+setLoggingVisibility()
+loggingToggle.onchange = setLoggingVisibility
+
 const setFormVisibility = () => {
     const formData = new FormData(formEl)
     const keycloakConfig = document.getElementById("keycloak_config")
