@@ -76,9 +76,9 @@ export const InstallOptionsForm = async () => {
                     <label for="keycloak_password">Confirm Keycloak Admin Password</label>
                     <input type="password" id="keycloak_password" name="keycloak_password"></input>
                 </p>
-                <div id="password_status"></div>
+                <div id="password_status" class="error"></div>
             </fieldset>
-            <div id="form_errors"></div>
+            <div id="form_errors" class="error"></div>
             <button type="submit" id="install_submit">Start Installation!</button>
 
         </form>

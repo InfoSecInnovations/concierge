@@ -2752,6 +2752,53 @@ function h(sel, b, c) {
   }
   return vnode(sel, data, children, text, undefined);
 }
+
+// client/node_modules/snabbdom/build/tovnode.js
+function toVNode(node, domApi) {
+  const api = domApi !== undefined ? domApi : htmlDomApi;
+  let text;
+  if (api.isElement(node)) {
+    const id = node.id ? "#" + node.id : "";
+    const cn = node.getAttribute("class");
+    const c = cn ? "." + cn.split(" ").join(".") : "";
+    const sel = api.tagName(node).toLowerCase() + id + c;
+    const attrs = {};
+    const dataset = {};
+    const data = {};
+    const children = [];
+    let name;
+    let i, n;
+    const elmAttrs = node.attributes;
+    const elmChildren = node.childNodes;
+    for (i = 0, n = elmAttrs.length;i < n; i++) {
+      name = elmAttrs[i].nodeName;
+      if (name.startsWith("data-")) {
+        dataset[name.slice(5)] = elmAttrs[i].nodeValue || "";
+      } else if (name !== "id" && name !== "class") {
+        attrs[name] = elmAttrs[i].nodeValue;
+      }
+    }
+    for (i = 0, n = elmChildren.length;i < n; i++) {
+      children.push(toVNode(elmChildren[i], domApi));
+    }
+    if (Object.keys(attrs).length > 0)
+      data.attrs = attrs;
+    if (Object.keys(dataset).length > 0)
+      data.dataset = dataset;
+    if (sel.startsWith("svg") && (sel.length === 3 || sel[3] === "." || sel[3] === "#")) {
+      addNS(data, children, sel);
+    }
+    return vnode(sel, data, children, undefined, node);
+  } else if (api.isText(node)) {
+    text = api.getTextContent(node);
+    return vnode(undefined, undefined, undefined, text, node);
+  } else if (api.isComment(node)) {
+    text = api.getTextContent(node);
+    return vnode("!", {}, [], text, node);
+  } else {
+    return vnode("", {}, [], undefined, node);
+  }
+}
 // client/node_modules/snabbdom/build/modules/attributes.js
 var xlinkNS = "http://www.w3.org/1999/xlink";
 var xmlnsNS = "http://www.w3.org/2000/xmlns/";
@@ -3043,13 +3090,13 @@ zxcvbnOptions.setOptions(options);
 var password1El = document.getElementById("keycloak_password_first");
 var password2El = document.getElementById("keycloak_password");
 var formSubmitEl = document.getElementById("install_submit");
-var passwordStatus = document.getElementById("password_status");
-var formErrors = document.getElementById("form_errors");
-var patchPassword = (newVNode) => {
-  passwordStatus = patch(passwordStatus, newVNode);
+var passwordStatus = toVNode(document.getElementById("password_status"));
+var formErrors = toVNode(document.getElementById("form_errors"));
+var patchPassword = (contents) => {
+  passwordStatus = patch(passwordStatus, h("div#password_status.error", contents));
 };
-var patchFormErrors = (newVNode) => {
-  formErrors = patch(formErrors, newVNode);
+var patchFormErrors = (contents) => {
+  formErrors = patch(formErrors, h("div#form_errors.error", contents));
 };
 var enableSubmit = () => formSubmitEl.disabled = false;
 var disableSubmit = () => formSubmitEl.disabled = true;
@@ -3057,32 +3104,32 @@ var checkPasswords = () => {
   const password1 = password1El.value;
   const password2 = password2El.value;
   if (!password1 && !password2) {
-    patchPassword(h("div#password_status", h("p", "please provide a strong password!")));
+    patchPassword(h("p", "please provide a strong password!"));
     disableSubmit();
     return;
   }
   if (password1 && !password2) {
-    patchPassword(h("div#password_status", h("p", "please confirm the password!")));
+    patchPassword(h("p", "please confirm the password!"));
     disableSubmit();
     return;
   }
   if (password1 != password2) {
-    patchPassword(h("div#password_status", h("p", "passwords don't match!")));
+    patchPassword(h("p", "passwords don't match!"));
     disableSubmit();
     return;
   }
   const strength = zxcvbn(password2);
   if (strength.score < 4) {
-    patchPassword(h("div#password_status", [
+    patchPassword([
       h("p", "Password is too weak!"),
       strength.feedback.warning ? h("p", `warning: ${strength.feedback.warning}`) : undefined,
       strength.feedback.suggestions.length ? h("p", "suggestions:") : undefined,
       ...strength.feedback.suggestions.map((suggestion) => h("p", suggestion))
-    ]));
+    ]);
     disableSubmit();
     return;
   }
-  patchPassword(h("div#password_status"));
+  patchPassword(null);
   enableSubmit();
 };
 password2El.oninput = checkPasswords;
@@ -3095,6 +3142,7 @@ var setFormVisibility = () => {
     checkPasswords();
   } else {
     keycloakConfig?.classList.add("hidden");
+    patchPassword(null);
     enableSubmit();
   }
 };
@@ -3103,4 +3151,4 @@ formEl.onchange = setFormVisibility;
 var params = new URLSearchParams(window.location.search);
 var err = params.get("err");
 if (err == "invalid-form")
-  patchFormErrors(h("div#form_errors", "Form data was invalid"));
+  patchFormErrors("Form data was invalid");

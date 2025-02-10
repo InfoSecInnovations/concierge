@@ -9,7 +9,9 @@ import {
     eventListenersModule,
     h,
     attributesModule,
-    type VNode
+    toVNode,
+    type VNode,
+    type VNodeChildren
   } from "snabbdom";
   
 const patch = init([
@@ -35,15 +37,15 @@ zxcvbnOptions.setOptions(options)
 const password1El = document.getElementById("keycloak_password_first")! as HTMLInputElement
 const password2El = document.getElementById("keycloak_password")! as HTMLInputElement
 const formSubmitEl = document.getElementById("install_submit")! as HTMLButtonElement
-let passwordStatus: HTMLElement | VNode = document.getElementById("password_status")!
-let formErrors: HTMLElement | VNode = document.getElementById("form_errors")!
+let passwordStatus: VNode = toVNode(document.getElementById("password_status")!)
+let formErrors: VNode = toVNode(document.getElementById("form_errors")!)
 
-const patchPassword = (newVNode: VNode) => {
-    passwordStatus = patch(passwordStatus, newVNode)
+const patchPassword = (contents: VNodeChildren) => {
+    passwordStatus = patch(passwordStatus, h('div#password_status.error', contents))
 }
 
-const patchFormErrors = (newVNode: VNode) => {
-    formErrors = patch(formErrors, newVNode)
+const patchFormErrors = (contents: VNodeChildren) => {
+    formErrors = patch(formErrors, h("div#form_errors.error", contents))
 }
 
 const enableSubmit = () => formSubmitEl.disabled = false
@@ -54,32 +56,32 @@ const checkPasswords = () => {
     const password1 = password1El.value
     const password2 = password2El.value
     if (!password1 && !password2) {
-        patchPassword(h('div#password_status', h('p', "please provide a strong password!")))
+        patchPassword(h('p', "please provide a strong password!"))
         disableSubmit()
         return
     }
     if (password1 && !password2) {
-        patchPassword(h('div#password_status', h('p', "please confirm the password!")))
+        patchPassword(h('p', "please confirm the password!"))
         disableSubmit()
         return
     }
     if (password1 != password2) {
-        patchPassword(h('div#password_status', h('p', "passwords don't match!")))
+        patchPassword(h('p', "passwords don't match!"))
         disableSubmit()
         return
     }
     const strength = zxcvbn(password2)
     if (strength.score < 4) {
-        patchPassword(h('div#password_status', [
+        patchPassword([
             h('p', 'Password is too weak!'),
             strength.feedback.warning ? h('p', `warning: ${strength.feedback.warning}`) : undefined,
             strength.feedback.suggestions.length ? h('p', 'suggestions:') : undefined,
             ...strength.feedback.suggestions.map(suggestion => h('p', suggestion))
-        ]))
+        ])
         disableSubmit()
         return
     }
-    patchPassword(h('div#password_status'))
+    patchPassword(null)
     enableSubmit()
 }
 
@@ -96,6 +98,7 @@ const setFormVisibility = () => {
     } 
     else {
         keycloakConfig?.classList.add("hidden")
+        patchPassword(null)
         enableSubmit()
     } 
 }
@@ -104,4 +107,4 @@ formEl.onchange = setFormVisibility
 
 const params = new URLSearchParams(window.location.search)
 const err = params.get("err")
-if (err == "invalid-form") patchFormErrors(h("div#form_errors", "Form data was invalid"))
+if (err == "invalid-form") patchFormErrors("Form data was invalid")
