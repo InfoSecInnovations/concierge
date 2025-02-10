@@ -2,7 +2,7 @@ import path from "node:path"
 import getDefaultDirectory from "./getDefaultDirectory"
 
 export const InstallOptionsForm = () => (
-    <form action="/install" method="post">
+    <form action="/install" method="post" id="install_form">
         <fieldset>
             <legend>LLM Configuration</legend>
             <p>
@@ -62,7 +62,7 @@ export const InstallOptionsForm = () => (
             </p>
             <p>If you don't enable security anyone who can access the web UI will have full privileges to interact with your Concierge instance!</p>
             <p>The demo configuration should never be used for production as it is a very insecure configuration designed to show off the different access levels using test users.</p>
-            <p>
+            <p id="keycloak_config">
                 {/* TODO: client side validation of strong password 
                 TODO: client side validation of matching password
                 */}
@@ -71,8 +71,10 @@ export const InstallOptionsForm = () => (
                 <label for="keycloak_password">Confirm Keycloak Admin Password</label>
                 <input type="password" id="keycloak_password" name="keycloak_password"></input>
             </p>
+            <div id="password_status"></div>
         </fieldset>
-        <button type="submit">Start Installation!</button>
+        <div id="form_errors"></div>
+        <button type="submit" id="install_submit">Start Installation!</button>
 
     </form>
 )

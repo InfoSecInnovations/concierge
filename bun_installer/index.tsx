@@ -7,16 +7,26 @@ import { RelaunchForm } from "./server/relaunchForm"
 import doLaunch from "./server/doLaunch"
 import { ExistingRemover } from "./server/existingRemover"
 import { stream } from 'hono/streaming'
+import css from "./assets/style.css" with {type: "file"}
+import js from "./assets/index.js" with {type: "file"}
+import { file } from "bun"
+import validateInstallForm from "./server/validateInstallForm.js"
 
 const app = new Hono()
 
+app.get('/style.css', async c => c.body(await file(css).text(), 201, {
+  'Content-Type': "text/css"
+}))
+app.get('/index.js', async c => c.body(await file(js).text(), 201, {
+  'Content-Type': "text/javascript"
+}))
 app.get('/', async c => {
   const dockerStatus = await dockerIsRunning()
   const conciergeIsInstalled = await conciergeIsConfigured()
   return await c.html(
   <html>
     <head>
-      <link rel="stylesheet" href="./style.css" />     
+      <link rel="stylesheet" href="./style.css" />         
     </head>
     <body>
       <h1>Concierge Configurator</h1>
@@ -37,11 +47,12 @@ app.get('/', async c => {
         <p>If you have already installed it, please launch Docker Desktop or start the daemon and this page should display the Concierge installation options.</p>
       </>}
     </body> 
-    <script src="index.js"></script>  
+    <script src="index.js"></script>
   </html>)
 })
 app.post("/install", c => c.req.formData()
   .then(data => {
+    if (!validateInstallForm(data)) return c.redirect("/?err=invalid-form")
     const resp = stream(c, async stream => {
       await stream.writeln(await <head>
         <meta http-equiv="Refresh" content="0; URL=/" />

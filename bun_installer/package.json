@@ -12,13 +12,17 @@
   },
   "dependencies": {
     "@keycloak/keycloak-admin-client": "^26.1.0",
+    "@zxcvbn-ts/core": "^3.0.4",
+    "@zxcvbn-ts/language-common": "^3.0.4",
+    "@zxcvbn-ts/language-en": "^3.0.2",
     "adm-zip": "^0.5.16",
     "envfile": "^7.1.0",
     "hono": "^4.6.17",
     "node-forge": "^1.3.1"
   },
   "scripts": {
-    "dev": "bun run --watch index.tsx"
+    "dev": "bun run --watch index.tsx",
+    "dev_client": "bun build ./client/index.js --outfile ./assets/index.js --watch"
   },
   "version": "0.5a13"
 }
