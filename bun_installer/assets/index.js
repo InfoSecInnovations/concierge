@@ -3040,19 +3040,9 @@ var options = {
   }
 };
 zxcvbnOptions.setOptions(options);
-var formEl = document.getElementById("install_form");
-var setFormVisibility = () => {
-  const formData = new FormData(formEl);
-  const keycloakConfig = document.getElementById("keycloak_config");
-  if (formData.get("security_level") != "none")
-    keycloakConfig?.classList.remove("hidden");
-  else
-    keycloakConfig?.classList.add("hidden");
-};
-setFormVisibility();
-formEl.onchange = setFormVisibility;
 var password1El = document.getElementById("keycloak_password_first");
 var password2El = document.getElementById("keycloak_password");
+var formSubmitEl = document.getElementById("install_submit");
 var passwordStatus = document.getElementById("password_status");
 var formErrors = document.getElementById("form_errors");
 var patchPassword = (newVNode) => {
@@ -3061,25 +3051,55 @@ var patchPassword = (newVNode) => {
 var patchFormErrors = (newVNode) => {
   formErrors = patch(formErrors, newVNode);
 };
+var enableSubmit = () => formSubmitEl.disabled = false;
+var disableSubmit = () => formSubmitEl.disabled = true;
 var checkPasswords = () => {
   const password1 = password1El.value;
   const password2 = password2El.value;
-  if (password1 != password2)
-    patchPassword(h("div#password_status", h("p", "passwords don't match!")));
-  else {
-    const strength = zxcvbn(password2);
-    if (strength.score < 4) {
-      patchPassword(h("div#password_status", [
-        h("p", "Password is too weak!"),
-        strength.feedback.warning ? h("p", `warning: ${strength.feedback.warning}`) : undefined,
-        strength.feedback.suggestions.length ? h("p", "suggestions:") : undefined,
-        ...strength.feedback.suggestions.map((suggestion) => h("p", suggestion))
-      ]));
-    } else
-      patchPassword(h("div#password_status"));
+  if (!password1 && !password2) {
+    patchPassword(h("div#password_status", h("p", "please provide a strong password!")));
+    disableSubmit();
+    return;
   }
+  if (password1 && !password2) {
+    patchPassword(h("div#password_status", h("p", "please confirm the password!")));
+    disableSubmit();
+    return;
+  }
+  if (password1 != password2) {
+    patchPassword(h("div#password_status", h("p", "passwords don't match!")));
+    disableSubmit();
+    return;
+  }
+  const strength = zxcvbn(password2);
+  if (strength.score < 4) {
+    patchPassword(h("div#password_status", [
+      h("p", "Password is too weak!"),
+      strength.feedback.warning ? h("p", `warning: ${strength.feedback.warning}`) : undefined,
+      strength.feedback.suggestions.length ? h("p", "suggestions:") : undefined,
+      ...strength.feedback.suggestions.map((suggestion) => h("p", suggestion))
+    ]));
+    disableSubmit();
+    return;
+  }
+  patchPassword(h("div#password_status"));
+  enableSubmit();
 };
 password2El.oninput = checkPasswords;
+var formEl = document.getElementById("install_form");
+var setFormVisibility = () => {
+  const formData = new FormData(formEl);
+  const keycloakConfig = document.getElementById("keycloak_config");
+  if (formData.get("security_level") != "none") {
+    keycloakConfig?.classList.remove("hidden");
+    checkPasswords();
+  } else {
+    keycloakConfig?.classList.add("hidden");
+    enableSubmit();
+  }
+};
+setFormVisibility();
+formEl.onchange = setFormVisibility;
 var params = new URLSearchParams(window.location.search);
 var err = params.get("err");
 if (err == "invalid-form")

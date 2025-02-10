@@ -106,7 +106,8 @@ export default async function* (options: FormData, environment = "production") {
     await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
     if (securityLevel == "demo") {
         yield logMessage("adding demo users")
+        envs.IS_SECURITY_DEMO = "True"
+        await updateEnv()
         await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
     }
-    yield "done! returning to main page..."
 }

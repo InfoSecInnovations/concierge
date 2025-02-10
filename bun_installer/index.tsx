@@ -6,11 +6,12 @@ import conciergeIsConfigured from "./server/conciergeIsConfigured"
 import { RelaunchForm } from "./server/relaunchForm"
 import doLaunch from "./server/doLaunch"
 import { ExistingRemover } from "./server/existingRemover"
-import { stream } from 'hono/streaming'
 import css from "./assets/style.css" with {type: "file"}
 import js from "./assets/index.js" with {type: "file"}
 import { file } from "bun"
 import validateInstallForm from "./server/validateInstallForm.js"
+import { $ } from "bun"
+import streamHtml from "./server/streamHtml.js"
 
 const app = new Hono()
 
@@ -53,19 +54,28 @@ app.get('/', async c => {
 app.post("/install", c => c.req.formData()
   .then(data => {
     if (!validateInstallForm(data)) return c.redirect("/?err=invalid-form")
-    const resp = stream(c, async stream => {
-      await stream.writeln(await <head>
-        <meta http-equiv="Refresh" content="0; URL=/" />
-      </head>)
+    return streamHtml(c, "Installing Concierge", async stream => {
       for await (const message of doInstall(data)) {
         await stream.writeln(await <p>{message}</p>)
       }
     })
-    resp.headers.set('Content-Type', 'text/html; charset=UTF-8')
-    resp.headers.set('Transfer-Encoding', 'chunked')
-    return resp
   })
 )
+app.post("/remove_concierge", c => streamHtml(c, "Removing Concierge service", async _ => {
+  await $`docker container rm --force concierge`
+}))
+app.post("/remove_ollama", c => streamHtml(c, "Removing Ollama service", async _ => {
+  await $`docker container rm --force ollama`
+  await $`docker volume rm --force concierge_ollama`
+}))
+app.post("/remove_opensearch", c => streamHtml(c, "Removing OpenSearch service", async _ => {
+  await $`docker container rm --force opensearch-node1`
+  await $`docker volume rm --force concierge_opensearch-data1`
+}))
+app.post("/remove_keycloak", c => streamHtml(c, "Removing Keycloak service", async _ => {
+  await $`docker container rm --force keycloak postgres`
+  await $`docker volume rm --force concierge_postgres_data`
+}))
 app.post("/launch", c => c.req.formData()
   .then(data => doLaunch(data))
   .then(() => c.redirect("/"))
