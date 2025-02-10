@@ -5,20 +5,16 @@ import getEnvPath from "./getEnvPath"
 
 export const InstallOptionsForm = async () => {
     const envFile = Bun.file(getEnvPath())
-    const securityEnabled = await envFile.exists() && await envFile.text().then(body => {
-        const envs = envfile.parse(body)
-        return envs.CONCIERGE_SECURITY_ENABLED == "True"
-    })
-    const demoEnabled = securityEnabled && await envFile.exists() && await envFile.text().then(body => {
-        const envs = envfile.parse(body)
-        return envs.IS_SECURITY_DEMO == "True"
-    })
+    const envs = await envFile.exists() && await envFile.text().then(body => envfile.parse(body))
+    const securityEnabled = envs && envs.CONCIERGE_SECURITY_ENABLED == "True"
+    const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True"
+    const gpuEnabled = envs && envs.OLLAMA_SERVICE == "ollama-gpu"
     return (
         <form action="/install" method="post" id="install_form">
             <fieldset>
                 <legend>LLM Configuration</legend>
                 <p>
-                    <input type="checkbox" id="use_gpu" name="use_gpu"></input>
+                    <input type="checkbox" id="use_gpu" name="use_gpu" checked={gpuEnabled}></input>
                     <label for="use_gpu">Enable GPU Acceleration</label>
                 </p>
                 <p>

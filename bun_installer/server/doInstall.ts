@@ -110,4 +110,5 @@ export default async function* (options: FormData, environment = "production") {
         await updateEnv()
         await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
     }
+    console.log("Installation done\n")
 }

@@ -12,6 +12,7 @@ import { file } from "bun"
 import validateInstallForm from "./server/validateInstallForm.js"
 import { $ } from "bun"
 import streamHtml from "./server/streamHtml.js"
+import { WebUILink } from "./server/webUiLink.js"
 
 const app = new Hono()
 
@@ -35,7 +36,9 @@ app.get('/', async c => {
       {dockerStatus ? <>
         {conciergeIsInstalled ? <>
           <h3>Launch Concierge</h3>
-          <p>Concierge appears to be configured on this system. You can (re)launch here if needed.</p>
+          <p>Concierge appears to be configured on this system</p>
+          <WebUILink></WebUILink>
+          <p>If the link above isn't working, try (re)launching using the button below.</p>
           <RelaunchForm></RelaunchForm>
         </> : null}
         <ExistingRemover></ExistingRemover>
@@ -77,8 +80,7 @@ app.post("/remove_keycloak", c => streamHtml(c, "Removing Keycloak service", asy
   await $`docker volume rm --force concierge_postgres_data`
 }))
 app.post("/launch", c => c.req.formData()
-  .then(data => doLaunch(data))
-  .then(() => c.redirect("/"))
+  .then(data => streamHtml(c, "Launching Concierge", async _ => await doLaunch(data)))
 )
 
 console.log("Concierge Configurator")
