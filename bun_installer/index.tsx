@@ -88,5 +88,6 @@ app.post("/launch", c => c.req.formData()
 )
 
 console.log("Concierge Configurator")
-console.log(getVersion())
+console.log(`${getVersion()}\n`)
+console.log("visit http://localhost:3000 to install or manage Concierge")
 Bun.serve({...app, idleTimeout: 0})
