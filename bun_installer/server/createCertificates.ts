@@ -119,7 +119,8 @@ export default async (certDir: string) => {
     createSignedCert("keycloak", ["localhost", "keycloak"]),
     createSignedCert("concierge", ["localhost", "concierge"]),
     createSignedCert("opensearch-node1", ["localhost", "opensearch-node1"]),
-    createSignedCert("opensearch-admin")
+    createSignedCert("opensearch-admin"),
+    createSignedCert("opensearch-admin-client", ["opensearch-admin-client"])
   ])
 
 }
