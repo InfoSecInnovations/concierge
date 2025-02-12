@@ -6,7 +6,7 @@ export default async () => {
     const envFile = Bun.file(getEnvPath())
     if (await Promise.all([
         envFile.exists(),
-        Bun.file(path.join(import.meta.dir, "..", "docker_compose", "docker-compose.yml")).exists()
+        Bun.file(path.join("docker_compose", "docker-compose.yml")).exists()
     ]).then(res => res.every(exists => exists))) {
         const envs = envfile.parse(await envFile.text())
         if (envs.CONCIERGE_VERSION) return true

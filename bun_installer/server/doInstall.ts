@@ -1,4 +1,4 @@
-import dockerComposeZip from "../docker_compose.zip" with { type: "file" }
+import dockerComposeZip from "../assets/docker_compose.zip" with { type: "file" }
 import { file, $ } from "bun"
 import AdmZip from "adm-zip"
 import createCertificates from "./createCertificates"
@@ -8,6 +8,7 @@ import crypto from "node:crypto"
 import KcAdminClient from '@keycloak/keycloak-admin-client'
 import getEnvPath from "./getEnvPath"
 import * as envfile from "envfile"
+import getVersion from "./getVersion"
 
 const logMessage = (message: string) => {
     console.log(message)
@@ -33,7 +34,7 @@ export default async function* (options: FormData, environment = "production") {
         yield logMessage("configuring security...")
         envs.CONCIERGE_SECURITY_ENABLED = "True"
         envs.CONCIERGE_SERVICE = "concierge-enable-security"
-        const certDir = path.join(import.meta.dir, "..", "self_signed_certificates")        
+        const certDir = path.resolve("self_signed_certificates")        
         await createCertificates(certDir)
         envs.ROOT_CA = path.join(certDir, "root-ca.pem")
         envs.OPENSEARCH_CLIENT_CERT = path.join(certDir, "opensearch-admin-client-cert.pem")
@@ -60,7 +61,7 @@ export default async function* (options: FormData, environment = "production") {
             envs.POSTGRES_DB_PASSWORD = postgresPassword
             updateEnv()
             yield logMessage("getting OpenID credentials from Keycloak service. This can take a few minutes!")
-            const keycloakComposeFile = path.join(import.meta.dir, "..", "docker_compose", "docker-compose-launch-keycloak.yml")
+            const keycloakComposeFile = path.join("docker_compose", "docker-compose-launch-keycloak.yml")
             // update the keycloak image otherwise it can get overwritten when we launch everything below
             await $`docker compose -f ${keycloakComposeFile} pull`
             await $`docker compose -f ${keycloakComposeFile} up -d`
@@ -80,7 +81,7 @@ export default async function* (options: FormData, environment = "production") {
                       });
                     const secret = await kcClient.clients.getClientSecret({id: '7a3ec428-36f2-49c4-91b1-8288dc44acb0', realm: 'concierge'})
                     envs.KEYCLOAK_CLIENT_ID = "concierge-auth"
-                    envs.KEYCLOAK_CLIENT_SECRET = secret.secretData!
+                    envs.KEYCLOAK_CLIENT_SECRET = secret.value!
                     break
                 }  
                 catch (error) {
@@ -99,7 +100,7 @@ export default async function* (options: FormData, environment = "production") {
         envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml"
     }
     envs.ENVIRONMENT = environment
-    envs.CONCIERGE_VERSION = process.env.npm_package_version!
+    envs.CONCIERGE_VERSION = getVersion()
     envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
     await updateEnv()
     yield logMessage("launching Docker containers")

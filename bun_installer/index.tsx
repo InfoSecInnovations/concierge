@@ -13,6 +13,7 @@ import validateInstallForm from "./server/validateInstallForm.js"
 import { $ } from "bun"
 import streamHtml from "./server/streamHtml.js"
 import { WebUILink } from "./server/webUiLink.js"
+import getVersion from "./server/getVersion.js"
 
 const app = new Hono()
 
@@ -39,6 +40,7 @@ app.get('/', async c => {
           <p>Concierge appears to be configured on this system</p>
           <WebUILink></WebUILink>
           <p>If the link above isn't working, try (re)launching using the button below.</p>
+          <p>Bear in mind that if you just installed Concierge it can take a few minutes before it's up and running.</p>
           <RelaunchForm></RelaunchForm>
         </section> : null}
         <ExistingRemover></ExistingRemover>
@@ -86,5 +88,5 @@ app.post("/launch", c => c.req.formData()
 )
 
 console.log("Concierge Configurator")
-console.log(process.env.npm_package_version)
+console.log(getVersion())
 Bun.serve({...app, idleTimeout: 0})
