@@ -3,7 +3,7 @@ import getDefaultDirectory from "./getDefaultDirectory"
 import * as envfile from "envfile"
 import getEnvPath from "./getEnvPath"
 
-export const InstallOptionsForm = async () => {
+export const InstallOptionsForm = async (props: {devMode: boolean}) => {
     const envFile = Bun.file(getEnvPath())
     const envs = await envFile.exists() && await envFile.text().then(body => envfile.parse(body))
     const securityEnabled = envs && envs.CONCIERGE_SECURITY_ENABLED == "True"
@@ -79,7 +79,8 @@ export const InstallOptionsForm = async () => {
                 <div id="password_status" class="error"></div>
             </fieldset>
             <div id="form_errors" class="error"></div>
-            <button type="submit" id="install_submit">Start Installation!</button>
+            <button type="submit" id="install_submit" class="install_button">Start Installation!</button>
+            {props.devMode && <button type="submit" id="install_submit_dev" class="install_button" name="dev_mode" value="True">Install Development Configuration</button>}
 
         </form>
     )

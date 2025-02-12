@@ -44,6 +44,7 @@ dev_launcher.py
 # non-container files
 cli
 concierge_packages
+bun_installer
 
 # compose files
 **/docker-compose*

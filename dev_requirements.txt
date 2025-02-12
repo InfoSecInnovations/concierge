@@ -9,3 +9,4 @@ nest_asyncio
 -e concierge_packages/script_builder
 -e concierge_packages/installer
 -r local_requirements.txt
+-r requirements.txt

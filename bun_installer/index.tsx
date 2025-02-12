@@ -14,6 +14,21 @@ import { $ } from "bun"
 import streamHtml from "./server/streamHtml.js"
 import { WebUILink } from "./server/webUiLink.js"
 import getVersion from "./server/getVersion.js"
+import { parseArgs } from "node:util"
+
+const { values } = parseArgs({
+  args: Bun.argv,
+  options: {
+    'dev-mode': {
+      type: 'boolean',
+
+    },
+  },
+  strict: true,
+  allowPositionals: true,
+});
+
+const devMode = !!values['dev-mode']
 
 const app = new Hono()
 
@@ -46,7 +61,7 @@ app.get('/', async c => {
         <ExistingRemover></ExistingRemover>
         <section>
           <h3>Install Concierge</h3>
-          <InstallOptionsForm></InstallOptionsForm>
+          <InstallOptionsForm devMode={devMode}></InstallOptionsForm>
         </section>
       </> : <section>
         <h3>Docker isn't running, please start it!</h3>

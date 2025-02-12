@@ -36,7 +36,7 @@ zxcvbnOptions.setOptions(options)
 
 const password1El = document.getElementById("keycloak_password_first")! as HTMLInputElement
 const password2El = document.getElementById("keycloak_password")! as HTMLInputElement
-const formSubmitEl = document.getElementById("install_submit")! as HTMLButtonElement
+const formSubmitEls = document.querySelectorAll(".install_button")
 const loggingEls = document.querySelectorAll(".logging_element")
 const loggingToggle = document.getElementById("activity_logging")! as HTMLInputElement
 const formEl = document.getElementById("install_form") as HTMLFormElement
@@ -51,9 +51,9 @@ const patchFormErrors = (contents: VNodeChildren) => {
     formErrors = patch(formErrors, h("div#form_errors.error", contents))
 }
 
-const enableSubmit = () => formSubmitEl.disabled = false
+const enableSubmit = () => formSubmitEls.forEach(el => (el as HTMLButtonElement).disabled = false)
 
-const disableSubmit = () => formSubmitEl.disabled = true
+const disableSubmit = () => formSubmitEls.forEach(el => (el as HTMLButtonElement).disabled = true)
 
 const checkPasswords = () => {
     const password1 = password1El.value

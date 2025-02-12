@@ -6,10 +6,11 @@ include:
 services:
   concierge:
     extends:
-      file: concierge_packages/installer/src/install_concierge/docker_compose/docker_compose_dependencies/docker-compose-concierge.yml
+      file: ./docker_compose_dependencies/docker-compose-concierge.yml
       service: ${CONCIERGE_SERVICE:-concierge}
     build:
-      dockerfile: Dockerfile.local
+      context: ../../..
+      dockerfile: ../../../Dockerfile.local
 
 networks:
   default:

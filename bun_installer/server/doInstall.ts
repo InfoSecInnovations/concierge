@@ -9,13 +9,16 @@ import KcAdminClient from '@keycloak/keycloak-admin-client'
 import getEnvPath from "./getEnvPath"
 import * as envfile from "envfile"
 import getVersion from "./getVersion"
+import { platform } from "node:os"
+import python from "bun_python"
 
 const logMessage = (message: string) => {
     console.log(message)
     return message
 }
 
-export default async function* (options: FormData, environment = "production") {
+export default async function* (options: FormData) {
+    const environment = options.get("dev_mode")?.toString() == "True" ? "development" : "production"
     // we need the compose files to be available outside of the executable bundle so the shell can use them
     const buf = await file(dockerComposeZip).arrayBuffer()
     const zip = new AdmZip(Buffer.from(buf))
@@ -88,7 +91,7 @@ export default async function* (options: FormData, environment = "production") {
                     continue
                 }
             }
-            yield logMessage("got Keycloak credentials")
+            yield logMessage("got Keycloak credentials.")
         }
         envs.OPENSEARCH_SERVICE = "opensearch-node-enable-security"
         envs.KEYCLOAK_SERVICE_FILE = "docker-compose-keycloak.yml"
@@ -103,13 +106,24 @@ export default async function* (options: FormData, environment = "production") {
     envs.CONCIERGE_VERSION = getVersion()
     envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
     await updateEnv()
-    yield logMessage("launching Docker containers")
-    await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
+    yield logMessage("launching Docker containers...")
+    if (environment == "development") {
+        await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
+        yield logMessage("configuring Python environment...")
+        // TODO: venv
+        if (platform() == 'win32') await $`.\\Scripts\\python -m pip install -r dev_requirements.txt`.cwd("..")
+        else await $`./bin/python -m pip install -r dev_requirements.txt`.cwd("..")
+    } 
+    else await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
     if (securityLevel == "demo") {
         yield logMessage("adding demo users")
         envs.IS_SECURITY_DEMO = "True"
         await updateEnv()
-        await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
+        if (environment == "development") {
+            if (platform() == 'win32') await $`.\\Scripts\\python -m concierge_scripts.add_keycloak_demo_users`.cwd("..")
+            else await $`./bin/python -m concierge_scripts.add_keycloak_demo_users`.cwd("..")
+        }
+        else await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
     }
     console.log("Installation done\n")
 }
