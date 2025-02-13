@@ -1,3 +1,0 @@
-extend = "../../ruff.toml"
-
-target-version = "py310"

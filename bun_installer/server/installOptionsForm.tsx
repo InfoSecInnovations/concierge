@@ -2,6 +2,7 @@ import path from "node:path"
 import getDefaultDirectory from "./getDefaultDirectory"
 import * as envfile from "envfile"
 import getEnvPath from "./getEnvPath"
+import { keycloakExists } from "./dockerItemsExist"
 
 export const InstallOptionsForm = async (props: {devMode: boolean}) => {
     const envFile = Bun.file(getEnvPath())
@@ -9,6 +10,7 @@ export const InstallOptionsForm = async (props: {devMode: boolean}) => {
     const securityEnabled = envs && envs.CONCIERGE_SECURITY_ENABLED == "True"
     const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True"
     const gpuEnabled = envs && envs.OLLAMA_SERVICE == "ollama-gpu"
+    const keycloakEnabled = await keycloakExists()
     return (
         <form action="/install" method="post" id="install_form">
             <fieldset>
@@ -70,12 +72,16 @@ export const InstallOptionsForm = async (props: {devMode: boolean}) => {
                 </p>
                 <p>If you don't enable security anyone who can access the web UI will have full privileges to interact with your Concierge instance!</p>
                 <p>The demo configuration should never be used for production as it is a very insecure configuration designed to show off the different access levels using test users.</p>
-                <p id="keycloak_config">
+                {keycloakEnabled ? <p id="keycloak_config">
                     <label for="keycloak_password_first">Keycloak Admin Password</label>
                     <input type="password" id="keycloak_password_first"></input>
                     <label for="keycloak_password">Confirm Keycloak Admin Password</label>
                     <input type="password" id="keycloak_password" name="keycloak_password"></input>
-                </p>
+                </p> : <>
+                    <p>There is an existing Keycloak installation.</p>
+                    <p>We strongly recommend removing that and OpenSearch using the buttons above before proceeding.</p>
+                    <p>If not the installer will attempt to keep the existing configuration but be aware that this isn't well supported and you may end up with an unusable setup.</p>
+                </>}
                 <div id="password_status" class="error"></div>
             </fieldset>
             <div id="form_errors" class="error"></div>

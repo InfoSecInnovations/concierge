@@ -17,7 +17,7 @@ export default (formData: FormData) => {
     const securityLevel = formData.get("security_level")?.toString()
     if (!securityLevel || securityLevel == "none") return true // if you don't have security enabled Concierge will install fine with no options set
     // if keycloak will be installed, we need a valid password
-    if (!keycloakExists() || !process.env.POSTGRES_DB_PASSWORD || !process.env.KEYCLOAK_CLIENT_ID || !process.env.KEYCLOAK_CLIENT_SECRET) {
+    if (!keycloakExists()) {
       const keycloakPassword = formData.get("keycloak_password")?.toString()
       if (!keycloakPassword || zxcvbn(keycloakPassword).score < 4) return false
     }

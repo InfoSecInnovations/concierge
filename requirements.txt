@@ -13,7 +13,7 @@ requests-oauthlib~=2.0.0
 sentence-transformers~=3.3.1
 shiny~=1.2.1
 shinyswatch~=0.8.0
-isi-util==0.2a1
+isi-util==0.2a2
 concierge-util==0.2a2
 python-keycloak~=5.1.1
 httpx~=0.23.2

@@ -2,7 +2,7 @@ import os
 import argparse
 import subprocess
 import shutil
-from script_builder.util import get_venv_executable
+from isi_util.venv import get_venv_executable
 
 parser = argparse.ArgumentParser()
 

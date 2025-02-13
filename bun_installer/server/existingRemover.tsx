@@ -23,25 +23,12 @@ export const ExistingRemover = async () => {
         <p>This can help you if your installation appears to be broken or you want to create a fresh install.</p>
         <p>If you're switching between having security enabled and disabled or vice-versa, it's strongly recommended that you remove all existing containers except for Ollama.</p>
         <p>Be aware that if you remove Ollama you will have to redownload the LLM models which are quite large.</p>
-        {conciergeExists && <>
-            <form action="/remove_concierge" method="post">
-                <button type="submit">Remove Concierge service</button>
-            </form>           
-        </>}
-        {ollamaExists && <>
-            <form action="/remove_ollama" method="post">
-                <button type="submit">Remove Ollama service</button>
-            </form>           
-        </>}
-        {keycloakExists && <>
-            <form action="/remove_keycloak" method="post">
-                <button type="submit">Remove Keycloak service</button>
-            </form>           
-        </>}
-        {opensearchExists && <>
-            <form action="/remove_opensearch" method="post">
-                <button type="submit">Remove OpenSearch service</button>
-            </form>           
-        </>}
+        <form action="/remove" method="post">
+            {conciergeExists && <button type="submit" name="service" value="concierge">Remove Concierge service</button>}
+            {ollamaExists && <button type="submit" name="service" value="ollama">Remove Ollama service</button>}
+            {keycloakExists && <button type="submit" name="service" value="keycloak">Remove Keycloak service</button>}
+            {opensearchExists && <button type="submit" name="service" value="opensearch">Remove OpenSearch service</button>}
+        </form>
+
     </section>)
 }

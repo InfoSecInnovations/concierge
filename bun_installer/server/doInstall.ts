@@ -1,6 +1,4 @@
-import dockerComposeZip from "../assets/docker_compose.zip" with { type: "file" }
-import { file, $ } from "bun"
-import AdmZip from "adm-zip"
+import { $ } from "bun"
 import createCertificates from "./createCertificates"
 import path from "node:path"
 import { keycloakExists } from "./dockerItemsExist"
@@ -11,20 +9,11 @@ import * as envfile from "envfile"
 import getVersion from "./getVersion"
 import runPython from "./runPython"
 import util from "node:util"
+import logMessage from "./logMessage"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
-
-const logMessage = (message: string) => {
-    console.log(message)
-    return message
-}
 
 export default async function* (options: FormData) {
     const environment = options.get("dev_mode")?.toString() == "True" ? "development" : "production"
-    // we need the compose files to be available outside of the executable bundle so the shell can use them
-    const buf = await file(dockerComposeZip).arrayBuffer()
-    const zip = new AdmZip(Buffer.from(buf))
-    zip.extractAllTo(".", true)
-    yield logMessage("unzipped Docker Compose files.")
     // we keep track of the environment variables so we can write to the .env file and the process environment as needed
     const envs: {[key: string]: string} = {}
     const updateEnv = () => {
@@ -52,7 +41,7 @@ export default async function* (options: FormData) {
         envs.WEB_CERT = path.join(certDir, "concierge-cert.pem")
         envs.WEB_KEY = path.join(certDir, "concierge-key.pem")
         yield logMessage("configured TLS certificates.")
-        if (!keycloakExists() || !process.env.POSTGRES_DB_PASSWORD || !process.env.KEYCLOAK_CLIENT_ID || !process.env.KEYCLOAK_CLIENT_SECRET) {
+        if (!keycloakExists()) {
             const keycloakPassword = options.get("keycloak_password")?.toString()
             // TODO: create error type for this
             if (!keycloakPassword) throw new Error("Keycloak admin password is invalid!")
@@ -109,19 +98,21 @@ export default async function* (options: FormData) {
     await updateEnv()
     yield logMessage("launching Docker containers...")
     if (environment == "development") {
+        await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
         yield logMessage("configuring Python environment...")
         await exec("python3 -m venv ..")
         await runPython("pip install -r dev_requirements.txt")
     } 
-    else await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
+    else {
+        await $`docker compose -f ./docker_compose/docker-compose.yml pull`
+        await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
+    } 
     if (securityLevel == "demo") {
         yield logMessage("adding demo users")
         envs.IS_SECURITY_DEMO = "True"
         await updateEnv()
-        if (environment == "development") {
-            await runPython("concierge_scripts.add_keycloak_demo_users")
-        }
+        if (environment == "development") await runPython("concierge_scripts.add_keycloak_demo_users")
         else await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
     }
     console.log("Installation done\n")

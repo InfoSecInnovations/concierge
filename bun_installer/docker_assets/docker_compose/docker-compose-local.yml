@@ -9,8 +9,8 @@ services:
       file: ./docker_compose_dependencies/docker-compose-concierge.yml
       service: ${CONCIERGE_SERVICE:-concierge}
     build:
-      context: ../../..
-      dockerfile: ../../../Dockerfile.local
+      context: ../..
+      dockerfile: Dockerfile.local
 
 networks:
   default:

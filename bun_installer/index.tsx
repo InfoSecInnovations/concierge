@@ -15,6 +15,9 @@ import streamHtml from "./server/streamHtml.js"
 import { WebUILink } from "./server/webUiLink.js"
 import getVersion from "./server/getVersion.js"
 import { parseArgs } from "node:util"
+import dockerComposeZip from "./assets/docker_compose.zip" with { type: "file" }
+import AdmZip from "adm-zip"
+import type { stream } from "hono/streaming"
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -56,7 +59,7 @@ app.get('/', async c => {
           <WebUILink></WebUILink>
           <p>If the link above isn't working, try (re)launching using the button below.</p>
           <p>Bear in mind that if you just installed Concierge it can take a few minutes before it's up and running.</p>
-          <RelaunchForm></RelaunchForm>
+          <RelaunchForm devMode={devMode}></RelaunchForm>
         </section> : null}
         <ExistingRemover></ExistingRemover>
         <section>
@@ -83,26 +86,42 @@ app.post("/install", c => c.req.formData()
     })
   })
 )
-app.post("/remove_concierge", c => streamHtml(c, "Removing Concierge service", async _ => {
-  await $`docker container rm --force concierge`
-}))
-app.post("/remove_ollama", c => streamHtml(c, "Removing Ollama service", async _ => {
-  await $`docker container rm --force ollama`
-  await $`docker volume rm --force concierge_ollama`
-}))
-app.post("/remove_opensearch", c => streamHtml(c, "Removing OpenSearch service", async _ => {
-  await $`docker container rm --force opensearch-node1`
-  await $`docker volume rm --force concierge_opensearch-data1`
-}))
-app.post("/remove_keycloak", c => streamHtml(c, "Removing Keycloak service", async _ => {
-  await $`docker container rm --force keycloak postgres`
-  await $`docker volume rm --force concierge_postgres_data`
+app.post("/remove", c => c.req.formData()
+.then(data => {
+  const service = data.get("service")
+  if (service == "concierge") return streamHtml(c, "Removing Concierge service", async _ => {
+    await $`docker container rm --force concierge`
+  })
+  if (service == "ollama") return streamHtml(c, "Removing Ollama service", async _ => {
+    await $`docker container rm --force ollama`
+    await $`docker volume rm --force concierge_ollama`
+  })
+  if (service == "opensearch") return streamHtml(c, "Removing OpenSearch service", async _ => {
+    await $`docker container rm --force opensearch-node1`
+    await $`docker volume rm --force concierge_opensearch-data1`
+  })
+  if (service == "keycloak") return streamHtml(c, "Removing Keycloak service", async _ => {
+    await $`docker container rm --force keycloak postgres`
+    await $`docker volume rm --force concierge_postgres_data`
+  })
+  return c.html(<p>Invalid service name was provided!</p>)
 }))
 app.post("/launch", c => c.req.formData()
-  .then(data => streamHtml(c, "Launching Concierge", async _ => await doLaunch(data)))
+  .then(data => streamHtml(c, "Launching Concierge", async stream => {
+    for await (const message of doLaunch(data)) {
+      await stream.writeln(await <p>{message}</p>)
+    }
+  }))
 )
 
 console.log("Concierge Configurator")
 console.log(`${getVersion()}\n`)
-console.log("visit http://localhost:3000 to install or manage Concierge")
+
+// we need the compose files to be available outside of the executable bundle so the shell can use them
+const buf = await file(dockerComposeZip).arrayBuffer()
+const zip = new AdmZip(Buffer.from(buf))
+zip.extractAllTo(".", true)
+console.log("Extracted docker compose files.\n")
+
 Bun.serve({...app, idleTimeout: 0})
+console.log("visit http://localhost:3000 to install or manage Concierge")
