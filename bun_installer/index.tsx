@@ -109,7 +109,16 @@ app.post("/remove", c => c.req.formData()
 app.post("/launch", c => c.req.formData()
   .then(data => streamHtml(c, "Launching Concierge", async stream => {
     for await (const message of doLaunch(data)) {
-      await stream.writeln(await <p>{message}</p>)
+      if (typeof message != "string" && message.command) {
+        if (message.command == "show_stop") await stream.writeln(await <form action="/" method="get">
+          <button type="submit">Stop Concierge</button>
+          <p>The other containers will remain running so you can run the code from VSCode or another application.</p>
+        </form>)
+      }
+      else {
+        await stream.writeln(await <p>{message}</p>)
+      }
+      
     }
   }))
 )

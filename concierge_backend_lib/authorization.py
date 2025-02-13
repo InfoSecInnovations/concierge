@@ -3,7 +3,6 @@ from .authentication import (
     get_keycloak_admin_client,
     server_url,
 )
-import dotenv
 import os
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
 from keycloak.exceptions import raise_error_from_response
@@ -14,9 +13,6 @@ import ssl
 class UnauthorizedOperationError(Exception):
     def __init__(self, message=""):
         self.message = message
-
-
-dotenv.load_dotenv()
 
 
 def auth_enabled():

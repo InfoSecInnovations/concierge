@@ -19,6 +19,8 @@ export default async function* (options: FormData) {
    else if (environment == "development") {
       yield logMessage("Launching Docker Compose configuration to run Concierge code locally...")
       await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
+      yield logMessage("Running Concierge from local codebase...")
+      yield {command: "show_stop"}
       await runPython("dev_launcher")
    } 
    else {

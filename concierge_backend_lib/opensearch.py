@@ -1,20 +1,18 @@
 import os
-from dotenv import load_dotenv
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from .authorization import auth_enabled
 
-load_dotenv()
-HOST = os.getenv("OPENSEARCH_HOST", "localhost")
+def host():
+    return os.getenv("OPENSEARCH_HOST", "localhost")
 MAPPING_INDEX_NAME = "collection_mappings"
 
 
 def get_client():
-    host = HOST
     port = 9200
 
     if auth_enabled():
         return OpenSearch(
-            hosts=[{"host": host, "port": port}],
+            hosts=[{"host": host(), "port": port}],
             use_ssl=True,
             verify_certs=True,
             client_cert=os.getenv("OPENSEARCH_CLIENT_CERT"),
@@ -23,7 +21,7 @@ def get_client():
             connection_class=RequestsHttpConnection,
         )
 
-    return OpenSearch(hosts=[{"host": host, "port": port}], use_ssl=False)
+    return OpenSearch(hosts=[{"host": host(), "port": port}], use_ssl=False)
 
 
 def create_collection_index(collection_id):

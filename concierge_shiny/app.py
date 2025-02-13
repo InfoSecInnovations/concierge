@@ -18,7 +18,8 @@ from concierge_backend_lib.document_collections import get_collections
 from functions import has_edit_access, has_read_access
 from app_login import app as app_login
 
-dotenv.load_dotenv()
+compose_path = os.path.join(os.getcwd(), "bun_installer", "docker_compose")
+dotenv.load_dotenv(os.path.join(compose_path, ".env"))
 
 app_ui = ui.page_auto(
     ui.output_ui("script_output"),

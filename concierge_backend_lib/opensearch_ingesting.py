@@ -1,14 +1,10 @@
 import os
-from dotenv import load_dotenv
 from opensearchpy import helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from concierge_backend_lib.embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument
 from dataclasses import fields
 from .opensearch import get_client
-
-load_dotenv()
-HOST = os.getenv("OPENSEARCH_HOST") or "localhost"
 
 chunk_size = 200
 chunk_overlap = 25

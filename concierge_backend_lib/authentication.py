@@ -5,19 +5,16 @@ from keycloak import (
     KeycloakAuthenticationError,
 )
 import os
-from dotenv import load_dotenv
 from asyncio import create_task, Task
 from typing import Any
 
 
 def server_url():
-    load_dotenv()
     keycloak_host = os.getenv("KEYCLOAK_HOST", "localhost")
     return f"https://{keycloak_host}:8443"
 
 
 def get_keycloak_client():
-    load_dotenv()
     keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
     keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
     client = KeycloakOpenID(
@@ -31,7 +28,6 @@ def get_keycloak_client():
 
 
 def get_service_account_connection():
-    load_dotenv()
     keycloak_client_id = os.getenv("KEYCLOAK_CLIENT_ID")
     keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
     keycloak_connection = KeycloakOpenIDConnection(

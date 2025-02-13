@@ -1,15 +1,14 @@
 import json
 import requests
 import os
-from dotenv import load_dotenv
 from .opensearch_prompting import get_context_from_opensearch
 from .authorization import auth_enabled, authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
 import httpx
 import ssl
 
-load_dotenv()
-HOST = os.getenv("OLLAMA_HOST") or "localhost"
+def host():
+    return os.getenv("OLLAMA_HOST") or "localhost"
 
 
 async def get_context(token, collection_id: str, reference_limit: int, user_input: str):
@@ -70,7 +69,7 @@ async def get_response(
         verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")), timeout=None
     ) as httpx_client:
         response = await httpx_client.post(
-            f"http://{HOST}:11434/api/generate", data=json.dumps(data)
+            f"http://{host()}:11434/api/generate", data=json.dumps(data)
         )
     if response.status_code != 200:
         print(response.content)
@@ -98,7 +97,7 @@ def stream_response(
 
     data = {"model": "mistral", "prompt": prompt, "stream": True}
 
-    response = requests.post(f"http://{HOST}:11434/api/generate", data=json.dumps(data))
+    response = requests.post(f"http://{host()}:11434/api/generate", data=json.dumps(data))
 
     for item in response.iter_lines():
         if item:
