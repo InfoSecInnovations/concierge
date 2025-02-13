@@ -1,7 +1,0 @@
-{
-  "editor.tabSize": 4,
-  "python.analysis.extraPaths": [
-    "./concierge_shiny"
-  ],
-  "bun.runtime": "C:\\Users\\sebyi\\AppData\\Roaming\\npm\\node_modules\\bun\\bin\\bun.exe"
-}
