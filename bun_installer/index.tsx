@@ -17,7 +17,6 @@ import getVersion from "./server/getVersion.js"
 import { parseArgs } from "node:util"
 import dockerComposeZip from "./assets/docker_compose.zip" with { type: "file" }
 import AdmZip from "adm-zip"
-import type { stream } from "hono/streaming"
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -52,6 +51,7 @@ app.get('/', async c => {
     <body>
       <h1>Concierge Configurator</h1>
       <p>This is a utility to install and configure Concierge Data AI, a tool made by <a href="https://www.infosecinnovations.com/" target="_blank">InfoSec Innovations</a></p>
+      <p>Having trouble? Got suggestions for improving Concierge? Head over to our <a href="https://github.com/InfoSecInnovations/concierge" target="_blank">GitHub</a>!</p>
       {dockerStatus ? <>
         {conciergeIsInstalled ? <section>
           <h3>Launch Concierge</h3>
