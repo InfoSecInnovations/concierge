@@ -9,8 +9,9 @@ import KcAdminClient from '@keycloak/keycloak-admin-client'
 import getEnvPath from "./getEnvPath"
 import * as envfile from "envfile"
 import getVersion from "./getVersion"
-import { platform } from "node:os"
-import python from "bun_python"
+import runPython from "./runPython"
+import util from "node:util"
+const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
 
 const logMessage = (message: string) => {
     console.log(message)
@@ -110,9 +111,8 @@ export default async function* (options: FormData) {
     if (environment == "development") {
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
         yield logMessage("configuring Python environment...")
-        // TODO: venv
-        if (platform() == 'win32') await $`.\\Scripts\\python -m pip install -r dev_requirements.txt`.cwd("..")
-        else await $`./bin/python -m pip install -r dev_requirements.txt`.cwd("..")
+        await exec("python3 -m venv ..")
+        await runPython("pip install -r dev_requirements.txt")
     } 
     else await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
     if (securityLevel == "demo") {
@@ -120,8 +120,7 @@ export default async function* (options: FormData) {
         envs.IS_SECURITY_DEMO = "True"
         await updateEnv()
         if (environment == "development") {
-            if (platform() == 'win32') await $`.\\Scripts\\python -m concierge_scripts.add_keycloak_demo_users`.cwd("..")
-            else await $`./bin/python -m concierge_scripts.add_keycloak_demo_users`.cwd("..")
+            await runPython("concierge_scripts.add_keycloak_demo_users")
         }
         else await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
     }
