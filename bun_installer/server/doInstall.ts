@@ -10,6 +10,7 @@ import getVersion from "./getVersion"
 import runPython from "./runPython"
 import util from "node:util"
 import logMessage from "./logMessage"
+import configurePreCommit from "./configurePreCommit"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
 
 export default async function* (options: FormData) {
@@ -96,13 +97,14 @@ export default async function* (options: FormData) {
     envs.CONCIERGE_VERSION = getVersion()
     envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
     await updateEnv()
-    yield logMessage("launching Docker containers...")
+    yield logMessage("launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...")
     if (environment == "development") {
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
         yield logMessage("configuring Python environment...")
         await exec("python3 -m venv ..")
         await runPython("pip install -r dev_requirements.txt")
+        await configurePreCommit()
     } 
     else {
         await $`docker compose -f ./docker_compose/docker-compose.yml pull`
@@ -115,5 +117,8 @@ export default async function* (options: FormData) {
         if (environment == "development") await runPython("concierge_scripts.add_keycloak_demo_users")
         else await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
     }
+    yield logMessage("pulling language model. This can take quite a long time if you haven't downloaded the model before.")
+    // TODO use options.get("language_model")
+    await $`docker exec -it ollama ollama pull mistral`
     console.log("Installation done\n")
 }
