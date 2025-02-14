@@ -8,7 +8,7 @@ import doLaunch from "./server/doLaunch"
 import { ExistingRemover } from "./server/existingRemover"
 import css from "./assets/style.css" with {type: "file"}
 import js from "./assets/index.js" with {type: "file"}
-import { file } from "bun"
+import { file, type Subprocess } from "bun"
 import validateInstallForm from "./server/validateInstallForm.js"
 import { $ } from "bun"
 import streamHtml from "./server/streamHtml.js"
@@ -31,6 +31,8 @@ const { values } = parseArgs({
 });
 
 const devMode = !!values['dev-mode']
+
+const state: {worker?: Subprocess} = {}
 
 const app = new Hono()
 
@@ -59,7 +61,7 @@ app.get('/', async c => {
           <WebUILink></WebUILink>
           <p>If the link above isn't working, try (re)launching using the button below.</p>
           <p>Bear in mind that if you just installed Concierge it can take a few minutes before it's up and running.</p>
-          <RelaunchForm devMode={devMode}></RelaunchForm>
+          <RelaunchForm devMode={devMode} isRunning={!!state.worker}></RelaunchForm>
         </section> : null}
         <ExistingRemover></ExistingRemover>
         <section>
@@ -108,17 +110,8 @@ app.post("/remove", c => c.req.formData()
 }))
 app.post("/launch", c => c.req.formData()
   .then(data => streamHtml(c, "Launching Concierge", async stream => {
-    for await (const message of doLaunch(data)) {
-      if (typeof message != "string" && message.command) {
-        if (message.command == "show_stop") await stream.writeln(await <form action="/" method="get">
-          <button type="submit">Stop Concierge</button>
-          <p>The other containers will remain running so you can run the code from VSCode or another application.</p>
-        </form>)
-      }
-      else {
-        await stream.writeln(await <p>{message}</p>)
-      }
-      
+    for await (const message of doLaunch(data, state)) {
+      await stream.writeln(await <p>{message}</p>) 
     }
   }))
 )

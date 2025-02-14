@@ -34,8 +34,8 @@ const options = {
 
 zxcvbnOptions.setOptions(options)
 
-const password1El = document.getElementById("keycloak_password_first")! as HTMLInputElement
-const password2El = document.getElementById("keycloak_password")! as HTMLInputElement
+const password1El = document.getElementById("keycloak_password_first") as HTMLInputElement
+const password2El = document.getElementById("keycloak_password") as HTMLInputElement
 const formSubmitEls = document.querySelectorAll(".install_button")
 const loggingEls = document.querySelectorAll(".logging_element")
 const loggingToggle = document.getElementById("activity_logging")! as HTMLInputElement
@@ -56,6 +56,11 @@ const enableSubmit = () => formSubmitEls.forEach(el => (el as HTMLButtonElement)
 const disableSubmit = () => formSubmitEls.forEach(el => (el as HTMLButtonElement).disabled = true)
 
 const checkPasswords = () => {
+    if (!password1El || !password2El) {
+        patchPassword(null)
+        enableSubmit()
+        return
+    }
     const password1 = password1El.value
     const password2 = password2El.value
     if (!password1 && !password2) {
@@ -89,7 +94,7 @@ const checkPasswords = () => {
 }
 
 
-password2El.oninput = checkPasswords
+if (password2El) password2El.oninput = checkPasswords
 
 const setLoggingVisibility = () => {
     if (loggingToggle.checked) {

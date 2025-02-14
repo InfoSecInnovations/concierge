@@ -16,7 +16,6 @@ Built with simplicy and security in mind, it has some features we love -- and ho
 
 These versions are currently being used to develop Concierge, lower versions may work but are untested. See [Known Issues](#known-issues) for an older Docker Compose command which might work for you if you're unable to upgrade.
 
-- **Python >= 3.12** (note: for all commands in documentation we will call the executable `python`. On your system you may need to use `python3`, you can use the `python-is-python3` package to configure the `python` command on Linux). Check with `python --version`.
 - **Docker >= 25.0.3** (currently the vector database and natural language response engine are running in docker containers). Check with `docker --version`.
 - **Docker Compose >= 2.24.6** (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup). Check with `docker compose version`.  
    
@@ -40,28 +39,15 @@ You should perform the following system configuration steps according to your Op
 
 ## Setup
 
-The provided install scripts perform a lot of automated cleanup and ensure that all the components are configured correctly to work together. However as this is an open source project you could create your own installation using the contents of this repository.
+Concierge now has a visual configurator which we hope you will like a lot more than the previous text-based one. Just go to the release you wish to install and download the executable for your Operating System. Please let us know if you're using a different Operating System, it may be possible for us to make a build for it. You can also use the development version.
 
-You no longer need to clone this repository to run Concierge.
+Launch the executable and visit the address indicated in your web browser. Select your desired options and click "Start Installation!".
 
-> [!TIP]
-> Pay attention to the use of dashes and underscores in the commands!
+Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Concierge" button. Docker will keep everything running for you and you will be able to access Concierge without going via the Configurator once installed.
 
-Run the following while not being in a virtual environment. This command will create the virtual environment and run the installer from within it.
+## Usage
 
-`python -m pip install launch-concierge`
-
-`python -m launch_concierge.install`
-
-Answer the questions and then the installer will ask if you are ready to make changes to the system.  
-Answer "yes" and let the installation begin!
-There may be additional questions during the installation depending on the options you selected.
-
-Please note that this package isn't the Concierge app itself, it's just a utility that helps you configure the environment and launch the correct Docker Compose file based on your choices, so it shouldn't be hugely risky to download it without using a virtual environment.
-
-### Reinstalling
-
-The above commands also allow you to remove an existing version of Concierge before installing. At the start of the installer if you're changing any settings or need to remove the existing services, it's generally recommended to remove all services except for Ollama, which you can usually keep as it's configured the same way regardless of your Concierge settings, and redownloading the model can take a long time.
+Once you have completed the installation process, Concierge will be running on localhost:15130 or the host and port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
 
 ## Configuring Authentication and Authorization
 
@@ -104,35 +90,43 @@ You will now be able to use the username and password you created to log into th
 
 If you need to switch user you may need to revoke the session of the currently logged in user, which is available in the "Sessions" tab for that user, otherwise clicking the login button may just automatically log you in with the same user again.
 
-## Usage
-
-Once you have completed the installation process above, Concierge will be running on localhost:15130 or the host and port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
-
-## Update to new release
-
-If running a version prior to 0.3.0 you should delete the files you cloned from the repository (unless you're installing the development environment), remove the related Docker containers and proceed with a fresh install following the instructions above.
-
-`python -m pip install launch-concierge --upgrade`
-
-`python -m launch_concierge.install`
-
-This will make sure to grab the latest version of Concierge, and re-run the installer
-
 ## Setup: development environment
+
+### Dependencies
+
+The ones listed at the top of this page, and:
+    - **Python 3.12** the application code is in Python so unless you intend to only run inside Docker, you'll need this
+    - **Bun 1.2.1** the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
+
+### Installation
 
 git clone repo or extract zip. 
 
 `cd concierge` go into the cloned project directory.
 
-You should not create a virtual environment as the script below will handle it for you.
+You should not create a virtual environment as the installer will handle it for you.
 
-`python install_dev.py` to launch the installer (same steps as the user installer).
+`cd bun_installer` to go into the subdirectory containing all the Bun scripts for the configurator.
+
+`bun install` to add all dependencies.
+
+`bun run dev_install` will launch the web server in dev mode which provides additional install and launch options compared to the distributed executable. Once the server is running go to http://localhost:3000 to see the configuration options. Click the "Install Development Configuration" button to install the dependencies in a way which will allow you to run local code with your changes.
 
 ## Usage: development environment
 
-Complete one of the installation methods above.
+Install using the instructions above.
 
 Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more about coding style enforcement and commit etiquette!
+
+### Launch from Configurator
+
+As well as installing, the web-based Configurator gives you some options to launch Concierge.
+
+The "Launch Concierge" button shouldn't be used to test local changes to the Python scripts as this uses the image from the Docker Hub.
+
+"Launch Local Code (Docker)" will build the local files into a Docker image and put it up in a container mimicking the production environment. You should always try your code here before submitting a PR as there are some minor differences with how the components communicate with each other within Docker compared to running the code locally. The first build can be slow, but the Python dependencies will be cached making subsequent builds much faster.
+
+"Launch Local Code (Python)" is a straightforward way to 
 
 ### Visual Studio Code
 
@@ -152,20 +146,6 @@ Authentication doesn't play very nicely with VSCode, however it is still possibl
 - Access the web app through your browser, not through the built-in VSCode one.
 
 This does offer the advantage of hot reloading and being able to use the debugger while testing authentication.
-
-### Launch script
-
-From the cloned project directory simply run `launch_dev.py`.
-
-You will be given the option to launch with CPU or GPU.
-
-`python launch_local.py` will build and launch the code in a Docker container as if it were the production environment, this allows you to locally test interactions between the containers.
-
-## Update to new release: development environment
-
-Clone the latest version of the repo.
-
-Repeat the process used during install.
 
 ## CLI ##
 
