@@ -42,7 +42,7 @@ export default async function* (options: FormData) {
         envs.WEB_CERT = path.join(certDir, "concierge-cert.pem")
         envs.WEB_KEY = path.join(certDir, "concierge-key.pem")
         yield logMessage("configured TLS certificates.")
-        if (!keycloakExists()) {
+        if (!await keycloakExists()) {
             const keycloakPassword = options.get("keycloak_password")?.toString()
             // TODO: create error type for this
             if (!keycloakPassword) throw new Error("Keycloak admin password is invalid!")
