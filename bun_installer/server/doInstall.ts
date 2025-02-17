@@ -13,7 +13,7 @@ import logMessage from "./logMessage"
 import configurePreCommit from "./configurePreCommit"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
 
-export default async function* (options: FormData) {
+export default async function* (options: FormData, installVenv = true) {
     const environment = options.get("dev_mode")?.toString() == "True" ? "development" : "production"
     // we keep track of the environment variables so we can write to the .env file and the process environment as needed
     const envs: {[key: string]: string} = {}
@@ -101,10 +101,12 @@ export default async function* (options: FormData) {
     if (environment == "development") {
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
-        yield logMessage("configuring Python environment...")
-        await exec("python3 -m venv ..")
-        await runPython("pip install -r dev_requirements.txt")
-        await configurePreCommit()
+        if (installVenv) { // if we're running the install for automated testing we assume the venv is already configured, so we want to skip this step
+            yield logMessage("configuring Python environment...")
+            await exec("python3 -m venv ..")
+            await runPython("pip install -r dev_requirements.txt")
+            await configurePreCommit()
+        }
     } 
     else {
         await $`docker compose -f ./docker_compose/docker-compose.yml pull`

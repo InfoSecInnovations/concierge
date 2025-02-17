@@ -43,6 +43,6 @@ options.set('security_level', values['security-level'])
 if (values['keycloak-password']) options.set('keycloak_password', values['keycloak-password'])
 if (values['use-gpu']) options.set("use_gpu", 'True')
 
-for await (const _ of doInstall(options)) {
+for await (const _ of doInstall(options, false)) { // we don't configure the venv because we assume it already exists and we don't want to break it
 
 }
