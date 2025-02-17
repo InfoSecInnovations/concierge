@@ -11,6 +11,7 @@ import runPython from "./runPython"
 import util from "node:util"
 import logMessage from "./logMessage"
 import configurePreCommit from "./configurePreCommit"
+import configurePlaywright from "./configurePlaywright"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
 
 export default async function* (options: FormData, installVenv = true) {
@@ -102,10 +103,11 @@ export default async function* (options: FormData, installVenv = true) {
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
         if (installVenv) { // if we're running the install for automated testing we assume the venv is already configured, so we want to skip this step
-            yield logMessage("configuring Python environment...")
+            yield logMessage("configuring Python environment. This can take some time if you have slow internet...")
             await exec("python3 -m venv ..")
             await runPython("pip install -r dev_requirements.txt")
             await configurePreCommit()
+            await configurePlaywright()
         }
     } 
     else {
