@@ -1,18 +1,26 @@
-from install_concierge.installer_lib.docker_containers import (
-    keycloak_exists,
-    remove_keycloak,
-    opensearch_exists,
-    remove_opensearch,
-    concierge_exists,
-    remove_concierge,
-)
+import subprocess
+import os
+import shutil
+from importlib.resources import files
+
+cwd = os.path.abspath(os.path.join(files(), "..", "bun_installer"))
 
 
 def destroy_instance():
     # note: we don't destroy Ollama because it takes a really long time to pull the models again and the settings are the same for all configurations.
-    if keycloak_exists():
-        remove_keycloak()
-    if opensearch_exists():
-        remove_opensearch()
-    if concierge_exists():
-        remove_concierge()
+    subprocess.run([shutil.which("bun"), "run", "./uninstallCli.ts"], cwd=cwd)
+
+
+def create_instance(enable_security, launch_local):
+    args = ["--host", "localhost", "--port", "15130"]
+    if os.getenv("OLLAMA_SERVICE", "ollama").endswith("gpu"):
+        args.append("--use-gpu")
+    args.append("--dev-mode")
+    if enable_security:
+        args.append("--security-level")
+        args.append("demo")
+        args.append("--keycloak-password")
+        args.append("ThisIsJustATest151")
+    subprocess.run([shutil.which("bun"), "run", "./installCli.ts", *args], cwd=cwd)
+    if launch_local:
+        subprocess.run([shutil.which("bun"), "run", "./launchLocal.ts"], cwd=cwd)

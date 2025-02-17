@@ -1,10 +1,10 @@
-import dotenv
 import os
 from concierge_backend_lib.authorization import auth_enabled
 from shiny import run_app
+from concierge_scripts.load_dotenv import load_env
 
 compose_path = os.path.join(os.getcwd(), "bun_installer", "docker_compose")
-dotenv.load_dotenv(os.path.join(compose_path, ".env"))
+load_env()
 app_dir = "concierge_shiny"
 port = int(os.getenv("WEB_PORT", "15130"))
 host = "localhost"

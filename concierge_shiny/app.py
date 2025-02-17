@@ -9,7 +9,6 @@ from oauth2 import auth_callback, refresh, logout
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 import os
-import dotenv
 from auth import get_task_runner
 from collections_data import CollectionsData
 from concierge_backend_lib.authentication import get_token_info
@@ -17,9 +16,10 @@ from concierge_backend_lib.authorization import auth_enabled, list_permissions
 from concierge_backend_lib.document_collections import get_collections
 from functions import has_edit_access, has_read_access
 from app_login import app as app_login
+from concierge_scripts.load_dotenv import load_env
 
 compose_path = os.path.join(os.getcwd(), "bun_installer", "docker_compose")
-dotenv.load_dotenv(os.path.join(compose_path, ".env"))
+load_env()
 
 app_ui = ui.page_auto(
     ui.output_ui("script_output"),
