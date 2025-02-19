@@ -7,9 +7,6 @@ from concierge_backend_lib.document_collections import (
     create_collection,
     delete_collection,
 )
-import nest_asyncio
-
-nest_asyncio.apply()
 
 
 @pytest.fixture(scope="module")

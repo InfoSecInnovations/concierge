@@ -9,6 +9,7 @@ from concierge_shiny.oauth2 import set_token_cookies
 from concierge_backend_lib.authentication import (
     get_keycloak_client,
 )
+import os
 
 collection_id = None
 doc_id = None
@@ -42,7 +43,9 @@ def request_with_user(username, url):
     token = keycloak_client.token(username, "test")
     cookie_response = DummyResponse()
     set_token_cookies(token, cookie_response)
-    response = requests.get(url, cookies=cookie_response.cookies, verify=False)
+    response = requests.get(
+        url, cookies=cookie_response.cookies, verify=os.getenv("ROOT_CA")
+    )
     return response
 
 

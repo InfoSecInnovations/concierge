@@ -4,6 +4,7 @@ from concierge_scripts.load_dotenv import load_env
 import requests
 from requests import ConnectionError
 from concierge_backend_lib.status import check_opensearch
+import os
 
 load_env()
 
@@ -16,7 +17,7 @@ def security_enabled_instance():
     # we need both Concierge and OpenSearch to be up (Ollama should already be up after running the installer)
     while True:
         try:
-            requests.get("https://localhost:15130", verify=False)
+            requests.get("https://localhost:15130", verify=os.getenv("ROOT_CA"))
             if check_opensearch():
                 break
         except ConnectionError:
