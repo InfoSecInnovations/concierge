@@ -2,7 +2,8 @@ import json
 import requests
 import os
 
-def host(): 
+
+def host():
     return os.getenv("OLLAMA_HOST", "localhost")
 
 

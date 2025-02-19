@@ -2,8 +2,11 @@ import os
 from opensearchpy import OpenSearch, RequestsHttpConnection
 from .authorization import auth_enabled
 
+
 def host():
     return os.getenv("OPENSEARCH_HOST", "localhost")
+
+
 MAPPING_INDEX_NAME = "collection_mappings"
 
 

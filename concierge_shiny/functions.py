@@ -101,7 +101,7 @@ def format_collection_name(collection_data, user_info):
 async def has_edit_access(permissions, task_runner: WebAppAsyncTokenTaskRunner):
     if not auth_enabled():
         return True
-    if permissions is None: # this means we haven't loaded the permissions yet
+    if permissions is None:  # this means we haven't loaded the permissions yet
         return False
     if (
         "collection:private:create" in permissions

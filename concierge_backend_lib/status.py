@@ -2,6 +2,7 @@ import requests
 import os
 from concierge_backend_lib.opensearch import get_client
 
+
 def ollama_host():
     return os.getenv("OLLAMA_HOST") or "localhost"
 

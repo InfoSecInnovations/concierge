@@ -7,6 +7,7 @@ from isi_util.async_single import asyncify
 import httpx
 import ssl
 
+
 def host():
     return os.getenv("OLLAMA_HOST") or "localhost"
 
@@ -97,7 +98,9 @@ def stream_response(
 
     data = {"model": "mistral", "prompt": prompt, "stream": True}
 
-    response = requests.post(f"http://{host()}:11434/api/generate", data=json.dumps(data))
+    response = requests.post(
+        f"http://{host()}:11434/api/generate", data=json.dumps(data)
+    )
 
     for item in response.iter_lines():
         if item:
