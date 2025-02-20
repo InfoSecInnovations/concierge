@@ -28,7 +28,7 @@ app_ui = ui.page_auto(
 )
 
 # we're only able to run HTTP in VSCode so we need to allow Oauthlib to use HTTP if we're in the VSCode environment
-if os.environ["VSCODE_INJECTION"] == "1":
+if os.getenv("VSCODE_INJECTION") == "1":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 
