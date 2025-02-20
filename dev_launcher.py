@@ -20,6 +20,7 @@ if auth_enabled():
         host=host,
         ssl_keyfile=os.getenv("WEB_KEY"),
         ssl_certfile=os.getenv("WEB_CERT"),
+        log_level="trace",
     )
 else:
     run_app(
