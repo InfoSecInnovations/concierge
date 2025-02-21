@@ -115,6 +115,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @render.ui
     def concierge_main():
+        print("main")
         shinyswatch.theme_picker_server()
         return ui.navset_pill_list(
             *nav_items(),
