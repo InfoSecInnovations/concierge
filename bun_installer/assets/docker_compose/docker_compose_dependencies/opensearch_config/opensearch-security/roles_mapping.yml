@@ -1,0 +1,9 @@
+_meta:
+  type: "rolesmapping"
+  config_version: 2
+
+all_access:
+  reserved: false
+  description: "Maps users with the admin client certificate to have all_access"
+  users:
+    - "opensearch-admin-client"

@@ -1,0 +1,27 @@
+name: concierge
+
+# this is a bit of a hack to conditionally include keycloak if we're running security, the blank compose stops Docker from complaining when doing an unsecured instance.
+include:
+  - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
+services:
+  ollama:
+    extends:
+      file: docker_compose_dependencies/docker-compose-ollama.yml
+      service: ${OLLAMA_SERVICE:-ollama}
+  opensearch-node1:
+    extends:
+      file: docker_compose_dependencies/docker-compose-opensearch.yml
+      service: ${OPENSEARCH_SERVICE:-opensearch-node-disable-security}
+  concierge:
+    extends:
+      file: docker_compose_dependencies/docker-compose-concierge.yml
+      service: ${CONCIERGE_SERVICE:-concierge}
+
+volumes:
+  opensearch-data1:
+  ollama:
+
+networks:
+  default:
+    name: concierge

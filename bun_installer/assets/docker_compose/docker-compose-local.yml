@@ -1,0 +1,17 @@
+name: concierge
+
+include:
+  - ./docker-compose-dev.yml
+
+services:
+  concierge:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-concierge.yml
+      service: ${CONCIERGE_SERVICE:-concierge}
+    build:
+      context: ../..
+      dockerfile: Dockerfile.local
+
+networks:
+  default:
+    name: concierge

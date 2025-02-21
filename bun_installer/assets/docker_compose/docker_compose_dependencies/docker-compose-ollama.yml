@@ -1,0 +1,20 @@
+services:
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    restart: unless-stopped
+  ollama-gpu:
+    extends: ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
