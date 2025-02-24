@@ -10,3 +10,4 @@ packageJson.version = version
 await Bun.write("./package.json", JSON.stringify(packageJson, undefined, "\t"))
 await $`git add -A`
 await $`git commit -m 'increment version to ${version}'`
+await $`git push`
