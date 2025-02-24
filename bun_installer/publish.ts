@@ -20,6 +20,7 @@ await $`git push`
 let pyPiKey: string | null = null
 const handlePyPi = async (packageUrlName: string, packageName: string, tomlData: any) => {
     const pyPiJson: any = await fetch(`https://pypi.org/pypi/${packageUrlName}/json`).then(res => res.json())
+    console.log(JSON.stringify(pyPiJson))
     if (pyPiJson.releases[tomlData.version]) {
         console.log(`Python package ${packageName} already up to date`)
         return
@@ -29,7 +30,6 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
     }
     const packageDir = path.resolve(path.join(import.meta.dir, '..', "concierge_packages", packageName))
     await $`rm -rf ${path.join(packageDir, "dist")}`
-    console.log(packageDir)
     await exec("python3 -m build", {cwd: packageDir})
     // single backslashes get stripped out by the command line so we need to double them
     await runPython(`twine upload ${path.join(packageDir, "dist").replaceAll("\\", "\\\\")}/* -u __token__ -p ${pyPiKey}`)
