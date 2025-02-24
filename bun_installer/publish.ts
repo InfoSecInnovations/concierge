@@ -14,14 +14,11 @@ while (!version) {
 }
 packageJson.version = version
 await Bun.write("./package.json", JSON.stringify(packageJson, undefined, "\t"))
-await $`git add -A`
-await $`git commit -m 'increment version to ${version}'`
-await $`git push`
 let pyPiKey: string | null = null
 const handlePyPi = async (packageUrlName: string, packageName: string, tomlData: any) => {
     const pyPiJson: any = await fetch(`https://pypi.org/pypi/${packageUrlName}/json`).then(res => res.json())
-    console.log(JSON.stringify(pyPiJson))
-    if (pyPiJson.releases[tomlData.version]) {
+    console.log(tomlData.project.version)
+    if (pyPiJson.releases[tomlData.project.version]) {
         console.log(`Python package ${packageName} already up to date`)
         return
     }
@@ -36,3 +33,6 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
 }
 await handlePyPi("concierge-util", "concierge_util", conciergeUtilPyProject)
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject)
+await $`git add -A`
+await $`git commit -m 'increment version to ${version}'`
+await $`git push`
