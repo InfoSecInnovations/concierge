@@ -27,7 +27,7 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
     while (!pyPiKey) {
         pyPiKey = prompt("Please provide your PyPI API key")
     }
-    const packageDir = path.resolve(path.join(import.meta.dir, '..', packageName))
+    const packageDir = path.resolve(path.join(import.meta.dir, '..', "concierge_packages", packageName))
     await $`rm -rf ${path.join(packageDir, "dist")}`
     console.log(packageDir)
     await exec("python3 -m build", {cwd: packageDir})
