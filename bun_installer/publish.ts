@@ -31,7 +31,8 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
     await $`rm -rf ${path.join(packageDir, "dist")}`
     console.log(packageDir)
     await exec("python3 -m build", {cwd: packageDir})
-    await runPython(`twine upload ${path.join(packageDir, "dist")}/* -u __token__ -p ${pyPiKey}`)
+    // single backslashes get stripped out by the command line so we need to double them
+    await runPython(`twine upload ${path.join(packageDir, "dist").replace("\\", "\\\\")}/* -u __token__ -p ${pyPiKey}`)
 }
 await handlePyPi("concierge-util", "concierge_util", conciergeUtilPyProject)
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject)
