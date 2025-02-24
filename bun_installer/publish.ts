@@ -29,6 +29,7 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
     }
     const packageDir = path.resolve(path.join(import.meta.dir, '..', packageName))
     await $`rm -rf ${path.join(packageDir, "dist")}`
+    console.log(packageDir)
     await exec("python3 -m build", {cwd: packageDir})
     await runPython(`twine upload ${path.join(packageDir, "dist")}/* -u __token__ -p ${pyPiKey}`)
 }
