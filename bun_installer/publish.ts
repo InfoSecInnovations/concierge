@@ -20,7 +20,7 @@ await $`git push`
 let pyPiKey: string | null = null
 const handlePyPi = async (packageUrlName: string, packageName: string, tomlData: any) => {
     const pyPiJson: any = await fetch(`https://pypi.org/pypi/${packageUrlName}/json`).then(res => res.json())
-    if (pyPiJson[tomlData.version]) {
+    if (pyPiJson.releases[tomlData.version]) {
         console.log(`Python package ${packageName} already up to date`)
         return
     }
