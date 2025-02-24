@@ -17,7 +17,6 @@ await Bun.write("./package.json", JSON.stringify(packageJson, undefined, "\t"))
 let pyPiKey: string | null = null
 const handlePyPi = async (packageUrlName: string, packageName: string, tomlData: any) => {
     const pyPiJson: any = await fetch(`https://pypi.org/pypi/${packageUrlName}/json`).then(res => res.json())
-    console.log(tomlData.project.version)
     if (pyPiJson.releases[tomlData.project.version]) {
         console.log(`Python package ${packageName} already up to date`)
         return
