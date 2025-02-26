@@ -56,4 +56,4 @@ const macZip = new AdmZip()
 macZip.addLocalFile(path.join("dist", "mac", "concierge"))
 macZip.writeZip(path.join("dist", "concierge_mac.zip"))
 const gitBranch = await $`git branch --show-current`.text()
-await $`gh release create ${version} ./dist/*.zip --target-branch ${gitBranch}`
+await $`gh release create ${version} ./dist/*.zip --target ${gitBranch}`
