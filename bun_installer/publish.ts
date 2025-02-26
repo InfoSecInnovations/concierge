@@ -6,6 +6,7 @@ import path from "node:path"
 import util from "node:util"
 import runPython from "./server/runPython"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
+import * as readline from "readline-sync"
 
 console.log("Concierge release publisher\n")
 let version = null
@@ -22,8 +23,9 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
         return
     }
     while (!pyPiKey) {
-        pyPiKey = prompt("Please provide your PyPI API key")
+        pyPiKey = readline.question("Please provide your PyPI API key: ", {hideEchoBack: true, mask: ''})
     }
+    console.log('\n')
     const packageDir = path.resolve(path.join(import.meta.dir, '..', "concierge_packages", packageName))
     await $`rm -rf ${path.join(packageDir, "dist")}`
     await exec("python3 -m build", {cwd: packageDir})
@@ -32,6 +34,13 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
 }
 await handlePyPi("concierge-util", "concierge_util", conciergeUtilPyProject)
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject)
+await $`docker build -t infosecinnovations/concierge:${version} ..`
+await $`docker image push infosecinnovations/concierge:${version}`
 await $`git add -A`
 await $`git commit -m 'increment version to ${version}'`
 await $`git push`
+await $`rm -rf ./dist` // clean dist directory in case we've been running stuff from there
+await $`bun run build_win`
+await $`bun run build_linux`
+await $`bun run build_mac`
+await $`gh release create ${version} ./dist`
