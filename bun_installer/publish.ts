@@ -7,8 +7,10 @@ import util from "node:util"
 import runPython from "./server/runPython"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
 import * as readline from "readline-sync"
+import getVersion from "./server/getVersion"
 
 console.log("Concierge release publisher\n")
+console.log(`Current version: ${getVersion()}`)
 let version = null
 while (!version) {
     version = prompt("Input new Concierge version:")
