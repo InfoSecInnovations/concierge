@@ -8,6 +8,7 @@ import runPython from "./server/runPython"
 const exec = util.promisify(await import("node:child_process").then(child_process => child_process.exec))
 import * as readline from "readline-sync"
 import getVersion from "./server/getVersion"
+import AdmZip from "adm-zip"
 
 console.log("Concierge release publisher\n")
 console.log(`Current version: ${getVersion()}`)
@@ -45,4 +46,13 @@ await $`rm -rf ./dist` // clean dist directory in case we've been running stuff 
 await $`bun run build_win`
 await $`bun run build_linux`
 await $`bun run build_mac`
-await $`gh release create ${version} ./dist`
+const winZip = new AdmZip()
+winZip.addLocalFile(path.join("dist", "windows", "concierge.exe"))
+winZip.writeZip(path.join("dist", "concierge_win.zip"))
+const linuxZip = new AdmZip()
+linuxZip.addLocalFile(path.join("dist", "linux", "concierge"))
+linuxZip.writeZip(path.join("dist", "concierge_linux.zip"))
+const macZip = new AdmZip()
+macZip.addLocalFile(path.join("dist", "mac", "concierge"))
+macZip.writeZip(path.join("dist", "concierge_mac.zip"))
+await $`gh release create ${version} ./dist/*.zip`
