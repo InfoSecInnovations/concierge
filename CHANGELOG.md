@@ -2,6 +2,10 @@
 
 ## 0.5.0 - TBD
 
+- RBAC is here! Concierge can optionally be configured to use Keycloak to handle user accounts and permissions.
+- The installer script has been replaced by an executable file available for Windows, Linux and MacOS. This executable serves up a web UI to enable you to configure Concierge locally or remotely. This should make it a lot easier to get Concierge up and running, we felt that the text based installer was no longer practical and it was running into issues with different OSes and Python versions.
+- Still a work in progress but some automated tests are now present. This will help us catch bugs more easily in the various permutations of Concierge that are possible.
+
 ## 0.4.0 - 2024-09-05
 
 ### Changes
