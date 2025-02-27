@@ -17,7 +17,6 @@ from concierge_backend_lib.document_collections import get_collections
 from functions import has_edit_access, has_read_access
 from app_login import app as app_login
 from concierge_scripts.load_dotenv import load_env
-import asyncio
 
 compose_path = os.path.join(os.getcwd(), "bun_installer", "docker_compose")
 load_env()
@@ -36,6 +35,7 @@ if os.getenv("VSCODE_INJECTION") == "1":
 def server(input: Inputs, output: Outputs, session: Session):
     user_info = reactive.value(None)
     permissions = reactive.value(None)
+    shinyswatch.theme_picker_server()
     task_runner = get_task_runner(session)
     auth_is_enabled = auth_enabled()
     if auth_is_enabled and not task_runner:
@@ -76,7 +76,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     collections = reactive.value(CollectionsData(collections=[], loading=True))
     read_access = reactive.value(False)
     edit_access = reactive.value(False)
-    rerender_trigger = reactive.value(0)  # this is an awful hack, see below
+    # rerender_trigger = reactive.value(0)  # this is an awful hack, see below
 
     @reactive.extended_task
     async def get_read_access():
@@ -98,24 +98,24 @@ def server(input: Inputs, output: Outputs, session: Session):
     # we're running into a very weird issue where the shinyswatch theme picker error only appears within a set range of UI refreshes
     # we just trigger a bunch more to make the error go away, it still pops up briefly but this is better than nothing
     # we're awaiting a proper fix from the Shiny team
-    @reactive.extended_task
-    async def rerender(trigger_value):
-        await asyncio.sleep(0.2)
-        return trigger_value + 1
+    # @reactive.extended_task
+    # async def rerender(trigger_value):
+    #     await asyncio.sleep(0.2)
+    #     return trigger_value + 1
 
-    @reactive.effect
-    def on_rerender():
-        rerender_trigger.set(rerender.result())
+    # @reactive.effect
+    # def on_rerender():
+    #     rerender_trigger.set(rerender.result())
 
-    @reactive.effect
-    def loop_rerender():
-        t = rerender_trigger.get()
-        if t <= 6:
-            rerender(t)
+    # @reactive.effect
+    # def loop_rerender():
+    #     t = rerender_trigger.get()
+    #     if t <= 6:
+    #         rerender(t)
 
     @reactive.calc
     def nav_items():
-        _ = rerender_trigger.get()  # this is a very hacky hack to try to trigger a rerender until the shinyswatch error goes away
+        # _ = rerender_trigger.get()  # this is a very hacky hack to try to trigger a rerender until the shinyswatch error goes away
         items = [ui.nav_panel("Home", home_ui("home"))]
         if not auth_is_enabled or read_access.get():
             items.append(ui.nav_panel("Prompter", prompter_ui("prompter")))
@@ -136,7 +136,6 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @render.ui
     def concierge_main():
-        shinyswatch.theme_picker_server()
         return ui.navset_pill_list(
             *nav_items(),
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
@@ -200,7 +199,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     def update_access():
         get_read_access()
         get_edit_access(permissions.get())
-        rerender(1)
+        # rerender(1)
 
     @reactive.effect
     @reactive.event(input.openid_logout, ignore_init=True, ignore_none=True)

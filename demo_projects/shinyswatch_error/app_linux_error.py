@@ -18,6 +18,7 @@ app_ui = ui.page_auto(
 def server(input: Inputs, output: Outputs, session: Session):
     nav_state = reactive.value(random.randint(0, 10))
     update_count = 0
+    shinyswatch.theme_picker_server()
 
     @reactive.extended_task
     async def update_state(current_state):
@@ -41,7 +42,6 @@ def server(input: Inputs, output: Outputs, session: Session):
     @render.ui
     def main_page():
         print("main")
-        shinyswatch.theme_picker_server()  # this is the workaround that's supposed to fix it
         return ui.navset_pill_list(
             *nav_items(), ui.nav_control(shinyswatch.theme_picker_ui())
         )
