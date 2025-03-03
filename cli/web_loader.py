@@ -1,14 +1,17 @@
 import sys
 import os
-from .get_token import get_token
+from get_token import get_token
 
 # on Linux the parent directory isn't automatically included for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from concierge_scripts.load_dotenv import load_env
 from loaders.web import WebLoader
 from concierge_backend_lib.ingesting import insert_with_tqdm
 import argparse
 import asyncio
+
+load_env()
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

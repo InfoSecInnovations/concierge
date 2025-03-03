@@ -12,7 +12,7 @@ requests_oauth2client~=1.5.3
 requests-oauthlib~=2.0.0
 sentence-transformers~=3.3.1
 shiny~=1.2.1
-git+https://github.com/posit-dev/py-shinyswatch.git@fix/theme-picker-dynamic-ui
+git+https://github.com/posit-dev/py-shinyswatch.git@256d763
 isi-util==0.2a2
 concierge-util==0.2a2
 python-keycloak~=5.1.1

@@ -8,7 +8,7 @@ from .authorization import (
     auth_enabled,
     UnauthorizedOperationError,
 )
-from .authentication import get_token_info
+from .authentication import get_token_info, get_keycloak_admin_client
 from uuid import uuid4
 from .opensearch import (
     create_collection_index,
@@ -57,7 +57,12 @@ type Location = Literal["private", "shared"]
 
 
 # in an unsecured instance collections don't have a location, so None is valid in that case
-async def create_collection(token, display_name: str, location: Location | None = None):
+async def create_collection(
+    token,
+    display_name: str,
+    location: Location | None = None,
+    collection_owner: str | None = None,
+):
     print(f"creating {location or ''} collection {display_name}")
     if auth_enabled():
         # when using authz collections should always have a location
@@ -66,8 +71,12 @@ async def create_collection(token, display_name: str, location: Location | None 
         authorized = await authorize(token, f"collection:{location}:create")
         if not authorized:
             raise UnauthorizedOperationError()
-        token_info = await get_token_info(token)
-        owner_id = token_info["sub"]
+        if collection_owner:
+            admin_client = get_keycloak_admin_client()
+            owner_id = await admin_client.a_get_user_id(collection_owner)
+        else:
+            token_info = await get_token_info(token)
+            owner_id = token_info["sub"]
         try:
             resource_id = await create_resource(
                 display_name, f"collection:{location}", owner_id
