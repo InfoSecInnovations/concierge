@@ -170,6 +170,10 @@ Available commands:
 - `delete_collection`
 - `delete_document`
 
+## Known Issues
+
+- Startup of the Concierge service can be quite slow, this appears to be especially so when running in Docker for some reason. We believe it's due to one of the AI related dependencies, we will review this problem at some point as there may be alternative frameworks we could use.
+
 ## Want to get involved? ##
 
 Please read our [Code of Conduct](CODE_OF_CONDUCT.md) then our [Contribution Guide](CONTRIBUTING.md).
