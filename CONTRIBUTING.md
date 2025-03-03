@@ -41,7 +41,9 @@ Ruff will attempt to fix any errors, if the checks fail but all errors are fixed
 ## Testing
 
 > [!IMPORTANT]
-> The tests spin up all the Docker requirements for the configuration being tested. They run the full install process which can take quite a long time for the security enabled configuration. Please leave the tests running for quite a long time before giving up on them! If there are changes to the required Docker images updating them may take a long time depending on your internet speed.
+> The tests spin up all the Docker requirements for the configuration being tested. They run the full install process which can take quite a long time for the security enabled configuration. Please leave the tests running for quite a long time before giving up on them! 
+> The security enabled test runs a local image build for the Concierge service, depending on the changes this can be a long process.
+> If there are changes to the required Docker dependencies, updating them may take a long time depending on your internet speed.
 
 End to end testing is in implemented, and some unit test coverage for the packages used by Concierge. To run the tests, enter the venv and simply use the `pytest` command. Green dots means all the tests passed. If you wish to stop the test run on the first failure (useful if you're trying to track down an error during testing) you can add the `-x` to the command.
 
