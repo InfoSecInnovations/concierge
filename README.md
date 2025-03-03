@@ -149,18 +149,17 @@ This does offer the advantage of hot reloading and being able to use the debugge
 
 ## CLI ##
 
-> [!WARNING]
-> We haven't yet updated the CLI scripts to work with authentication and authorization, it's likely some of them are broken.
-
-While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.
+While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app. We haven't yet included these in our automated test coverage, so please let us know if you're trying to use them and having issues.
 
 One notable feature is that the `loader` script loads an entire directory of documents which the GUI is currently unable to do.
 
-To use them you can navigate to the `cli` subdirectory or append `cli.` to the script name from the parent directory.
+To use them you can navigate to the `cli` subdirectory.
 
 Make sure you are running inside the virtual environment created during installation.
 
 Call commands like this: `python -m <script_name> <options>`. Use the `-h` or `--help` option to see what the options are.
+
+If your instance of Concierge has RBAC enabled the CLI runs with full admin privileges, so use with care! If there's demand for it we may consider adding proper login to be able to use the CLI with a user account.
 
 Available commands:
 - `loader`
