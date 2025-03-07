@@ -1,0 +1,7 @@
+fastapi~=0.115.11
+python-keycloak~=5.3.1
+isi-util==0.2a2
+concierge-util==0.2a2
+sentence-transformers~=3.4.1
+opensearch-py~=2.8.0
+langchain~=0.3.20

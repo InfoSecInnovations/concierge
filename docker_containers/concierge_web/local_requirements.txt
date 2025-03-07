@@ -1,0 +1,5 @@
+-e ../../python_packages/isi_util
+-e ../../python_packages/concierge_util
+-e ../../python_packages/concierge_api_client
+
+-r requirements.txt
