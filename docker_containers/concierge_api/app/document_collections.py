@@ -1,5 +1,5 @@
 from typing import Literal
-from app.authorization import (
+from authorization import (
     authorize,
     create_resource,
     list_resources,
@@ -8,9 +8,9 @@ from app.authorization import (
     auth_enabled,
     UnauthorizedOperationError,
 )
-from app.authentication import get_token_info, get_keycloak_admin_client
+from authentication import get_token_info, get_keycloak_admin_client
 from uuid import uuid4
-from app.opensearch import (
+from opensearch import (
     create_collection_index,
     delete_collection_indices,
     create_index_mapping,

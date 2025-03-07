@@ -1,4 +1,4 @@
-from app.authentication import (
+from authentication import (
     get_keycloak_client,
     get_keycloak_admin_client,
     server_url,

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.document_collections import create_collection, get_collections
-from app.authorization import auth_enabled
+from document_collections import create_collection, get_collections
+from authorization import auth_enabled
 
 app = FastAPI()
 

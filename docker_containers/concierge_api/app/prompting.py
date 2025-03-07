@@ -1,8 +1,8 @@
 import json
 import requests
 import os
-from app.opensearch_prompting import get_context_from_opensearch
-from app.authorization import auth_enabled, authorize, UnauthorizedOperationError
+from opensearch_prompting import get_context_from_opensearch
+from authorization import auth_enabled, authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
 import httpx
 import ssl

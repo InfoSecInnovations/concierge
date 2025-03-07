@@ -1,6 +1,6 @@
 import requests
 import os
-from app.opensearch import get_client
+from opensearch import get_client
 
 
 def ollama_host():

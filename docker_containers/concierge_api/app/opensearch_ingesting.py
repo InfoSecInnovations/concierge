@@ -1,9 +1,9 @@
 from opensearchpy import helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from app.embeddings import create_embeddings
+from embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument
 from dataclasses import fields
-from .opensearch import get_client
+from opensearch import get_client
 
 chunk_size = 200
 chunk_overlap = 25
