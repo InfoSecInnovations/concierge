@@ -2,9 +2,13 @@ from opensearch_ingesting import insert
 from authorization import auth_enabled, authorize, UnauthorizedOperationError
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
+from models import DocumentIngestInfo
+from typing import AsyncGenerator, Any
 
 
-async def insert_document(token, collection_id, document, binary=None):
+async def insert_document(
+    token, collection_id, document, binary=None
+) -> AsyncGenerator[DocumentIngestInfo, Any]:
     if auth_enabled():
         authorized = await authorize(token, collection_id, "update")
         if not authorized:

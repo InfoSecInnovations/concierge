@@ -4,6 +4,7 @@ from embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument
 from dataclasses import fields
 from opensearch import get_client
+from models import DocumentIngestInfo
 
 chunk_size = 200
 chunk_overlap = 25
@@ -118,5 +119,10 @@ def insert(
                 for index, vect in enumerate(vects)
             ]
         )
-        yield (index, total, doc_id)
+        yield DocumentIngestInfo(
+            progress=index,
+            total=total,
+            document_id=doc_id,
+            document_type=document.metadata.type,
+        )
     helpers.bulk(client, entries, refresh=True)

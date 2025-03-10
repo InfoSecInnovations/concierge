@@ -22,6 +22,7 @@ from opensearch import (
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
+from models import CollectionInfo, DocumentInfo, DeletedDocumentInfo
 
 
 class CollectionExistsError(Exception):
@@ -34,11 +35,15 @@ class InvalidLocationError(Exception):
         self.message = message
 
 
-async def get_collections(token):
+async def get_collections(token) -> list[CollectionInfo]:
     if auth_enabled():
         available_resources = await list_resources(token)
         return [
-            resource
+            CollectionInfo(
+                collection_name=resource["displayName"],
+                collection_id=resource["_id"],
+                location=resource["type"].replace("collection:", ""),
+            )
             for resource in available_resources
             if (
                 resource["type"] == "collection:shared"
@@ -49,8 +54,15 @@ async def get_collections(token):
             )  # the default resources are just there to show permissions if no collections are present
         ]
     else:
+        print(await asyncify(get_collection_mappings))
         # if not using authz we get the collection info from OpenSearch
-        return await asyncify(get_collection_mappings)
+        return [
+            CollectionInfo(
+                collection_name=mapping["collection_name"],
+                collection_id=mapping["collection_id"],
+            )
+            for mapping in await asyncify(get_collection_mappings)
+        ]
 
 
 type Location = Literal["private", "shared"]
@@ -62,7 +74,7 @@ async def create_collection(
     display_name: str,
     location: Location | None = None,
     collection_owner: str | None = None,
-):
+) -> CollectionInfo:
     print(f"creating {location or ''} collection {display_name}")
     if auth_enabled():
         # when using authz collections should always have a location
@@ -96,7 +108,9 @@ async def create_collection(
         await asyncify(create_index_mapping, resource_id, display_name)
     await asyncify(create_collection_index, resource_id)
     print(f"created {location or ''} collection {display_name} with ID {resource_id}")
-    return resource_id
+    return CollectionInfo(
+        collection_name=display_name, collection_id=resource_id, location=location
+    )
 
 
 async def delete_collection(token, collection_id):
@@ -110,6 +124,7 @@ async def delete_collection(token, collection_id):
         await asyncify(delete_index_mapping, collection_id)
     await asyncify(delete_collection_indices, collection_id)
     print(f"deleted collection with ID {collection_id}")
+    return CollectionInfo(collection_id=collection_id)
 
 
 async def get_documents(token, collection_id):
@@ -117,7 +132,19 @@ async def get_documents(token, collection_id):
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
-    return await asyncify(get_opensearch_documents, collection_id)
+    return [
+        DocumentInfo(
+            type=doc["type"],
+            source=doc["source"],
+            ingest_date=doc["ingest_date"],
+            vector_count=doc["vector_count"],
+            document_id=doc["id"],
+            index=doc["index"],
+            page_count=doc["page_count"],
+            media_type=doc["media_type"],
+        )
+        for doc in await asyncify(get_opensearch_documents, collection_id)
+    ]
 
 
 async def delete_document(token, collection_id, document_type, document_id):
@@ -125,8 +152,13 @@ async def delete_document(token, collection_id, document_type, document_id):
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
             raise UnauthorizedOperationError()
-    return await asyncify(
-        delete_opensearch_document, collection_id, document_type, document_id
+    return DeletedDocumentInfo(
+        collection_id=collection_id,
+        document_id=document_id,
+        document_type=document_type,
+        deleted_element_count=await asyncify(
+            delete_opensearch_document, collection_id, document_type, document_id
+        ),
     )
 
 

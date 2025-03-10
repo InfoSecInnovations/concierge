@@ -10,8 +10,13 @@ from ingesting import insert_document
 from authorization import auth_enabled
 from loading import load_file
 from fastapi.responses import StreamingResponse
-import json
 import aiofiles
+from models import (
+    BaseCollectionCreateInfo,
+    CollectionInfo,
+    DocumentInfo,
+    DeletedDocumentInfo,
+)
 
 app = FastAPI()
 
@@ -20,19 +25,21 @@ app = FastAPI()
 if not auth_enabled():
 
     @app.post("/collections")
-    async def create_collection_route(name: str):
-        return await create_collection(None, name)
+    async def create_collection_route(
+        collection_info: BaseCollectionCreateInfo,
+    ) -> CollectionInfo:
+        return await create_collection(None, collection_info.collection_name)
 
     @app.get("/collections")
-    async def get_collections_route():
+    async def get_collections_route() -> list[CollectionInfo]:
         return await get_collections(None)
 
     @app.delete("/collections/{collection_id}")
-    async def delete_collection_route(collection_id: str):
+    async def delete_collection_route(collection_id: str) -> CollectionInfo:
         return await delete_collection(None, collection_id)
 
     @app.get("/collections/{collection_id}/documents")
-    async def get_documents_route(collection_id: str):
+    async def get_documents_route(collection_id: str) -> list[DocumentInfo]:
         return await get_documents(None, collection_id)
 
     @app.post("/collections/{collection_id}/documents/files")
@@ -44,22 +51,15 @@ if not auth_enabled():
             ) as fp:
                 binary = await file.read()
                 await fp.write(binary)
-                paths[file.filename] = {"name": fp.name, "binary": binary}
+                paths[file.filename] = {"path": fp.name, "binary": binary}
 
         async def response_json():
             for filename, data in paths.items():
-                doc = load_file(data["path"])
+                doc = load_file(data["path"], filename)
                 async for result in insert_document(
                     None, collection_id, doc, data["binary"]
                 ):
-                    yield json.dumps(
-                        {
-                            "progress": result[0],
-                            "total": result[1],
-                            "id": result[2],
-                            "file": filename,
-                        }
-                    )
+                    yield result.model_dump_json(exclude_unset=True)
 
         return StreamingResponse(response_json())
 
@@ -71,5 +71,5 @@ if not auth_enabled():
     @app.delete("/collections/{collection_id}/documents/{document_type}/{document_id}")
     async def delete_document_route(
         collection_id: str, document_type: str, document_id: str
-    ):
+    ) -> DeletedDocumentInfo:
         return await delete_document(None, collection_id, document_type, document_id)
