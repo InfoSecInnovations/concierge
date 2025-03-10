@@ -32,7 +32,7 @@ class ConciergeDocument:
 class ConciergeDocLoader(metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
-    def load(full_path: str) -> ConciergeDocument:
+    def load(full_path: str, filename: str | None) -> ConciergeDocument:
         # load pages
         pass
 

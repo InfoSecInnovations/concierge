@@ -42,13 +42,16 @@ if not auth_enabled():
             async with aiofiles.tempfile.NamedTemporaryFile(
                 suffix=file.filename, delete=False
             ) as fp:
-                await fp.write(await file.read())
-                paths[file.filename] = fp.name
+                binary = await file.read()
+                await fp.write(binary)
+                paths[file.filename] = {"name": fp.name, "binary": binary}
 
         async def response_json():
-            for filename, path in paths.items():
-                doc = load_file(path)
-                async for result in insert_document(None, collection_id, doc):
+            for filename, data in paths.items():
+                doc = load_file(data["path"])
+                async for result in insert_document(
+                    None, collection_id, doc, data["binary"]
+                ):
                     yield json.dumps(
                         {
                             "progress": result[0],

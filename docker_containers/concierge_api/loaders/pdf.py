@@ -15,7 +15,7 @@ class PDFLoader(ConciergeFileLoader):
         return full_path.endswith(".pdf")
 
     @staticmethod
-    def load(full_path: str) -> ConciergeDocument:
+    def load(full_path: str, filename: str | None) -> ConciergeDocument:
         date_time = get_current_time()
         loader = PyPDFLoader(full_path)
         pages = loader.load_and_split()
@@ -24,7 +24,7 @@ class PDFLoader(ConciergeFileLoader):
             metadata=ConciergeFileLoader.FileMetaData(
                 type="pdf",
                 source=full_path,
-                filename=Path(full_path).name,
+                filename=filename or Path(full_path).name,
                 ingest_date=date_time,
                 media_type="application/pdf",
             ),
