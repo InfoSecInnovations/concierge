@@ -9,7 +9,9 @@ from document_collections import (
 from ingesting import insert_document
 from authorization import auth_enabled
 from loading import load_file
-import tempfile
+from fastapi.responses import StreamingResponse
+import json
+import aiofiles
 
 app = FastAPI()
 
@@ -35,13 +37,28 @@ if not auth_enabled():
 
     @app.post("/collections/{collection_id}/documents/files")
     async def insert_files_document_route(collection_id: str, files: list[UploadFile]):
+        paths = {}
         for file in files:
-            with tempfile.NamedTemporaryFile(suffix=file.filename, delete=False) as fp:
-                fp.write(file.file.read())
-                file_path = fp.name
-            doc = load_file(file_path)
-            async for result in insert_document(None, collection_id, doc):
-                pass
+            async with aiofiles.tempfile.NamedTemporaryFile(
+                suffix=file.filename, delete=False
+            ) as fp:
+                await fp.write(await file.read())
+                paths[file.filename] = fp.name
+
+        async def response_json():
+            for filename, path in paths.items():
+                doc = load_file(path)
+                async for result in insert_document(None, collection_id, doc):
+                    yield json.dumps(
+                        {
+                            "progress": result[0],
+                            "total": result[1],
+                            "id": result[2],
+                            "file": filename,
+                        }
+                    )
+
+        return StreamingResponse(response_json())
 
     @app.post("/collections/{collection_id}/documents/urls")
     async def insert_url_document_route(collection_id: str, urls: list[str]):
