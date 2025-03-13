@@ -16,8 +16,8 @@ class DocumentInfo(BaseModel):
     type: str
     source: str
     ingest_date: int
-    filename: str
-    media_type: str
+    filename: Optional[str] = None
+    media_type: Optional[str] = None
     document_id: str
     index: str
     page_count: int
@@ -36,3 +36,28 @@ class DocumentIngestInfo(BaseModel):
     total: int
     document_id: str
     document_type: str
+
+
+class PromptInfo(BaseModel):
+    collection_id: str
+    task: str
+    user_input: str
+    persona: Optional[str] = None
+    enhancers: Optional[list[str]] = None
+    file_id: Optional[str] = None
+
+
+class ServiceStatus(BaseModel):
+    running: bool
+
+
+class PromptConfigInfo(BaseModel):
+    prompt: Optional[str] = None
+
+
+class TaskInfo(PromptConfigInfo):
+    greeting: str
+
+
+class TempFileInfo(BaseModel):
+    id: str

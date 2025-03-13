@@ -141,7 +141,8 @@ async def get_documents(token, collection_id):
             document_id=doc["id"],
             index=doc["index"],
             page_count=doc["page_count"],
-            media_type=doc["media_type"],
+            media_type=doc["media_type"] if "media_type" in doc else None,
+            filename=doc["filename"] if "filename" in doc else None,
         )
         for doc in await asyncify(get_opensearch_documents, collection_id)
     ]

@@ -8,6 +8,7 @@ def host():
 
 
 MAPPING_INDEX_NAME = "collection_mappings"
+FILES_INDEX_NAME = "file_mappings"
 
 
 def get_client():
@@ -199,3 +200,23 @@ def delete_opensearch_document(collection_id: str, doc_type: str, doc_id: str):
     deleted_count = response["deleted"]
     client.delete(doc_index, doc_id, refresh=True)
     return deleted_count + 1
+
+
+def set_temp_file(file_path: str):
+    client = get_client()
+    if not client.indices.exists(FILES_INDEX_NAME):
+        index_body = {"mappings": {"properties": {"file_path": {"type": "keyword"}}}}
+        client.indices.create(FILES_INDEX_NAME, body=index_body)
+    response = client.index(
+        FILES_INDEX_NAME,
+        body={"file_path": file_path},
+        refresh=True,
+    )
+    return response["_id"]
+
+
+def get_temp_file(id: str):
+    client = get_client()
+    if client.indices.exists(FILES_INDEX_NAME):
+        response = client.get(FILES_INDEX_NAME, id)
+        return response["_source"]["file_path"]

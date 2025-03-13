@@ -1,11 +1,9 @@
 import json
-import requests
 import os
 from opensearch_prompting import get_context_from_opensearch
 from authorization import auth_enabled, authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
 import httpx
-import ssl
 
 
 def host():
@@ -66,9 +64,7 @@ async def get_response(
 
     data = {"model": "mistral", "prompt": prompt, "stream": False}
     # Ollama doesn't like the data in JSON, we have to dump it to string
-    async with httpx.AsyncClient(
-        verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")), timeout=None
-    ) as httpx_client:
+    async with httpx.AsyncClient(timeout=None) as httpx_client:
         response = await httpx_client.post(
             f"http://{host()}:11434/api/generate", data=json.dumps(data)
         )
@@ -79,7 +75,7 @@ async def get_response(
     return json.loads(response.text)["response"]
 
 
-def stream_response(
+async def stream_response(
     context,
     task_prompt,
     user_input,
@@ -97,13 +93,10 @@ def stream_response(
     )
 
     data = {"model": "mistral", "prompt": prompt, "stream": True}
-
-    response = requests.post(
-        f"http://{host()}:11434/api/generate", data=json.dumps(data)
-    )
-
-    for item in response.iter_lines():
-        if item:
-            value = json.loads(item)
-            if "response" in value:
-                yield value["response"]
+    # Ollama doesn't like the data in JSON, we have to dump it to string
+    async with httpx.AsyncClient(timeout=None) as httpx_client:
+        async with httpx_client.stream(
+            "POST", f"http://{host()}:11434/api/generate", data=json.dumps(data)
+        ) as response:
+            async for line in response.aiter_lines():
+                yield line
