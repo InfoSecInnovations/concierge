@@ -7,8 +7,6 @@ from document_collections import (
     get_documents,
     delete_document,
 )
-from ingesting import insert_document
-from loading import load_file
 from fastapi.responses import StreamingResponse
 import aiofiles
 from models import (
@@ -22,11 +20,12 @@ from models import (
     PromptConfigInfo,
     TempFileInfo,
 )
-from loaders.web import WebLoader
 from status import check_ollama, check_opensearch
 from prompting import stream_response, get_context
 from opensearch import set_temp_file, get_temp_file
 from load_prompter_config import load_prompter_config
+from insert_uploaded_files import insert_uploaded_files
+from insert_urls import insert_urls
 
 router = APIRouter()
 
@@ -59,25 +58,7 @@ async def get_documents_route(collection_id: str) -> list[DocumentInfo]:
 async def insert_files_document_route(
     collection_id: str, files: list[UploadFile]
 ) -> StreamingResponse:
-    paths = {}
-    for file in files:
-        async with aiofiles.tempfile.NamedTemporaryFile(
-            suffix=file.filename, delete=False
-        ) as fp:
-            binary = await file.read()
-            await fp.write(binary)
-            paths[file.filename] = {"path": fp.name, "binary": binary}
-
-    async def response_json():
-        for filename, data in paths.items():
-            doc = load_file(data["path"], filename)
-            if doc:
-                async for result in insert_document(
-                    None, collection_id, doc, data["binary"]
-                ):
-                    yield result.model_dump_json(exclude_unset=True)
-
-    return StreamingResponse(response_json())
+    return await insert_uploaded_files(None, collection_id, files)
 
 
 @router.post(
@@ -86,14 +67,7 @@ async def insert_files_document_route(
 async def insert_urls_document_route(
     collection_id: str, urls: list[str]
 ) -> StreamingResponse:
-    async def response_json():
-        for url in urls:
-            doc = WebLoader.load(url)
-            if doc:
-                async for result in insert_document(None, collection_id, doc):
-                    yield result.model_dump_json(exclude_unset=True)
-
-    return StreamingResponse(response_json())
+    return await insert_urls(None, collection_id, urls)
 
 
 @router.delete(

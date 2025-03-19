@@ -54,7 +54,6 @@ async def get_collections(token) -> list[CollectionInfo]:
             )  # the default resources are just there to show permissions if no collections are present
         ]
     else:
-        print(await asyncify(get_collection_mappings))
         # if not using authz we get the collection info from OpenSearch
         return [
             CollectionInfo(

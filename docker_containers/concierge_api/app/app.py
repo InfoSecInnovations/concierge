@@ -1,14 +1,24 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from authorization import auth_enabled
 import insecure_routes
 import secure_routes
+import os
 from load_dotenv import load_env
+from keycloak import KeycloakAuthenticationError
+import json
 
 load_env()
 
-app = FastAPI()
+app = FastAPI(
+    swagger_ui_init_oauth={
+        "clientId": os.getenv("KEYCLOAK_CLIENT_ID"),
+        "clientSecret": os.getenv("KEYCLOAK_CLIENT_SECRET"),
+    }
+)
 
+# TODO: probably don't wildcard this
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,4 +32,13 @@ app.add_middleware(
 if not auth_enabled():
     app.include_router(insecure_routes.router)
 else:
+
+    @app.exception_handler(KeycloakAuthenticationError)
+    def keycloak_authentication_error_handler(
+        request: Request, exc: KeycloakAuthenticationError
+    ):
+        return JSONResponse(
+            content=json.loads(exc.response_body), status_code=exc.response_code
+        )
+
     app.include_router(secure_routes.router)

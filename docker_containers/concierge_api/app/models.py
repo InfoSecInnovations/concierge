@@ -6,6 +6,10 @@ class BaseCollectionCreateInfo(BaseModel):
     collection_name: str
 
 
+class AuthzCollectionCreateInfo(BaseCollectionCreateInfo):
+    location: str
+
+
 class CollectionInfo(BaseModel):
     collection_name: Optional[str] = None
     collection_id: str
