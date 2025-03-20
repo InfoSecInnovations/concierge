@@ -9,7 +9,7 @@ from document_collections import (
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import StreamingResponse
 from typing import Annotated
-from authentication import server_url
+from authentication import server_url, get_token_info
 from models import (
     AuthzCollectionCreateInfo,
     CollectionInfo,
@@ -158,3 +158,8 @@ def ollama_status():
 @router.get("/status/opensearch")
 def opensearch_status():
     return ServiceStatus(running=check_opensearch())
+
+
+@router.get("/user_info")
+async def get_user_info_route(credentials: Annotated[str, Depends(valid_access_token)]):
+    return await get_token_info(credentials)
