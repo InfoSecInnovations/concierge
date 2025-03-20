@@ -8,7 +8,6 @@ from document_collections import (
     delete_document,
 )
 from fastapi.responses import StreamingResponse
-import aiofiles
 from models import (
     BaseCollectionCreateInfo,
     CollectionInfo,
@@ -21,11 +20,11 @@ from models import (
     TempFileInfo,
 )
 from status import check_ollama, check_opensearch
-from opensearch import set_temp_file
 from load_prompter_config import load_prompter_config
 from insert_uploaded_files import insert_uploaded_files
 from insert_urls import insert_urls
 from run_prompt import run_prompt
+from upload_prompt_file import upload_prompt_file
 
 router = APIRouter()
 
@@ -100,11 +99,7 @@ def get_enhancers_route() -> dict[str, PromptConfigInfo]:
 
 @router.post("/prompt/source_file")
 async def prompt_file_route(file: UploadFile) -> TempFileInfo:
-    async with aiofiles.tempfile.NamedTemporaryFile(delete=False) as fp:
-        binary = await file.read()
-        await fp.write(binary)
-        id = set_temp_file(fp.name)
-    return TempFileInfo(id=id)
+    return await upload_prompt_file(file)
 
 
 @router.post("/prompt")

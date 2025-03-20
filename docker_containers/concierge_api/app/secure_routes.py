@@ -15,11 +15,20 @@ from models import (
     CollectionInfo,
     DocumentInfo,
     DeletedDocumentInfo,
+    ServiceStatus,
+    PromptInfo,
+    TaskInfo,
+    PromptConfigInfo,
+    TempFileInfo,
 )
 from insert_uploaded_files import insert_uploaded_files
 from insert_urls import insert_urls
 from jwcrypto.jwt import JWTExpired
 from authentication import get_keycloak_client
+from status import check_ollama, check_opensearch
+from run_prompt import run_prompt
+from load_prompter_config import load_prompter_config
+from upload_prompt_file import upload_prompt_file
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
     tokenUrl=f"{server_url()}/realms/concierge/protocol/openid-connect/token",
@@ -37,7 +46,8 @@ async def valid_access_token(access_token: Annotated[str, Depends(oauth_2_scheme
         raise HTTPException(status_code=401, detail="Token expired")
 
 
-router = APIRouter()
+# all these routes require a valid account to view
+router = APIRouter(dependencies=[Depends(valid_access_token)])
 
 
 @router.get("/collections", response_model_exclude_unset=True)
@@ -110,3 +120,41 @@ async def delete_document_route(
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> DeletedDocumentInfo:
     return await delete_document(credentials, collection_id, document_type, document_id)
+
+
+@router.get("/tasks", response_model_exclude_unset=True)
+def get_tasks_route() -> dict[str, TaskInfo]:
+    tasks = load_prompter_config("tasks")
+    return {key: TaskInfo(**value) for key, value in tasks.items()}
+
+
+@router.get("/personas")
+def get_personas_route() -> dict[str, PromptConfigInfo]:
+    personas = load_prompter_config("personas")
+    return {key: PromptConfigInfo(**value) for key, value in personas.items()}
+
+
+@router.get("/enhancers")
+def get_enhancers_route() -> dict[str, PromptConfigInfo]:
+    enhancers = load_prompter_config("enhancers")
+    return {key: PromptConfigInfo(**value) for key, value in enhancers.items()}
+
+
+@router.post("/prompt/source_file")
+async def prompt_file_route(file: UploadFile) -> TempFileInfo:
+    return await upload_prompt_file(file)
+
+
+@router.post("/prompt")
+async def prompt_route(prompt_info: PromptInfo) -> StreamingResponse:
+    return await run_prompt(None, prompt_info)
+
+
+@router.get("/status/ollama")
+def ollama_status():
+    return ServiceStatus(running=check_ollama())
+
+
+@router.get("/status/opensearch")
+def opensearch_status():
+    return ServiceStatus(running=check_opensearch())
