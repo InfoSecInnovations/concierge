@@ -5,7 +5,7 @@
 from .lib import create_collection_for_user, clean_up_collections
 import asyncio
 import pytest
-from concierge_backend_lib.document_collections import CollectionExistsError
+from app.document_collections import CollectionExistsError
 
 
 async def test_own_private_collection_with_same_name():

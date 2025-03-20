@@ -3,7 +3,7 @@ from ..util import destroy_instance, create_instance
 from concierge_scripts.load_dotenv import load_env
 import requests
 from requests import ConnectionError
-from concierge_backend_lib.status import check_opensearch
+from app.status import check_opensearch
 import os
 
 load_env()

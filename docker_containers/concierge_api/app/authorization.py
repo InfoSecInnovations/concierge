@@ -1,4 +1,4 @@
-from authentication import (
+from .authentication import (
     get_keycloak_client,
     get_keycloak_admin_client,
     server_url,
@@ -35,29 +35,6 @@ async def authorize(token, resource, scope: str | None = None):
                 "response_mode": "decision",
             },
             headers={"Authorization": f"Bearer {token}"},
-        )
-
-    # this will cause us to get a new token if needed
-    raise_error_from_response(resp, KeycloakPostError)
-    authorized = resp.json()
-    return authorized["result"]
-
-
-async def authorize_url(auth_header, path, method):
-    async with httpx.AsyncClient(
-        verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")), timeout=None
-    ) as httpx_client:
-        resp = await httpx_client.post(
-            f"{server_url()}/realms/concierge/protocol/openid-connect/token",
-            data={
-                "grant_type": "urn:ietf:params:oauth:grant-type:uma-ticket",
-                "audience": "concierge-auth",
-                "permission": f"{path}#{method}",
-                "response_mode": "decision",
-                "permission_resource_format": "uri",
-                "permission_resource_matching_uri": "true",
-            },
-            headers={"Authorization": auth_header},
         )
 
     # this will cause us to get a new token if needed

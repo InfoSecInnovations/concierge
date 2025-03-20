@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, HTTPException
-from document_collections import (
+from .document_collections import (
     get_collections,
     create_collection,
     delete_collection,
@@ -9,8 +9,8 @@ from document_collections import (
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import StreamingResponse
 from typing import Annotated
-from authentication import server_url, get_token_info
-from models import (
+from .authentication import server_url, get_token_info
+from .models import (
     AuthzCollectionCreateInfo,
     CollectionInfo,
     DocumentInfo,
@@ -21,14 +21,16 @@ from models import (
     PromptConfigInfo,
     TempFileInfo,
 )
-from insert_uploaded_files import insert_uploaded_files
-from insert_urls import insert_urls
+from .insert_uploaded_files import insert_uploaded_files
+from .insert_urls import insert_urls
 from jwcrypto.jwt import JWTExpired
-from authentication import get_keycloak_client
-from status import check_ollama, check_opensearch
-from run_prompt import run_prompt
-from load_prompter_config import load_prompter_config
-from upload_prompt_file import upload_prompt_file
+from .authentication import get_keycloak_client
+from .status import check_ollama, check_opensearch
+from .run_prompt import run_prompt
+from .load_prompter_config import load_prompter_config
+from .upload_prompt_file import upload_prompt_file
+from .opensearch_binary import serve_binary
+from .authorization import authorize
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
     tokenUrl=f"{server_url()}/realms/concierge/protocol/openid-connect/token",
@@ -163,3 +165,14 @@ def opensearch_status():
 @router.get("/user_info")
 async def get_user_info_route(credentials: Annotated[str, Depends(valid_access_token)]):
     return await get_token_info(credentials)
+
+
+@router.get("/files/{collection_id}/{doc_type}/{doc_id}")
+async def get_files_route(
+    collection_id: str,
+    doc_type: str,
+    doc_id: str,
+    credentials: Annotated[str, Depends(valid_access_token)],
+):
+    authorize(credentials, collection_id, "read")
+    return await serve_binary(collection_id, doc_id, doc_type)

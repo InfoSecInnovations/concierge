@@ -1,13 +1,13 @@
-from concierge_backend_lib.authentication import (
+from app.authentication import (
     get_keycloak_client,
     get_keycloak_admin_openid_token,
 )
-from concierge_backend_lib.document_collections import (
+from app.document_collections import (
     create_collection,
     delete_collection,
 )
-from concierge_backend_lib.ingesting import insert_document
-from concierge_backend_lib.loading import load_file
+from app.ingesting import insert_document
+from app.loading import load_file
 import os
 
 
@@ -25,9 +25,10 @@ async def create_collection_for_user(user, location, collection_name):
     return collection_id
 
 
-file_path = os.path.join(os.path.dirname(__file__), "..", "assets", "test_doc.txt")
+filename = "test_doc.txt"
+file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 # we will use the same file for each test
-doc = load_file(file_path)
+doc = load_file(file_path, filename)
 with open(file_path, "rb") as f:
     binary = f.read()
 

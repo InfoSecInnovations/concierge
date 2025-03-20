@@ -1,9 +1,9 @@
 from fastapi import UploadFile
 import aiofiles
-from models import (
+from .models import (
     TempFileInfo,
 )
-from opensearch import set_temp_file
+from .opensearch import set_temp_file
 
 
 async def upload_prompt_file(file: UploadFile) -> TempFileInfo:

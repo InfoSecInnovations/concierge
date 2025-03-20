@@ -1,12 +1,12 @@
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 import aiofiles
-from models import (
+from .models import (
     PromptInfo,
 )
-from prompting import stream_response, get_context
-from opensearch import get_temp_file
-from load_prompter_config import load_prompter_config
+from .prompting import stream_response, get_context
+from .opensearch import get_temp_file
+from .load_prompter_config import load_prompter_config
 
 
 async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingResponse:

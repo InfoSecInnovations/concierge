@@ -1,5 +1,5 @@
 from typing import Literal
-from authorization import (
+from .authorization import (
     authorize,
     create_resource,
     list_resources,
@@ -8,9 +8,9 @@ from authorization import (
     auth_enabled,
     UnauthorizedOperationError,
 )
-from authentication import get_token_info, get_keycloak_admin_client
+from .authentication import get_token_info, get_keycloak_admin_client
 from uuid import uuid4
-from opensearch import (
+from .opensearch import (
     create_collection_index,
     delete_collection_indices,
     create_index_mapping,
@@ -22,7 +22,7 @@ from opensearch import (
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
-from models import CollectionInfo, DocumentInfo, DeletedDocumentInfo
+from .models import CollectionInfo, DocumentInfo, DeletedDocumentInfo
 
 
 class CollectionExistsError(Exception):

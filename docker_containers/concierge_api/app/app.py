@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from authorization import auth_enabled
-import insecure_routes
-import secure_routes
+from .authorization import auth_enabled
+from . import insecure_routes
+from . import secure_routes
 import os
 from load_dotenv import load_env
 from keycloak import KeycloakAuthenticationError

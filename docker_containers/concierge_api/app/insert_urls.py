@@ -1,6 +1,6 @@
 from fastapi.responses import StreamingResponse
 from loaders.web import WebLoader
-from ingesting import insert_document
+from .ingesting import insert_document
 
 
 async def insert_urls(

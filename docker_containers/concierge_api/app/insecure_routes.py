@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi import UploadFile
-from document_collections import (
+from .document_collections import (
     create_collection,
     get_collections,
     delete_collection,
@@ -8,7 +8,7 @@ from document_collections import (
     delete_document,
 )
 from fastapi.responses import StreamingResponse
-from models import (
+from .models import (
     BaseCollectionCreateInfo,
     CollectionInfo,
     DocumentInfo,
@@ -19,12 +19,13 @@ from models import (
     PromptConfigInfo,
     TempFileInfo,
 )
-from status import check_ollama, check_opensearch
-from load_prompter_config import load_prompter_config
-from insert_uploaded_files import insert_uploaded_files
-from insert_urls import insert_urls
-from run_prompt import run_prompt
-from upload_prompt_file import upload_prompt_file
+from .status import check_ollama, check_opensearch
+from .load_prompter_config import load_prompter_config
+from .insert_uploaded_files import insert_uploaded_files
+from .insert_urls import insert_urls
+from .run_prompt import run_prompt
+from .upload_prompt_file import upload_prompt_file
+from .opensearch_binary import serve_binary
 
 router = APIRouter()
 
@@ -115,3 +116,8 @@ def ollama_status():
 @router.get("/status/opensearch")
 def opensearch_status():
     return ServiceStatus(running=check_opensearch())
+
+
+@router.get("/files/{collection_id}/{doc_type}/{doc_id}")
+async def get_files_route(collection_id: str, doc_type: str, doc_id: str):
+    return await serve_binary(collection_id, doc_id, doc_type)

@@ -118,8 +118,8 @@ export default async function* (options: FormData, installVenv = true) {
         yield logMessage("adding demo users")
         envs.IS_SECURITY_DEMO = "True"
         await updateEnv()
-        if (environment == "development") await runPython("concierge_scripts.add_keycloak_demo_users")
-        else await $`docker exec -d concierge python -m concierge_scripts.add_keycloak_demo_users`
+        if (environment == "development") await runPython("add_keycloak_demo_users")
+        else await $`docker exec -d concierge python -m add_keycloak_demo_users`
     }
     yield logMessage("pulling language model. This can take quite a long time if you haven't downloaded the model before.")
     // TODO use options.get("language_model")

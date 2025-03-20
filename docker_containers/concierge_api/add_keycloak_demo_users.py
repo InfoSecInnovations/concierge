@@ -1,8 +1,8 @@
 import json
 from importlib.resources import files
 import os
-from concierge_backend_lib.authentication import get_keycloak_admin_client
-from concierge_scripts.load_dotenv import load_env
+from app.authentication import get_keycloak_admin_client
+from load_dotenv import load_env
 
 
 def add_users():

@@ -1,5 +1,5 @@
-from embeddings import create_embeddings
-from opensearch import get_client
+from .embeddings import create_embeddings
+from .opensearch import get_client
 
 
 def get_context_from_opensearch(

@@ -1,8 +1,8 @@
-from opensearch_ingesting import insert
-from authorization import auth_enabled, authorize, UnauthorizedOperationError
+from .opensearch_ingesting import insert
+from .authorization import auth_enabled, authorize, UnauthorizedOperationError
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
-from models import DocumentIngestInfo
+from .models import DocumentIngestInfo
 from typing import AsyncGenerator, Any
 
 

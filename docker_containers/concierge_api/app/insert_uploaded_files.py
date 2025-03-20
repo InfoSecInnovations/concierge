@@ -1,7 +1,7 @@
 from fastapi import UploadFile
 import aiofiles
-from ingesting import insert_document
-from loading import load_file
+from .ingesting import insert_document
+from .loading import load_file
 from fastapi.responses import StreamingResponse
 
 

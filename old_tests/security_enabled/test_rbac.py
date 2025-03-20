@@ -2,11 +2,11 @@
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
-from concierge_backend_lib.authentication import (
+from app.authentication import (
     get_keycloak_client,
 )
-from concierge_backend_lib.authorization import UnauthorizedOperationError
-from concierge_backend_lib.document_collections import (
+from app.authorization import UnauthorizedOperationError
+from app.document_collections import (
     delete_collection,
     get_documents,
     delete_document,
