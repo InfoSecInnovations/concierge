@@ -204,6 +204,19 @@ async def delete_document_with_user(user, collection_name):
     )
 
 
+async def delete_document_api_with_user(user, collection_name):
+    # create a new entry each time to avoid accidentally trying to delete the same one multiple times
+    doc_id = await ingest_document(
+        "testadmin", collection_lookup[collection_name]
+    )  # testadmin should be able to ingest documents into any collection
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    return client.delete(
+        f"/collections/{collection_lookup[collection_name]}/documents/plaintext/{doc_id}",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+
+
 @pytest.mark.parametrize(
     "user,collection_name",
     [
@@ -216,6 +229,9 @@ async def delete_document_with_user(user, collection_name):
 )
 async def test_can_delete_document(user, collection_name):
     assert await delete_document_with_user(user, collection_name)
+    response = await delete_document_api_with_user(user, collection_name)
+    assert response.status_code == 200
+    assert "document_id" in response.json()
 
 
 @pytest.mark.parametrize(
@@ -235,6 +251,7 @@ async def test_cannot_delete_document(user, collection_name):
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_document_with_user(user, collection_name)
+        await delete_document_api_with_user(user, collection_name)
 
 
 async def delete_collection_with_user(user, owner, location):
@@ -244,7 +261,20 @@ async def delete_collection_with_user(user, owner, location):
     )  # we add a unique identifier to avoid running into name collision issues
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    await delete_collection(token["access_token"], collection_id)
+    return await delete_collection(token["access_token"], collection_id)
+
+
+async def delete_collection_api_with_user(user, owner, location):
+    # we will create a collection each time to avoid trying to delete an already deleted one
+    collection_id = await create_collection_for_user(
+        owner, location, secrets.token_hex(8)
+    )  # we add a unique identifier to avoid running into name collision issues
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    return client.delete(
+        f"/collections/{collection_id}",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
 
 
 @pytest.mark.parametrize(
@@ -260,6 +290,9 @@ async def delete_collection_with_user(user, owner, location):
 )
 async def test_can_delete_collection(user, owner, location):
     await delete_collection_with_user(user, owner, location)
+    response = await delete_collection_api_with_user(user, owner, location)
+    assert response.status_code == 200
+    assert "collection_id" in response.json()
 
 
 @pytest.mark.parametrize(
@@ -279,6 +312,7 @@ async def test_cannot_delete_collection(user, owner, location):
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_collection_with_user(user, owner, location)
+        await delete_collection_api_with_user(user, owner, location)
 
 
 async def clean_up_local_collections():
