@@ -17,14 +17,14 @@ class TextFileLoader(ConciergeFileLoader):
         return not is_binary(full_path)
 
     @staticmethod
-    def load(full_path: str) -> ConciergeDocument:
+    def load(full_path: str, filename: str | None) -> ConciergeDocument:
         date_time = get_current_time()
         loader = TextLoader(full_path)
         pages = loader.load()
         return ConciergeDocument(
             metadata=TextFileLoader.TextFileMetadata(
                 source=full_path,
-                filename=Path(full_path).name,
+                filename=filename or Path(full_path).name,
                 extension=os.path.splitext(full_path)[1],
                 ingest_date=date_time,
                 type="plaintext",

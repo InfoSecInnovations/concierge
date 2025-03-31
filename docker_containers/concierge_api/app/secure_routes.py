@@ -174,5 +174,5 @@ async def get_files_route(
     doc_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
 ):
-    authorize(credentials, collection_id, "read")
+    await authorize(credentials, collection_id, "read")
     return await serve_binary(collection_id, doc_id, doc_type)
