@@ -2,9 +2,7 @@
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
-from app.authentication import (
-    get_keycloak_client,
-)
+from app.authentication import get_keycloak_client, get_keycloak_admin_openid_token
 from app.authorization import UnauthorizedOperationError
 from app.document_collections import (
     delete_collection,
@@ -18,10 +16,13 @@ import secrets
 from .lib import create_collection_for_user, clean_up_collections, ingest_document
 from app.app import app
 from fastapi.testclient import TestClient
+import os
+import json
 
 
 # we will use the collections created in the first tests for the subsequent tests
 collection_lookup = {}
+collection_ids = []
 
 client = TestClient(app)
 
@@ -54,6 +55,7 @@ async def test_can_create_collection(user, location):
     assert response.status_code == 200
     response_json = response.json()
     assert response_json["collection_id"]
+    collection_ids.append(response_json["collection_id"])
     collection_lookup[collection_name] = response_json["collection_id"]
 
 
@@ -70,8 +72,19 @@ async def test_can_create_collection(user, location):
 )
 async def test_cannot_create_collection(user, location):
     with pytest.raises((KeycloakPostError, KeycloakAuthenticationError)):
+        # test function behind the API call
         await create_collection_for_user(
             user, location, f"{user}'s {location} collection"
+        )
+
+        # test the API call itself
+        keycloak_client = get_keycloak_client()
+        token = keycloak_client.token(user, "test")
+        collection_name = f"{user}'s {location} API collection"
+        client.post(
+            "/collections",
+            headers={"Authorization": f"Bearer {token['access_token']}"},
+            json={"collection_name": collection_name, "location": location},
         )
 
 
@@ -93,6 +106,12 @@ async def test_can_read_collection(user, collection_name):
         token["access_token"], collection_lookup[collection_name]
     )
     assert docs is not None
+    response = client.get(
+        f"/collections/{collection_lookup[collection_name]}/documents",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
 
 
 @pytest.mark.parametrize(
@@ -113,6 +132,29 @@ async def test_cannot_read_collection(user, collection_name):
         keycloak_client = get_keycloak_client()
         token = keycloak_client.token(user, "test")
         await get_documents(token["access_token"], collection_lookup[collection_name])
+        client.get(
+            f"/collections/{collection_lookup[collection_name]}/documents",
+            headers={"Authorization": f"Bearer {token['access_token']}"},
+        )
+
+
+filename = "test_doc.txt"
+file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
+
+
+def ingest_document_api(user, collection_id):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = client.post(
+        f"/collections/{collection_id}/documents/files",
+        files=[("files", open(file_path, "rb"))],
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    for item in response.iter_lines():
+        line = json.loads(item)
+        if "document_id" in line:
+            document_id = line["document_id"]
+    return document_id
 
 
 @pytest.mark.parametrize(
@@ -127,6 +169,7 @@ async def test_cannot_read_collection(user, collection_name):
 )
 async def test_can_ingest_document(user, collection_name):
     assert await ingest_document(user, collection_lookup[collection_name])
+    assert ingest_document_api(user, collection_lookup[collection_name])
 
 
 @pytest.mark.parametrize(
@@ -146,6 +189,7 @@ async def test_cannot_ingest_document(user, collection_name):
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await ingest_document(user, collection_lookup[collection_name])
+        assert ingest_document_api(user, collection_lookup[collection_name])
 
 
 async def delete_document_with_user(user, collection_name):
@@ -237,5 +281,17 @@ async def test_cannot_delete_collection(user, owner, location):
         await delete_collection_with_user(user, owner, location)
 
 
+async def clean_up_local_collections():
+    token = get_keycloak_admin_openid_token()
+    for id in collection_ids:
+        token = get_keycloak_admin_openid_token()
+        # the tests may have deleted some of these, so we allow exceptions here
+        try:
+            await delete_collection(token["access_token"], id)
+        except Exception:
+            pass
+
+
 def teardown_module():
     asyncio.run(clean_up_collections())
+    asyncio.run(clean_up_local_collections())

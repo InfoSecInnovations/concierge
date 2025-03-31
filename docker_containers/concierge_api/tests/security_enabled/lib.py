@@ -29,7 +29,6 @@ filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 # we will use the same file for each test
 doc = load_file(file_path, filename)
-print(doc.metadata)
 with open(file_path, "rb") as f:
     binary = f.read()
 
