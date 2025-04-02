@@ -11,10 +11,10 @@ filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 collection_lookup = {}
+collection_name = "test_collection"
 
 
 def test_create_collection():
-    collection_name = "test_collection"
     response = client.post("/collections", json={"collection_name": collection_name})
     assert response.status_code == 200
     collection_id = response.json()["collection_id"]
@@ -22,8 +22,17 @@ def test_create_collection():
     collection_lookup[collection_name] = collection_id
 
 
+def test_list_collections():
+    response = client.get("/collections")
+    assert response.status_code == 200
+    assert find(
+        response.json(),
+        lambda x: x["collection_id"] == collection_lookup[collection_name],
+    )
+
+
 async def test_delete_collection():
-    response = client.delete(f"/collections/{collection_lookup["test_collection"]}")
+    response = client.delete(f"/collections/{collection_lookup[collection_name]}")
     assert response.status_code == 200
     collections = await get_collections(None)
     assert not find(
