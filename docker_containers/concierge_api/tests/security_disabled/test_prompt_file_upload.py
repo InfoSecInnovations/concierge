@@ -13,6 +13,7 @@ def test_source_file():
     response = client.post(
         "/prompt/source_file", files=[("file", open(file_path, "rb"))]
     )
+    assert response.status_code == 200
     file_id = response.json()["id"]
     prompt_file_path = get_temp_file(file_id)
     assert prompt_file_path
