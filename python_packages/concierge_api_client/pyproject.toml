@@ -3,7 +3,8 @@ name = "concierge-api-client"
 version = "0.1a1"
 requires-python = ">=3.12"
 dependencies = [
-
+  "httpx",
+  "python-keycloak"
 ]
 
 [build-system]
