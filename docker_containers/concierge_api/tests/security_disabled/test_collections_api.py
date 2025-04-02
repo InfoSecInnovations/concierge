@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from app.app import app
 import os
-from app.document_collections import delete_collection, get_collections
+from app.document_collections import delete_collection, get_collections, get_documents
 import asyncio
 from isi_util.list_util import find
 
@@ -29,6 +29,26 @@ def test_list_collections():
         response.json(),
         lambda x: x["collection_id"] == collection_lookup[collection_name],
     )
+
+
+async def test_insert_documents():
+    response = client.post(
+        f"/collections/{collection_lookup[collection_name]}/documents/files",
+        files=[("files", open(file_path, "rb"))],
+    )
+    assert response.status_code == 200
+    docs = await get_documents(None, collection_lookup[collection_name])
+    assert len(docs)
+
+
+async def test_insert_urls():
+    url = "https://en.wikipedia.org/wiki/Generative_artificial_intelligence"
+    response = client.post(
+        f"/collections/{collection_lookup[collection_name]}/documents/urls", json=[url]
+    )
+    assert response.status_code == 200
+    docs = await get_documents(None, collection_lookup[collection_name])
+    assert find(docs, lambda x: x.source == url)
 
 
 async def test_delete_collection():
