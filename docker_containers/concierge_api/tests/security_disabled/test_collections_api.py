@@ -4,6 +4,8 @@ import os
 from app.document_collections import delete_collection, get_collections, get_documents
 import asyncio
 from isi_util.list_util import find
+from app.ingesting import insert_document
+from app.loading import load_file
 
 client = TestClient(app)
 
@@ -49,6 +51,22 @@ async def test_insert_urls():
     assert response.status_code == 200
     docs = await get_documents(None, collection_lookup[collection_name])
     assert find(docs, lambda x: x.source == url)
+
+
+async def test_delete_document():
+    doc = load_file(file_path, filename)
+    with open(file_path, "rb") as f:
+        binary = f.read()
+    async for ingest_info in insert_document(
+        None, collection_lookup[collection_name], doc, binary
+    ):
+        pass
+    response = client.delete(
+        f"/collections/{collection_lookup[collection_name]}/documents/plaintext/{ingest_info.document_id}"
+    )
+    assert response.status_code == 200
+    docs = await get_documents(None, collection_lookup[collection_name])
+    assert not find(docs, lambda x: x.document_id == ingest_info.document_id)
 
 
 async def test_delete_collection():
