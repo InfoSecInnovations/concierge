@@ -73,7 +73,7 @@ def create_index_mapping(collection_id, collection_name):
 
 def delete_index_mapping(collection_id):
     client = get_client()
-    client.delete(MAPPING_INDEX_NAME, id=collection_id)
+    client.delete(MAPPING_INDEX_NAME, id=collection_id, refresh=True)
 
 
 def get_collection_mappings():
