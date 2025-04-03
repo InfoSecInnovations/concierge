@@ -67,7 +67,7 @@ async def insert_files_document_route(
 async def insert_urls_document_route(
     collection_id: str, urls: list[str]
 ) -> StreamingResponse:
-    return await insert_urls(None, collection_id, urls)
+    return insert_urls(None, collection_id, urls)
 
 
 @router.delete(

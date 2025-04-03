@@ -24,6 +24,6 @@ async def insert_uploaded_files(
                 async for result in insert_document(
                     token, collection_id, doc, data["binary"]
                 ):
-                    yield result.model_dump_json(exclude_unset=True)
+                    yield f"{result.model_dump_json(exclude_unset=True)}\n"
 
     return StreamingResponse(response_json())

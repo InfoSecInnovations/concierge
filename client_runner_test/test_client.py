@@ -4,6 +4,7 @@ import os
 
 client = ConciergeClient(server_url="http://127.0.0.1:8000")
 collection_id = None
+document_id = None
 
 filename = "test_doc.txt"
 file_path = os.path.join(
@@ -29,8 +30,30 @@ async def test_list_collections():
 
 
 async def test_insert_document():
+    global document_id
     async for line in client.insert_files(collection_id, [file_path]):
         print(line)
+        document_id = line["document_id"]
+
+
+async def test_insert_urls():
+    async for line in client.insert_urls(
+        collection_id,
+        ["https://en.wikipedia.org/wiki/Generative_artificial_intelligence"],
+    ):
+        print(line)
+
+
+async def test_list_documents():
+    documents = await client.get_documents(collection_id)
+    print(documents)
+
+
+async def test_delete_document():
+    deleted_document_id = await client.delete_document(
+        collection_id, "plaintext", document_id
+    )
+    print(deleted_document_id)
 
 
 async def test_collection_delete():
@@ -42,6 +65,9 @@ async def run_all():
     await test_collection_create()
     await test_list_collections()
     await test_insert_document()
+    await test_insert_urls()
+    await test_list_documents()
+    await test_delete_document()
     await test_collection_delete()
 
 

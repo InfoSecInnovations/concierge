@@ -20,6 +20,17 @@ class ConciergeClient:
             raise ConciergeRequestError(status_code=response.status_code)
         return response
 
+    async def __stream_request(
+        self, method, url, json=None, files: httpx._types.RequestFiles = None
+    ):
+        async with self.httpx_client.stream(
+            method=method, url=urljoin(self.server_url, url), json=json, files=files
+        ) as response:
+            if response.status_code not in EXPECTED_CODES:
+                raise ConciergeRequestError(status_code=response.status_code)
+            async for line in response.aiter_lines():
+                yield line
+
     async def create_collection(self, collection_name: str):
         response = await self.__make_request(
             "POST", "collections", {"collection_name": collection_name}
@@ -48,3 +59,18 @@ class ConciergeClient:
         )
         async for line in response.aiter_lines():
             yield json.loads(line)
+
+    async def insert_urls(self, collection_id: str, urls: list[str]):
+        async for line in self.__stream_request(
+            "POST",
+            f"/collections/{collection_id}/documents/urls",
+            json=urls,
+        ):
+            yield json.loads(line)
+
+    async def delete_document(self, collection_id, document_type, document_id):
+        response = await self.__make_request(
+            "DELETE",
+            f"collections/{collection_id}/documents/{document_type}/{document_id}",
+        )
+        return response.json()["document_id"]
