@@ -1,11 +1,9 @@
 [project]
-name = "concierge-api-client"
+name = "concierge-models"
 version = "0.1a1"
 requires-python = ">=3.12"
 dependencies = [
-  "httpx",
-  "python-keycloak",
-  "concierge-models"
+  "pydantic"
 ]
 
 [build-system]

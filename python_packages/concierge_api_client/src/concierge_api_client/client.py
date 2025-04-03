@@ -3,6 +3,7 @@ from urllib.parse import urljoin
 from .exceptions import ConciergeRequestError
 from .codes import EXPECTED_CODES
 import json
+from concierge_models import CollectionInfo, DocumentInfo, DocumentIngestInfo
 
 
 class ConciergeClient:
@@ -39,7 +40,7 @@ class ConciergeClient:
 
     async def get_collections(self):
         response = await self.__make_request("GET", "collections")
-        return response.json()
+        return [CollectionInfo(**item) for item in response.json()]
 
     async def delete_collection(self, collection_id: str):
         response = await self.__make_request("DELETE", f"collections/{collection_id}")
@@ -49,16 +50,15 @@ class ConciergeClient:
         response = await self.__make_request(
             "GET", f"collections/{collection_id}/documents"
         )
-        return response.json()
+        return [DocumentInfo(**item) for item in response.json()]
 
     async def insert_files(self, collection_id: str, file_paths: list[str]):
-        response = await self.__make_request(
+        async for line in self.__stream_request(
             "POST",
             f"/collections/{collection_id}/documents/files",
             files=[("files", open(file_path, "rb")) for file_path in file_paths],
-        )
-        async for line in response.aiter_lines():
-            yield json.loads(line)
+        ):
+            yield DocumentIngestInfo(**json.loads(line))
 
     async def insert_urls(self, collection_id: str, urls: list[str]):
         async for line in self.__stream_request(
@@ -66,7 +66,7 @@ class ConciergeClient:
             f"/collections/{collection_id}/documents/urls",
             json=urls,
         ):
-            yield json.loads(line)
+            yield DocumentIngestInfo(**json.loads(line))
 
     async def delete_document(self, collection_id, document_type, document_id):
         response = await self.__make_request(
