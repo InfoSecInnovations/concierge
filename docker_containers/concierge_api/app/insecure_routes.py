@@ -30,7 +30,7 @@ from .opensearch_binary import serve_binary
 router = APIRouter()
 
 
-@router.post("/collections", response_model_exclude_unset=True)
+@router.post("/collections", response_model_exclude_unset=True, status_code=201)
 async def create_collection_route(
     collection_info: BaseCollectionCreateInfo,
 ) -> CollectionInfo:

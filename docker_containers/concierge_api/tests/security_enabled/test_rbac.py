@@ -52,7 +52,7 @@ async def test_can_create_collection(user, location):
         headers={"Authorization": f"Bearer {token['access_token']}"},
         json={"collection_name": collection_name, "location": location},
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
     response_json = response.json()
     assert response_json["collection_id"]
     collection_ids.append(response_json["collection_id"])

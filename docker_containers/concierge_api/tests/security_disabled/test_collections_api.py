@@ -18,7 +18,7 @@ collection_name = "test_collection"
 
 def test_create_collection():
     response = client.post("/collections", json={"collection_name": collection_name})
-    assert response.status_code == 200
+    assert response.status_code == 201
     collection_id = response.json()["collection_id"]
     assert collection_id
     collection_lookup[collection_name] = collection_id

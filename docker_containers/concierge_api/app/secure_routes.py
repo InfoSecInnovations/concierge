@@ -59,7 +59,7 @@ async def get_collections_route(
     return await get_collections(credentials)
 
 
-@router.post("/collections", response_model_exclude_unset=True)
+@router.post("/collections", response_model_exclude_unset=True, status_code=201)
 async def create_collection_route(
     collection_info: AuthzCollectionCreateInfo,
     credentials: Annotated[str, Depends(valid_access_token)],

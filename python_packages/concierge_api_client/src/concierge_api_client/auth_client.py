@@ -4,6 +4,8 @@ from ssl import SSLContext
 from urllib.parse import urljoin
 from keycloak import KeycloakOpenID
 from asyncio import create_task, Task
+from .exceptions import ConciergeRequestException
+from .codes import EXPECTED_CODES
 
 
 class ConciergeAuthenticationError(Exception):
@@ -35,7 +37,7 @@ class ConciergeAuthorizationClient:
         self.refresh_task: Task | None = None
 
     async def __request_with_token(
-        self, method, url, json, task_id=None
+        self, method, url, json=None, task_id=None
     ) -> httpx.Response:
         if task_id is None:
             task_id = self.currentId
@@ -57,6 +59,8 @@ class ConciergeAuthorizationClient:
                 raise ConciergeTokenExpiredError(status_code=401)
             if response.status_code == 403:
                 raise ConciergeAuthenticationError(status_code=403)
+            if response.status_code not in EXPECTED_CODES:
+                raise ConciergeRequestException(status_code=response.status_code)
             return response
 
         task = create_task(make_request(token))
