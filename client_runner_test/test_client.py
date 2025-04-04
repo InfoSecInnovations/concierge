@@ -33,7 +33,7 @@ async def test_insert_document():
     global document_id
     async for line in client.insert_files(collection_id, [file_path]):
         print(line)
-        document_id = line["document_id"]
+        document_id = line.document_id
 
 
 async def test_insert_urls():
@@ -47,6 +47,13 @@ async def test_insert_urls():
 async def test_list_documents():
     documents = await client.get_documents(collection_id)
     print(documents)
+
+
+async def test_prompt():
+    async for line in client.prompt(
+        collection_id, "Where does Generative AI get its data from?", "question"
+    ):
+        print(line)
 
 
 async def test_delete_document():
@@ -67,6 +74,7 @@ async def run_all():
     await test_insert_document()
     await test_insert_urls()
     await test_list_documents()
+    await test_prompt()
     await test_delete_document()
     await test_collection_delete()
 

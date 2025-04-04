@@ -3,7 +3,13 @@ from urllib.parse import urljoin
 from .exceptions import ConciergeRequestError
 from .codes import EXPECTED_CODES
 import json
-from concierge_models import CollectionInfo, DocumentInfo, DocumentIngestInfo
+from concierge_models import (
+    CollectionInfo,
+    DocumentInfo,
+    DocumentIngestInfo,
+    TaskInfo,
+    PromptConfigInfo,
+)
 
 
 class ConciergeClient:
@@ -32,7 +38,7 @@ class ConciergeClient:
             async for line in response.aiter_lines():
                 yield line
 
-    async def create_collection(self, collection_name: str):
+    async def create_collection(self, collection_name: str) -> str:
         response = await self.__make_request(
             "POST", "collections", {"collection_name": collection_name}
         )
@@ -42,7 +48,7 @@ class ConciergeClient:
         response = await self.__make_request("GET", "collections")
         return [CollectionInfo(**item) for item in response.json()]
 
-    async def delete_collection(self, collection_id: str):
+    async def delete_collection(self, collection_id: str) -> str:
         response = await self.__make_request("DELETE", f"collections/{collection_id}")
         return response.json()["collection_id"]
 
@@ -68,9 +74,64 @@ class ConciergeClient:
         ):
             yield DocumentIngestInfo(**json.loads(line))
 
-    async def delete_document(self, collection_id, document_type, document_id):
+    async def delete_document(self, collection_id, document_type, document_id) -> str:
         response = await self.__make_request(
             "DELETE",
             f"collections/{collection_id}/documents/{document_type}/{document_id}",
         )
         return response.json()["document_id"]
+
+    async def get_tasks(self):
+        response = await self.__make_request("GET", "/tasks")
+        return {key: TaskInfo(**value) for key, value in response.json().items()}
+
+    async def get_personas(self):
+        response = await self.__make_request("GET", "/personas")
+        return {
+            key: PromptConfigInfo(**value) for key, value in response.json().items()
+        }
+
+    async def get_enhancers(self):
+        response = await self.__make_request("GET", "/enhancers")
+        return {
+            key: PromptConfigInfo(**value) for key, value in response.json().items()
+        }
+
+    async def prompt(
+        self,
+        collection_id: str,
+        prompt: str,
+        task: str,
+        persona: str | None = None,
+        enhancers: list[str] | None = None,
+        file_path: str | None = None,
+    ):
+        file_id = None
+        if file_path:
+            response = await self.__make_request(
+                "POST", "/prompt/source_file", files=[("file", open(file_path, "rb"))]
+            )
+            file_id = response["id"]
+        async for line in self.__stream_request(
+            "GET",
+            "prompt",
+            json={
+                "collection_id": collection_id,
+                "user_input": prompt,
+                "task": task,
+                "persona": persona,
+                "enhancers": enhancers,
+                "file_id": file_id,
+            },
+        ):
+            line_object = json.loads(line)
+            if "response" in line_object:
+                yield line_object["response"]
+
+    async def ollama_status(self) -> bool:
+        response = await self.__make_request("GET", "status/ollama")
+        return response.json()["running"]
+
+    async def opensearch_status(self) -> bool:
+        response = await self.__make_request("GET", "status/opensearch")
+        return response.json()["running"]

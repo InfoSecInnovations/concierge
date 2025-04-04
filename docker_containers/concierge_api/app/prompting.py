@@ -99,4 +99,4 @@ async def stream_response(
             "POST", f"http://{host()}:11434/api/generate", data=json.dumps(data)
         ) as response:
             async for line in response.aiter_lines():
-                yield line
+                yield f"{line}\n"

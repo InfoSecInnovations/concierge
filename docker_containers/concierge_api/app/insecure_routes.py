@@ -103,7 +103,7 @@ async def prompt_file_route(file: UploadFile) -> TempFileInfo:
     return await upload_prompt_file(file)
 
 
-@router.post("/prompt")
+@router.get("/prompt")
 async def prompt_route(prompt_info: PromptInfo) -> StreamingResponse:
     return await run_prompt(None, prompt_info)
 
