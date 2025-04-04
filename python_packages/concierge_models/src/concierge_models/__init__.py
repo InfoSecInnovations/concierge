@@ -13,7 +13,10 @@ class AuthzCollectionCreateInfo(BaseCollectionCreateInfo):
 class CollectionInfo(BaseModel):
     collection_name: Optional[str] = None
     collection_id: str
-    location: Optional[str] = None
+
+
+class AuthzCollectionInfo(CollectionInfo):
+    location: str
 
 
 class DocumentInfo(BaseModel):

@@ -10,9 +10,9 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import StreamingResponse
 from typing import Annotated
 from .authentication import server_url, get_token_info
-from .models import (
+from concierge_models import (
     AuthzCollectionCreateInfo,
-    CollectionInfo,
+    AuthzCollectionInfo,
     DocumentInfo,
     DeletedDocumentInfo,
     ServiceStatus,
@@ -55,7 +55,7 @@ router = APIRouter(dependencies=[Depends(valid_access_token)])
 @router.get("/collections", response_model_exclude_unset=True)
 async def get_collections_route(
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> list[CollectionInfo]:
+) -> list[AuthzCollectionInfo]:
     return await get_collections(credentials)
 
 
@@ -63,7 +63,7 @@ async def get_collections_route(
 async def create_collection_route(
     collection_info: AuthzCollectionCreateInfo,
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> CollectionInfo:
+) -> AuthzCollectionInfo:
     return await create_collection(
         credentials, collection_info.collection_name, collection_info.location
     )
@@ -73,7 +73,7 @@ async def create_collection_route(
 async def delete_collection_route(
     collection_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> CollectionInfo:
+) -> AuthzCollectionInfo:
     return await delete_collection(credentials, collection_id)
 
 

@@ -8,7 +8,7 @@ from .exceptions import ConciergeRequestError
 from .codes import EXPECTED_CODES
 import json
 from concierge_models import (
-    CollectionInfo,
+    AuthzCollectionInfo,
     DocumentInfo,
     DocumentIngestInfo,
     TaskInfo,
@@ -120,7 +120,7 @@ class ConciergeAuthorizationClient:
 
     async def get_collections(self):
         response = await self.__make_request("GET", "collections")
-        return [CollectionInfo(**item) for item in response.json()]
+        return [AuthzCollectionInfo(**item) for item in response.json()]
 
     async def delete_collection(self, collection_id: str) -> str:
         response = await self.__make_request("DELETE", f"collections/{collection_id}")

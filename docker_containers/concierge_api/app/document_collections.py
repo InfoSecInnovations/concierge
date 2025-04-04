@@ -22,7 +22,12 @@ from .opensearch import (
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
-from .models import CollectionInfo, DocumentInfo, DeletedDocumentInfo
+from concierge_models import (
+    CollectionInfo,
+    AuthzCollectionInfo,
+    DocumentInfo,
+    DeletedDocumentInfo,
+)
 
 
 class CollectionExistsError(Exception):
@@ -35,11 +40,11 @@ class InvalidLocationError(Exception):
         self.message = message
 
 
-async def get_collections(token) -> list[CollectionInfo]:
+async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
     if auth_enabled():
         available_resources = await list_resources(token)
         return [
-            CollectionInfo(
+            AuthzCollectionInfo(
                 collection_name=resource["displayName"],
                 collection_id=resource["_id"],
                 location=resource["type"].replace("collection:", ""),
