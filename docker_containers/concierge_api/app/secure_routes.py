@@ -108,7 +108,7 @@ async def insert_urls_document_route(
     urls: list[str],
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> StreamingResponse:
-    return await insert_urls(credentials, collection_id, urls)
+    return insert_urls(credentials, collection_id, urls)
 
 
 @router.delete(

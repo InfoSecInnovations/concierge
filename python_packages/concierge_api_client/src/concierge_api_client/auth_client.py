@@ -6,6 +6,14 @@ from keycloak import KeycloakOpenID
 from asyncio import create_task, Task
 from .exceptions import ConciergeRequestError
 from .codes import EXPECTED_CODES
+import json
+from concierge_models import (
+    CollectionInfo,
+    DocumentInfo,
+    DocumentIngestInfo,
+    TaskInfo,
+    PromptConfigInfo,
+)
 
 
 class ConciergeAuthenticationError(ConciergeRequestError):
@@ -29,28 +37,23 @@ class ConciergeAuthorizationClient:
         self.token = token
         self.keycloak_client = keycloak_client
         self.tasks: set[Task] = set()
-        self.currentId = 0
         self.refresh_task: Task | None = None
 
-    async def __request_with_token(
-        self, method, url, json=None, task_id=None
+    async def __make_request(
+        self, method, url, json=None, files=None, stream=False
     ) -> httpx.Response:
-        if task_id is None:
-            task_id = self.currentId
-            self.currentId += 1
-        token = self.token
-
         async def make_request(token):
             headers = (
                 {"Authorization": f"Bearer {token['access_token']}"} if token else None
             )
-            response = await self.httpx_client.request(
+            request = self.httpx_client.build_request(
                 method=method,
                 url=urljoin(self.server_url, url),
                 headers=headers,
                 json=json,
+                files=files,
             )
-            print(response)
+            response = await self.httpx_client.send(request, stream=stream)
             if response.status_code == 401:
                 raise ConciergeTokenExpiredError(status_code=401)
             if response.status_code == 403:
@@ -59,6 +62,7 @@ class ConciergeAuthorizationClient:
                 raise ConciergeRequestError(status_code=response.status_code)
             return response
 
+        token = self.token
         task = create_task(make_request(token))
         self.tasks.add(task)
 
@@ -94,12 +98,114 @@ class ConciergeAuthorizationClient:
                 await self.refresh_task
             # if not it has probably been refreshed and we're good to go
             # try to rerun using current token
-            return await self.__request_with_token(method, url, json, task_id)
+            return await self.__make_request(
+                method=method, url=url, json=json, files=files, stream=stream
+            )
+
+    async def __stream_request(self, method, url, json=None, files=None):
+        response = await self.__make_request(
+            method=method, url=url, json=json, files=files, stream=True
+        )
+        async for line in response.aiter_lines():
+            yield line
+        await response.aclose()
 
     async def create_collection(self, collection_name: str, location: str):
-        response = await self.__request_with_token(
+        response = await self.__make_request(
             "POST",
             "collections",
             {"collection_name": collection_name, "location": location},
         )
         return response.json()["collection_id"]
+
+    async def get_collections(self):
+        response = await self.__make_request("GET", "collections")
+        return [CollectionInfo(**item) for item in response.json()]
+
+    async def delete_collection(self, collection_id: str) -> str:
+        response = await self.__make_request("DELETE", f"collections/{collection_id}")
+        return response.json()["collection_id"]
+
+    async def get_documents(self, collection_id: str):
+        response = await self.__make_request(
+            "GET", f"collections/{collection_id}/documents"
+        )
+        return [DocumentInfo(**item) for item in response.json()]
+
+    async def insert_files(self, collection_id: str, file_paths: list[str]):
+        async for line in self.__stream_request(
+            "POST",
+            f"/collections/{collection_id}/documents/files",
+            files=[("files", open(file_path, "rb")) for file_path in file_paths],
+        ):
+            yield DocumentIngestInfo(**json.loads(line))
+
+    async def insert_urls(self, collection_id: str, urls: list[str]):
+        async for line in self.__stream_request(
+            "POST", f"/collections/{collection_id}/documents/urls", json=urls
+        ):
+            yield DocumentIngestInfo(**json.loads(line))
+
+    async def delete_document(self, collection_id, document_type, document_id) -> str:
+        response = await self.__make_request(
+            "DELETE",
+            f"collections/{collection_id}/documents/{document_type}/{document_id}",
+        )
+        return response.json()["document_id"]
+
+    async def get_tasks(self):
+        response = await self.__make_request("GET", "/tasks")
+        return {key: TaskInfo(**value) for key, value in response.json().items()}
+
+    async def get_personas(self):
+        response = await self.__make_request("GET", "/personas")
+        return {
+            key: PromptConfigInfo(**value) for key, value in response.json().items()
+        }
+
+    async def get_enhancers(self):
+        response = await self.__make_request("GET", "/enhancers")
+        return {
+            key: PromptConfigInfo(**value) for key, value in response.json().items()
+        }
+
+    async def prompt(
+        self,
+        collection_id: str,
+        prompt: str,
+        task: str,
+        persona: str | None = None,
+        enhancers: list[str] | None = None,
+        file_path: str | None = None,
+    ):
+        file_id = None
+        if file_path:
+            response = await self.__make_request(
+                "POST", "/prompt/source_file", files=[("file", open(file_path, "rb"))]
+            )
+            file_id = response["id"]
+        async for line in self.__stream_request(
+            "GET",
+            "prompt",
+            json={
+                "collection_id": collection_id,
+                "user_input": prompt,
+                "task": task,
+                "persona": persona,
+                "enhancers": enhancers,
+                "file_id": file_id,
+            },
+            stream=True,
+        ):
+            line_object = json.loads(line)
+            if "response" in line_object:
+                yield line_object["response"]
+        await response.aclose()
+
+    async def ollama_status(self) -> bool:
+        response = await self.__make_request("GET", "status/ollama")
+        return response.json()["running"]
+
+    async def opensearch_status(self) -> bool:
+        response = await self.__make_request("GET", "status/opensearch")
+        return response.json()["running"]
