@@ -1,9 +1,9 @@
 [project]
-name = "concierge-models"
+name = "concierge-keycloak"
 version = "0.1a1"
 requires-python = ">=3.12"
 dependencies = [
-  "pydantic"
+  "python-keycloak"
 ]
 
 [build-system]

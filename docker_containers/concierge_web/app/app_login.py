@@ -1,5 +1,5 @@
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
-from concierge_backend_lib.authentication import get_keycloak_client
+from concierge_keycloak import get_keycloak_client
 
 scope = "profile email openid"
 

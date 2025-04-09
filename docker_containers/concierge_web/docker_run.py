@@ -1,5 +1,5 @@
 from shiny import run_app
-from concierge_backend_lib.authorization import auth_enabled
+from concierge_util import auth_enabled
 
 # this script should only be run inside the docker container
 

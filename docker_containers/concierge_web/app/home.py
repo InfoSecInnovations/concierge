@@ -1,7 +1,7 @@
 from shiny import ui, Inputs, Outputs, Session, render, module, reactive
-from markdown_renderer import md
-from functions import has_edit_access, has_read_access
-from concierge_backend_lib.authorization import auth_enabled
+from concierge_util import auth_enabled
+from .common.markdown_renderer import md
+from .functions import has_edit_access, has_read_access
 
 title = """
 # Data Concierge AI

@@ -5,10 +5,10 @@ from .authorization import (
     list_resources,
     list_scopes,
     delete_resource,
-    auth_enabled,
     UnauthorizedOperationError,
 )
-from .authentication import get_token_info, get_keycloak_admin_client
+from concierge_util import auth_enabled
+from concierge_keycloak import get_token_info, get_keycloak_admin_client
 from uuid import uuid4
 from .opensearch import (
     create_collection_index,
@@ -22,7 +22,7 @@ from .opensearch import (
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
-from concierge_models import (
+from concierge_types import (
     CollectionInfo,
     AuthzCollectionInfo,
     DocumentInfo,
@@ -78,7 +78,7 @@ async def create_collection(
     display_name: str,
     location: Location | None = None,
     collection_owner: str | None = None,
-) -> CollectionInfo:
+) -> CollectionInfo | AuthzCollectionInfo:
     print(f"creating {location or ''} collection {display_name}")
     if auth_enabled():
         # when using authz collections should always have a location
@@ -112,9 +112,12 @@ async def create_collection(
         await asyncify(create_index_mapping, resource_id, display_name)
     await asyncify(create_collection_index, resource_id)
     print(f"created {location or ''} collection {display_name} with ID {resource_id}")
-    return CollectionInfo(
-        collection_name=display_name, collection_id=resource_id, location=location
-    )
+    if auth_enabled():
+        return AuthzCollectionInfo(
+            collection_name=display_name, collection_id=resource_id, location=location
+        )
+    else:
+        return CollectionInfo(collection_name=display_name, collection_id=resource_id)
 
 
 async def delete_collection(token, collection_id):

@@ -3,12 +3,13 @@ from urllib.parse import urljoin
 from .exceptions import ConciergeRequestError
 from .codes import EXPECTED_CODES
 import json
-from concierge_models import (
+from concierge_types import (
     CollectionInfo,
     DocumentInfo,
     DocumentIngestInfo,
     TaskInfo,
     PromptConfigInfo,
+    ModelLoadInfo,
 )
 
 
@@ -135,3 +136,11 @@ class ConciergeClient:
     async def opensearch_status(self) -> bool:
         response = await self.__make_request("GET", "status/opensearch")
         return response.json()["running"]
+
+    async def load_model(self, model_name: str):
+        async for line in self.__stream_request(
+            "POST",
+            "/models/pull",
+            json={"model_name": model_name},
+        ):
+            yield ModelLoadInfo(**json.loads(line))

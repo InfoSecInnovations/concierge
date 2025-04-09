@@ -1,20 +1,7 @@
 from shiny import ui, render
-from concierge_backend_lib.authentication import (
-    get_keycloak_client,
-    AsyncTokenTaskRunner,
-)
-from concierge_backend_lib.authorization import auth_enabled
+from concierge_keycloak import get_keycloak_client
+from concierge_util import auth_enabled
 import json
-
-
-class WebAppAsyncTokenTaskRunner:
-    def __init__(self, token) -> None:
-        self.runner = AsyncTokenTaskRunner(token)
-
-    async def run_async_task(self, func):
-        _, result = await self.runner.run_with_token(func)
-        # TODO: refresh cookie token using AJAX somehow? This doesn't seem to be required, maybe the refresh tokens remain valid?
-        return result
 
 
 class CookieNotPresentError(Exception):
@@ -59,10 +46,3 @@ def get_auth_token(session):
 
         return None
     return token
-
-
-def get_task_runner(session):
-    token = get_auth_token(session)
-    if token is None:
-        return None
-    return WebAppAsyncTokenTaskRunner(token)

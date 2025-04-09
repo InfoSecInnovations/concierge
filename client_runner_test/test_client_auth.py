@@ -32,6 +32,11 @@ file_path = os.path.join(
 )
 
 
+async def test_user_info():
+    info = await client.get_user_info()
+    print(info)
+
+
 async def test_collection_create():
     global collection_id
     collection_id = await client.create_collection("stlbl", "private")
@@ -58,16 +63,39 @@ async def test_insert_urls():
         print(line)
 
 
+async def test_list_documents():
+    documents = await client.get_documents(collection_id)
+    print(documents)
+
+
+async def test_prompt():
+    async for line in client.prompt(
+        collection_id, "Where does Generative AI get its data from?", "question"
+    ):
+        print(line)
+
+
+async def test_delete_document():
+    deleted_document_id = await client.delete_document(
+        collection_id, "plaintext", document_id
+    )
+    print(deleted_document_id)
+
+
 async def test_collection_delete():
     deleted_collection_id = await client.delete_collection(collection_id)
     print(deleted_collection_id)
 
 
 async def run_all():
+    await test_user_info()
     await test_collection_create()
     await test_list_collections()
     await test_insert_document()
     await test_insert_urls()
+    await test_list_documents()
+    await test_prompt()
+    await test_delete_document()
     await test_collection_delete()
 
 

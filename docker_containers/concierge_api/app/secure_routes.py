@@ -9,8 +9,8 @@ from .document_collections import (
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import StreamingResponse
 from typing import Annotated
-from .authentication import server_url, get_token_info
-from concierge_models import (
+from concierge_keycloak import server_url, get_token_info, get_keycloak_client
+from concierge_types import (
     AuthzCollectionCreateInfo,
     AuthzCollectionInfo,
     DocumentInfo,
@@ -20,17 +20,19 @@ from concierge_models import (
     TaskInfo,
     PromptConfigInfo,
     TempFileInfo,
+    CollectionInfo,
+    ModelInfo,
 )
 from .insert_uploaded_files import insert_uploaded_files
 from .insert_urls import insert_urls
 from jwcrypto.jwt import JWTExpired
-from .authentication import get_keycloak_client
 from .status import check_ollama, check_opensearch
 from .run_prompt import run_prompt
 from .load_prompter_config import load_prompter_config
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
 from .authorization import authorize
+from .ollama import load_model
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
     tokenUrl=f"{server_url()}/realms/concierge/protocol/openid-connect/token",
@@ -73,7 +75,7 @@ async def create_collection_route(
 async def delete_collection_route(
     collection_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> AuthzCollectionInfo:
+) -> CollectionInfo:
     return await delete_collection(credentials, collection_id)
 
 
@@ -176,3 +178,9 @@ async def get_files_route(
 ):
     await authorize(credentials, collection_id, "read")
     return await serve_binary(collection_id, doc_id, doc_type)
+
+
+@router.post("/models/pull")
+async def load_model_route(model_info: ModelInfo):
+    # TODO: should this be locked behind a higher permission level?
+    return load_model(model_info.model_name)

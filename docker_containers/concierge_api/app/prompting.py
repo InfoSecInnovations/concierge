@@ -1,9 +1,10 @@
 import json
 import os
 from .opensearch_prompting import get_context_from_opensearch
-from .authorization import auth_enabled, authorize, UnauthorizedOperationError
+from .authorization import authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
 import httpx
+from concierge_util import auth_enabled
 
 
 def host():

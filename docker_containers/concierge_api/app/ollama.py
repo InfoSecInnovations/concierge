@@ -1,6 +1,8 @@
 import json
 import requests
 import os
+from fastapi.responses import StreamingResponse
+from concierge_types import ModelLoadInfo
 
 
 def host():
@@ -8,29 +10,37 @@ def host():
 
 
 def load_model(model_name):
-    def is_loaded():
-        models = requests.get(f"http://{host()}:11434/api/tags")
-        model_list = json.loads(models.text)["models"]
-        return next(
-            filter(lambda x: x["name"].split(":")[0] == model_name, model_list), None
-        )
+    def do_loading():
+        def is_loaded():
+            models = requests.get(f"http://{host()}:11434/api/tags")
+            model_list = json.loads(models.text)["models"]
+            return next(
+                filter(lambda x: x["name"].split(":")[0] == model_name, model_list),
+                None,
+            )
 
-    while not is_loaded():
-        print(f"{model_name} model not found. Please wait while it loads.")
-        request = requests.post(
-            f"http://{host()}:11434/api/pull",
-            data=json.dumps({"name": model_name}),
-            stream=True,
-        )
-        current = 0
-        for item in request.iter_lines():
-            if item:
-                value = json.loads(item)
-                # TODO: display statuses
-                if "total" in value:
-                    if "completed" in value:
-                        current = value["completed"]
-                    yield (current, value["total"])
+        while not is_loaded():
+            print(f"{model_name} model not found. Please wait while it loads.")
+            request = requests.post(
+                f"http://{host()}:11434/api/pull",
+                data=json.dumps({"name": model_name}),
+                stream=True,
+            )
+            current = 0
+            for item in request.iter_lines():
+                if item:
+                    value = json.loads(item)
+                    # TODO: display statuses
+                    if "total" in value:
+                        if "completed" in value:
+                            current = value["completed"]
+                        yield ModelLoadInfo(
+                            progress=current,
+                            total=value["total"],
+                            model_name=model_name,
+                        )
+
+    return StreamingResponse(do_loading())
 
 
 def create_embeddings_ollama(text):

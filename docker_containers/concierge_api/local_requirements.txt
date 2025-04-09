@@ -1,5 +1,6 @@
 -e ../../python_packages/isi_util
 -e ../../python_packages/concierge_util
--e ../../python_packages/concierge_models
+-e ../../python_packages/concierge_types
+-e ../../python_packages/concierge_keycloak
 
 -r requirements.txt

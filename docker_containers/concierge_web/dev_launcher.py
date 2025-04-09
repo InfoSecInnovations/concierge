@@ -1,5 +1,5 @@
 import os
-from concierge_backend_lib.authorization import auth_enabled
+from concierge_util import auth_enabled
 from shiny import run_app
 from concierge_scripts.load_dotenv import load_env
 

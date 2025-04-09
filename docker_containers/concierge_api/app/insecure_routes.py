@@ -8,7 +8,7 @@ from .document_collections import (
     delete_document,
 )
 from fastapi.responses import StreamingResponse
-from .models import (
+from concierge_types import (
     BaseCollectionCreateInfo,
     CollectionInfo,
     DocumentInfo,
@@ -18,6 +18,7 @@ from .models import (
     TaskInfo,
     PromptConfigInfo,
     TempFileInfo,
+    ModelInfo,
 )
 from .status import check_ollama, check_opensearch
 from .load_prompter_config import load_prompter_config
@@ -26,6 +27,7 @@ from .insert_urls import insert_urls
 from .run_prompt import run_prompt
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
+from .ollama import load_model
 
 router = APIRouter()
 
@@ -121,3 +123,8 @@ def opensearch_status():
 @router.get("/files/{collection_id}/{doc_type}/{doc_id}")
 async def get_files_route(collection_id: str, doc_type: str, doc_id: str):
     return await serve_binary(collection_id, doc_id, doc_type)
+
+
+@router.post("/models/pull")
+async def load_model_route(model_info: ModelInfo):
+    return load_model(model_info.model_name)

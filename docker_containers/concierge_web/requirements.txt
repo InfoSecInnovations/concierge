@@ -1,5 +1,6 @@
-humanize~=4.10.0
+humanize~=4.12.2
 shiny~=1.2.1
 git+https://github.com/posit-dev/py-shinyswatch.git@256d763
 isi-util==0.2a2
 concierge-util==0.2a2
+tqdm~=4.67.1

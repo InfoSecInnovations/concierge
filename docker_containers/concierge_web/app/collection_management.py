@@ -1,25 +1,17 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
-from components import (
+from .components import (
     collection_create_ui,
     collection_create_server,
     collection_selector_ui,
     collection_selector_server,
 )
 from isi_util.list_util import find
-from concierge_backend_lib.document_collections import (
-    get_collection_scopes,
-    delete_collection,
-    get_documents,
-    delete_document,
-    get_collections,
-)
-from concierge_backend_lib.authorization import auth_enabled
-from ingester import ingester_ui, ingester_server
+from concierge_util import auth_enabled
+from .ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-from functions import doc_link, format_collection_name
-from markdown_renderer import md
-from collections_data import CollectionsData
-from auth import WebAppAsyncTokenTaskRunner
+from .functions import doc_link, format_collection_name
+from .common.markdown_renderer import md
+from .common.collections_data import CollectionsData
 
 # --------
 # DOCUMENT

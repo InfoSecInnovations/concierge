@@ -1,0 +1,11 @@
+[project]
+name = "concierge-types"
+version = "0.1a1"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

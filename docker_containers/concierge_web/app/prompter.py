@@ -1,16 +1,13 @@
 from shiny import ui, Inputs, Outputs, Session, module, reactive, render
-from configobj import ConfigObj
 from pathlib import Path
 import os
-from concierge_backend_lib.prompting import get_response, get_context
-from components import (
+from .components import (
     collection_selector_ui,
     collection_selector_server,
 )
-from functions import page_link, load_llm_model
-from markdown_renderer import md
-from concierge_backend_lib.authorization import auth_enabled
-from auth import WebAppAsyncTokenTaskRunner
+from .functions import page_link, load_llm_model
+from .common.markdown_renderer import md
+from concierge_util import auth_enabled
 
 REFERENCE_LIMIT = 5
 

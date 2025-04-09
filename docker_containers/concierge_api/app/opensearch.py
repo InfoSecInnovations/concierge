@@ -1,6 +1,6 @@
 import os
 from opensearchpy import OpenSearch, RequestsHttpConnection
-from .authorization import auth_enabled
+from concierge_util import auth_enabled
 
 
 def host():

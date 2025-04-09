@@ -2,7 +2,7 @@ from starlette.responses import RedirectResponse
 from starlette.requests import Request
 import json
 from concierge_util import load_config
-from concierge_backend_lib.authentication import get_keycloak_client
+from concierge_keycloak import get_keycloak_client
 
 max_bytes = 3000  # setting a cookie adds escape characters to the stringified JSON so this allows a safe margin to avoid hitting the 4096 byte limit
 

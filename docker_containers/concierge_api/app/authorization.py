@@ -1,4 +1,4 @@
-from .authentication import (
+from concierge_keycloak import (
     get_keycloak_client,
     get_keycloak_admin_client,
     server_url,
@@ -13,10 +13,6 @@ import ssl
 class UnauthorizedOperationError(Exception):
     def __init__(self, message=""):
         self.message = message
-
-
-def auth_enabled():
-    return os.getenv("CONCIERGE_SECURITY_ENABLED", "False") == "True"
 
 
 async def authorize(token, resource, scope: str | None = None):

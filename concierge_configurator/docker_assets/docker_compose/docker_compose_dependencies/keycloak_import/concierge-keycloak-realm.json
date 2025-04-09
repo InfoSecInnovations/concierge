@@ -685,11 +685,13 @@
       "clientAuthenticatorType": "client-secret",
       "redirectUris": [
         "http://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback",
-        "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback"
+        "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback",
+        "http://127.0.0.1:8000/docs/oauth2-redirect"
       ],
       "webOrigins": [
         "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}",
-        "http://${CONCIERGE_HOST}:${CONCIERGE_PORT}"
+        "http://${CONCIERGE_HOST}:${CONCIERGE_PORT}",
+        "http://127.0.0.1:8000"
       ],
       "notBefore": 0,
       "bearerOnly": false,

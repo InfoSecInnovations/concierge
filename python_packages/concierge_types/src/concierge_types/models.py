@@ -45,6 +45,16 @@ class DocumentIngestInfo(BaseModel):
     document_type: str
 
 
+class ModelLoadInfo(BaseModel):
+    progress: int
+    total: int
+    model_name: str
+
+
+class ModelInfo(BaseModel):
+    model_name: str
+
+
 class PromptInfo(BaseModel):
     collection_id: str
     task: str

@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from .authorization import auth_enabled
+from concierge_util import auth_enabled
 from . import insecure_routes
 from . import secure_routes
 import os
