@@ -215,7 +215,7 @@ def collection_management_server(
     def get_documents_effect():
         docs = get_documents_task.result()
         fetching_docs.set(False)
-        current_docs.set([DocumentItem(**doc, element_id=rand_hex(4)) for doc in docs])
+        current_docs.set([DocumentItem(**doc.model_dump(), element_id=rand_hex(4)) for doc in docs])
 
     @reactive.effect
     @reactive.event(
