@@ -3,6 +3,7 @@ from tqdm import tqdm
 from ..common.text_list import text_list_ui, text_list_server
 from typing import AsyncGenerator, Any, Callable
 from concierge_types import DocumentIngestInfo
+import os
 
 
 @module.ui
@@ -60,7 +61,13 @@ def ingester_server(
 
     async def ingest_files(files: list[dict], collection_id: str):
         print("ingest files")
-        await load_doc(load_files(collection_id, [file["datapath"] for file in files]), "loading files")
+        # we want to conserve the original file names
+        named_files = []
+        for file in files:
+            named_file = os.path.join(os.path.dirname(file["datapath"]), file["name"])
+            os.rename(file["datapath"], named_file)
+            named_files.append(named_file)
+        await load_doc(load_files(collection_id, named_files), "loading files")
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
