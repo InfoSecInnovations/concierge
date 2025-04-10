@@ -2,7 +2,7 @@ from shiny import module, reactive, ui, Inputs, Outputs, Session
 import os
 
 @module.ui
-def text_input_enter_ui(label, placeholder):
+def text_input_enter_ui(label: str, placeholder: str):
     id_input = module.resolve_id("text_input_enter")
     id_enter = module.resolve_id("enter")
     return [
@@ -36,7 +36,7 @@ def text_input_enter_ui(label, placeholder):
 
 @module.server
 def text_input_enter_server(
-    input: Inputs, output: Outputs, session: Session, processing
+    input: Inputs, output: Outputs, session: Session, processing: reactive.Value
 ):
     # We're going to indepedently set the value when either
     # * the submit button is pressed

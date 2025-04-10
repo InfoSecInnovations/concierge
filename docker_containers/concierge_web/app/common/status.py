@@ -1,5 +1,5 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session
-from isi_util.async_single import asyncify
+from typing import Callable
 
 @module.ui
 def status_ui():
@@ -7,7 +7,7 @@ def status_ui():
 
 
 @module.server
-def status_server(input: Inputs, output: Outputs, session: Session, check_ollama, check_opensearch):
+def status_server(input: Inputs, output: Outputs, session: Session, check_ollama: Callable[[], bool], check_opensearch: Callable[[], bool]):
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
 

@@ -18,8 +18,8 @@ def collection_create_server(
     output: Outputs,
     session: Session,
     client: ConciergeClient,
-    selected_collection,
-    collections,
+    selected_collection: reactive.Value,
+    collections: reactive.Value[CollectionsData],
 ):
     creating = reactive.value(False)
     new_collection_name = text_input_enter_server("new_collection", creating)

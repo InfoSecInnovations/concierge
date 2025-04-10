@@ -20,7 +20,7 @@ def ingester_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    selected_collection,
+    selected_collection: reactive.Value,
     load_files: Callable[[str, list[str]], AsyncGenerator[DocumentIngestInfo, Any]],
     load_urls: Callable[[str, list[str]], AsyncGenerator[DocumentIngestInfo, Any]]
 ):

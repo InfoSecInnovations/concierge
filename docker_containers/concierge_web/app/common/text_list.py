@@ -7,7 +7,7 @@ def text_list_ui():
 
 
 @module.server
-def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger):
+def text_list_server(input: Inputs, output: Outputs, session: Session, clear_trigger: reactive.Value):
     input_ids = reactive.value([f"input_{rand_hex(4)}"])
     container_id = module.resolve_id("input_list_container")
     list_id = module.resolve_id("input_list")
