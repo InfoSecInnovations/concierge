@@ -51,7 +51,7 @@ async def test_list_documents():
 
 async def test_prompt():
     async for line in client.prompt(
-        collection_id, "Where does Generative AI get its data from?", "question"
+        collection_id, "Where does Generative AI get its data from?", "question", None, []
     ):
         print(line)
 

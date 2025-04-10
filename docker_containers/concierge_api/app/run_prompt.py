@@ -32,7 +32,7 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
                 raise HTTPException(
                     status_code=400, detail="Requested enhancer not found"
                 )
-            enhancer_prompts.routerend(enhancers[enhancer]["prompt"])
+            enhancer_prompts.append(enhancers[enhancer]["prompt"])
     else:
         enhancer_prompts = None
 
@@ -46,6 +46,9 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
     context = await get_context(
         token, prompt_info.collection_id, 5, prompt_info.user_input
     )
+
+    # TODO: stream context
+    # TODO: send message if no context found
 
     return StreamingResponse(
         stream_response(

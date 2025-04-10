@@ -6,6 +6,7 @@ from ..common.status import status_ui, status_server
 from .home import home_ui, home_server
 from .collection_management import collection_management_ui, collection_management_server
 from ..common.update_status import update_status_reactives
+from .prompter import prompter_ui, prompter_server
 
 API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
 
@@ -30,6 +31,7 @@ def server(input: Inputs, output: Outputs, session: Session):
                     "Collection Management",
                     collection_management_ui("collection_management"),
                 ),
+            ui.nav_panel("Prompter", prompter_ui("prompter")),
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
             id="concierge_nav",
         )
@@ -61,5 +63,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             fetch_collections()
         else:
             collections.set(CollectionsData(collections=[], loading=False))
+
+    prompter_server("prompter", client, selected_collection, collections, opensearch_status, ollama_status)
 
 app = App(app_ui, server)
