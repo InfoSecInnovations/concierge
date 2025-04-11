@@ -12,6 +12,8 @@ from .auth import get_auth_token
 import ssl
 from ..common.status import status_ui, status_server
 from .home import home_ui, home_server
+from ..common.collection_management_ui import collection_management_ui
+from .collection_management import collection_management_server
 
 API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
 
@@ -36,6 +38,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     selected_collection = reactive.value("")
     collections = reactive.value(CollectionsData(loading=True))
     user_info = reactive.value(None)
+    permissions: reactive.Value[set] = reactive.value(set())
 
     @reactive.extended_task
     async def get_info():
@@ -48,9 +51,23 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     get_info()
 
+    @reactive.extended_task
+    async def get_permissions():
+        return await client.get_permissions()
+
+    @reactive.effect
+    def get_permissions_effect():
+        permissions_value = get_permissions.result()
+        permissions.set(permissions_value)
+
+    get_permissions()
+
     @reactive.calc
     def nav_items():
+        perms = permissions.get()
         items = [ui.nav_panel("Home", home_ui("home"))]
+        if "collection:private:create" in perms or "collection:shared:create" in perms or "update" in perms or "delete" in perms:
+            items.append(ui.nav_panel("Collection Management", collection_management_ui("collection_management")))
         items.append(
             ui.nav_control(
                 ui.input_action_button("openid_logout", "Log Out", class_="my-3")
@@ -67,7 +84,15 @@ def server(input: Inputs, output: Outputs, session: Session):
         )
     
     status = status_server("status_widget", client.ollama_status, client.opensearch_status)
+
     home_server("home", user_info)
+    collection_management_server("collection_management", client, selected_collection, collections, opensearch_status, user_info, permissions)
+
+    @reactive.effect
+    def update_status():
+        current_status = status()
+        opensearch_status.set(current_status["opensearch"])
+        ollama_status.set(current_status["ollama"])
 
 shiny_app = App(app_ui, server)
 

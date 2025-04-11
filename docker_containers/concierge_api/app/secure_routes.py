@@ -31,8 +31,9 @@ from .run_prompt import run_prompt
 from .load_prompter_config import load_prompter_config
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
-from .authorization import authorize
+from .authorization import authorize, list_permissions, has_scope, list_scopes
 from .ollama import load_model
+import asyncio
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
     tokenUrl=f"{server_url()}/realms/concierge/protocol/openid-connect/token",
@@ -125,6 +126,9 @@ async def delete_document_route(
 ) -> DeletedDocumentInfo:
     return await delete_document(credentials, collection_id, document_type, document_id)
 
+@router.get("/{collection_id}/scopes")
+async def get_collection_scopes(collection_id: str, credentials: Annotated[str, Depends(valid_access_token)]):
+    return await list_scopes(credentials, collection_id)
 
 @router.get("/tasks", response_model_exclude_unset=True)
 def get_tasks_route() -> dict[str, TaskInfo]:
@@ -150,8 +154,11 @@ async def prompt_file_route(file: UploadFile) -> TempFileInfo:
 
 
 @router.post("/prompt")
-async def prompt_route(prompt_info: PromptInfo) -> StreamingResponse:
-    return await run_prompt(None, prompt_info)
+async def prompt_route(
+    prompt_info: PromptInfo,
+    credentials: Annotated[str, Depends(valid_access_token)]
+) -> StreamingResponse:
+    return await run_prompt(credentials, prompt_info)
 
 
 @router.get("/status/ollama")
@@ -167,6 +174,18 @@ def opensearch_status():
 @router.get("/user_info")
 async def get_user_info_route(credentials: Annotated[str, Depends(valid_access_token)]):
     return await get_token_info(credentials)
+
+
+@router.get("/permissions")
+async def get_permissions(credentials: Annotated[str, Depends(valid_access_token)]):   
+    permissions, read, update, delete = await asyncio.gather(list_permissions(credentials), has_scope(credentials, "read"), has_scope(credentials, "update"), has_scope(credentials, "delete"))
+    if read:
+        permissions.add("read")
+    if update:
+        permissions.add("update")
+    if delete:
+        permissions.add("delete")
+    return permissions
 
 
 @router.get("/files/{collection_id}/{doc_type}/{doc_id}")

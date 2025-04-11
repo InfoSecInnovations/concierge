@@ -153,6 +153,10 @@ class ConciergeAuthorizationClient:
             f"collections/{collection_id}/documents/{document_type}/{document_id}",
         )
         return response.json()["document_id"]
+    
+    async def get_collection_scopes(self, collection_id: str):
+        response = await self.__make_request("GET", f"/{collection_id}/scopes")
+        return set(response.json())
 
     async def get_tasks(self):
         response = await self.__make_request("GET", "/tasks")
@@ -212,6 +216,10 @@ class ConciergeAuthorizationClient:
     async def get_user_info(self):
         response = await self.__make_request("GET", "/user_info")
         return response.json()
+    
+    async def get_permissions(self):
+        response = await self.__make_request("GET", "/permissions")
+        return set(response.json())
 
     async def load_model(self, model_name: str):
         async for line in self.__stream_request(

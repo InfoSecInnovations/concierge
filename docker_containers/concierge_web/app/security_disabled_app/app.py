@@ -4,7 +4,8 @@ from concierge_api_client import ConciergeClient
 from .collections_data import CollectionsData
 from ..common.status import status_ui, status_server
 from .home import home_ui, home_server
-from .collection_management import collection_management_ui, collection_management_server
+from .collection_management import collection_management_server
+from ..common.collection_management_ui import collection_management_ui
 from ..common.update_status import update_status_reactives
 from .prompter import prompter_ui, prompter_server
 

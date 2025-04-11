@@ -1,4 +1,4 @@
-from shiny import ui, Inputs, Outputs, Session, render, module, reactive
+from shiny import ui, Inputs, Outputs, Session, render, module, reactive, req
 from ..common.markdown_renderer import md
 from ..common.home_texts import TITLE, QUICKSTART, TIPS, CONTRIBUTING
 
@@ -18,6 +18,7 @@ def home_server(
     @render.ui
     def profile():
         info = user_info.get()
+        req(info)
         contents = []
         if "name" in info:
             contents.append(ui.card_header(ui.markdown(f"Hello **{info['name']}**")))

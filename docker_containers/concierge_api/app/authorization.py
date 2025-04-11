@@ -97,7 +97,7 @@ async def list_permissions(token):
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
         # 401 means no authorization provided, 403 means not authorized, so we can return an empty set
         if e.response_code == 401 or e.response_code == 403:
-            return {}
+            return set()
     admin_client = get_keycloak_admin_client()
     client_id = await admin_client.a_get_client_id("concierge-auth")
     resources = [

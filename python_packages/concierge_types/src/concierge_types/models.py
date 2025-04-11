@@ -1,6 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional
 
+class UserInfo(BaseModel):
+    username: str
+    user_id: str
 
 class BaseCollectionCreateInfo(BaseModel):
     collection_name: str
@@ -17,6 +20,7 @@ class CollectionInfo(BaseModel):
 
 class AuthzCollectionInfo(CollectionInfo):
     location: str
+    owner: UserInfo
 
 
 class DocumentInfo(BaseModel):
