@@ -4,3 +4,4 @@ shinyswatch~=0.9.0
 isi-util==0.2a2
 concierge-util==0.2a2
 tqdm~=4.67.1
+python-dotenv~=1.1.0

@@ -1,7 +1,7 @@
 import json
 from importlib.resources import files
 import os
-from app.authentication import get_keycloak_admin_client
+from concierge_keycloak import get_keycloak_admin_client
 from load_dotenv import load_env
 
 

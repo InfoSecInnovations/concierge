@@ -28,10 +28,10 @@ class ConciergeTokenExpiredError(ConciergeRequestError):
 class ConciergeAuthorizationClient:
     def __init__(
         self,
-        server_url: str,
+        server_url: str,       
+        token: Any,
+        keycloak_client: KeycloakOpenID,
         verify: SSLContext | None = None,
-        token: None | Any = None,
-        keycloak_client: None | KeycloakOpenID = None,
     ):
         self.server_url = server_url
         self.httpx_client = httpx.AsyncClient(verify=verify, timeout=None)
