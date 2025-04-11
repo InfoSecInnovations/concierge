@@ -72,7 +72,10 @@ async def test_prompt():
     async for line in client.prompt(
         collection_id, "Where does Generative AI get its data from?", "question"
     ):
-        print(line)
+        if "response" in line:
+            print(line["response"])
+        else: 
+            print(line)
 
 
 async def test_delete_document():

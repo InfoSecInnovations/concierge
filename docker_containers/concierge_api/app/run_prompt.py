@@ -7,6 +7,7 @@ from .models import (
 from .prompting import stream_response, get_context
 from .opensearch import get_temp_file
 from .load_prompter_config import load_prompter_config
+import json
 
 
 async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingResponse:
@@ -47,15 +48,23 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
         token, prompt_info.collection_id, 5, prompt_info.user_input
     )
 
-    # TODO: stream context
-    # TODO: send message if no context found
+    if not len(context["sources"]):
+        def no_sources_response():
+            yield f'{json.dumps({"response": "No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."})}\n'
+        return StreamingResponse(no_sources_response())
 
-    return StreamingResponse(
-        stream_response(
+    async def stream_context_and_response():
+        for source in context["sources"]:
+            yield f'{json.dumps({
+                "source": source
+            })}\n'
+        async for x in stream_response(
             context=context["context"],
             task_prompt=task_prompt,
             user_input=prompt_info.user_input,
             persona_prompt=persona_prompt,
             source_file_contents=source_file_contents,
-        )
-    )
+        ):
+            yield x
+
+    return StreamingResponse(stream_context_and_response())

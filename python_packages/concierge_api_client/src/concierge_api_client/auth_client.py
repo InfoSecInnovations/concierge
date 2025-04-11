@@ -198,9 +198,7 @@ class ConciergeAuthorizationClient:
             },
             stream=True,
         ):
-            line_object = json.loads(line)
-            if "response" in line_object:
-                yield line_object["response"]
+            yield json.loads(line)
         await response.aclose()
 
     async def ollama_status(self) -> bool:

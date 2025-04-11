@@ -8,6 +8,7 @@ import asyncio
 import humanize
 import tqdm
 from concierge_types import TaskInfo, PromptConfigInfo
+from ..common.doc_page_link import page_link
 
 REFERENCE_LIMIT = 5
 
@@ -122,8 +123,7 @@ def prompter_server(
         return ui.TagList(
             ui.chat_ui(
                 id="prompter_chat",
-                placeholder=tasks_dict[selected_task].greeting,
-                messages=chat.messages(),
+                placeholder=tasks_dict[selected_task].greeting
             ),
             collection_selector_ui("collection_selector"),
             ui.layout_columns(
@@ -158,60 +158,32 @@ def prompter_server(
             chat.update_user_input(placeholder=tasks_dict[selected_task].greeting)
 
     async def stream_response(
-        collection_id: str, user_input: str, task: str, persona: str | None, selected_enhancers: list[str] | None, source_file: str | None
+        collection_id: str, user_input: str, task: str, persona: str | None, selected_enhancers: list[str] | None, file_path: str | None
     ):
-        # async def do_get_context(token):
-        #     return await get_context(
-        #         token["access_token"], collection_id, REFERENCE_LIMIT, user_input
-        #     )
-
-        # context = await task_runner.run_async_task(do_get_context)
-        # if len(context["sources"]):
-        #     yield "Responding based on the following sources:\n\n"
-        #     for source in context["sources"]:
-        #         yield f"{page_link(collection_id, source)}\n\n"
-        #     if "prompt" in tasks[task]:
-        #         yield await get_response(
-        #             context["context"],
-        #             tasks[task]["prompt"],
-        #             user_input,
-        #             None
-        #             if not persona or persona == "None"
-        #             else personas[persona]["prompt"],
-        #             None
-        #             if not selected_enhancers
-        #             else [
-        #                 enhancers[enhancer]["prompt"] for enhancer in selected_enhancers
-        #             ],
-        #             source_file,
-        #         )
-        # else:
-        #     yield "No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."
-        # TODO: file
-        async for x in client.prompt(collection_id, user_input, task, None if not persona or persona == "None" else persona, selected_enhancers):
-            # TODO: yield sources
-            yield x
+        async for x in client.prompt(collection_id, user_input, task, None if not persona or persona == "None" else persona, selected_enhancers, file_path):
+            if "response" in x:
+                yield x["response"]
+            elif "source" in x:
+                yield f"{page_link(collection_id, x["source"])}\n\n"
 
     @chat.on_user_submit
-    async def on_chat_submit():
+    async def on_chat_submit(user_input: str):
         collection_id = selected_collection.get()
         task = input.task_select()
         persona = input.persona_select()
         selected_enhancers = input.enhancers_select()
         input_files = input[f"prompt_file_{current_file_id.get()}"]()
-        file_contents = None
+        file_path = None
         if input_files and len(input_files):
-            with open(input_files[0]["datapath"], "r") as file:
-                file_contents = file.read()
-
+            file_path = input_files[0]["datapath"]
         await chat.append_message_stream(
             stream_response(
                 collection_id,
-                chat.user_input(),
+                user_input,
                 task,
                 persona,
                 selected_enhancers,
-                file_contents,
+                file_path,
             )
         )
 

@@ -126,9 +126,7 @@ class ConciergeClient:
                 "file_id": file_id,
             },
         ):
-            line_object = json.loads(line)
-            if "response" in line_object:
-                yield line_object["response"]
+            yield json.loads(line)
 
     async def ollama_status(self) -> bool:
         response = await self.__make_request("GET", "status/ollama")

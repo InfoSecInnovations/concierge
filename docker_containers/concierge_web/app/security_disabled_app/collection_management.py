@@ -198,7 +198,7 @@ def collection_management_server(
             )
         )
         if len(new_collections):
-            selected_collection.set(new_collections[0]["_id"])
+            selected_collection.set(new_collections[0].collection_id)
         else:
             selected_collection.set(None)
 
