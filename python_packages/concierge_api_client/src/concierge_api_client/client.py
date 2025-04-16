@@ -10,6 +10,7 @@ from concierge_types import (
     TaskInfo,
     PromptConfigInfo,
     ModelLoadInfo,
+    WebFile
 )
 
 
@@ -143,3 +144,8 @@ class ConciergeClient:
             json={"model_name": model_name},
         ):
             yield ModelLoadInfo(**json.loads(line))
+
+    async def get_file(self, collection_id: str, doc_type: str, doc_id: str):
+        response = await self.__make_request("GET", f"/files/{collection_id}/{doc_type}/{doc_id}")
+        media_type = response.headers.get("content-type")
+        return WebFile(bytes=await response.aread(), media_type=media_type)

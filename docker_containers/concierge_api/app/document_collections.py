@@ -8,7 +8,7 @@ from .authorization import (
     UnauthorizedOperationError,
 )
 from concierge_util import auth_enabled
-from concierge_keycloak import get_token_info, get_keycloak_admin_client
+from concierge_keycloak import get_token_info, get_keycloak_admin_client, get_username
 from uuid import uuid4
 from .opensearch import (
     create_collection_index,
@@ -27,6 +27,7 @@ from concierge_types import (
     AuthzCollectionInfo,
     DocumentInfo,
     DeletedDocumentInfo,
+    UserInfo
 )
 
 
@@ -40,6 +41,8 @@ class InvalidLocationError(Exception):
         self.message = message
 
 
+# TODO: add owner data to all AuthzCollectionInfo return types
+
 async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
     if auth_enabled():
         available_resources = await list_resources(token)
@@ -48,6 +51,7 @@ async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionI
                 collection_name=resource["displayName"],
                 collection_id=resource["_id"],
                 location=resource["type"].replace("collection:", ""),
+                owner=UserInfo(user_id=resource['attributes']['concierge_owner'][0], username=get_username(resource['attributes']['concierge_owner'][0]))
             )
             for resource in available_resources
             if (
@@ -114,7 +118,7 @@ async def create_collection(
     print(f"created {location or ''} collection {display_name} with ID {resource_id}")
     if auth_enabled():
         return AuthzCollectionInfo(
-            collection_name=display_name, collection_id=resource_id, location=location
+            collection_name=display_name, collection_id=resource_id, location=location, owner=UserInfo(user_id=owner_id, username=get_username(owner_id))
         )
     else:
         return CollectionInfo(collection_name=display_name, collection_id=resource_id)

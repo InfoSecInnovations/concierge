@@ -10,13 +10,13 @@ from typing import Callable, Coroutine, Any
 
 
 @module.ui
-def document_ui(collection_name, doc, can_delete):
+def document_ui(collection_id: str, doc: DocumentInfo, can_delete: bool):
     card_elements = [
         ui.markdown(
             f"""
-{doc_link(collection_name, doc)}
+{doc_link(collection_id, doc)}
 
-{doc["vector_count"]} vectors
+{doc.vector_count} vectors
 """,
             render_func=md.render,
         )

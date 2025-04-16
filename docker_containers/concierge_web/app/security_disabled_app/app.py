@@ -8,6 +8,9 @@ from .collection_management import collection_management_server
 from ..common.collection_management_ui import collection_management_ui
 from ..common.update_status import update_status_reactives
 from .prompter import prompter_ui, prompter_server
+from starlette.applications import Starlette
+from starlette.routing import Mount, Route
+from .files_route import serve_files
 
 API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
 
@@ -67,4 +70,12 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     prompter_server("prompter", client, selected_collection, collections, opensearch_status, ollama_status)
 
-app = App(app_ui, server)
+shiny_app = App(app_ui, server)
+
+routes = [
+    Route("/files/{collection_id}/{doc_type}/{doc_id}", endpoint=serve_files),
+    Mount("/", app=shiny_app),
+]
+
+
+app = Starlette(routes=routes)

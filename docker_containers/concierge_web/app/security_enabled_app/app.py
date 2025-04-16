@@ -14,6 +14,7 @@ from ..common.status import status_ui, status_server
 from .home import home_ui, home_server
 from ..common.collection_management_ui import collection_management_ui
 from .collection_management import collection_management_server
+from .files_route import serve_files
 
 API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
 
@@ -94,12 +95,33 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status.set(current_status["opensearch"])
         ollama_status.set(current_status["ollama"])
 
+    @reactive.extended_task
+    async def fetch_collections():
+        return await client.get_collections()
+
+    @reactive.effect
+    def fetch_collections_effect():
+        new_collections = fetch_collections.result()
+        collections.set(CollectionsData(collections=new_collections, loading=False))
+        if len(new_collections):
+            selected_collection.set(new_collections[0].collection_id)
+        else:
+            selected_collection.set(None)
+
+    @reactive.effect
+    def update_collections():
+        if opensearch_status.get():
+            fetch_collections()
+        else:
+            collections.set(CollectionsData(collections=[], loading=False))
+
 shiny_app = App(app_ui, server)
 
 routes = [
     Route("/callback", endpoint=auth_callback),
     Route("/refresh", endpoint=refresh),
     Route("/logout", endpoint=logout),
+    Route("/files/{collection_id}/{doc_type}/{doc_id}", endpoint=serve_files),
     Mount("/login", app=app_login),
     Mount("/", app=shiny_app),
 ]

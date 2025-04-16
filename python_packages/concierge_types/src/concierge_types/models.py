@@ -82,3 +82,8 @@ class TaskInfo(PromptConfigInfo):
 
 class TempFileInfo(BaseModel):
     id: str
+
+
+class WebFile(BaseModel):
+    bytes: bytes
+    media_type: str

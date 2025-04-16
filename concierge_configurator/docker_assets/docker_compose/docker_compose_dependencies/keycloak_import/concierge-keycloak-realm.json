@@ -686,7 +686,7 @@
       "redirectUris": [
         "http://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback",
         "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}/callback",
-        "http://127.0.0.1:8000/docs/oauth2-redirect"
+        "http://127.0.0.1:8000/*"
       ],
       "webOrigins": [
         "https://${CONCIERGE_HOST}:${CONCIERGE_PORT}",

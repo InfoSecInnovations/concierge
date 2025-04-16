@@ -88,7 +88,7 @@ def collection_management_server(
             )
             items = [
                 ui.markdown(
-                    f"### Selected collection: {format_collection_name(find(collections.get().collections, lambda collection: collection['_id'] == selected_collection.get()), user_info.get())}"
+                    f"### Selected collection: {format_collection_name(find(collections.get().collections, lambda collection: collection.collection_id == selected_collection.get()), user_info.get())}"
                 ),
                 ui.accordion(
                     *accordion_elements,
