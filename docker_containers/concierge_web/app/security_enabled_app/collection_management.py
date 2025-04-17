@@ -30,9 +30,7 @@ def collection_management_server(
     collection_selector_server(
         "collection_select", selected_collection, collections, user_info
     )
-    ingestion_done_trigger = ingester_server(
-        "ingester", selected_collection, client.insert_files, client.insert_urls
-    )
+    ingestion_done_trigger = ingester_server("ingester", client, selected_collection)
 
     document_delete_trigger = reactive.value(0)
     current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])

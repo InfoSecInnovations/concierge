@@ -1,5 +1,6 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session
-from typing import Callable
+from concierge_api_client import BaseConciergeClient
+
 
 @module.ui
 def status_ui():
@@ -7,17 +8,19 @@ def status_ui():
 
 
 @module.server
-def status_server(input: Inputs, output: Outputs, session: Session, check_ollama: Callable[[], bool], check_opensearch: Callable[[], bool]):
+def status_server(
+    input: Inputs, output: Outputs, session: Session, client: BaseConciergeClient
+):
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
 
     @reactive.extended_task
     async def get_ollama_status():
-        return await check_ollama()
+        return await client.ollama_status()
 
     @reactive.extended_task
     async def get_opensearch_status():
-        return await check_opensearch()
+        return await client.opensearch_status()
 
     @reactive.effect
     def set_ollama_status():

@@ -112,9 +112,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             id="concierge_nav",
         )
 
-    status = status_server(
-        "status_widget", client.ollama_status, client.opensearch_status
-    )
+    status = status_server("status_widget", client)
 
     home_server("home", user_info)
     collection_management_server(

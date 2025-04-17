@@ -46,11 +46,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         )
 
     home_server("home")
-    status = status_server(
-        "status_widget",
-        check_ollama=client.ollama_status,
-        check_opensearch=client.opensearch_status,
-    )
+    status = status_server("status_widget", client)
     collection_management_server(
         "collection_management",
         client,

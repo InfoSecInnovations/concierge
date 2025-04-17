@@ -1,8 +1,9 @@
 from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 from tqdm import tqdm
 from ..common.text_list import text_list_ui, text_list_server
-from typing import AsyncGenerator, Any, Callable
+from typing import AsyncGenerator, Any
 from concierge_types import DocumentIngestInfo
+from concierge_api_client import BaseConciergeClient
 import os
 
 
@@ -20,9 +21,8 @@ def ingester_server(
     input: Inputs,
     output: Outputs,
     session: Session,
+    client: BaseConciergeClient,
     selected_collection: reactive.Value,
-    load_files: Callable[[str, list[str]], AsyncGenerator[DocumentIngestInfo, Any]],
-    load_urls: Callable[[str, list[str]], AsyncGenerator[DocumentIngestInfo, Any]]
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
@@ -53,7 +53,10 @@ def ingester_server(
             p.set(0, message=f"{label}: loading...")
             async for x in stream:
                 p.max = x.total
-                p.set(x.progress + 1, message=f"{label}: part {x.progress + 1} of {x.total}.")
+                p.set(
+                    x.progress + 1,
+                    message=f"{label}: part {x.progress + 1} of {x.total}.",
+                )
                 page_progress.n = x.progress + 1
                 page_progress.total = x.total
                 page_progress.refresh()
@@ -67,13 +70,13 @@ def ingester_server(
             named_file = os.path.join(os.path.dirname(file["datapath"]), file["name"])
             os.rename(file["datapath"], named_file)
             named_files.append(named_file)
-        await load_doc(load_files(collection_id, named_files), "loading files")
+        await load_doc(client.insert_files(collection_id, named_files), "loading files")
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
     async def ingest_urls(urls: list[str], collection_id: str):
         print("ingest URLs")
-        await load_doc(load_urls(collection_id, urls), "loading URLs")
+        await load_doc(client.insert_urls(collection_id, urls), "loading URLs")
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 
