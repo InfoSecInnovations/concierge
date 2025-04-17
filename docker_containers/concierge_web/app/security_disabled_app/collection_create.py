@@ -9,7 +9,9 @@ COLLECTION_PLACEHOLDER = "new_collection_name"
 
 @module.ui
 def collection_create_ui():
-    return [text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER)]
+    return [
+        text_input_enter_ui("new_collection", "New Collection", COLLECTION_PLACEHOLDER)
+    ]
 
 
 @module.server
@@ -36,7 +38,10 @@ def collection_create_server(
             collection_id, new_collections = create_concierge_collection.result()
             collections.set(
                 CollectionsData(
-                    collections=new_collections,
+                    collections={
+                        collection.collection_id: collection
+                        for collection in new_collections
+                    },
                     loading=False,
                 )
             )

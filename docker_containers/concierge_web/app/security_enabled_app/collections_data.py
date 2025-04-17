@@ -3,5 +3,5 @@ from concierge_types import AuthzCollectionInfo
 
 
 class CollectionsData(BaseModel):
-    collections: list[AuthzCollectionInfo] = []
+    collections: dict[str, AuthzCollectionInfo] = {}
     loading: bool = False

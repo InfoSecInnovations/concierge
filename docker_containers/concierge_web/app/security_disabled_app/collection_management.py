@@ -1,11 +1,8 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
-from isi_util.list_util import find
 from ..common.ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-from ..common.markdown_renderer import md
 from .collections_data import CollectionsData
 from concierge_api_client import ConciergeClient
-from concierge_types import DocumentInfo
 from .collection_create import collection_create_ui, collection_create_server
 from ..common.collection_selector_ui import collection_selector_ui
 from .collection_selector_server import collection_selector_server
@@ -21,14 +18,12 @@ def collection_management_server(
     client: ConciergeClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData],
-    opensearch_status: reactive.Value
+    opensearch_status: reactive.Value,
 ):
     collection_create_server(
         "collection_create", client, selected_collection, collections
     )
-    collection_selector_server(
-        "collection_select", selected_collection, collections
-    )
+    collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server(
         "ingester", selected_collection, client.insert_files, client.insert_urls
     )
@@ -72,17 +67,19 @@ def collection_management_server(
                     value="manage_documents",
                 )
             )
-            return ui.TagList([
-                ui.markdown(
-                    f"### Selected collection: {find(collections.get().collections, lambda collection: collection.collection_id == selected_collection.get()).collection_name}"
-                ),
-                ui.accordion(
-                    *accordion_elements,
-                    id="collection_management_accordion",
-                    class_="mb-3",
-                ),
-                ui.input_task_button(id="delete", label="Delete Collection")
-            ])
+            return ui.TagList(
+                [
+                    ui.markdown(
+                        f"### Selected collection: {collections.get().collections[selected_collection.get()].collection_name}"
+                    ),
+                    ui.accordion(
+                        *accordion_elements,
+                        id="collection_management_accordion",
+                        class_="mb-3",
+                    ),
+                    ui.input_task_button(id="delete", label="Delete Collection"),
+                ]
+            )
         if collections.get().loading:
             return ui.markdown("Loading collections...")
         return ui.markdown("Please create a collection first!")
@@ -102,12 +99,7 @@ def collection_management_server(
             return ui.markdown("#### Loading collection...")
         return ui.TagList(
             *[
-                document_ui(
-                    doc.element_id,
-                    selected_collection.get(),
-                    doc,
-                    True
-                )
+                document_ui(doc.element_id, selected_collection.get(), doc, True)
                 for doc in current_docs.get()
             ],
         )
@@ -123,7 +115,10 @@ def collection_management_server(
         new_collections = delete.result()
         collections.set(
             CollectionsData(
-                collections=new_collections,
+                collections={
+                    collection.collection_id: collection
+                    for collection in new_collections
+                },
                 loading=False,
             )
         )
@@ -145,7 +140,9 @@ def collection_management_server(
     def get_documents_effect():
         docs = get_documents_task.result()
         fetching_docs.set(False)
-        current_docs.set([DocumentItem(**doc.model_dump(), element_id=rand_hex(4)) for doc in docs])
+        current_docs.set(
+            [DocumentItem(**doc.model_dump(), element_id=rand_hex(4)) for doc in docs]
+        )
 
     @reactive.effect
     @reactive.event(

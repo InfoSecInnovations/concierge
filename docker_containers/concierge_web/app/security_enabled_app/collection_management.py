@@ -2,7 +2,6 @@ from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from .collection_create import collection_create_ui, collection_create_server
 from .collection_selector_server import collection_selector_server
 from ..common.collection_selector_ui import collection_selector_ui
-from isi_util.list_util import find
 from ..common.ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from .format_collection_name import format_collection_name
@@ -46,7 +45,10 @@ def collection_management_server(
     def collection_management_content():
         if opensearch_status.get():
             perms = permissions.get()
-            show_toggle = "collection:shared:create" in perms and "collection:private:create" in perms
+            show_toggle = (
+                "collection:shared:create" in perms
+                and "collection:private:create" in perms
+            )
 
             return ui.TagList(
                 collection_create_ui("collection_create", show_toggle),
@@ -88,7 +90,7 @@ def collection_management_server(
             )
             items = [
                 ui.markdown(
-                    f"### Selected collection: {format_collection_name(find(collections.get().collections, lambda collection: collection.collection_id == selected_collection.get()), user_info.get())}"
+                    f"### Selected collection: {format_collection_name(collections.get().collections[selected_collection.get()], user_info.get())}"
                 ),
                 ui.accordion(
                     *accordion_elements,
@@ -142,7 +144,10 @@ def collection_management_server(
         new_collections = delete.result()
         collections.set(
             CollectionsData(
-                collections=new_collections,
+                collections={
+                    collection.collection_id: collection
+                    for collection in new_collections
+                },
                 loading=False,
             )
         )
@@ -167,7 +172,9 @@ def collection_management_server(
         scopes, docs = get_documents_task.result()
         current_scopes.set(scopes)
         fetching_docs.set(False)
-        current_docs.set([DocumentItem(**doc.model_dump(), element_id=rand_hex(4)) for doc in docs])
+        current_docs.set(
+            [DocumentItem(**doc.model_dump(), element_id=rand_hex(4)) for doc in docs]
+        )
 
     @reactive.effect
     @reactive.event(

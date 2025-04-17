@@ -26,7 +26,7 @@ def collection_selector_server(
             label="Select Collection",
             choices={
                 collection.collection_id: collection.collection_name
-                for collection in collections.get().collections
+                for collection in collections.get().collections.values()
             },
             selected=selected_collection.get(),
         )

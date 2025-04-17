@@ -23,8 +23,10 @@ def collection_selector_server(
             id="internal_selected_collection",
             label="Select Collection",
             choices={
-                collection.collection_id: format_collection_name(collection, user_info.get())
-                for collection in collections.get().collections
+                collection.collection_id: format_collection_name(
+                    collection, user_info.get()
+                )
+                for collection in collections.get().collections.values()
             },
             selected=selected_collection.get(),
         )

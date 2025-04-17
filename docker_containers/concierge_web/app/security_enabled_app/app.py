@@ -16,7 +16,7 @@ from ..common.collection_management_ui import collection_management_ui
 from .collection_management import collection_management_server
 from .files_route import serve_files
 
-API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
+API_URL = "http://127.0.0.1:8000/"  # TODO: get this from the environment
 
 app_ui = ui.page_auto(
     ui.output_ui("script_output"),
@@ -28,12 +28,18 @@ app_ui = ui.page_auto(
 if os.getenv("VSCODE_INJECTION") == "1":
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
+
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     token = get_auth_token(session)
     if not token:
         return
-    client = ConciergeAuthorizationClient(server_url=API_URL, token=token, keycloak_client=get_keycloak_client(), verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")))
+    client = ConciergeAuthorizationClient(
+        server_url=API_URL,
+        token=token,
+        keycloak_client=get_keycloak_client(),
+        verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")),
+    )
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -67,8 +73,18 @@ def server(input: Inputs, output: Outputs, session: Session):
     def nav_items():
         perms = permissions.get()
         items = [ui.nav_panel("Home", home_ui("home"))]
-        if "collection:private:create" in perms or "collection:shared:create" in perms or "update" in perms or "delete" in perms:
-            items.append(ui.nav_panel("Collection Management", collection_management_ui("collection_management")))
+        if (
+            "collection:private:create" in perms
+            or "collection:shared:create" in perms
+            or "update" in perms
+            or "delete" in perms
+        ):
+            items.append(
+                ui.nav_panel(
+                    "Collection Management",
+                    collection_management_ui("collection_management"),
+                )
+            )
         items.append(
             ui.nav_control(
                 ui.input_action_button("openid_logout", "Log Out", class_="my-3")
@@ -83,11 +99,21 @@ def server(input: Inputs, output: Outputs, session: Session):
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
             id="concierge_nav",
         )
-    
-    status = status_server("status_widget", client.ollama_status, client.opensearch_status)
+
+    status = status_server(
+        "status_widget", client.ollama_status, client.opensearch_status
+    )
 
     home_server("home", user_info)
-    collection_management_server("collection_management", client, selected_collection, collections, opensearch_status, user_info, permissions)
+    collection_management_server(
+        "collection_management",
+        client,
+        selected_collection,
+        collections,
+        opensearch_status,
+        user_info,
+        permissions,
+    )
 
     @reactive.effect
     def update_status():
@@ -102,7 +128,15 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.effect
     def fetch_collections_effect():
         new_collections = fetch_collections.result()
-        collections.set(CollectionsData(collections=new_collections, loading=False))
+        collections.set(
+            CollectionsData(
+                collections={
+                    collection.collection_id: collection
+                    for collection in new_collections
+                },
+                loading=False,
+            )
+        )
         if len(new_collections):
             selected_collection.set(new_collections[0].collection_id)
         else:
@@ -113,7 +147,8 @@ def server(input: Inputs, output: Outputs, session: Session):
         if opensearch_status.get():
             fetch_collections()
         else:
-            collections.set(CollectionsData(collections=[], loading=False))
+            collections.set(CollectionsData(collections={}, loading=False))
+
 
 shiny_app = App(app_ui, server)
 

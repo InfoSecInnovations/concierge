@@ -25,7 +25,7 @@ def collection_create_server(
     client: ConciergeAuthorizationClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData],
-    permissions: reactive.Value[set]
+    permissions: reactive.Value[set],
 ):
     creating = reactive.value(False)
     new_collection_name = text_input_enter_server("new_collection", creating)
@@ -42,7 +42,10 @@ def collection_create_server(
             collection_id, new_collections = create_concierge_collection.result()
             collections.set(
                 CollectionsData(
-                    collections=new_collections,
+                    collections={
+                        collection.collection_id: collection
+                        for collection in new_collections
+                    },
                     loading=False,
                 )
             )
