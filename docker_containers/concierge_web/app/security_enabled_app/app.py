@@ -114,7 +114,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     status = status_server("status_widget", client)
 
-    home_server("home", user_info)
+    home_server("home", user_info, permissions)
     collection_management_server(
         "collection_management",
         client,
