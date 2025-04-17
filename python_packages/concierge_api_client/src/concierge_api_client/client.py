@@ -10,11 +10,12 @@ from concierge_types import (
     TaskInfo,
     PromptConfigInfo,
     ModelLoadInfo,
-    WebFile
+    WebFile,
 )
+from .base_client import BaseConciergeClient
 
 
-class ConciergeClient:
+class ConciergeClient(BaseConciergeClient):
     def __init__(self, server_url: str):
         self.server_url = server_url
         self.httpx_client = httpx.AsyncClient(timeout=None)
@@ -36,8 +37,10 @@ class ConciergeClient:
             method=method, url=urljoin(self.server_url, url), json=json, files=files
         ) as response:
             if response.status_code not in EXPECTED_CODES:
-                message = await response.aread()     
-                raise ConciergeRequestError(status_code=response.status_code, message=message.decode())
+                message = await response.aread()
+                raise ConciergeRequestError(
+                    status_code=response.status_code, message=message.decode()
+                )
             async for line in response.aiter_lines():
                 yield line
 
@@ -146,6 +149,8 @@ class ConciergeClient:
             yield ModelLoadInfo(**json.loads(line))
 
     async def get_file(self, collection_id: str, doc_type: str, doc_id: str):
-        response = await self.__make_request("GET", f"/files/{collection_id}/{doc_type}/{doc_id}")
+        response = await self.__make_request(
+            "GET", f"/files/{collection_id}/{doc_type}/{doc_id}"
+        )
         media_type = response.headers.get("content-type")
         return WebFile(bytes=await response.aread(), media_type=media_type)

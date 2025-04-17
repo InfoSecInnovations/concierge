@@ -1,6 +1,6 @@
 from shiny import module, reactive, ui, Inputs, Outputs, Session
-from .collections_data import CollectionsData
-from concierge_types import CollectionExistsError
+from ..common.collections_data import CollectionsData
+from concierge_types import CollectionExistsError, AuthzCollectionInfo
 from concierge_api_client import ConciergeAuthorizationClient
 from ..common.text_input_enter import text_input_enter_ui, text_input_enter_server
 
@@ -24,7 +24,7 @@ def collection_create_server(
     session: Session,
     client: ConciergeAuthorizationClient,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData],
+    collections: reactive.Value[CollectionsData[AuthzCollectionInfo]],
     permissions: reactive.Value[set],
 ):
     creating = reactive.value(False)

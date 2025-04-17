@@ -1,9 +1,6 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
-from .collections_data import CollectionsData
-
-# --------
-# COLLECTION SELECTOR
-# --------
+from ..common.collections_data import CollectionsData
+from concierge_types import CollectionInfo
 
 
 @module.server
@@ -12,7 +9,7 @@ def collection_selector_server(
     output: Outputs,
     session: Session,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData],
+    collections: reactive.Value[CollectionsData[CollectionInfo]],
 ):
     @render.ui
     def collection_selector():

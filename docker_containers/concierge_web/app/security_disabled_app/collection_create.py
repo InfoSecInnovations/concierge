@@ -1,8 +1,9 @@
 from shiny import module, reactive, ui, req, Inputs, Outputs, Session
-from .collections_data import CollectionsData
+from ..common.collections_data import CollectionsData
 from concierge_types import CollectionExistsError
 from concierge_api_client import ConciergeClient
 from ..common.text_input_enter import text_input_enter_ui, text_input_enter_server
+from concierge_types import CollectionInfo
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
@@ -21,7 +22,7 @@ def collection_create_server(
     session: Session,
     client: ConciergeClient,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData],
+    collections: reactive.Value[CollectionsData[CollectionInfo]],
 ):
     creating = reactive.value(False)
     new_collection_name = text_input_enter_server("new_collection", creating)

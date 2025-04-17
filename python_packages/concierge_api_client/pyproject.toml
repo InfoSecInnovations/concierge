@@ -5,7 +5,7 @@ requires-python = ">=3.12"
 dependencies = [
   "httpx",
   "python-keycloak",
-  "concierge-models"
+  "concierge-types"
 ]
 
 [build-system]

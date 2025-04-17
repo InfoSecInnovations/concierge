@@ -126,9 +126,13 @@ async def delete_document_route(
 ) -> DeletedDocumentInfo:
     return await delete_document(credentials, collection_id, document_type, document_id)
 
+
 @router.get("/{collection_id}/scopes")
-async def get_collection_scopes(collection_id: str, credentials: Annotated[str, Depends(valid_access_token)]):
+async def get_collection_scopes(
+    collection_id: str, credentials: Annotated[str, Depends(valid_access_token)]
+):
     return await list_scopes(credentials, collection_id)
+
 
 @router.get("/tasks", response_model_exclude_unset=True)
 def get_tasks_route() -> dict[str, TaskInfo]:
@@ -153,10 +157,9 @@ async def prompt_file_route(file: UploadFile) -> TempFileInfo:
     return await upload_prompt_file(file)
 
 
-@router.post("/prompt")
+@router.get("/prompt")
 async def prompt_route(
-    prompt_info: PromptInfo,
-    credentials: Annotated[str, Depends(valid_access_token)]
+    prompt_info: PromptInfo, credentials: Annotated[str, Depends(valid_access_token)]
 ) -> StreamingResponse:
     return await run_prompt(credentials, prompt_info)
 
@@ -177,8 +180,13 @@ async def get_user_info_route(credentials: Annotated[str, Depends(valid_access_t
 
 
 @router.get("/permissions")
-async def get_permissions(credentials: Annotated[str, Depends(valid_access_token)]):   
-    permissions, read, update, delete = await asyncio.gather(list_permissions(credentials), has_scope(credentials, "read"), has_scope(credentials, "update"), has_scope(credentials, "delete"))
+async def get_permissions(credentials: Annotated[str, Depends(valid_access_token)]):
+    permissions, read, update, delete = await asyncio.gather(
+        list_permissions(credentials),
+        has_scope(credentials, "read"),
+        has_scope(credentials, "update"),
+        has_scope(credentials, "delete"),
+    )
     if read:
         permissions.add("read")
     if update:

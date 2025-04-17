@@ -1,6 +1,7 @@
 from shiny import module, reactive, ui, req, render, Inputs, Outputs, Session
 from .format_collection_name import format_collection_name
-from .collections_data import CollectionsData
+from ..common.collections_data import CollectionsData
+from concierge_types import AuthzCollectionInfo
 
 
 @module.server
@@ -9,7 +10,7 @@ def collection_selector_server(
     output: Outputs,
     session: Session,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData],
+    collections: reactive.Value[CollectionsData[AuthzCollectionInfo]],
     user_info,
 ):
     @render.ui

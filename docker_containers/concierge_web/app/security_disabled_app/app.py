@@ -1,16 +1,18 @@
 from shiny import ui, Inputs, Outputs, Session, reactive, render, App
 import shinyswatch
 from concierge_api_client import ConciergeClient
-from .collections_data import CollectionsData
+from ..common.collections_data import CollectionsData
 from ..common.status import status_ui, status_server
 from .home import home_ui, home_server
 from .collection_management import collection_management_server
 from ..common.collection_management_ui import collection_management_ui
 from ..common.update_status import update_status_reactives
-from .prompter import prompter_ui, prompter_server
+from ..common.prompter import prompter_ui, prompter_server
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 from .files_route import serve_files
+from concierge_types import CollectionInfo
+from .collection_selector_server import collection_selector_server
 
 API_URL = "http://127.0.0.1:8000/"  # TODO: get this from the environment
 
@@ -26,7 +28,9 @@ def server(input: Inputs, output: Outputs, session: Session):
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
-    collections = reactive.value(CollectionsData(loading=True))
+    collections: reactive.Value[CollectionsData[CollectionInfo]] = reactive.value(
+        CollectionsData(loading=True)
+    )
 
     @render.ui
     def concierge_main():
@@ -94,6 +98,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         collections,
         opensearch_status,
         ollama_status,
+        collection_selector_server,
     )
 
 

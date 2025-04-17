@@ -5,10 +5,11 @@ from ..common.collection_selector_ui import collection_selector_ui
 from ..common.ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from .format_collection_name import format_collection_name
-from .collections_data import CollectionsData
+from ..common.collections_data import CollectionsData
 from ..common.collection_document import document_ui, document_server
 from concierge_api_client import ConciergeAuthorizationClient
 from ..common.document_item import DocumentItem
+from concierge_types import AuthzCollectionInfo
 
 
 @module.server
@@ -18,7 +19,7 @@ def collection_management_server(
     session: Session,
     client: ConciergeAuthorizationClient,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData],
+    collections: reactive.Value[CollectionsData[AuthzCollectionInfo]],
     opensearch_status: reactive.Value,
     user_info: reactive.Value,
     permissions: reactive.Value[set],
@@ -102,7 +103,6 @@ def collection_management_server(
                 items.append(
                     ui.input_task_button(id="delete", label="Delete Collection")
                 )
-            print("sup")
             return ui.TagList(*items)
         if collections.get().loading:
             return ui.markdown("Loading collections...")

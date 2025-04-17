@@ -14,8 +14,9 @@ from concierge_types import (
     TaskInfo,
     PromptConfigInfo,
     ModelLoadInfo,
-    WebFile
+    WebFile,
 )
+from .base_client import BaseConciergeClient
 
 
 class ConciergeAuthenticationError(ConciergeRequestError):
@@ -26,10 +27,10 @@ class ConciergeTokenExpiredError(ConciergeRequestError):
     pass
 
 
-class ConciergeAuthorizationClient:
+class ConciergeAuthorizationClient(BaseConciergeClient):
     def __init__(
         self,
-        server_url: str,       
+        server_url: str,
         token: Any,
         keycloak_client: KeycloakOpenID,
         verify: SSLContext | None = None,
@@ -154,7 +155,7 @@ class ConciergeAuthorizationClient:
             f"collections/{collection_id}/documents/{document_type}/{document_id}",
         )
         return response.json()["document_id"]
-    
+
     async def get_collection_scopes(self, collection_id: str):
         response = await self.__make_request("GET", f"/{collection_id}/scopes")
         return set(response.json())
@@ -201,10 +202,8 @@ class ConciergeAuthorizationClient:
                 "enhancers": enhancers,
                 "file_id": file_id,
             },
-            stream=True,
         ):
             yield json.loads(line)
-        await response.aclose()
 
     async def ollama_status(self) -> bool:
         response = await self.__make_request("GET", "status/ollama")
@@ -217,7 +216,7 @@ class ConciergeAuthorizationClient:
     async def get_user_info(self):
         response = await self.__make_request("GET", "/user_info")
         return response.json()
-    
+
     async def get_permissions(self):
         response = await self.__make_request("GET", "/permissions")
         return set(response.json())
@@ -231,6 +230,8 @@ class ConciergeAuthorizationClient:
             yield ModelLoadInfo(**json.loads(line))
 
     async def get_file(self, collection_id: str, doc_type: str, doc_id: str):
-        response = await self.__make_request("GET", f"/files/{collection_id}/{doc_type}/{doc_id}")
+        response = await self.__make_request(
+            "GET", f"/files/{collection_id}/{doc_type}/{doc_id}"
+        )
         media_type = response.headers.get("content-type")
         return WebFile(bytes=await response.aread(), media_type=media_type)

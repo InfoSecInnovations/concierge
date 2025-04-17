@@ -1,2 +1,3 @@
-from .client import ConciergeClient
-from .auth_client import ConciergeAuthorizationClient
+from .client import ConciergeClient as ConciergeClient
+from .auth_client import ConciergeAuthorizationClient as ConciergeAuthorizationClient
+from .base_client import BaseConciergeClient as BaseConciergeClient

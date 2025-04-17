@@ -1,13 +1,14 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from ..common.ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
-from .collections_data import CollectionsData
+from ..common.collections_data import CollectionsData
 from concierge_api_client import ConciergeClient
 from .collection_create import collection_create_ui, collection_create_server
 from ..common.collection_selector_ui import collection_selector_ui
 from .collection_selector_server import collection_selector_server
 from ..common.collection_document import document_ui, document_server
 from ..common.document_item import DocumentItem
+from concierge_types import CollectionInfo
 
 
 @module.server
@@ -17,7 +18,7 @@ def collection_management_server(
     session: Session,
     client: ConciergeClient,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData],
+    collections: reactive.Value[CollectionsData[CollectionInfo]],
     opensearch_status: reactive.Value,
 ):
     collection_create_server(

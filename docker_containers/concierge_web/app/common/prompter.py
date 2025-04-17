@@ -1,16 +1,18 @@
 from shiny import ui, Inputs, Outputs, Session, module, reactive, render
 from ..common.collection_selector_ui import collection_selector_ui
-from .collection_selector_server import collection_selector_server
 from ..common.markdown_renderer import md
-from concierge_api_client import ConciergeClient
+from concierge_api_client import BaseConciergeClient
 from ..common.collections_data import CollectionsData
 import asyncio
 import humanize
 import tqdm
 from concierge_types import TaskInfo, PromptConfigInfo, CollectionInfo
 from ..common.doc_page_link import page_link
+from typing import TypeVar
 
 REFERENCE_LIMIT = 5
+
+TCollectionInfo = TypeVar("TCollectionInfo", bound=CollectionInfo)
 
 
 @module.ui
@@ -23,11 +25,12 @@ def prompter_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: ConciergeClient,
+    client: BaseConciergeClient,
     selected_collection: reactive.Value,
-    collections: reactive.Value[CollectionsData[CollectionInfo]],
+    collections: reactive.Value[CollectionsData[TCollectionInfo]],
     opensearch_status: reactive.Value,
     ollama_status: reactive.Value,
+    collection_selector_server,
 ):
     llm_loaded = reactive.value(False)
     current_file_id = reactive.value(0)

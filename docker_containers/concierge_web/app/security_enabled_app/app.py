@@ -1,7 +1,7 @@
 import os
 from shiny import ui, Inputs, Outputs, Session, reactive, App, render
 import shinyswatch
-from .collections_data import CollectionsData
+from ..common.collections_data import CollectionsData
 from concierge_api_client import ConciergeAuthorizationClient
 from concierge_keycloak import get_keycloak_client
 from starlette.applications import Starlette
@@ -15,6 +15,9 @@ from .home import home_ui, home_server
 from ..common.collection_management_ui import collection_management_ui
 from .collection_management import collection_management_server
 from .files_route import serve_files
+from concierge_types import AuthzCollectionInfo
+from ..common.prompter import prompter_ui, prompter_server
+from .collection_selector_server import collection_selector_server
 
 API_URL = "http://127.0.0.1:8000/"  # TODO: get this from the environment
 
@@ -43,7 +46,9 @@ def server(input: Inputs, output: Outputs, session: Session):
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
-    collections = reactive.value(CollectionsData(loading=True))
+    collections: reactive.Value[CollectionsData[AuthzCollectionInfo]] = reactive.value(
+        CollectionsData(loading=True)
+    )
     user_info = reactive.value(None)
     permissions: reactive.Value[set] = reactive.value(set())
 
@@ -85,6 +90,13 @@ def server(input: Inputs, output: Outputs, session: Session):
                     collection_management_ui("collection_management"),
                 )
             )
+        if "read" in perms:
+            items.append(
+                ui.nav_panel(
+                    "Prompter",
+                    prompter_ui("prompter"),
+                )
+            )
         items.append(
             ui.nav_control(
                 ui.input_action_button("openid_logout", "Log Out", class_="my-3")
@@ -113,6 +125,17 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status,
         user_info,
         permissions,
+    )
+    prompter_server(
+        "prompter",
+        client,
+        selected_collection,
+        collections,
+        opensearch_status,
+        ollama_status,
+        lambda str, selected_collection, collections: collection_selector_server(
+            str, selected_collection, collections, user_info
+        ),
     )
 
     @reactive.effect
