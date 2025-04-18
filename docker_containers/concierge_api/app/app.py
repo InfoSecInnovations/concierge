@@ -8,6 +8,7 @@ import os
 from load_dotenv import load_env
 from keycloak import KeycloakPostError
 import json
+from concierge_types import CollectionExistsError
 
 load_env()
 
@@ -40,3 +41,10 @@ else:
         )
 
     app.include_router(secure_routes.router)
+
+
+@app.exception_handler(CollectionExistsError)
+def collection_exists_error_handler(request: Request, exc: CollectionExistsError):
+    return JSONResponse(
+        content={"error_type": "CollectionExistsError"}, status_code=500
+    )

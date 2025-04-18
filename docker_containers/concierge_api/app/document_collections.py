@@ -27,13 +27,9 @@ from concierge_types import (
     AuthzCollectionInfo,
     DocumentInfo,
     DeletedDocumentInfo,
-    UserInfo
+    UserInfo,
+    CollectionExistsError,
 )
-
-
-class CollectionExistsError(Exception):
-    def __init__(self, message=""):
-        self.message = message
 
 
 class InvalidLocationError(Exception):
@@ -43,6 +39,7 @@ class InvalidLocationError(Exception):
 
 # TODO: add owner data to all AuthzCollectionInfo return types
 
+
 async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
     if auth_enabled():
         available_resources = await list_resources(token)
@@ -51,7 +48,10 @@ async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionI
                 collection_name=resource["displayName"],
                 collection_id=resource["_id"],
                 location=resource["type"].replace("collection:", ""),
-                owner=UserInfo(user_id=resource['attributes']['concierge_owner'][0], username=get_username(resource['attributes']['concierge_owner'][0]))
+                owner=UserInfo(
+                    user_id=resource["attributes"]["concierge_owner"][0],
+                    username=get_username(resource["attributes"]["concierge_owner"][0]),
+                ),
             )
             for resource in available_resources
             if (
@@ -118,7 +118,10 @@ async def create_collection(
     print(f"created {location or ''} collection {display_name} with ID {resource_id}")
     if auth_enabled():
         return AuthzCollectionInfo(
-            collection_name=display_name, collection_id=resource_id, location=location, owner=UserInfo(user_id=owner_id, username=get_username(owner_id))
+            collection_name=display_name,
+            collection_id=resource_id,
+            location=location,
+            owner=UserInfo(user_id=owner_id, username=get_username(owner_id)),
         )
     else:
         return CollectionInfo(collection_name=display_name, collection_id=resource_id)

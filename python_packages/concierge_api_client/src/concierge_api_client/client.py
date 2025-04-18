@@ -13,6 +13,7 @@ from concierge_types import (
     WebFile,
 )
 from .base_client import BaseConciergeClient
+from .raise_error import raise_error
 
 
 class ConciergeClient(BaseConciergeClient):
@@ -27,7 +28,7 @@ class ConciergeClient(BaseConciergeClient):
             method=method, url=urljoin(self.server_url, url), json=json, files=files
         )
         if response.status_code not in EXPECTED_CODES:
-            raise ConciergeRequestError(status_code=response.status_code)
+            raise_error(response)
         return response
 
     async def __stream_request(

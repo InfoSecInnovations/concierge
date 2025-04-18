@@ -17,6 +17,7 @@ from concierge_types import (
     WebFile,
 )
 from .base_client import BaseConciergeClient
+from .raise_error import raise_error
 
 
 class ConciergeAuthenticationError(ConciergeRequestError):
@@ -62,7 +63,7 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
             if response.status_code == 403:
                 raise ConciergeAuthenticationError(status_code=403)
             if response.status_code not in EXPECTED_CODES:
-                raise ConciergeRequestError(status_code=response.status_code)
+                raise_error(response)
             return response
 
         token = self.token
