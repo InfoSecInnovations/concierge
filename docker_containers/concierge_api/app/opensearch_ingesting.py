@@ -1,7 +1,7 @@
 from opensearchpy import helpers
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from .embeddings import create_embeddings
-from loaders.base_loader import ConciergeDocument
+from loaders.base_loader import ConciergeDocument, ConciergeFileLoader
 from dataclasses import fields
 from .opensearch import get_client
 from .models import DocumentIngestInfo
@@ -124,5 +124,8 @@ def insert(
             total=total,
             document_id=doc_id,
             document_type=document.metadata.type,
+            label=document.metadata.filename
+            if isinstance(document.metadata, ConciergeFileLoader.FileMetaData)
+            else document.metadata.source,
         )
     helpers.bulk(client, entries, refresh=True)

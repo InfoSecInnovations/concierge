@@ -43,19 +43,16 @@ def ingester_server(
     def file_input():
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
-    async def load_doc(
-        stream: AsyncGenerator[DocumentIngestInfo, Any],
-        label: str,
-    ):
+    async def load_doc(stream: AsyncGenerator[DocumentIngestInfo, Any]):
         print("load doc")
         page_progress = tqdm()
         with ui.Progress(0) as p:
-            p.set(0, message=f"{label}: loading...")
+            p.set(0)
             async for x in stream:
                 p.max = x.total
                 p.set(
                     x.progress + 1,
-                    message=f"{label}: part {x.progress + 1} of {x.total}.",
+                    message=f"{x.label}: part {x.progress + 1} of {x.total}.",
                 )
                 page_progress.n = x.progress + 1
                 page_progress.total = x.total
@@ -70,13 +67,13 @@ def ingester_server(
             named_file = os.path.join(os.path.dirname(file["datapath"]), file["name"])
             os.rename(file["datapath"], named_file)
             named_files.append(named_file)
-        await load_doc(client.insert_files(collection_id, named_files), "loading files")
+        await load_doc(client.insert_files(collection_id, named_files))
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
     async def ingest_urls(urls: list[str], collection_id: str):
         print("ingest URLs")
-        await load_doc(client.insert_urls(collection_id, urls), "loading URLs")
+        await load_doc(client.insert_urls(collection_id, urls))
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 

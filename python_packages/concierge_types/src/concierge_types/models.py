@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class UserInfo(BaseModel):
     username: str
     user_id: str
+
 
 class BaseCollectionCreateInfo(BaseModel):
     collection_name: str
@@ -47,6 +49,7 @@ class DocumentIngestInfo(BaseModel):
     total: int
     document_id: str
     document_type: str
+    label: str
 
 
 class ModelLoadInfo(BaseModel):
