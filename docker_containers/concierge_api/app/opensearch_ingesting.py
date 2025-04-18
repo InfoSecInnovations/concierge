@@ -3,7 +3,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from .embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument, ConciergeFileLoader
 from dataclasses import fields
-from .opensearch import get_client
+from .opensearch import get_client, delete_opensearch_document
 from .models import DocumentIngestInfo
 
 chunk_size = 200
@@ -51,81 +51,86 @@ def insert(
         print("document has no pages!")
         return
 
-    if binary:
-        binary_index_name = f"{collection_id}.binary"
-        if not client.indices.exists(binary_index_name):
+    try:
+        if binary:
+            binary_index_name = f"{collection_id}.binary"
+            if not client.indices.exists(binary_index_name):
+                index_body = {
+                    "aliases": {collection_id: {}},
+                    "mappings": {
+                        "properties": {
+                            "doc_index": {"type": "keyword"},
+                            "doc_id": {"type": "keyword"},
+                            "data": {"type": "binary"},
+                            "media_type": {"type": "keyword"},
+                        }
+                    },
+                }
+                client.indices.create(binary_index_name, index_body)
+            client.index(
+                binary_index_name,
+                {
+                    "doc_index": doc_index_name,
+                    "doc_id": doc_id,
+                    "data": binary.hex(),
+                    "media_type": document.metadata.media_type or "text/plain",
+                },
+            )
+
+        page = document.pages[0]
+        page_index_name = f"{doc_index_name}.pages"
+        if not client.indices.exists(page_index_name):
             index_body = {
                 "aliases": {collection_id: {}},
                 "mappings": {
                     "properties": {
                         "doc_index": {"type": "keyword"},
                         "doc_id": {"type": "keyword"},
-                        "data": {"type": "binary"},
-                        "media_type": {"type": "keyword"},
+                        **{
+                            field.name: {"type": get_field_type(field.type)}
+                            for field in fields(page.metadata)
+                        },
                     }
                 },
             }
-            client.indices.create(binary_index_name, index_body)
-        client.index(
-            binary_index_name,
-            {
-                "doc_index": doc_index_name,
-                "doc_id": doc_id,
-                "data": binary.hex(),
-                "media_type": document.metadata.media_type or "text/plain",
-            },
-        )
+            client.indices.create(page_index_name, body=index_body)
 
-    page = document.pages[0]
-    page_index_name = f"{doc_index_name}.pages"
-    if not client.indices.exists(page_index_name):
-        index_body = {
-            "aliases": {collection_id: {}},
-            "mappings": {
-                "properties": {
-                    "doc_index": {"type": "keyword"},
-                    "doc_id": {"type": "keyword"},
-                    **{
-                        field.name: {"type": get_field_type(field.type)}
-                        for field in fields(page.metadata)
-                    },
-                }
-            },
-        }
-        client.indices.create(page_index_name, body=index_body)
-
-    for index, page in enumerate(document.pages):
-        page_id = client.index(
-            page_index_name,
-            {
-                "doc_index": doc_index_name,
-                "doc_id": doc_id,
-                **vars(page.metadata),
-            },
-        )["_id"]
-        chunks = splitter.split_text(page.content)
-        vects = create_embeddings(chunks)
-        entries.extend(
-            [
+        for index, page in enumerate(document.pages):
+            page_id = client.index(
+                page_index_name,
                 {
-                    "_index": collection_id,
-                    "text": chunks[index],
-                    "document_vector": vect,
-                    "page_index": page_index_name,
-                    "page_id": page_id,
                     "doc_index": doc_index_name,
                     "doc_id": doc_id,
-                }
-                for index, vect in enumerate(vects)
-            ]
-        )
-        yield DocumentIngestInfo(
-            progress=index,
-            total=total,
-            document_id=doc_id,
-            document_type=document.metadata.type,
-            label=document.metadata.filename
-            if isinstance(document.metadata, ConciergeFileLoader.FileMetaData)
-            else document.metadata.source,
-        )
-    helpers.bulk(client, entries, refresh=True)
+                    **vars(page.metadata),
+                },
+            )["_id"]
+            chunks = splitter.split_text(page.content)
+            vects = create_embeddings(chunks)
+            entries.extend(
+                [
+                    {
+                        "_index": collection_id,
+                        "text": chunks[index],
+                        "document_vector": vect,
+                        "page_index": page_index_name,
+                        "page_id": page_id,
+                        "doc_index": doc_index_name,
+                        "doc_id": doc_id,
+                    }
+                    for index, vect in enumerate(vects)
+                ]
+            )
+            yield DocumentIngestInfo(
+                progress=index,
+                total=total,
+                document_id=doc_id,
+                document_type=document.metadata.type,
+                label=document.metadata.filename
+                if isinstance(document.metadata, ConciergeFileLoader.FileMetaData)
+                else document.metadata.source,
+            )
+        helpers.bulk(client, entries, refresh=True)
+
+    except Exception as e:
+        delete_opensearch_document(collection_id, document.metadata.type, doc_id)
+        raise e
