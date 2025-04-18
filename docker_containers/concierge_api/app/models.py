@@ -40,6 +40,7 @@ class DocumentIngestInfo(BaseModel):
     total: int
     document_id: str
     document_type: str
+    label: str
 
 
 class PromptInfo(BaseModel):

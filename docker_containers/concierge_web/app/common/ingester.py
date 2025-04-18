@@ -44,10 +44,9 @@ def ingester_server(
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
     async def load_doc(stream: AsyncGenerator[DocumentIngestInfo, Any]):
-        print("load doc")
         page_progress = tqdm()
         with ui.Progress(0) as p:
-            p.set(0)
+            p.set(0, message="ingesting...")
             async for x in stream:
                 p.max = x.total
                 p.set(
