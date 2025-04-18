@@ -2,6 +2,12 @@ from shiny import ui, Inputs, Outputs, Session, render, module, req
 from ..common.markdown_renderer import md
 from ..common.home_texts import TITLE, QUICKSTART, TIPS, CONTRIBUTING
 
+LOADING = """
+### Getting started:
+
+Loading your permissions...
+"""
+
 QUICKSTART_READONLY = """
 ### Getting started:
 
@@ -15,6 +21,7 @@ QUICKSTART_NO_ACCESS = """
 
 You currently don't have permission to do anything in Concierge, please contact an administrator to be assigned the correct roles!
 """
+
 ADMIN_TIPS = """
 ### Admin tips
 - You can configure Keycloak to support many different login methods including OAuth and LDAP.
@@ -56,7 +63,9 @@ def home_server(
     def home_text():
         perms = permissions.get()
         items = [TITLE]
-        if (
+        if perms is None:
+            items.append(LOADING)
+        elif (
             "collection:private:create" in perms
             or "collection:shared:create" in perms
             or "update" in perms

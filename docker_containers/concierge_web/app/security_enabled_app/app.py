@@ -50,7 +50,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         CollectionsData(loading=True)
     )
     user_info = reactive.value(None)
-    permissions: reactive.Value[set] = reactive.value(set())
+    permissions: reactive.Value[set | None] = reactive.value(None)
 
     @reactive.extended_task
     async def get_info():
@@ -78,7 +78,9 @@ def server(input: Inputs, output: Outputs, session: Session):
     def nav_items():
         perms = permissions.get()
         items = [ui.nav_panel("Home", home_ui("home"))]
-        if (
+        if perms is None:
+            items.append(ui.nav_control(ui.markdown("Loading your permissions...")))
+        elif (
             "collection:private:create" in perms
             or "collection:shared:create" in perms
             or "update" in perms
@@ -90,7 +92,7 @@ def server(input: Inputs, output: Outputs, session: Session):
                     collection_management_ui("collection_management"),
                 )
             )
-        if "read" in perms:
+        if perms and "read" in perms:
             items.append(
                 ui.nav_panel(
                     "Prompter",
@@ -169,6 +171,13 @@ def server(input: Inputs, output: Outputs, session: Session):
             fetch_collections()
         else:
             collections.set(CollectionsData(collections={}, loading=False))
+
+    @reactive.effect
+    @reactive.event(input.openid_logout, ignore_init=True, ignore_none=True)
+    def handle_logout():
+        @render.ui
+        def concierge_main():
+            return ui.tags.script('window.location.href = "/logout"')
 
 
 shiny_app = App(app_ui, server)

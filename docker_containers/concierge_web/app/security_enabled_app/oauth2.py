@@ -17,6 +17,16 @@ def set_token_cookies(token, response):
         response.set_cookie(f"concierge_auth_{index}", chunk.decode(), httponly=True)
 
 
+def get_token_from_cookies(request: Request):
+    chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
+    if not chunk_count:
+        return None
+    token_string = ""
+    for i in range(chunk_count):
+        token_string += request.cookies.get(f"concierge_auth_{i}")
+    return json.loads(token_string)
+
+
 async def auth_callback(request: Request):
     keycloak_openid = get_keycloak_client()
     redirect_uri = f"{request.base_url}callback"
@@ -31,11 +41,7 @@ async def auth_callback(request: Request):
 
 
 async def refresh(request: Request):
-    chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
-    token_string = ""
-    for i in range(chunk_count):
-        token_string += request.cookies.get(f"concierge_auth_{i}")
-    token = json.loads(token_string)
+    token = get_token_from_cookies(request)
     keycloak_openid = get_keycloak_client()
     try:
         token = keycloak_openid.refresh_token(token["refresh_token"])
@@ -47,6 +53,10 @@ async def refresh(request: Request):
 
 
 async def logout(request: Request):
+    token = get_token_from_cookies(request)
+    if token:
+        keycloak_openid = get_keycloak_client()
+        keycloak_openid.logout(token["refresh_token"])
     chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
     response = RedirectResponse(url="/")
     response.delete_cookie("concierge_token_chunk_count")
