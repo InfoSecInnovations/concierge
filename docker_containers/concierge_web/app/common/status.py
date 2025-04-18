@@ -1,4 +1,4 @@
-from shiny import module, reactive, ui, render, Inputs, Outputs, Session
+from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from concierge_api_client import BaseConciergeClient
 
 
@@ -11,8 +11,8 @@ def status_ui():
 def status_server(
     input: Inputs, output: Outputs, session: Session, client: BaseConciergeClient
 ):
-    opensearch_status = reactive.value(False)
-    ollama_status = reactive.value(False)
+    opensearch_status = reactive.value("loading")
+    ollama_status = reactive.value("loading")
 
     @reactive.extended_task
     async def get_ollama_status():
@@ -24,11 +24,11 @@ def status_server(
 
     @reactive.effect
     def set_ollama_status():
-        ollama_status.set(get_ollama_status.result())
+        ollama_status.set("online" if get_ollama_status.result() else "offline")
 
     @reactive.effect
     def set_opensearch_status():
-        opensearch_status.set(get_opensearch_status.result())
+        opensearch_status.set("online" if get_opensearch_status.result() else "offline")
 
     @reactive.effect
     def poll():
@@ -38,13 +38,27 @@ def status_server(
 
     @render.ui
     def status_widget():
-        return ui.card(
-            ui.markdown(f"{'🟢' if opensearch_status.get() else '🔴'} OpenSearch"),
-            ui.markdown(f"{'🟢' if ollama_status.get() else '🔴'} Ollama"),
-        )
+        items = []
+        if opensearch_status.get() != "loading":
+            items.append(
+                ui.markdown(
+                    f"{'🟢' if opensearch_status.get() == "online" else '🔴'} OpenSearch"
+                )
+            )
+        if ollama_status.get() != "loading":
+            items.append(
+                ui.markdown(
+                    f"{'🟢' if ollama_status.get() == "online" else '🔴'} Ollama"
+                )
+            )
+        req(items)
+        return ui.card(*items)
 
     @reactive.calc
     def result():
-        return {"opensearch": opensearch_status.get(), "ollama": ollama_status.get()}
+        return {
+            "opensearch": opensearch_status.get() == "online",
+            "ollama": ollama_status.get() == "online",
+        }
 
     return result
