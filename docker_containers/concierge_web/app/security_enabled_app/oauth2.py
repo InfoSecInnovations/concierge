@@ -56,7 +56,7 @@ async def logout(request: Request):
     token = get_token_from_cookies(request)
     if token:
         keycloak_openid = get_keycloak_client()
-        keycloak_openid.logout(token["refresh_token"])
+        await keycloak_openid.a_logout(token["refresh_token"])
     chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
     response = RedirectResponse(url="/")
     response.delete_cookie("concierge_token_chunk_count")
