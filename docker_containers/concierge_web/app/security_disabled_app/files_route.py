@@ -1,11 +1,11 @@
 from starlette.responses import Response
 from starlette.requests import Request
 from concierge_api_client import ConciergeClient
+from .get_api_url import get_api_url
 
-API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
 
 async def serve_files(request: Request):
-    client = ConciergeClient(server_url=API_URL)
+    client = ConciergeClient(server_url=get_api_url())
     collection_id = request.path_params["collection_id"]
     doc_id = request.path_params["doc_id"]
     doc_type = request.path_params["doc_type"]

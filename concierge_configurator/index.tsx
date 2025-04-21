@@ -32,7 +32,7 @@ const { values } = parseArgs({
 
 const devMode = !!values['dev-mode']
 
-const state: {worker?: Subprocess} = {}
+const state: {apiWorker?: Subprocess, webWorker?: Subprocess} = {}
 
 const app = new Hono()
 
@@ -61,7 +61,7 @@ app.get('/', async c => {
           <WebUILink></WebUILink>
           <p>If the link above isn't working, try (re)launching using the button below.</p>
           <p>Bear in mind that if you just installed Concierge it can take a few minutes before it's up and running.</p>
-          <RelaunchForm devMode={devMode} isRunning={!!state.worker}></RelaunchForm>
+          <RelaunchForm devMode={devMode} apiIsRunning={!!state.apiWorker} webIsRunning={!!state.webWorker}></RelaunchForm>
         </section> : null}
         <ExistingRemover></ExistingRemover>
         <section>

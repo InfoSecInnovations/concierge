@@ -1,1 +1,14 @@
-# TODO: launch API
+import uvicorn
+from app.app import app
+from concierge_util import auth_enabled
+
+if auth_enabled():
+    uvicorn.run(
+        app=app,
+        port=15131,
+        host="0.0.0.0",
+        ssl_keyfile="api_certs/key.pem",
+        ssl_certfile="api_certs/cert.pem",
+    )
+else:
+    uvicorn.run(app=app, port=15131, host="0.0.0.0")

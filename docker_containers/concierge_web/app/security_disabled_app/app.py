@@ -13,8 +13,7 @@ from starlette.routing import Mount, Route
 from .files_route import serve_files
 from concierge_types import CollectionInfo
 from .collection_selector_server import collection_selector_server
-
-API_URL = "http://127.0.0.1:8000/"  # TODO: get this from the environment
+from .get_api_url import get_api_url
 
 app_ui = ui.page_auto(
     ui.output_ui("concierge_main"),
@@ -24,7 +23,7 @@ app_ui = ui.page_auto(
 
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
-    client = ConciergeClient(API_URL)
+    client = ConciergeClient(get_api_url())
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")

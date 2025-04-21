@@ -4,12 +4,12 @@ include:
   - ./docker-compose-dev.yml
 
 services:
-  concierge:
+  concierge_web:
     extends:
       file: ./docker_compose_dependencies/docker-compose-concierge.yml
-      service: ${CONCIERGE_SERVICE:-concierge}
+      service: ${CONCIERGE_WEB_SERVICE:-concierge_web}
     build:
-      context: ../../docker_containers/concierge_api
+      context: ../../docker_containers/concierge_web
       dockerfile: Dockerfile.local
 
 networks:

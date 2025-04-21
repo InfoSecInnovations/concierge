@@ -24,11 +24,14 @@ export default async function* (options: FormData, installVenv = true) {
     }
     envs.WEB_HOST = options.get("host")?.toString() || "localhost"
     envs.WEB_PORT = options.get("port")?.toString() || "15130"
+    envs.API_HOST = options.get("api-host")?.toString() || "localhost"
+    envs.API_PORT = options.get("api-port")?.toString() || "15131"
     const securityLevel = options.get("security_level")?.toString()
     if (securityLevel && securityLevel != "none") {
         yield logMessage("configuring security...")
         envs.CONCIERGE_SECURITY_ENABLED = "True"
         envs.CONCIERGE_SERVICE = "concierge-enable-security"
+        envs.CONCIERGE_WEB_SERVICE = "concierge_web-enable-security"
         const certDir = path.resolve("self_signed_certificates")        
         await createCertificates(certDir)
         envs.ROOT_CA = path.join(certDir, "root-ca.pem")
@@ -40,8 +43,10 @@ export default async function* (options: FormData, installVenv = true) {
         envs.OPENSEARCH_NODE_KEY = path.join(certDir, "opensearch-node1-key.pem")
         envs.KEYCLOAK_CERT = path.join(certDir, "keycloak-cert.pem")
         envs.KEYCLOAK_CERT_KEY = path.join(certDir, "keycloak-key.pem")
-        envs.WEB_CERT = path.join(certDir, "concierge-cert.pem")
-        envs.WEB_KEY = path.join(certDir, "concierge-key.pem")
+        envs.API_CERT = path.join(certDir, "concierge-cert.pem")
+        envs.API_KEY = path.join(certDir, "concierge-key.pem")
+        envs.WEB_CERT = path.join(certDir, "concierge_web-cert.pem")
+        envs.WEB_KEY = path.join(certDir, "concierge_web-key.pem")
         yield logMessage("configured TLS certificates.")
         if (!await keycloakExists()) {
             const keycloakPassword = options.get("keycloak_password")?.toString()
@@ -90,6 +95,7 @@ export default async function* (options: FormData, installVenv = true) {
     }
     else {
         envs.CONCIERGE_SERVICE = "concierge"
+        envs.CONCIERGE_WEB_SERVICE = "concierge_web"
         envs.CONCIERGE_SECURITY_ENABLED = "False"
         envs.OPENSEARCH_SERVICE = "opensearch-node-disable-security"
         envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml"
@@ -103,11 +109,15 @@ export default async function* (options: FormData, installVenv = true) {
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`
         await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
         if (installVenv) { // if we're running the install for automated testing we assume the venv is already configured, so we want to skip this step
-            yield logMessage("configuring Python environment. This can take some time if you have slow internet...")
+            yield logMessage("configuring Python environments. This can take some time if you have slow internet...")
             await exec("python3 -m venv ..")
             await runPython("pip install -r dev_requirements.txt")
             await configurePreCommit()
             await configurePlaywright()
+            await exec("python3 -m venv .", {cwd: path.resolve(path.join("..", "docker_containers", "concierge_api"))})
+            await runPython("pip install -r dev_requirements.txt", ["docker_containers", "concierge_api"])
+            await exec("python3 -m venv .", {cwd: path.resolve(path.join("..", "docker_containers", "concierge_web"))})
+            await runPython("pip install -r dev_requirements.txt", ["docker_containers", "concierge_web"])
         }
     } 
     else {
@@ -118,7 +128,7 @@ export default async function* (options: FormData, installVenv = true) {
         yield logMessage("adding demo users")
         envs.IS_SECURITY_DEMO = "True"
         await updateEnv()
-        if (environment == "development") await runPython("add_keycloak_demo_users")
+        if (environment == "development") await runPython("add_keycloak_demo_users", ["docker_containers", "concierge_api"])
         else await $`docker exec -d concierge python -m add_keycloak_demo_users`
     }
     yield logMessage("pulling language model. This can take quite a long time if you haven't downloaded the model before.")

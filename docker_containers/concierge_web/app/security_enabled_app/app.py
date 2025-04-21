@@ -18,8 +18,8 @@ from .files_route import serve_files
 from concierge_types import AuthzCollectionInfo
 from ..common.prompter import prompter_ui, prompter_server
 from .collection_selector_server import collection_selector_server
+from .get_api_url import get_api_url
 
-API_URL = "http://127.0.0.1:8000/"  # TODO: get this from the environment
 
 app_ui = ui.page_auto(
     ui.output_ui("script_output"),
@@ -38,7 +38,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     if not token:
         return
     client = ConciergeAuthorizationClient(
-        server_url=API_URL,
+        server_url=get_api_url(),
         token=token,
         keycloak_client=get_keycloak_client(),
         verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")),

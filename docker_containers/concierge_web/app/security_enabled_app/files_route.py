@@ -3,14 +3,19 @@ from starlette.requests import Request
 from concierge_api_client import ConciergeAuthorizationClient
 from concierge_keycloak import get_keycloak_client
 from .auth import load_token_from_cookies
+from .get_api_url import get_api_url
 import ssl
 import os
 
-API_URL = "http://127.0.0.1:8000/" # TODO: get this from the environment
 
 async def serve_files(request: Request):
     token = load_token_from_cookies(request.cookies)
-    client = ConciergeAuthorizationClient(server_url=API_URL, token=token, keycloak_client=get_keycloak_client(), verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")))
+    client = ConciergeAuthorizationClient(
+        server_url=get_api_url(),
+        token=token,
+        keycloak_client=get_keycloak_client(),
+        verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")),
+    )
     collection_id = request.path_params["collection_id"]
     doc_id = request.path_params["doc_id"]
     doc_type = request.path_params["doc_type"]
