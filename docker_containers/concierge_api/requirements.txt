@@ -1,4 +1,4 @@
-fastapi~=0.115.11
+fastapi[standard]
 python-keycloak~=5.3.1
 isi-util==0.2a2
 concierge-util==0.2a2

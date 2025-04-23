@@ -1,0 +1,56 @@
+# config files
+.env
+.env.example
+concierge.yml
+concierge.example.yml
+ruff.toml
+
+# generated certificates
+self_signed_certificates
+
+# files that appear to be due to installing dependencies, try un-ignoring these if needed
+share
+etc
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtualenv
+# http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+.Python
+[Bb]in
+[Ii]nclude
+[Ll]ib
+[Ll]ib64
+[Ll]ocal
+[Ss]cripts
+pyvenv.cfg
+.venv
+pip-selfcheck.json
+
+# dev dependencies
+.ruff_cache
+.pytest_cache
+.vscode
+contribution_guides
+*.md
+install_dev.py
+dev_installer.py
+launch_dev.py
+dev_launcher.py
+
+# non-container files
+cli
+python_packages
+concierge_configurator
+
+# compose files
+**/docker-compose*
+
+# unignore these directories for local build
+!python_packages/concierge_util
+!python_packages/concierge_types
+!python_packages/concierge_keycloak
+!python_packages/isi_util

@@ -31,7 +31,7 @@ export default async function* (options: FormData, installVenv = true) {
         yield logMessage("configuring security...")
         envs.CONCIERGE_SECURITY_ENABLED = "True"
         envs.CONCIERGE_SERVICE = "concierge-enable-security"
-        envs.CONCIERGE_WEB_SERVICE = "concierge_web-enable-security"
+        envs.CONCIERGE_WEB_SERVICE = "concierge-web-enable-security"
         const certDir = path.resolve("self_signed_certificates")        
         await createCertificates(certDir)
         envs.ROOT_CA = path.join(certDir, "root-ca.pem")
@@ -45,8 +45,8 @@ export default async function* (options: FormData, installVenv = true) {
         envs.KEYCLOAK_CERT_KEY = path.join(certDir, "keycloak-key.pem")
         envs.API_CERT = path.join(certDir, "concierge-cert.pem")
         envs.API_KEY = path.join(certDir, "concierge-key.pem")
-        envs.WEB_CERT = path.join(certDir, "concierge_web-cert.pem")
-        envs.WEB_KEY = path.join(certDir, "concierge_web-key.pem")
+        envs.WEB_CERT = path.join(certDir, "concierge-web-cert.pem")
+        envs.WEB_KEY = path.join(certDir, "concierge-web-key.pem")
         yield logMessage("configured TLS certificates.")
         if (!await keycloakExists()) {
             const keycloakPassword = options.get("keycloak_password")?.toString()
@@ -95,7 +95,7 @@ export default async function* (options: FormData, installVenv = true) {
     }
     else {
         envs.CONCIERGE_SERVICE = "concierge"
-        envs.CONCIERGE_WEB_SERVICE = "concierge_web"
+        envs.CONCIERGE_WEB_SERVICE = "concierge-web"
         envs.CONCIERGE_SECURITY_ENABLED = "False"
         envs.OPENSEARCH_SERVICE = "opensearch-node-disable-security"
         envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml"

@@ -10,6 +10,8 @@ services:
       service: ${CONCIERGE_SERVICE:-concierge}
     build:
       context: ../../docker_containers/concierge_api
+      additional_contexts: 
+        python_packages: ../../python_packages
       dockerfile: Dockerfile.local
 
 networks:

@@ -1,4 +1,9 @@
 pytest~=8.3.4
 pytest-asyncio~=0.25.3
 
--r local_requirements.txt
+-e ../../python_packages/isi_util
+-e ../../python_packages/concierge_util
+-e ../../python_packages/concierge_types
+-e ../../python_packages/concierge_keycloak
+
+-r requirements.txt

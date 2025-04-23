@@ -118,7 +118,7 @@ export default async (certDir: string) => {
   await Promise.all([
     createSignedCert("keycloak", ["localhost", "keycloak"]),
     createSignedCert("concierge", ["localhost", "concierge"]),
-    createSignedCert("concierge_web", ["localhost", "concierge_web"]),
+    createSignedCert("concierge-web", ["localhost", "concierge-web"]),
     createSignedCert("opensearch-node1", ["localhost", "opensearch-node1"]),
     createSignedCert("opensearch-admin"),
     createSignedCert("opensearch-admin-client", ["opensearch-admin-client"])

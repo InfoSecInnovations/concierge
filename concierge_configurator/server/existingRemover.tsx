@@ -16,7 +16,7 @@ export const ExistingRemover = async () => {
             dockerItemExists("opensearch", "container"),
             dockerItemExists("concierge_opensearch-data1", "volume")
         ],).then(res => res.some(exists => exists)),
-        dockerItemExists("concierge_web", "container")
+        dockerItemExists("concierge-web", "container")
     ])
     if (!conciergeExists && !ollamaExists && !keycloakExists && !opensearchExists && !conciergeWebExists) return <></>
     return (<section>
@@ -26,7 +26,7 @@ export const ExistingRemover = async () => {
         <p>Be aware that if you remove Ollama you will have to redownload the LLM models which are quite large.</p>
         <form action="/remove" method="post">
             {conciergeExists && <button type="submit" name="service" value="concierge">Remove Concierge API service</button>}
-            {conciergeWebExists && <button type="submit" name="service" value="concierge_web">Remove Concierge Web UI service</button>}
+            {conciergeWebExists && <button type="submit" name="service" value="concierge-web">Remove Concierge Web UI service</button>}
             {ollamaExists && <button type="submit" name="service" value="ollama">Remove Ollama service</button>}
             {keycloakExists && <button type="submit" name="service" value="keycloak">Remove Keycloak service</button>}
             {opensearchExists && <button type="submit" name="service" value="opensearch">Remove OpenSearch service</button>}
