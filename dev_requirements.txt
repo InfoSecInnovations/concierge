@@ -1,3 +1,4 @@
 twine
+build
 
 -r requirements.txt
