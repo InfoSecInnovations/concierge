@@ -1,7 +1,9 @@
 import { $ } from "bun"
 import packageJson from "./package.json"
-import conciergeUtilPyProject from "../concierge_packages/concierge_util/pyproject.toml"
-import isiUtilPyProject from "../concierge_packages/isi_util/pyproject.toml"
+import conciergeUtilPyProject from "../python_packages/concierge_util/pyproject.toml"
+import isiUtilPyProject from "../python_packages/isi_util/pyproject.toml"
+import conciergeApiPyProject from "../python_packages/concierge_api_client/pyproject.toml"
+import conciergeKeycloakPyProject from "../python_packages/concierge_keycloak/pyproject.toml"
 import path from "node:path"
 import util from "node:util"
 import runPython from "./server/runPython"
@@ -20,16 +22,19 @@ packageJson.version = version
 await Bun.write("./package.json", JSON.stringify(packageJson, undefined, "\t"))
 let pyPiKey: string | null = null
 const handlePyPi = async (packageUrlName: string, packageName: string, tomlData: any) => {
-    const pyPiJson: any = await fetch(`https://pypi.org/pypi/${packageUrlName}/json`).then(res => res.json())
-    if (pyPiJson.releases[tomlData.project.version]) {
-        console.log(`Python package ${packageName} already up to date`)
-        return
+    try {
+        const pyPiJson: any = await fetch(`https://pypi.org/pypi/${packageUrlName}/json`).then(res => res.json())
+        if (pyPiJson.releases[tomlData.project.version]) {
+            console.log(`Python package ${packageName} already up to date`)
+            return
+        }
     }
+    catch {} // if the above block fails it probably means the package doesn't exist
     while (!pyPiKey) {
         pyPiKey = readline.question("Please provide your PyPI API key: ", {hideEchoBack: true, mask: ''})
     }
     console.log('\n')
-    const packageDir = path.resolve(path.join(import.meta.dir, '..', "concierge_packages", packageName))
+    const packageDir = path.resolve(path.join(import.meta.dir, '..', "python_packages", packageName))
     await $`rm -rf ${path.join(packageDir, "dist")}`
     await exec("python3 -m build", {cwd: packageDir})
     // single backslashes get stripped out by the command line so we need to double them
@@ -37,8 +42,12 @@ const handlePyPi = async (packageUrlName: string, packageName: string, tomlData:
 }
 await handlePyPi("concierge-util", "concierge_util", conciergeUtilPyProject)
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject)
-await $`docker build -t infosecinnovations/concierge:${version} ..`
+await handlePyPi("concierge-api-client", "concierge_api_client", conciergeApiPyProject)
+await handlePyPi("concierge-keycloak", "concierge_keycloak", conciergeKeycloakPyProject)
+await $`docker build -t infosecinnovations/concierge:${version} ../docker_containers/concierge_api`
 await $`docker image push infosecinnovations/concierge:${version}`
+await $`docker build -t infosecinnovations/concierge-web:${version} ../docker_containers/concierge_web`
+await $`docker image push infosecinnovations/concierge-web:${version}`
 await $`git add -A`
 await $`git commit -m 'increment version to ${version}'`
 await $`git push`

@@ -1,6 +1,6 @@
 [project]
 name = "concierge-util"
-version = "0.2a2"
+version = "0.3a1"
 requires-python = ">=3.10"
 dependencies = [
     "pyyaml"
