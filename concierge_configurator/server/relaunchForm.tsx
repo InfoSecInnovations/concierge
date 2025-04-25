@@ -11,7 +11,7 @@ export const RelaunchForm = async (props: {devMode: boolean, apiIsRunning?: bool
             </p>
             <button type="submit">Launch Concierge</button>
             {props.devMode && <>
-                <button type="submit" name="environment" value="api_local">Launch API Locally (Docker)</button>         
+                <button type="submit" name="environment" value="local">Launch API Locally (Docker)</button>         
                 {
                     props.apiIsRunning ? 
                     <button type="submit" name="environment" value="stop_development">Stop API (Python)</button> :

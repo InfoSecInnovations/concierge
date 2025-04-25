@@ -1,7 +1,9 @@
 fastapi[standard]~=0.115.11
 python-keycloak~=5.3.1
-isi-util==0.2a2
-concierge-util==0.2a2
+isi-util==0.3a1
+concierge-util==0.3a1
+concierge-types==0.1a1
+concierge-keycloak==0.1a1
 sentence-transformers~=3.4.1
 opensearch-py~=2.8.0
 langchain~=0.3.20

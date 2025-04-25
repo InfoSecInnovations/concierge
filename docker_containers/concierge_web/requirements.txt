@@ -1,7 +1,10 @@
 humanize~=4.12.2
 shiny~=1.4.0
 shinyswatch~=0.9.0
-isi-util==0.2a2
-concierge-util==0.2a2
+isi-util==0.3a1
+concierge-util==0.3a1
+concierge-types==0.1a1
+concierge-keycloak==0.1a1
+concierge-api-client==0.1a1
 tqdm~=4.67.1
 python-dotenv~=1.1.0
