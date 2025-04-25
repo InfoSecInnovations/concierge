@@ -7,3 +7,43 @@ export class CollectionInfo {
     this.collectionId = collectionId
   }
 }
+
+export class DocumentInfo {
+  type: string
+  source: string
+  ingestDate: number
+  filename?: string
+  mediaType?: string
+  documentId: string
+  index: string
+  pageCount: number
+  vectorCount: number
+  constructor(documentId: string, type: string, source: string, ingestDate: number, index: string, pageCount: number, vectorCount: number, mediaType?: string, filename?: string) {
+    this.documentId = documentId
+    this.type = type
+    this.source = source
+    this.ingestDate = ingestDate
+    this.index = index
+    this.pageCount = pageCount
+    this.vectorCount = vectorCount
+    this.mediaType = mediaType
+    this.filename = filename
+  }
+}
+
+export class DocumentIngestInfo {
+  progress: number
+  total: number
+  documentId: string
+  documentType: string
+  label: string
+
+  constructor(progress: number, total: number, documentId: string, documentType: string, label: string) {
+    this.progress = progress;
+    this.total = total;
+    this.documentId = documentId;
+    this.documentType = documentType;
+    this.label = label;
+  }
+}
+
