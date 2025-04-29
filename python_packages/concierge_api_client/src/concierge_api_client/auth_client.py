@@ -193,7 +193,7 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
             )
             file_id = response["id"]
         async for line in self.__stream_request(
-            "GET",
+            "POST",
             "prompt",
             json={
                 "collection_id": collection_id,

@@ -47,3 +47,38 @@ export class DocumentIngestInfo {
   }
 }
 
+export class PromptConfigInfo {
+  prompt?: string
+  constructor(prompt?: string) {
+    this.prompt = prompt
+  }
+}
+
+export class TaskInfo extends PromptConfigInfo {
+  greeting: string
+  constructor(greeting: string, prompt?: string) {
+    super(prompt)
+    this.greeting = greeting
+  }
+}
+
+export class ModelLoadInfo {
+  progress: number
+  total: number
+  modelName: string
+  constructor(progress: number, total: number, modelName: string) {
+    this.progress = progress
+    this.total = total
+    this.modelName = modelName
+  }
+}
+
+export class WebFile {
+  bytes: Blob
+  mediaType: string
+  constructor(bytes: Blob, mediaType: string) {
+    this.bytes = bytes
+    this.mediaType = mediaType
+  }
+}
+
