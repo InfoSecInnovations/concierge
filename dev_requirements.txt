@@ -1,4 +1,8 @@
 twine
 build
 
+-e python_packages/concierge_api_client
+-e python_packages/concierge_keycloak
+-e python_packages/concierge_types
+
 -r requirements.txt

@@ -2,18 +2,24 @@
   "name": "concierge_api_client_node",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:js": "esbuild index.ts --bundle --platform=node --outdir=dist --packages=external",
+    "build:types": "tsc --declaration index.ts --emitDeclarationOnly --outDir ./dist",
+    "build": "npm-run-all --serial build:js build:types"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^22.15.2"
+    "@types/node": "^22.15.2",
+    "dotenv": "^16.5.0",
+    "esbuild": "^0.25.3",
+    "npm-run-all": "^4.1.5"
   },
   "dependencies": {
-    "dotenv": "^16.5.0",
     "openid-client": "^6.4.2"
   }
 }

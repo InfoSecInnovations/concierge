@@ -3,7 +3,7 @@ import asyncio
 from concierge_scripts.load_dotenv import load_env
 import ssl
 import os
-from docker_containers.concierge_api.app.authentication import get_keycloak_client
+from concierge_keycloak import get_keycloak_client
 
 load_env()
 
@@ -74,7 +74,7 @@ async def test_prompt():
     ):
         if "response" in line:
             print(line["response"])
-        else: 
+        else:
             print(line)
 
 
