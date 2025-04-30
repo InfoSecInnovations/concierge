@@ -85,7 +85,7 @@ export class ConciergeAuthorizationClient extends BaseConciergeClient {
     return json.collection_id
   }
 
-  async getCollections() {
+  async getCollections(): Promise<AuthzCollectionInfo[]> {
     const res = await this.makeRequest("GET", "collections")
     const json = await res.json()
     return json.map(item => new AuthzCollectionInfo(item.collection_name, item.collection_id, item.location))

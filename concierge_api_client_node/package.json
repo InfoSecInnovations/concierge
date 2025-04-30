@@ -1,9 +1,12 @@
 {
-  "name": "concierge_api_client_node",
+  "name": "concierge-api-client",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:js": "esbuild index.ts --bundle --platform=node --outdir=dist --packages=external",
@@ -15,7 +18,6 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.15.2",
-    "dotenv": "^16.5.0",
     "esbuild": "^0.25.3",
     "npm-run-all": "^4.1.5"
   },

@@ -1,15 +1,24 @@
-import { ConciergeClient } from "./client";
-
-const client = new ConciergeClient("http://localhost:8000")
-
+import { ConciergeAuthorizationClient } from "concierge-api-client"
+import * as openIdClient from 'openid-client'
+import * as dotenv from 'dotenv'
+import path from "node:path"
+import getOpenIdConfig from "./getOpenIdConfig"
 
 const run = async () => {
-  const collectionId = await client.createCollection("testing").then(collectionId => {
+  // TODO: we need to use the root CA certs rather than disabling verification!
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED='0'
+  dotenv.config({path: path.resolve(path.join("..", "concierge_configurator", "docker_compose", ".env"))})
+  const config = await getOpenIdConfig()
+  const token = await openIdClient.genericGrantRequest(config, "password", {
+    username: "testadmin", password: "test"})
+  const client = new ConciergeAuthorizationClient("http://localhost:8000", token, config)
+
+  const collectionId = await client.createCollection("testing", "private").then(collectionId => {
     console.log(collectionId)
     return collectionId
   })
   await client.getCollections().then(collections => collections.forEach(collectionInfo => console.log(collectionInfo)))
-  let documentId: string
+  let documentId: string = ""
   for await (const item of await client.insertFiles(collectionId, ["./test.txt"])) {
     console.log(item)
     documentId = item.documentId
