@@ -10,6 +10,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "commander": "^13.1.0",
+    "concierge-api-client": "../concierge_api_client_node",
     "openid-client": "^6.4.2"
   }
 }
