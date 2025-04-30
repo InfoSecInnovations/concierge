@@ -40,7 +40,6 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
         self.httpx_client = httpx.AsyncClient(verify=verify, timeout=None)
         self.token = token
         self.keycloak_client = keycloak_client
-        self.tasks: set[Task] = set()
         self.refresh_task: Task | None = None
 
     async def __make_request(
@@ -68,12 +67,6 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
 
         token = self.token
         task = create_task(make_request(token))
-        self.tasks.add(task)
-
-        def on_done(task):
-            self.tasks.remove(task)
-
-        task.add_done_callback(on_done)
 
         try:
             if self.refresh_task:

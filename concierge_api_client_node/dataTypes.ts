@@ -8,6 +8,15 @@ export class CollectionInfo {
   }
 }
 
+export class AuthzCollectionInfo extends CollectionInfo {
+  location: string
+
+  constructor(collectionName: string, collectionId: string, location: string) {
+    super(collectionName, collectionId)
+    this.location = location
+  }
+}
+
 export class DocumentInfo {
   type: string
   source: string

@@ -11,5 +11,9 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.15.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "openid-client": "^6.4.2"
   }
 }
