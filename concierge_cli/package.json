@@ -4,12 +4,14 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/cli-progress": "^3.11.6"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "cli-progress": "^3.12.0",
     "commander": "^13.1.0",
     "concierge-api-client": "../concierge_api_client_node",
     "dotenv": "^16.5.0",
@@ -19,7 +21,7 @@
     "cli_dev_api": "API_URL=http://localhost:8000 bun run index.ts",
     "cli": "bun run index.ts",
     "build_win": "CONCIERGE_ENVIRONMENT_TYPE=executable bun build ./index.ts --compile --target=bun-windows-x64 --outfile dist/windows/concierge_cli --env=CONCIERGE_ENVIRONMENT_*",
-		"build_linux": "CONCIERGE_ENVIRONMENT_TYPE=executable bun build ./index.ts --compile --target=bun-linux-x64 --outfile dist/linux/concierge_cli --env=CONCIERGE_ENVIRONMENT_*",
-		"build_mac": "CONCIERGE_ENVIRONMENT_TYPE=executable bun build ./index.ts --compile --target=bun-darwin-arm64 --outfile dist/mac/concierge_cli --env=CONCIERGE_ENVIRONMENT_*"
+    "build_linux": "CONCIERGE_ENVIRONMENT_TYPE=executable bun build ./index.ts --compile --target=bun-linux-x64 --outfile dist/linux/concierge_cli --env=CONCIERGE_ENVIRONMENT_*",
+    "build_mac": "CONCIERGE_ENVIRONMENT_TYPE=executable bun build ./index.ts --compile --target=bun-darwin-arm64 --outfile dist/mac/concierge_cli --env=CONCIERGE_ENVIRONMENT_*"
   }
 }
