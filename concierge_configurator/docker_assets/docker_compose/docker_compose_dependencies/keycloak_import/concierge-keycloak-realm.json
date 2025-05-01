@@ -805,6 +805,24 @@
             "icon_uri": ""
           },
           {
+            "name": "collection:private:assign",
+            "type": "collection:private:assign",
+            "ownerManagedAccess": false,
+            "displayName": "collection:private:assign",
+            "attributes": {},
+            "uris": [],
+            "icon_uri": ""
+          },
+          {
+            "name": "collection:shared:assign",
+            "type": "collection:shared:assign",
+            "ownerManagedAccess": false,
+            "displayName": "collection:shared:assign",
+            "attributes": {},
+            "uris": [],
+            "icon_uri": ""
+          },
+          {
             "_id": "default-1",
             "name": "collection:private:default",
             "type": "collection:private",
@@ -945,6 +963,28 @@
             "config": {
               "defaultResourceType": "collection:private:create",
               "applyPolicies": "[\"access-own-collection-policy\"]"
+            }
+          },
+          {
+            "name": "private-assign",
+            "description": "",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "defaultResourceType": "collection:private:assign",
+              "applyPolicies": "[\"admin-policy\"]"
+            }
+          },
+          {
+            "name": "shared-assign",
+            "description": "",
+            "type": "resource",
+            "logic": "POSITIVE",
+            "decisionStrategy": "UNANIMOUS",
+            "config": {
+              "defaultResourceType": "collection:shared:assign",
+              "applyPolicies": "[\"admin-policy\"]"
             }
           },
           {

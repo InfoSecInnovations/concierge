@@ -92,7 +92,12 @@ async def list_permissions(token):
     keycloak_openid = get_keycloak_client()
     try:
         response = await keycloak_openid.a_uma_permissions(
-            token, ["collection:private:create", "collection:shared:create"]
+            token,
+            [
+                "collection:private:create",
+                "collection:shared:create",
+                "collection:private:assign",
+            ],
         )
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
         # 401 means no authorization provided, 403 means not authorized, so we can return an empty set

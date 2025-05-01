@@ -92,6 +92,10 @@ async def create_collection(
         if not authorized:
             raise UnauthorizedOperationError()
         if collection_owner:
+            authorized = await authorize(token, f"collection:{location}:assign")
+            if not authorized:
+                raise UnauthorizedOperationError()
+            # only users with the "assign" permission can assign collections to other users
             admin_client = get_keycloak_admin_client()
             owner_id = await admin_client.a_get_user_id(collection_owner)
         else:

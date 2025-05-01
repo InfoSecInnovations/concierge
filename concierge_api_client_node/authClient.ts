@@ -79,8 +79,8 @@ export class ConciergeAuthorizationClient extends BaseConciergeClient {
     }
   }
 
-  async createCollection(collectionName: string, location: string) {
-    const res = await this.makeRequest("POST", "collections", { collection_name: collectionName, location })
+  async createCollection(collectionName: string, location: string, ownerUsername?: string): Promise<string> {
+    const res = await this.makeRequest("POST", "collections", { collection_name: collectionName, location, owner_username: ownerUsername })
     const json = await res.json()
     return json.collection_id
   }

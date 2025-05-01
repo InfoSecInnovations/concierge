@@ -107,11 +107,17 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
             yield line
         await response.aclose()
 
-    async def create_collection(self, collection_name: str, location: str):
+    async def create_collection(
+        self, collection_name: str, location: str, owner_username: str | None = None
+    ) -> str:
         response = await self.__make_request(
             "POST",
             "collections",
-            {"collection_name": collection_name, "location": location},
+            {
+                "collection_name": collection_name,
+                "location": location,
+                "owner_username": owner_username,
+            },
         )
         return response.json()["collection_id"]
 

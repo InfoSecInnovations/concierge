@@ -13,6 +13,7 @@ class BaseCollectionCreateInfo(BaseModel):
 
 class AuthzCollectionCreateInfo(BaseCollectionCreateInfo):
     location: str
+    owner_username: Optional[str] = None
 
 
 class CollectionInfo(BaseModel):
