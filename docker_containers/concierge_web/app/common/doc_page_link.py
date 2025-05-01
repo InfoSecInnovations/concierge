@@ -3,6 +3,7 @@ from .doc_url import doc_url
 from typing import Any
 from datetime import datetime
 
+
 def page_link(collection_id: str, page: dict[str, Any]):
     doc_metadata = page["doc_metadata"]
     page_metadata = page["page_metadata"]
@@ -15,7 +16,7 @@ def page_link(collection_id: str, page: dict[str, Any]):
         }"
     if page["type"] == "web":
         # we store the timestamp in ms but Python uses s timestamps
-        ingest_time = datetime.fromtimestamp(doc_metadata['ingest_date'] / 1000)
+        ingest_time = datetime.fromtimestamp(doc_metadata["ingest_date"] / 1000)
         return f"Web page: {md_link(page_metadata['source'])} scraped {ingest_time.ctime()} from parent URL {md_link(doc_metadata['source'])}"
     if "filename" in doc_metadata:
         return f"{doc_metadata['extension']} file {

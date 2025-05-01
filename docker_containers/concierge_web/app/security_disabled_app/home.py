@@ -9,12 +9,9 @@ def home_ui():
 
 
 @module.server
-def home_server(
-    input: Inputs,
-    output: Outputs,
-    session: Session
-):
-
+def home_server(input: Inputs, output: Outputs, session: Session):
     @render.ui
     def home_text():
-        return ui.markdown("\n".join([TITLE, QUICKSTART, TIPS, CONTRIBUTING]), render_func=md.render)
+        return ui.markdown(
+            "\n".join([TITLE, QUICKSTART, TIPS, CONTRIBUTING]), render_func=md.render
+        )

@@ -1,5 +1,6 @@
 from concierge_types import AuthzCollectionInfo
 
+
 def format_collection_name(collection_info: AuthzCollectionInfo, user_info):
     if collection_info.location == "shared":
         return collection_info.collection_name

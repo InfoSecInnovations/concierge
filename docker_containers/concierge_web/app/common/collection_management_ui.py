@@ -1,5 +1,6 @@
 from shiny import module, ui
 
+
 @module.ui
 def collection_management_ui():
     return [

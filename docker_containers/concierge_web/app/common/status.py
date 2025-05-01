@@ -42,13 +42,13 @@ def status_server(
         if opensearch_status.get() != "loading":
             items.append(
                 ui.markdown(
-                    f"{'🟢' if opensearch_status.get() == "online" else '🔴'} OpenSearch"
+                    f"{'🟢' if opensearch_status.get() == 'online' else '🔴'} OpenSearch"
                 )
             )
         if ollama_status.get() != "loading":
             items.append(
                 ui.markdown(
-                    f"{'🟢' if ollama_status.get() == "online" else '🔴'} Ollama"
+                    f"{'🟢' if ollama_status.get() == 'online' else '🔴'} Ollama"
                 )
             )
         req(items)

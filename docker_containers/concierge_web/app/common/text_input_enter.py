@@ -1,6 +1,7 @@
 from shiny import module, reactive, ui, Inputs, Outputs, Session
 import os
 
+
 @module.ui
 def text_input_enter_ui(label: str, placeholder: str):
     id_input = module.resolve_id("text_input_enter")
@@ -27,7 +28,9 @@ def text_input_enter_ui(label: str, placeholder: str):
         ),
         ui.include_js(
             os.path.abspath(
-                os.path.join(os.path.dirname(__file__), "..", "js", "text_input_enter.js")
+                os.path.join(
+                    os.path.dirname(__file__), "..", "js", "text_input_enter.js"
+                )
             ),
             method="inline",
         ),

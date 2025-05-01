@@ -3,6 +3,7 @@ from .doc_url import doc_url
 from .md_link import md_link
 import os
 
+
 def doc_link(collection_id: str, doc: DocumentInfo):
     if doc.type == "pdf":
         return f"PDF File: {

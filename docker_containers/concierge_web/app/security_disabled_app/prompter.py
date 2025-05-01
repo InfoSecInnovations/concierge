@@ -175,7 +175,7 @@ def prompter_server(
             if "response" in x:
                 yield x["response"]
             elif "source" in x:
-                yield f"{page_link(collection_id, x["source"])}\n\n"
+                yield f"{page_link(collection_id, x['source'])}\n\n"
 
     @chat.on_user_submit
     async def on_chat_submit(user_input: str):

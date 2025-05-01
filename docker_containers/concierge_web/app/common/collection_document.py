@@ -42,10 +42,10 @@ def document_server(
     @reactive.extended_task
     async def delete():
         return await delete_function(
-                collection,
-                doc.type,
-                doc.document_id,
-            )
+            collection,
+            doc.type,
+            doc.document_id,
+        )
 
     @reactive.effect()
     def delete_effect():

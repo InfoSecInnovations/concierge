@@ -6,8 +6,11 @@ md = MarkdownIt("gfm-like").use(attrs.attrs_plugin)
 
 app_ui = ui.page_auto(
     ui.chat_ui("prompter_chat"),
-    ui.markdown('[Google](<https://www.google.com>){target="_blank"}', render_func=md.render)
+    ui.markdown(
+        '[Google](<https://www.google.com>){target="_blank"}', render_func=md.render
+    ),
 )
+
 
 def server(input: Inputs, output: Outputs, session: Session):
     chat = ui.Chat(id="prompter_chat")
@@ -18,10 +21,10 @@ def server(input: Inputs, output: Outputs, session: Session):
     def render_md(s: str):
         print(md.render(s))
         return ui.HTML(md.render(f"Rendered:\n\n{s}"))
-    
+
     @chat.on_user_submit
     async def on_chat_submit(user_input: str):
         await chat.append_message('[Google](<https://www.google.com>){target="_blank"}')
-        
+
 
 app = App(app_ui, server)

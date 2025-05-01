@@ -49,15 +49,15 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
     )
 
     if not len(context["sources"]):
+
         def no_sources_response():
-            yield f'{json.dumps({"response": "No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."})}\n'
+            yield f"{json.dumps({'response': 'No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data.'})}\n"
+
         return StreamingResponse(no_sources_response())
 
     async def stream_context_and_response():
         for source in context["sources"]:
-            yield f'{json.dumps({
-                "source": source
-            })}\n'
+            yield f"{json.dumps({'source': source})}\n"
         async for x in stream_response(
             context=context["context"],
             task_prompt=task_prompt,
