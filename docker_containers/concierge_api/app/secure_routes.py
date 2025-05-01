@@ -68,7 +68,10 @@ async def create_collection_route(
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> AuthzCollectionInfo:
     return await create_collection(
-        credentials, collection_info.collection_name, collection_info.location
+        credentials,
+        collection_info.collection_name,
+        collection_info.location,
+        collection_info.owner_username,
     )
 
 

@@ -1,7 +1,7 @@
 import * as client from 'openid-client'
 import { EXPECTED_CODES } from './codes'
 import { BaseConciergeClient } from './baseClient'
-import { AuthzCollectionInfo } from './dataTypes'
+import { AuthzCollectionInfo, UserInfo } from './dataTypes'
 
 class ConciergeTokenExpiredError extends Error {
   constructor(...params: any[]) {
@@ -88,7 +88,7 @@ export class ConciergeAuthorizationClient extends BaseConciergeClient {
   async getCollections(): Promise<AuthzCollectionInfo[]> {
     const res = await this.makeRequest("GET", "collections")
     const json = await res.json()
-    return json.map(item => new AuthzCollectionInfo(item.collection_name, item.collection_id, item.location))
+    return json.map(item => new AuthzCollectionInfo(item.collection_name, item.collection_id, item.location, new UserInfo(item.owner.username, item.owner.user_id)))
   }
 
   async getUserInfo() {

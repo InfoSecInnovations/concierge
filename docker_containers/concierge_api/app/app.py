@@ -8,7 +8,11 @@ import os
 from load_dotenv import load_env
 from keycloak import KeycloakPostError
 import json
-from concierge_types import CollectionExistsError
+from concierge_types import (
+    CollectionExistsError,
+    InvalidLocationError,
+    InvalidUserError,
+)
 
 load_env()
 
@@ -46,5 +50,25 @@ else:
 @app.exception_handler(CollectionExistsError)
 def collection_exists_error_handler(request: Request, exc: CollectionExistsError):
     return JSONResponse(
-        content={"error_type": "CollectionExistsError"}, status_code=500
+        content={"error_type": "CollectionExistsError", "error_message": exc.message},
+        status_code=500,
+    )
+
+
+@app.exception_handler(InvalidLocationError)
+def invalid_location_error_handler(request: Request, exc: InvalidLocationError):
+    return JSONResponse(
+        content={
+            "error_type": "InvalidLocationError",
+            "error_message": 'location must be "private" or "shared"',
+        },
+        status_code=500,
+    )
+
+
+@app.exception_handler(InvalidUserError)
+def invalid_user_error_handler(request: Request, exc: InvalidUserError):
+    return JSONResponse(
+        content={"error_type": "InvalidUserError", "error_message": exc.message},
+        status_code=500,
     )

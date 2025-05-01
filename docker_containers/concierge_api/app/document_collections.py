@@ -29,12 +29,9 @@ from concierge_types import (
     DeletedDocumentInfo,
     UserInfo,
     CollectionExistsError,
+    InvalidLocationError,
+    InvalidUserError,
 )
-
-
-class InvalidLocationError(Exception):
-    def __init__(self, message=""):
-        self.message = message
 
 
 # TODO: add owner data to all AuthzCollectionInfo return types
@@ -92,12 +89,16 @@ async def create_collection(
         if not authorized:
             raise UnauthorizedOperationError()
         if collection_owner:
+            # only users with the "assign" permission can assign collections to other users
             authorized = await authorize(token, f"collection:{location}:assign")
             if not authorized:
                 raise UnauthorizedOperationError()
-            # only users with the "assign" permission can assign collections to other users
             admin_client = get_keycloak_admin_client()
             owner_id = await admin_client.a_get_user_id(collection_owner)
+            if owner_id is None:
+                raise InvalidUserError(
+                    f"no user with username {collection_owner} found"
+                )
         else:
             token_info = await get_token_info(token)
             owner_id = token_info["sub"]
@@ -107,14 +108,17 @@ async def create_collection(
             )
         except KeycloakPostError as e:
             if e.response_code == 409:
-                raise CollectionExistsError()
+                raise CollectionExistsError(
+                    f"a {location} collection with the name {display_name} already exists"
+                )
             else:
                 raise e
     else:
         existing = get_collection_mapping(display_name)
-        # print(f"existing: {existing}")
         if existing:
-            raise CollectionExistsError()
+            raise CollectionExistsError(
+                f"a collection with the name {display_name} already exists"
+            )
         resource_id = str(uuid4())
         # if we don't have authz configured, we write the collection name mapping to OpenSearch
         await asyncify(create_index_mapping, resource_id, display_name)

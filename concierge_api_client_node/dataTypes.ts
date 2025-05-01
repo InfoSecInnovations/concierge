@@ -8,12 +8,24 @@ export class CollectionInfo {
   }
 }
 
+export class UserInfo {
+  username: string
+  userId: string
+
+  constructor(username: string, userId: string) {
+    this.username = username
+    this.userId = userId
+  }
+}
+
 export class AuthzCollectionInfo extends CollectionInfo {
   location: string
+  owner: UserInfo
 
-  constructor(collectionName: string, collectionId: string, location: string) {
+  constructor(collectionName: string, collectionId: string, location: string, owner: UserInfo) {
     super(collectionName, collectionId)
     this.location = location
+    this.owner = owner
   }
 }
 

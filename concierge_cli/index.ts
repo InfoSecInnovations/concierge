@@ -1,9 +1,14 @@
 import * as commander from 'commander';
 import getAuthClient from './getAuthClient';
+import * as dotenv from 'dotenv';
+import path from 'node:path'
 
-// TODO: load env file from correct location depending on standalone or development environment
-// for now you need to pass it in with --env-file=path/to/.env
-// also we need a way to point it at the API if you're running it from the command line instead of at the default location
+// we set this to 'executable' when building the standalone
+const environment = process.env.CONCIERGE_ENVIRONMENT_TYPE || 'local';
+const envPath = environment == 'executable' ? ['docker_compose', '.env'] : ['..', 'concierge_configurator', 'docker_compose', '.env'];
+dotenv.config({ path: path.resolve(path.join(...envPath)) });
+
+// TODO: we need a way to point it at the API if you're running it from the command line instead of at the default location
 
 const program = new commander.Command();
 
@@ -25,7 +30,13 @@ if (authEnabled) {
     .then(client => client.deleteCollection(collectionId)
     .then(collectionId => console.log(`Deleted collection with id ${collectionId}`))
   ))
-  collection.command('list').action(() => console.log('list collections'));
+  collection.command('list').action(() => 
+    getAuthClient()
+    .then(client => client.getCollections()
+    .then(collections => {
+      collections.forEach(collection => console.log(collection))
+    })
+  ))
 }
 
 program.parse(Bun.argv)

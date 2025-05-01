@@ -57,14 +57,22 @@ await $`rm -rf ./dist` // clean dist directory in case we've been running stuff 
 await $`bun run build_win`
 await $`bun run build_linux`
 await $`bun run build_mac`
+const cliDir = path.resolve(path.join(import.meta.dir, "..", "concierge_cli"))
+await $`rm -rf ./dist`.cwd(cliDir) // clean dist directory in case we've been running stuff from there
+await $`bun run build_win`.cwd(cliDir)
+await $`bun run build_linux`.cwd(cliDir)
+await $`bun run build_mac`.cwd(cliDir)
 const winZip = new AdmZip()
 winZip.addLocalFile(path.join("dist", "windows", "concierge.exe"))
+winZip.addLocalFile(path.join(cliDir, "dist", "windows", "concierge-cli.exe"), "concierge-cli.exe")
 winZip.writeZip(path.join("dist", "concierge_win.zip"))
 const linuxZip = new AdmZip()
 linuxZip.addLocalFile(path.join("dist", "linux", "concierge"))
+linuxZip.addLocalFile(path.join(cliDir, "dist", "linux", "concierge-cli"), "concierge-cli")
 linuxZip.writeZip(path.join("dist", "concierge_linux.zip"))
 const macZip = new AdmZip()
 macZip.addLocalFile(path.join("dist", "mac", "concierge"))
+macZip.addLocalFile(path.join(cliDir, "dist", "mac", "concierge-cli"), "concierge-cli")
 macZip.writeZip(path.join("dist", "concierge_mac.zip"))
 const gitBranch = await $`git branch --show-current`.text().then(branch => branch.trim())
 await $`gh release create ${version} ./dist/*.zip --target ${gitBranch}`
