@@ -53,6 +53,7 @@ collection.command('list').action(() =>
 
 const ingest = program.command('ingest')
 ingest.command('directory <directory>')
+.description('ingest all files in a directory to a collection')
 .requiredOption('-c, --collection <collection>', 'collection id to ingest into')
 .action(async (directory, options) => {
   const files = await readdir(directory, { withFileTypes: true, recursive: true });
@@ -71,6 +72,7 @@ ingest.command('directory <directory>')
   if (bar) bar.stop();
 })
 ingest.command('urls <urls...>')
+.description('ingest a list of URLs to a collection')
 .requiredOption('-c, --collection <collection>', 'collection id to ingest into')
 .action(async (urls, options) => {
   let bar: cliProgress.SingleBar | undefined = undefined
@@ -94,7 +96,15 @@ program.command('prompt <userInput>')
 .option('-e, --enhancers <enhancers...>', 'enhancers to use for the prompt')
 .option('-f, --file <file>', 'file to add information to the prompt context')
 .action(async (userInput, options) => {
+  let sourceFound = false
   for await (const item of await client.prompt(options.collection, userInput, options.task, options.persona, options.enhancers, options.file)) {
+    if (item.source) {
+      if (!sourceFound) {
+        console.log('Answering using the following sources:')
+        sourceFound = true
+      }
+      console.log(item.source.page_metadata.source)
+    } 
     if (item.response) {
       process.stdout.write(item.response)
     }
