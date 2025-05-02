@@ -94,7 +94,7 @@ program.command('prompt <userInput>')
 .option('-e, --enhancers <enhancers...>', 'enhancers to use for the prompt')
 .option('-f, --file <file>', 'file to add information to the prompt context')
 .action(async (userInput, options) => {
-  for await (const item of await client.prompt(options.collection, userInput, options.task, options.persona, options.enhancers)) {
+  for await (const item of await client.prompt(options.collection, userInput, options.task, options.persona, options.enhancers, options.file)) {
     if (item.response) {
       process.stdout.write(item.response)
     }
