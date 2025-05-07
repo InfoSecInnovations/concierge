@@ -7,6 +7,7 @@ import * as cliProgress from 'cli-progress';
 import getClient from './getClient';
 import type { ConciergeAuthorizationClient } from 'concierge-api-client';
 import type { ConciergeClient } from 'concierge-api-client';
+import type { DocumentIngestInfo } from 'concierge-api-client/dist/dataTypes';
 
 // we set this to 'executable' when building the standalone
 const environment = process.env.CONCIERGE_ENVIRONMENT_TYPE || 'local';
@@ -17,7 +18,7 @@ dotenv.config({ path: path.resolve(path.join(...envPath)) });
 const program = new commander.Command();
 
 const authEnabled = process.env.CONCIERGE_SECURITY_ENABLED == 'True'
-const client = authEnabled ? await getAuthClient() : await getClient()
+const client = authEnabled ? await getAuthClient() : getClient()
 
 const collection = program.command('collection')
 if (authEnabled) {
@@ -37,30 +38,23 @@ else {
   })
 }
 
-collection.command('delete <collectionId>')
-.action((collectionId) => 
-  getAuthClient()
-  .then(client => client.deleteCollection(collectionId)
-  .then(collectionId => console.log(`Deleted collection with id ${collectionId}`))
-))
+collection.command('delete <collections...>')
+.description('Delete collections with the specified IDs')
+.action(async (collections) => {
+  for (const collectionId of collections) {
+    await client.deleteCollection(collectionId)
+    .then(collectionId => console.log(`Deleted collection with id ${collectionId}`))
+  }
+})
 collection.command('list').action(() => 
-  getAuthClient()
-  .then(client => client.getCollections()
-  .then(collections => {
-    collections.forEach(collection => console.log(collection))
-  })
-))
+  client.getCollections()
+  .then(collections => collections.forEach(collection => console.log(collection)))
+)
 
-const ingest = program.command('ingest')
-ingest.command('directory <directory>')
-.description('ingest all files in a directory to a collection')
-.requiredOption('-c, --collection <collection>', 'collection id to ingest into')
-.action(async (directory, options) => {
-  const files = await readdir(directory, { withFileTypes: true, recursive: true });
-  const actualFiles = files.filter(file => file.isFile());
+const insert = async (insertStream: ReadableStream<DocumentIngestInfo>) => {
   let bar: cliProgress.SingleBar | undefined = undefined
   let currentLabel
-  for await (const item of await client.insertFiles(options.collection, actualFiles.map(file => path.join(file.parentPath, file.name)))) {
+  for await (const item of insertStream) {
     if (currentLabel != item.label) {
       if (bar) bar.stop()
       bar = new cliProgress.SingleBar({format: '{bar} {value}/{total} pages {label}'}, cliProgress.Presets.shades_classic)
@@ -70,24 +64,25 @@ ingest.command('directory <directory>')
     if (bar) bar.update(item.progress + 1); // progress is 0 indexed but the bar is 1 indexed  
   }
   if (bar) bar.stop();
+}
+
+const ingest = program.command('ingest')
+ingest.command('file <filepath>')
+.description('ingest a file into a collection')
+.requiredOption('-c, --collection <collection>', 'collection id to ingest into')
+.action(async (filepath, options) => insert(await client.insertFiles(options.collection, [filepath])) )
+ingest.command('directory <directory>')
+.description('ingest all files in a directory to a collection')
+.requiredOption('-c, --collection <collection>', 'collection id to ingest into')
+.action(async (directory, options) => {
+  const files = await readdir(directory, { withFileTypes: true, recursive: true });
+  const actualFiles = files.filter(file => file.isFile());
+  await insert(await client.insertFiles(options.collection, actualFiles.map(file => path.join(file.parentPath, file.name))))
 })
 ingest.command('urls <urls...>')
 .description('ingest a list of URLs to a collection')
 .requiredOption('-c, --collection <collection>', 'collection id to ingest into')
-.action(async (urls, options) => {
-  let bar: cliProgress.SingleBar | undefined = undefined
-  let currentLabel
-  for await (const item of await client.insertUrls(options.collection, urls)) {
-    if (currentLabel != item.label) {
-      if (bar) bar.stop()
-      bar = new cliProgress.SingleBar({format: '{bar} {value}/{total} pages {label}'}, cliProgress.Presets.shades_classic)
-      bar.start(item.total, 0, {label: item.label});
-      currentLabel = item.label
-    }
-    if (bar) bar.update(item.progress + 1); // progress is 0 indexed but the bar is 1 indexed   
-  }
-  if (bar) bar.stop();
-})
+.action(async (urls, options) => insert(await client.insertUrls(options.collection, urls)))
 
 program.command('prompt <userInput>')
 .requiredOption('-c, --collection <collection>', 'collection id to source the response from')
@@ -110,5 +105,13 @@ program.command('prompt <userInput>')
     }
   }
 })
+
+const documents = program.command('documents')
+documents.command('list')
+.requiredOption('-c, --collection <collection>', 'collection id to list documents from')
+.action(options => 
+  client.getDocuments(options.collection)
+  .then(documents => documents.forEach(document => console.log(document)))
+)
 
 program.parse(Bun.argv)

@@ -2,6 +2,13 @@ from __future__ import annotations
 from loaders.base_loader import ConciergeDocLoader, ConciergeDocument, get_current_time
 from dataclasses import dataclass
 from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
+from bs4 import BeautifulSoup
+import re
+
+
+def bs4_extractor(html: str) -> str:
+    soup = BeautifulSoup(html, "lxml")
+    return re.sub(r"\n\n+", "\n\n", soup.text).strip()
 
 
 class WebLoader(ConciergeDocLoader):
@@ -14,7 +21,7 @@ class WebLoader(ConciergeDocLoader):
     @staticmethod
     def load(full_path: str) -> ConciergeDocument:
         date_time = get_current_time()
-        loader = RecursiveUrlLoader(full_path, max_depth=50)
+        loader = RecursiveUrlLoader(full_path, max_depth=50, extractor=bs4_extractor)
         pages = loader.load_and_split()
         return ConciergeDocument(
             metadata=ConciergeDocument.DocumentMetadata(

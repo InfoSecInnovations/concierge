@@ -38,7 +38,7 @@ def create_collection_index(collection_id):
             "properties": {
                 "document_vector": {
                     "type": "knn_vector",
-                    "dimension": 384,
+                    "dimension": 768,
                     "method": {
                         "name": "hnsw",
                         "space_type": "cosinesimil",

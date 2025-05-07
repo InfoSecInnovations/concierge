@@ -1,6 +1,8 @@
 from sentence_transformers import SentenceTransformer
 
-stransform = SentenceTransformer("paraphrase-MiniLM-L6-v2")
+stransform = SentenceTransformer(
+    "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+)
 
 
 def create_embeddings(text):

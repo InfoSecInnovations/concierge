@@ -1,5 +1,5 @@
 from opensearchpy import helpers
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.text_splitter import SentenceTransformersTokenTextSplitter
 from .embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument, ConciergeFileLoader
 from dataclasses import fields
@@ -9,8 +9,12 @@ from .models import DocumentIngestInfo
 chunk_size = 200
 chunk_overlap = 25
 
-splitter = RecursiveCharacterTextSplitter(
-    chunk_size=chunk_size, chunk_overlap=chunk_overlap
+# splitter = RecursiveCharacterTextSplitter(
+#     chunk_size=chunk_size, chunk_overlap=chunk_overlap
+# )
+
+splitter = SentenceTransformersTokenTextSplitter(
+    model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
 )
 
 

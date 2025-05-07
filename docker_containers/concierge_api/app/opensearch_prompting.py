@@ -7,13 +7,15 @@ def get_context_from_opensearch(
 ):
     client = get_client()
 
+    embedding = create_embeddings(user_input)
+
     query = {
         "size": reference_limit,
         "query": {
             "knn": {
                 "document_vector": {
-                    "vector": create_embeddings(user_input),
-                    "min_score": 0.8,  # this is quite a magic number, tweak as needed!
+                    "vector": embedding,
+                    "min_score": 0.6,  # this is quite a magic number, tweak as needed!
                 }
             }
         },
@@ -27,6 +29,7 @@ def get_context_from_opensearch(
     page_metadata = {}
 
     for hit in hits:
+        print(f"{hit["text"]}\n")
         if hit["page_index"] not in page_metadata:
             page_metadata[hit["page_index"]] = {}
         if hit["page_id"] not in page_metadata[hit["page_index"]]:
