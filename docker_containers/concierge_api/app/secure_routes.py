@@ -198,15 +198,14 @@ async def get_permissions(credentials: Annotated[str, Depends(valid_access_token
     return permissions
 
 
-@router.get("/files/{collection_id}/{doc_type}/{doc_id}")
+@router.get("/files/{collection_id}/{doc_id}")
 async def get_files_route(
     collection_id: str,
-    doc_type: str,
     doc_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
 ):
     await authorize(credentials, collection_id, "read")
-    return await serve_binary(collection_id, doc_id, doc_type)
+    return await serve_binary(collection_id, doc_id)
 
 
 @router.post("/models/pull")

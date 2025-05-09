@@ -151,8 +151,8 @@ export class BaseConciergeClient {
     return this.streamRequest("POST", "models/pull", json => new ModelLoadInfo(json.progress, json.total, json.model_name), {model_name: modelName})
   }
 
-  async getFile(collectionId: string, documentType: string, documentId: string) {
-    const res = await this.makeRequest("GET", `files/${collectionId}/${documentType}/${documentId}`)
+  async getFile(collectionId: string, documentId: string) {
+    const res = await this.makeRequest("GET", `files/${collectionId}/${documentId}`)
     const mediaType = res.headers.get("Content-Type")
     return new WebFile(await res.blob(), mediaType)
   }

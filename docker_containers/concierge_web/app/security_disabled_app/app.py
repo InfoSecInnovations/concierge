@@ -100,7 +100,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 shiny_app = App(app_ui, server)
 
 routes = [
-    Route("/files/{collection_id}/{doc_type}/{doc_id}", endpoint=serve_files),
+    Route("/files/{collection_id}/{doc_id}", endpoint=serve_files),
     Mount("/", app=shiny_app),
 ]
 

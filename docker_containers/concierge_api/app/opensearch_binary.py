@@ -2,15 +2,20 @@ from .opensearch import get_client
 from fastapi.responses import Response
 
 
-async def serve_binary(collection_id: str, doc_id: str, doc_type: str):
+async def serve_binary(collection_id: str, doc_id: str):
     client = get_client()
+    lookup = client.get(f"{collection_id}.document_lookup", doc_id)
     response = client.search(
         body={
             "query": {
                 "bool": {
                     "filter": [
-                        {"term": {"doc_id": doc_id}},
-                        {"term": {"doc_index": f"{collection_id}.{doc_type}"}},
+                        {"term": {"doc_id": lookup["_source"]["doc_id"]}},
+                        {
+                            "term": {
+                                "doc_index": f"{collection_id}.{lookup["_source"]["doc_type"]}"
+                            }
+                        },
                     ]
                 }
             }

@@ -186,7 +186,7 @@ routes = [
     Route("/callback", endpoint=auth_callback),
     Route("/refresh", endpoint=refresh),
     Route("/logout", endpoint=logout),
-    Route("/files/{collection_id}/{doc_type}/{doc_id}", endpoint=serve_files),
+    Route("/files/{collection_id}/{doc_id}", endpoint=serve_files),
     Mount("/login", app=app_login),
     Mount("/", app=shiny_app),
 ]

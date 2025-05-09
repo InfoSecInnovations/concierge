@@ -72,5 +72,5 @@ class BaseConciergeClient(ABC):
         pass
 
     @abstractmethod
-    async def get_file(self, collection_id: str, doc_type: str, doc_id: str) -> WebFile:
+    async def get_file(self, collection_id: str, doc_id: str) -> WebFile:
         pass

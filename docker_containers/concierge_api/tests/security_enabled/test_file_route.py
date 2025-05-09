@@ -29,7 +29,7 @@ def test_can_access_files_route():
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token("testadmin", "test")
     response = client.get(
-        f"/files/{collection_id}/plaintext/{doc_id}",
+        f"/files/{collection_id}/{doc_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 200
@@ -40,6 +40,6 @@ def test_other_user_cannot_access_files_route():
     token = keycloak_client.token("testshared", "test")
     with pytest.raises(KeycloakPostError):
         client.get(
-            f"/files/{collection_id}/plaintext/{doc_id}",
+            f"/files/{collection_id}/{doc_id}",
             headers={"Authorization": f"Bearer {token['access_token']}"},
         )

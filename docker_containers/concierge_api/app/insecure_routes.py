@@ -120,9 +120,9 @@ def opensearch_status():
     return ServiceStatus(running=check_opensearch())
 
 
-@router.get("/files/{collection_id}/{doc_type}/{doc_id}")
-async def get_files_route(collection_id: str, doc_type: str, doc_id: str):
-    return await serve_binary(collection_id, doc_id, doc_type)
+@router.get("/files/{collection_id}/{doc_id}")
+async def get_files_route(collection_id: str, doc_id: str):
+    return await serve_binary(collection_id, doc_id)
 
 
 @router.post("/models/pull")

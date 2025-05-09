@@ -18,6 +18,5 @@ async def serve_files(request: Request):
     )
     collection_id = request.path_params["collection_id"]
     doc_id = request.path_params["doc_id"]
-    doc_type = request.path_params["doc_type"]
-    file = await client.get_file(collection_id, doc_type, doc_id)
+    file = await client.get_file(collection_id, doc_id)
     return Response(file.bytes, media_type=file.media_type)
