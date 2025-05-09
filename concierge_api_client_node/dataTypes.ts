@@ -36,15 +36,13 @@ export class DocumentInfo {
   filename?: string
   mediaType?: string
   documentId: string
-  index: string
   pageCount: number
   vectorCount: number
-  constructor(documentId: string, type: string, source: string, ingestDate: number, index: string, pageCount: number, vectorCount: number, mediaType?: string, filename?: string) {
+  constructor(documentId: string, type: string, source: string, ingestDate: number, pageCount: number, vectorCount: number, mediaType?: string, filename?: string) {
     this.documentId = documentId
     this.type = type
     this.source = source
     this.ingestDate = ingestDate
-    this.index = index
     this.pageCount = pageCount
     this.vectorCount = vectorCount
     this.mediaType = mediaType

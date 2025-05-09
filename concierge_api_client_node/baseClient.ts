@@ -77,7 +77,7 @@ export class BaseConciergeClient {
   async getDocuments(collectionId: string): Promise<DocumentInfo[]> {
     const res = await this.makeRequest("GET", `collections/${collectionId}/documents`)
     const json = await res.json()
-    return json.map(item => new DocumentInfo(item.document_id, item.type, item.source, item.ingest_date, item.index, item.page_count, item.vector_count, item.media_type, item.filename))
+    return json.map(item => new DocumentInfo(item.document_id, item.type, item.source, item.ingest_date, item.page_count, item.vector_count, item.media_type, item.filename))
   }
 
   async insertFiles(collectionId: string, filePaths: string[]) {
@@ -100,8 +100,8 @@ export class BaseConciergeClient {
     ), urls )
   }
 
-  async deleteDocument(collectionId: string, documentType: string, documentId: string) {
-    const res = await this.makeRequest("DELETE", `collections/${collectionId}/documents/${documentType}/${documentId}`)
+  async deleteDocument(collectionId: string, documentId: string) {
+    const res = await this.makeRequest("DELETE", `collections/${collectionId}/documents/${documentId}`)
     const json = await res.json()
     return json.document_id
   }

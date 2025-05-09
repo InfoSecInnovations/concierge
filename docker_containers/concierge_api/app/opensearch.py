@@ -50,10 +50,22 @@ def create_collection_index(collection_id):
                 "page_id": {"type": "keyword"},
                 "doc_index": {"type": "keyword"},
                 "doc_id": {"type": "keyword"},
+                "doc_lookup_id": {"type": "keyword"},
             }
         },
     }
     client.indices.create(index_name, body=index_body)
+    document_ids_index = f"{collection_id}.document_lookup"
+    document_ids_body = {
+        "aliases": {collection_id: {}},
+        "mappings": {
+            "properties": {
+                "doc_index": {"type": "keyword"},
+                "doc_id": {"type": "keyword"},
+            }
+        },
+    }
+    client.indices.create(document_ids_index, body=document_ids_body)
 
 
 def create_index_mapping(collection_id, collection_name):
@@ -147,6 +159,7 @@ def get_opensearch_documents(collection_id: str):
         for hit in response["hits"]["hits"]
     ]
     for doc in docs:
+        # TODO: this might be counting binaries too?
         query = {
             "query": {
                 "bool": {
@@ -179,13 +192,23 @@ def get_opensearch_documents(collection_id: str):
             }
         }
         doc["vector_count"] = client.count(body=query, index=collection_id)["count"]
+        query = {
+            "size": 1,
+            "query": {"bool": {"filter": [{"term": {"doc_id": doc["id"]}}]}},
+        }
+        doc["doc_lookup_id"] = client.search(
+            body=query, index=f"{collection_id}.document_lookup"
+        )["hits"]["hits"][0]["_id"]
 
     return docs
 
 
-def delete_opensearch_document(collection_id: str, doc_type: str, doc_id: str):
+def delete_opensearch_document(collection_id: str, doc_lookup_id: str):
     client = get_client()
-    doc_index = f"{collection_id}.{doc_type}"
+    lookup_index = f"{collection_id}.document_lookup"
+    lookup = client.get(lookup_index, doc_lookup_id)
+    doc_index = lookup["_source"]["doc_index"]
+    doc_id = lookup["_source"]["doc_id"]
     query = {
         "query": {
             "bool": {

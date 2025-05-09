@@ -2,7 +2,7 @@ from .opensearch_ingesting import insert
 from .authorization import authorize, UnauthorizedOperationError
 from tqdm import tqdm
 from isi_util.async_generator import asyncify_generator
-from .models import DocumentIngestInfo
+from concierge_types import DocumentIngestInfo
 from typing import AsyncGenerator, Any
 from concierge_util import auth_enabled
 

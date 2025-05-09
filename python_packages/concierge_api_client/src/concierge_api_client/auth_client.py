@@ -149,10 +149,10 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
         ):
             yield DocumentIngestInfo(**json.loads(line))
 
-    async def delete_document(self, collection_id, document_type, document_id) -> str:
+    async def delete_document(self, collection_id, document_id) -> str:
         response = await self.__make_request(
             "DELETE",
-            f"collections/{collection_id}/documents/{document_type}/{document_id}",
+            f"collections/{collection_id}/documents/{document_id}",
         )
         return response.json()["document_id"]
 

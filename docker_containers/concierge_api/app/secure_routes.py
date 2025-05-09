@@ -118,16 +118,15 @@ async def insert_urls_document_route(
 
 
 @router.delete(
-    "/collections/{collection_id}/documents/{document_type}/{document_id}",
+    "/collections/{collection_id}/documents/{document_id}",
     response_model_exclude_unset=True,
 )
 async def delete_document_route(
     collection_id: str,
-    document_type: str,
     document_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> DeletedDocumentInfo:
-    return await delete_document(credentials, collection_id, document_type, document_id)
+    return await delete_document(credentials, collection_id, document_id)
 
 
 @router.get("/{collection_id}/scopes")

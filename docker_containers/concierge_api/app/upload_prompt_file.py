@@ -1,8 +1,6 @@
 from fastapi import UploadFile
 import aiofiles
-from .models import (
-    TempFileInfo,
-)
+from concierge_types import TempFileInfo
 from .opensearch import set_temp_file
 
 

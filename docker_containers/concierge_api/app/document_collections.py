@@ -34,9 +34,6 @@ from concierge_types import (
 )
 
 
-# TODO: add owner data to all AuthzCollectionInfo return types
-
-
 async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
     if auth_enabled():
         available_resources = await list_resources(token)
@@ -160,8 +157,7 @@ async def get_documents(token, collection_id):
             source=doc["source"],
             ingest_date=doc["ingest_date"],
             vector_count=doc["vector_count"],
-            document_id=doc["id"],
-            index=doc["index"],
+            document_id=doc["doc_lookup_id"],
             page_count=doc["page_count"],
             media_type=doc["media_type"] if "media_type" in doc else None,
             filename=doc["filename"] if "filename" in doc else None,
@@ -170,7 +166,7 @@ async def get_documents(token, collection_id):
     ]
 
 
-async def delete_document(token, collection_id, document_type, document_id):
+async def delete_document(token, collection_id, document_id):
     if auth_enabled():
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
@@ -178,9 +174,8 @@ async def delete_document(token, collection_id, document_type, document_id):
     return DeletedDocumentInfo(
         collection_id=collection_id,
         document_id=document_id,
-        document_type=document_type,
         deleted_element_count=await asyncify(
-            delete_opensearch_document, collection_id, document_type, document_id
+            delete_opensearch_document, collection_id, document_id
         ),
     )
 

@@ -54,16 +54,24 @@ collection.command('list').action(() =>
 const insert = async (insertStream: ReadableStream<DocumentIngestInfo>) => {
   let bar: cliProgress.SingleBar | undefined = undefined
   let currentLabel
+  let currentId
   for await (const item of insertStream) {
     if (currentLabel != item.label) {
-      if (bar) bar.stop()
+      if (bar) {
+        bar.stop()
+        console.log(`Ingested ${currentLabel} with ID ${currentId}`)
+      } 
       bar = new cliProgress.SingleBar({format: '{bar} {value}/{total} pages {label}'}, cliProgress.Presets.shades_classic)
       bar.start(item.total, 0, {label: item.label});
       currentLabel = item.label
+      currentId = item.documentId
     }
     if (bar) bar.update(item.progress + 1); // progress is 0 indexed but the bar is 1 indexed  
   }
-  if (bar) bar.stop();
+  if (bar) {
+    bar.stop()
+    console.log(`Ingested ${currentLabel} with ID ${currentId}`)
+  } 
 }
 
 const ingest = program.command('ingest')
@@ -106,12 +114,19 @@ program.command('prompt <userInput>')
   }
 })
 
-const documents = program.command('documents')
-documents.command('list')
-.requiredOption('-c, --collection <collection>', 'collection id to list documents from')
-.action(options => 
-  client.getDocuments(options.collection)
+const document = program.command('document')
+document.command('list <collection>')
+.action(collection => 
+  client.getDocuments(collection)
   .then(documents => documents.forEach(document => console.log(document)))
 )
+document.command('delete <documents...>')
+.requiredOption('-c, --collection <collection>', 'collection id containing the documents to be deleted')
+.action(async (documents, options) => {
+  for (const documentId of documents) {
+    await client.deleteDocument(options.collection, documentId).then(documentId => console.log(`deleted document with id ${documentId}`))
+  }
+  
+})
 
 program.parse(Bun.argv)

@@ -33,7 +33,6 @@ class DocumentInfo(BaseModel):
     filename: Optional[str] = None
     media_type: Optional[str] = None
     document_id: str
-    index: str
     page_count: int
     vector_count: int
 
@@ -41,7 +40,6 @@ class DocumentInfo(BaseModel):
 class DeletedDocumentInfo(BaseModel):
     collection_id: str
     document_id: str
-    document_type: str
     deleted_element_count: int
 
 

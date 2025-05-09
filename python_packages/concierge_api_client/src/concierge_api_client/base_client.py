@@ -32,7 +32,7 @@ class BaseConciergeClient(ABC):
         pass
 
     @abstractmethod
-    async def delete_document(self, collection_id, document_type, document_id) -> str:
+    async def delete_document(self, collection_id, document_id) -> str:
         pass
 
     @abstractmethod

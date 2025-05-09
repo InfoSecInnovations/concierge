@@ -4,7 +4,7 @@ from .embeddings import create_embeddings
 from loaders.base_loader import ConciergeDocument, ConciergeFileLoader
 from dataclasses import fields
 from .opensearch import get_client, delete_opensearch_document
-from .models import DocumentIngestInfo
+from concierge_types import DocumentIngestInfo
 
 chunk_size = 200
 chunk_overlap = 25
@@ -49,6 +49,10 @@ def insert(
         }
         client.indices.create(doc_index_name, body=index_body)
     doc_id = client.index(doc_index_name, vars(document.metadata))["_id"]
+    doc_lookup_id = client.index(
+        f"{collection_id}.document_lookup",
+        {"doc_id": doc_id, "doc_index": doc_index_name},
+    )["_id"]
 
     total = len(document.pages)
     if not total:  # this shouldn't really happen
@@ -120,6 +124,7 @@ def insert(
                         "page_id": page_id,
                         "doc_index": doc_index_name,
                         "doc_id": doc_id,
+                        "doc_lookup_id": doc_lookup_id,
                     }
                     for index, vect in enumerate(vects)
                 ]
@@ -127,7 +132,7 @@ def insert(
             yield DocumentIngestInfo(
                 progress=index,
                 total=total,
-                document_id=doc_id,
+                document_id=doc_lookup_id,
                 document_type=document.metadata.type,
                 label=document.metadata.filename
                 if isinstance(document.metadata, ConciergeFileLoader.FileMetaData)
@@ -136,5 +141,5 @@ def insert(
         helpers.bulk(client, entries, refresh=True)
 
     except Exception as e:
-        delete_opensearch_document(collection_id, document.metadata.type, doc_id)
+        delete_opensearch_document(collection_id, doc_lookup_id)
         raise e
