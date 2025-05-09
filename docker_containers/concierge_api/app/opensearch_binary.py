@@ -13,7 +13,7 @@ async def serve_binary(collection_id: str, doc_id: str):
                         {"term": {"doc_id": lookup["_source"]["doc_id"]}},
                         {
                             "term": {
-                                "doc_index": f"{collection_id}.{lookup["_source"]["doc_type"]}"
+                                "doc_index": f"{collection_id}.{lookup['_source']['doc_type']}"
                             }
                         },
                     ]
