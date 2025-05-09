@@ -11,11 +11,7 @@ async def serve_binary(collection_id: str, doc_id: str):
                 "bool": {
                     "filter": [
                         {"term": {"doc_id": lookup["_source"]["doc_id"]}},
-                        {
-                            "term": {
-                                "doc_index": f"{collection_id}.{lookup['_source']['doc_type']}"
-                            }
-                        },
+                        {"term": {"doc_index": lookup["_source"]["doc_index"]}},
                     ]
                 }
             }

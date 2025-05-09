@@ -6,7 +6,6 @@ from concierge_scripts.load_dotenv import load_env
 load_env()
 port = int(os.getenv("WEB_PORT", "15130"))
 host = "localhost"
-print("start web", os.getenv("WEB_CERT"), os.getenv("WEB_KEY"))
 
 if auth_enabled():
     run_app(
