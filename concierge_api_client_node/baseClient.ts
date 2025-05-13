@@ -106,26 +106,26 @@ export class BaseConciergeClient {
     return json.document_id
   }
 
-  async getTasks(): Promise<{string: TaskInfo}> {
+  async getTasks(): Promise<{[key: string]: TaskInfo}> {
     const res = await this.makeRequest("GET", "tasks")
     const json = await res.json()
-    return json.items().reduce((acc, [key, value]: any) => {
+    return Object.entries(json).reduce((acc, [key, value]: any) => {
       return {...acc, [key]: new TaskInfo(value.greeting, value.prompt)}
     }, {})
   }
 
-  async getPersonas(): Promise<{string: PromptConfigInfo}> {
+  async getPersonas(): Promise<{[key: string]: PromptConfigInfo}> {
     const res = await this.makeRequest("GET", "personas")
     const json = await res.json()
-    return json.items().reduce((acc, [key, value]: any) => {
+    return Object.entries(json).reduce((acc, [key, value]: any) => {
       return {...acc, [key]: new PromptConfigInfo(value.prompt)}
     }, {})
   }
 
-  async getEnhancers(): Promise<{string: PromptConfigInfo}> {
+  async getEnhancers(): Promise<{[key: string]: PromptConfigInfo}> {
     const res = await this.makeRequest("GET", "enhancers")
     const json = await res.json()
-    return json.items().reduce((acc, [key, value]: any) => {
+    return Object.entries(json).reduce((acc, [key, value]: any) => {
       return {...acc, [key]: new PromptConfigInfo(value.prompt)}
     }, {})
   }

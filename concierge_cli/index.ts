@@ -129,4 +129,31 @@ document.command('delete <documents...>')
   
 })
 
+program.command('task list').action(() => client.getTasks().then(tasks => Object.entries(tasks).forEach(([key, value]) => {
+  console.log(key)
+  console.log('')
+  if (value.prompt) {
+    const splits = value.prompt.split('\n')
+    splits.forEach(split => console.log(split.trim()))
+  }
+  else {
+    console.log('this task just searches for matching documents without forming a response')
+  }
+  console.log('')
+})))
+
+program.command('enhancer list').action(() => client.getEnhancers().then(enhancers => Object.entries(enhancers).forEach(([key, value]) => {
+  console.log(key)
+  console.log('')
+  console.log(value.prompt)
+  console.log('')
+})))
+
+program.command('persona list').action(() => client.getPersonas().then(personas => Object.entries(personas).forEach(([key, value]) => {
+  console.log(key)
+  console.log('')
+  console.log(value.prompt)
+  console.log('')
+})))
+
 program.parse(Bun.argv)
