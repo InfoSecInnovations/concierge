@@ -32,3 +32,6 @@ pip-selfcheck.json
 
 # package builds
 dist
+
+# avoid accidentally committing orphaned node_modules directories after deleting or rename a JS package!
+node_modules
