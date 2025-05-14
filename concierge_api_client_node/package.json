@@ -1,7 +1,7 @@
 {
-  "name": "concierge-api-client",
-  "version": "1.0.0",
-  "description": "",
+  "name": "@infosecinnovations/shabti-api-client",
+  "version": "0.1.0-alpha",
+  "description": "Node.js client to make calls to the Shabti REST API",
   "main": "dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -15,7 +15,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^22.15.2",
     "esbuild": "^0.25.3",

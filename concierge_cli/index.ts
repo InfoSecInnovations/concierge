@@ -7,7 +7,7 @@ import * as cliProgress from 'cli-progress';
 import getClient from './getClient';
 import type { ConciergeAuthorizationClient } from 'concierge-api-client';
 import type { ConciergeClient } from 'concierge-api-client';
-import type { DocumentIngestInfo } from 'concierge-api-client/dist/dataTypes';
+import type { DocumentIngestInfo, PromptConfigInfo } from 'concierge-api-client/dist/dataTypes';
 
 // we set this to 'executable' when building the standalone
 const environment = process.env.CONCIERGE_ENVIRONMENT_TYPE || 'local';
@@ -129,31 +129,29 @@ document.command('delete <documents...>')
   
 })
 
-program.command('task list').action(() => client.getTasks().then(tasks => Object.entries(tasks).forEach(([key, value]) => {
+const listPromptConfig = (items: {[key: string]: PromptConfigInfo}) => Object.entries(items).forEach(([key, value]) => {
   console.log(key)
   console.log('')
   if (value.prompt) {
     const splits = value.prompt.split('\n')
     splits.forEach(split => console.log(split.trim()))
   }
-  else {
+  else { // in reality only the search task should have an empty prompt!
     console.log('this task just searches for matching documents without forming a response')
   }
   console.log('')
-})))
+})
 
-program.command('enhancer list').action(() => client.getEnhancers().then(enhancers => Object.entries(enhancers).forEach(([key, value]) => {
-  console.log(key)
-  console.log('')
-  console.log(value.prompt)
-  console.log('')
-})))
+program.command('task list').action(() => client.getTasks().then(tasks => listPromptConfig(tasks)))
 
-program.command('persona list').action(() => client.getPersonas().then(personas => Object.entries(personas).forEach(([key, value]) => {
-  console.log(key)
-  console.log('')
-  console.log(value.prompt)
-  console.log('')
-})))
+program.command('persona list').action(() => client.getPersonas().then(personas => listPromptConfig(personas)))
+
+program.command('enhancer list').action(() => client.getEnhancers().then(enhancers => listPromptConfig(enhancers)))
+
+program.command('status').action(async () => {
+  console.log(`Ollama: ${await client.ollamaStatus() ? 'online' : 'offline'}`)
+  console.log(`OpenSearch: ${await client.opensearchStatus() ? 'online' : 'offline'}`)
+})
+
 
 program.parse(Bun.argv)

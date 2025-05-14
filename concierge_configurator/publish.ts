@@ -5,6 +5,7 @@ import isiUtilPyProject from "../python_packages/isi_util/pyproject.toml"
 import conciergeApiPyProject from "../python_packages/concierge_api_client/pyproject.toml"
 import conciergeKeycloakPyProject from "../python_packages/concierge_keycloak/pyproject.toml"
 import conciergeTypesPyProject from "../python_packages/concierge_types/pyproject.toml"
+import conciergeApiPackageJson from "../concierge_api_client_node/package.json"
 import path from "node:path"
 import util from "node:util"
 import runPython from "./server/runPython"
@@ -46,6 +47,13 @@ await handlePyPi("isi-util", "isi_util", isiUtilPyProject)
 await handlePyPi("concierge-api-client", "concierge_api_client", conciergeApiPyProject)
 await handlePyPi("concierge-keycloak", "concierge_keycloak", conciergeKeycloakPyProject)
 await handlePyPi("concierge-types", "concierge_types", conciergeTypesPyProject)
+const npmJson: any = await fetch("https://registry.npmjs.org/@infosecinnovations/shabti-api-client").then(res => res.json())
+if (npmJson.versions[conciergeApiPackageJson.version]) {
+    console.log("Shabti API Node Client already up to date")
+}
+else {
+    await $`bun publish --access public`.cwd(path.resolve(path.join(import.meta.dir, '..', 'concierge_api_client_node'))) // TODO: detect if prerelease
+}
 await $`docker build -t infosecinnovations/concierge:${version} ../docker_containers/concierge_api`
 await $`docker image push infosecinnovations/concierge:${version}`
 await $`docker build -t infosecinnovations/concierge-web:${version} ../docker_containers/concierge_web`
