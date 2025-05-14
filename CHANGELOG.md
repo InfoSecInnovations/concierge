@@ -1,12 +1,16 @@
 # Changelog
 
-## 0.6.0 - TBD
+## 0.7.0 - TBD
 
-We skipped a version because we ended up working concurrently on some features from our planned 0.5 and 0.6 releases. We hope you enjoy this big release that brings some of the most important features to Concierge!
+We skipped a couple of versions because we ended up working concurrently on some features from our planned 0.5, 0.6 and 0.7 releases. We hope you enjoy this big release that brings some of the most important features to Shabti/Concierge!
 
-- RBAC is here. Concierge can optionally be configured to use Keycloak to handle user accounts and permissions. You can keep using it without user accounts if you're just using it for personal use on a local machine. We imagine RBAC to be useful in an enterprise setting with multiple users being able to access the instance. Please let us know if you like this feature, and what additional controls we could ship with it.
-- The installer script has been replaced by an executable file available for Windows, Linux and MacOS. This executable serves up a web UI to enable you to configure Concierge locally or remotely. This should make it a lot easier to get Concierge up and running, we felt that the text based installer was no longer practical and it was running into issues with different OSes and Python versions.
-- Still a work in progress but some automated tests are now present. This will help us catch bugs more easily in the various permutations of Concierge that are possible.
+- The project is now called Shabti,
+- RBAC is here. Shabti can optionally be configured to use Keycloak to handle user accounts and permissions. You can keep using it without user accounts if you're just using it for personal use on a local machine. We imagine RBAC to be useful in an enterprise setting with multiple users being able to access the instance. Please let us know if you like this feature, and what additional controls we could ship with it.
+- The installer script has been replaced by an executable file available for Windows, Linux and MacOS. This executable serves up a web UI to enable you to configure Shabti locally or remotely. This should make it a lot easier to get Shabti up and running, we felt that the text based installer was no longer practical and it was running into issues with different OSes and Python versions.
+- The backend code has been moved to a REST API so you can integrate Shabti into your own stack or build your own front end if you wish. We have provided Python and Node.js client packages to provide a more streamlined experience calling the API.
+- The CLI has been revamped and now calls the REST API.
+- Logging: TODO
+- Still a work in progress but some automated tests are now present. This will help us catch bugs more easily in the various permutations of Shabti that are possible.
 
 ## 0.4.0 - 2024-09-05
 
