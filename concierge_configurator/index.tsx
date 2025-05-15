@@ -119,7 +119,7 @@ app.post("/launch", c => c.req.formData()
   }))
 )
 
-console.log("Concierge Configurator")
+console.log("Shabti Configurator")
 console.log(`${getVersion()}\n`)
 
 // we need the compose files to be available outside of the executable bundle so the shell can use them

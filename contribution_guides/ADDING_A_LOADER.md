@@ -10,7 +10,7 @@ For examples of the existing loaders, look at the `loaders` directory inside thi
 
 The top level element, this represents the input to the loader, such as a file or URL.
 
-In the Concierge code base the class `ConciergeDocument` holds all the other elements relating to the document.
+In the Shabti code base the class `ConciergeDocument` holds all the other elements relating to the document.
 
 `ConciergeDocument.DocumentMetadata` contains the following fields:
     
@@ -75,7 +75,7 @@ Load and split the document as per the documentation of the loader you're using 
 
 ### Adding Your Loader To Concierge
 
-Now you've created the loader class and its metadata classes, you need to tell Concierge to look for it when loading files. 
+Now you've created the loader class and its metadata classes, you need to tell Shabti to look for it when loading files. 
 
 Open `concierge_backend_lib/loading.py`.
 

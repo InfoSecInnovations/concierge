@@ -14,11 +14,11 @@ import * as readline from "readline-sync"
 import getVersion from "./server/getVersion"
 import AdmZip from "adm-zip"
 
-console.log("Concierge release publisher\n")
+console.log("Shabti release publisher\n")
 console.log(`Current version: ${getVersion()}`)
 let version = null
 while (!version) {
-    version = prompt("Input new Concierge version:")
+    version = prompt("Input new Shabti version:")
 }
 packageJson.version = version
 await Bun.write("./package.json", JSON.stringify(packageJson, undefined, "\t"))
@@ -75,16 +75,16 @@ await $`bun run build_win`.cwd(cliDir)
 await $`bun run build_linux`.cwd(cliDir)
 await $`bun run build_mac`.cwd(cliDir)
 const winZip = new AdmZip()
-winZip.addLocalFile(path.join("dist", "windows", "concierge.exe"))
-winZip.addLocalFile(path.join(cliDir, "dist", "windows", "concierge_cli.exe"))
-winZip.writeZip(path.join("dist", "concierge_win.zip"))
+winZip.addLocalFile(path.join("dist", "windows", "shabti.exe"))
+winZip.addLocalFile(path.join(cliDir, "dist", "windows", "shabti_cli.exe"))
+winZip.writeZip(path.join("dist", "shabti_win.zip"))
 const linuxZip = new AdmZip()
-linuxZip.addLocalFile(path.join("dist", "linux", "concierge"))
-linuxZip.addLocalFile(path.join(cliDir, "dist", "linux", "concierge_cli"))
-linuxZip.writeZip(path.join("dist", "concierge_linux.zip"))
+linuxZip.addLocalFile(path.join("dist", "linux", "shabti"))
+linuxZip.addLocalFile(path.join(cliDir, "dist", "linux", "shabti_cli"))
+linuxZip.writeZip(path.join("dist", "shabti_linux.zip"))
 const macZip = new AdmZip()
-macZip.addLocalFile(path.join("dist", "mac", "concierge"))
-macZip.addLocalFile(path.join(cliDir, "dist", "mac", "concierge_cli"))
-macZip.writeZip(path.join("dist", "concierge_mac.zip"))
+macZip.addLocalFile(path.join("dist", "mac", "shabti"))
+macZip.addLocalFile(path.join(cliDir, "dist", "mac", "shabti_cli"))
+macZip.writeZip(path.join("dist", "shabti_mac.zip"))
 const gitBranch = await $`git branch --show-current`.text().then(branch => branch.trim())
 await $`gh release create ${version} ./dist/*.zip --target ${gitBranch}`

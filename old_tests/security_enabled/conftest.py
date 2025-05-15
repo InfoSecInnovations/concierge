@@ -14,7 +14,7 @@ def security_enabled_instance():
     destroy_instance()
     create_instance(enable_security=True, launch_local=True)
     load_env()
-    # we need both Concierge and OpenSearch to be up (Ollama should already be up after running the installer)
+    # we need both Shabti and OpenSearch to be up (Ollama should already be up after running the installer)
     while True:
         try:
             requests.get("https://localhost:15130", verify=os.getenv("ROOT_CA"))

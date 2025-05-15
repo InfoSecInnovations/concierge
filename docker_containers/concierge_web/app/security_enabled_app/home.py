@@ -25,7 +25,7 @@ You currently don't have permission to do anything in Concierge, please contact 
 ADMIN_TIPS = """
 ### Admin tips
 - You can configure Keycloak to support many different login methods including OAuth and LDAP.
-- Use the Keycloak administration UI to assign roles to users. Open up the Concierge realm and assign roles from the concierge-auth client.
+- Use the Keycloak administration UI to assign roles to users. Open up the Shabti realm and assign roles from the concierge-auth client.
 - Once a collection has been created you can assign custom permissions to access it if you need something more granular than the provided roles.
 """
 

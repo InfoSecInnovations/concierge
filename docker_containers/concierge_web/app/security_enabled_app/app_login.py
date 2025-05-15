@@ -5,7 +5,7 @@ scope = "profile email openid"
 
 app_ui = ui.page_fillable(
     ui.output_ui("script_output"),
-    ui.markdown("# Data Concierge AI"),
+    ui.markdown("# Shabti AI"),
     ui.div(ui.input_action_button("login_button", "Log In")),
     gap="1em",
 )

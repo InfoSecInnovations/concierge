@@ -13,6 +13,6 @@ def load_file(full_path, filename) -> ConciergeDocument | None:
             except Exception as e:
                 print(e)
     print(
-        f"{full_path} was unable to be loaded by any of the current Concierge loading options"
+        f"{full_path} was unable to be loaded by any of the current Shabti loading options"
     )
     return None

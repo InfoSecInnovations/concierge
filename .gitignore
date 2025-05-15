@@ -1,4 +1,4 @@
-# config files used by Concierge
+# config files used by Shabti
 .env
 concierge.yml
 

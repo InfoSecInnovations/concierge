@@ -23,7 +23,7 @@ If you have made changes to either of the packages in `concierge_packages` you s
 
 ### Major release
 
-While we're in alpha/beta phase, "major" refers to the second number in the version as we're using `0.X.Y` versions where `X` refers to a major release and `Y` refers to a patch. Once we consider Concierge to be properly production ready, releases will be `1.X.Y`. Major releases and their patches are what we want the general public to be using.
+While we're in alpha/beta phase, "major" refers to the second number in the version as we're using `0.X.Y` versions where `X` refers to a major release and `Y` refers to a patch. Once we consider Shabti to be properly production ready, releases will be `1.X.Y`. Major releases and their patches are what we want the general public to be using.
 
 - Make sure to update [CHANGELOG.md](CHANGELOG.md) with the changes that have been implemented since the previous major release.
 - Merge the corresponding branch into the `main` branch. Ensure you're only merging features you intend to release, unfinished features need to remain on `development` or a dedicated feature branch.
@@ -32,7 +32,7 @@ While we're in alpha/beta phase, "major" refers to the second number in the vers
 
 ### Pre-release versions
 
-For testing purposes it may be required to publish a release, as we need to verify that Concierge and its Configurator work in an environment identical to production, and this can only be achieved by publishing the Python dependencies to PyPI and the Docker image to Docker Hub.
+For testing purposes it may be required to publish a release, as we need to verify that Shabti and its Configurator work in an environment identical to production, and this can only be achieved by publishing the Python dependencies to PyPI and the Docker image to Docker Hub.
 
 - For general testing you can publish from any branch, a release candidate should be published from the `X.Y.Z` release branch once you believe its contents are ready for a major release and just need some testing first.
 - For general testing use `0.XaN` or `0.X.YaN` for a patch, for release candidates use `0.XrcN` or `0.X.YrcN` for a patch.

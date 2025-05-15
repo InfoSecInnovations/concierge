@@ -21,8 +21,8 @@
   "scripts": {
     "cli_dev_api": "API_URL=http://localhost:8000 bun run index.ts",
     "cli": "bun run index.ts",
-    "build_win": "bun build ./index.ts --compile --target=bun-windows-x64 --outfile dist/windows/concierge_cli --define 'process.env.CONCIERGE_ENVIRONMENT_TYPE=\"executable\"'",
-    "build_linux": "bun build ./index.ts --compile --target=bun-linux-x64 --outfile dist/linux/concierge_cli --define 'process.env.CONCIERGE_ENVIRONMENT_TYPE=\"executable\"'",
-    "build_mac": "bun build ./index.ts --compile --target=bun-darwin-arm64 --outfile dist/mac/concierge_cli --define 'process.env.CONCIERGE_ENVIRONMENT_TYPE=\"executable\"'"
+    "build_win": "bun build ./index.ts --compile --target=bun-windows-x64 --outfile dist/windows/shabti_cli --define 'process.env.CONCIERGE_ENVIRONMENT_TYPE=\"executable\"'",
+    "build_linux": "bun build ./index.ts --compile --target=bun-linux-x64 --outfile dist/linux/shabti_cli --define 'process.env.CONCIERGE_ENVIRONMENT_TYPE=\"executable\"'",
+    "build_mac": "bun build ./index.ts --compile --target=bun-darwin-arm64 --outfile dist/mac/shabti_cli --define 'process.env.CONCIERGE_ENVIRONMENT_TYPE=\"executable\"'"
   }
 }

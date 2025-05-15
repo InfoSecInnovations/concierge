@@ -1,5 +1,5 @@
 // This script was implemented to enable automated tests to set up Concierge
-// It provides a Concierge install without having to go through the web UI
+// It provides a Shabti install without having to go through the web UI
 // Use at your own risk for other purposes!
 
 import doInstall from "./server/doInstall";

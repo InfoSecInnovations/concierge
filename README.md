@@ -1,11 +1,11 @@
-# Data Concierge AI #  
+# Shabti AI #  
 AI should be simple, safe, and amazing.  
 
 ## TL;DR: ##
-Data Concierge AI (aka Concierge) is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
+Shabti AI is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
 
 ## More details ##
-Concierge is a local and modular RAG framework still in alpha.  
+Shabti is a local and modular RAG framework still in alpha.  
 
 Built with simplicy and security in mind, it has some features we love -- and hope you do too!
 * The quick install method is so easy.
@@ -14,14 +14,14 @@ Built with simplicy and security in mind, it has some features we love -- and ho
 
 ## Dependencies ##  
 
-These versions are currently being used to develop Concierge, lower versions may work but are untested. See [Known Issues](#known-issues) for an older Docker Compose command which might work for you if you're unable to upgrade.
+These versions are currently being used to develop Shabti, lower versions may work but are untested. See [Known Issues](#known-issues) for an older Docker Compose command which might work for you if you're unable to upgrade.
 
 - **Docker >= 25.0.3** (currently the vector database and natural language response engine are running in docker containers). Check with `docker --version`.
 - **Docker Compose >= 2.24.6** (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup). Check with `docker compose version`.  
    
 Optional:  
-If you want to use GPU acceleration (Concierge does NOT require this, but it will make responses dramatically faster), you must have the 
-NVIDIA drivers correctly setup and running. Concierge will not install or make any adjustments to your driver configuration.  
+If you want to use GPU acceleration (Shabti does NOT require this, but it will make responses dramatically faster), you must have the 
+NVIDIA drivers correctly setup and running. Shabti will not install or make any adjustments to your driver configuration.  
 
 Note: if you want to use GPU acceleration on a Windows host, you must use WSL2.  
 More details here:  
@@ -31,23 +31,23 @@ Refer to the documentation from NVIDIA for information on how to do this for you
 
 ## System Requirements ##
 
-It is unlikely you'll be able to run Concierge with less than 8GB RAM, at least 16GB is desirable.
+It is unlikely you'll be able to run Shabti with less than 8GB RAM, at least 16GB is desirable.
 
 If you're using Docker Desktop you need to make sure at least 4GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 8GB RAM and haven't modified your configuration it's likely you don't need to do anything.
 
-You should perform the following system configuration steps according to your Operating System: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, otherwise you may not be able to run the OpenSearch container Concierge depends on.
+You should perform the following system configuration steps according to your Operating System: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, otherwise you may not be able to run the OpenSearch container Shabti depends on.
 
 ## Setup
 
-Concierge now has a visual configurator which we hope you will like a lot more than the previous text-based one. Just go to the release you wish to install and download the executable for your Operating System. Please let us know if you're using a different Operating System, it may be possible for us to make a build for it. You can also use the development version.
+Shabti now has a visual configurator which we hope you will like a lot more than the previous text-based one. Just go to the release you wish to install and download the executable for your Operating System. Please let us know if you're using a different Operating System, it may be possible for us to make a build for it. You can also use the development version.
 
 Launch the executable and visit the address indicated in your web browser. Select your desired options and click "Start Installation!".
 
-Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Concierge" button. Docker will keep everything running for you and you will be able to access Concierge without going via the Configurator once installed.
+Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Shabti" button. Docker will keep everything running for you and you will be able to access Shabti without going via the Configurator once installed.
 
 ## Usage
 
-Once you have completed the installation process, Concierge will be running on localhost:15130 or the host and port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
+Once you have completed the installation process, Shabti will be running on localhost:15130 or the host and port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
 
 ## Configuring Authentication and Authorization
 
@@ -57,15 +57,15 @@ Start by opening up https://localhost:8443 in your browser. Here you should see 
 
 You should refer to the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html) to find out how to configure the type of login you wish to support. You can enable a variety of social network logins, OpenID, LDAP or just username and password.
 
-The configuration we have supplied has already created the super admin user (the one you used to connect to Keycloak above), and a realm called `concierge` with some roles the provide various levels of access to Concierge. Make sure to configure logins and users in this realm and not the master realm.
+The configuration we have supplied has already created the super admin user (the one you used to connect to Keycloak above), and a realm called `concierge` with some roles the provide various levels of access to Shabti. Make sure to configure logins and users in this realm and not the master realm.
 
-The super admin user only serves to administrate the Keycloak instance, they do not have any permissions to access Concierge as a user.
+The super admin user only serves to administrate the Keycloak instance, they do not have any permissions to access Shabti as a user.
 
 If using authorization, there are shared and private collections. A private collection can only be viewed by the user who created it, a shared collection can be viewed by any user with required role. In the future we will add options to switch a collection from private to shared. If you need more specific permissions you can configure those in the `concierge-auth` client using the resources that represent collections.
 
 ### Roles
 
-The roles that grant access to Concierge collections can be found within the `concierge-auth` client in the `concierge` realm.
+The roles that grant access to Shabti collections can be found within the `concierge-auth` client in the `concierge` realm.
 
 - `admin` - can do everything including viewing, updating and deleting other users' private collections. This is different from the super admin user in the master realm.
 - `private_collection` - can create and manage personal collections not accessible by other users (except the admin).
@@ -120,59 +120,30 @@ Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more abo
 
 ### Launch from Configurator
 
-As well as installing, the web-based Configurator gives you some options to launch Concierge.
+As well as installing, the web-based Configurator gives you some options to launch Shabti.
 
-The "Launch Concierge" button shouldn't be used to test local changes to the Python scripts as this uses the image from the Docker Hub.
+The "Launch Shabti" button shouldn't be used to test local changes to the Python scripts as this uses the image from the Docker Hub and not your local files.
 
-"Launch Local Code (Docker)" will build the local files into a Docker image and put it up in a container mimicking the production environment. You should always try your code here before submitting a PR as there are some minor differences with how the components communicate with each other within Docker compared to running the code locally. The first build can be slow, but the Python dependencies will be cached making subsequent builds much faster.
+"Launch X Locally (Docker)" will build the local files into a Docker image and put it up in a container mimicking the production environment. You should always try your code here before submitting a PR as there are some minor differences with how the components communicate with each other within Docker compared to running the code locally. The first build can be slow, but the Python dependencies will be cached making subsequent builds much faster.
 
-"Launch Local Code (Python)" is a straightforward way to 
+"Launch X Locally (Python)" is a straightforward way to run the Python code directly from your local files.
 
-### Visual Studio Code
+### Launch API in dev mode with reloading
 
-Install Shiny for Python VSCode extension.
+- Navigate to `docker_containers/concierge_api`
+- Enable the virtual environment
+- Navigate to the `app` subdirectory
+- `fastapi dev app.py`
 
-Run Shiny for Python VSCode extension from `concierge_shiny/app.py`.
-
-You can also access the URL by pasting it into another browser.
-
-At this time it doesn't seem to be possible to use HTTPS while launching from VSCode.
-
-#### With authentication
-
-Authentication doesn't play very nicely with VSCode, however it is still possible to use it.
-
-- Manually configure the port used by Shiny in the extension configuration to match the one you chose during install.
-- Access the web app through your browser, not through the built-in VSCode one.
-
-This does offer the advantage of hot reloading and being able to use the debugger while testing authentication.
+You will see in the command line that the Swagger UI is available, this is really useful for testing out the REST API functions.
 
 ## CLI ##
 
-While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app. We haven't yet included these in our automated test coverage, so please let us know if you're trying to use them and having issues.
-
-One notable feature is that the `loader` script loads an entire directory of documents which the GUI is currently unable to do.
-
-To use them you can navigate to the `cli` subdirectory.
-
-Make sure you are running inside the virtual environment created during installation.
-
-Call commands like this: `python -m <script_name> <options>`. Use the `-h` or `--help` option to see what the options are.
-
-If your instance of Concierge has RBAC enabled the CLI runs with full admin privileges, so use with care! If there's demand for it we may consider adding proper login to be able to use the CLI with a user account.
-
-Available commands:
-- `loader`
-- `web_loader`
-- `prompter`
-- `list_collections`
-- `list_documents`
-- `delete_collection`
-- `delete_document`
+Shabti now ships with a standalone executable for the Command Line Interface and the syntax has been completely revamped. We will add proper documentation for this, but you can call the executable with the `-h` flag to see which commands exist and how to use them. The CLI executable must be in the same directory as the main executable and will only work after you've installed Shabti.
 
 ## Known Issues
 
-- Startup of the Concierge service can be quite slow, this appears to be especially so when running in Docker for some reason. We believe it's due to one of the AI related dependencies, we will review this problem at some point as there may be alternative frameworks we could use.
+- Startup of the Shabti API service can be quite slow, this appears to be especially so when running in Docker for some reason. We believe it's due to one of the AI related dependencies, we will review this problem at some point as there may be alternative frameworks we could use.
 
 ## Want to get involved? ##
 

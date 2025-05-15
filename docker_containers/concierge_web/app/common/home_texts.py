@@ -1,9 +1,9 @@
 TITLE = """
-# Data Concierge AI
+# Shabti AI
 
 AI should be simple, safe, and amazing.
 
-Concierge is an open-source AI framework built specifically for
+Shabti is an open-source AI framework built specifically for
 how you use data.
 """
 
@@ -17,7 +17,7 @@ QUICKSTART = """
 TIPS = """
 ### Tips for getting the most out of Concierge:
 - You can have as many collections as you want. Organize your data how you'd like!
-- Experiment with the selection options in Prompter. You can have Concierge help you with lots of tasks.
+- Experiment with the selection options in Prompter. You can have Shabti help you with lots of tasks.
 - If you have any problems, reach out to us via github issues or the contact page on <https://dataconcierge.ai>{target="_blank"}
 """
 

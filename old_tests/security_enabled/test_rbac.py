@@ -1,4 +1,4 @@
-# This test should be run once Concierge is installed with the demo RBAC configuration
+# This test should be run once Shabti is installed with the demo RBAC configuration
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
