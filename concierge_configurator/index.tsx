@@ -51,28 +51,28 @@ app.get('/', async c => {
       <link rel="stylesheet" href="./style.css" />         
     </head>
     <body>
-      <h1>Concierge Configurator</h1>
-      <p>This is a utility to install and configure Concierge Data AI, a tool made by <a href="https://www.infosecinnovations.com/" target="_blank">InfoSec Innovations</a></p>
-      <p>Having trouble? Got suggestions for improving Concierge? Head over to our <a href="https://github.com/InfoSecInnovations/concierge" target="_blank">GitHub</a>!</p>
+      <h1>Shabti Configurator</h1>
+      <p>This is a utility to install and configure Shabti AI, a tool made by <a href="https://www.infosecinnovations.com/" target="_blank">InfoSec Innovations</a></p>
+      <p>Having trouble? Got suggestions for improving Shabti? Head over to our <a href="https://github.com/InfoSecInnovations/concierge" target="_blank">GitHub</a>!</p>
       {dockerStatus ? <>
         {conciergeIsInstalled ? <section>
-          <h3>Launch Concierge</h3>
-          <p>Concierge appears to be configured on this system</p>
+          <h3>Launch Shabti</h3>
+          <p>Shabti appears to be configured on this system</p>
           <WebUILink></WebUILink>
           <p>If the link above isn't working, try (re)launching using the button below.</p>
-          <p>Bear in mind that if you just installed Concierge it can take a few minutes before it's up and running.</p>
+          <p>Bear in mind that if you just installed Shabti it can take a few minutes before it's up and running.</p>
           <RelaunchForm devMode={devMode} apiIsRunning={!!state.apiWorker} webIsRunning={!!state.webWorker}></RelaunchForm>
         </section> : null}
         <ExistingRemover></ExistingRemover>
         <section>
-          <h3>Install Concierge</h3>
+          <h3>Install Shabti</h3>
           <InstallOptionsForm devMode={devMode}></InstallOptionsForm>
         </section>
       </> : <section>
         <h3>Docker isn't running, please start it!</h3>
-        <p>Docker is needed to install and run Concierge. We don't currently have a way to integrate it into the installer, so you will have to install it yourself.</p>
+        <p>Docker is needed to install and run Shabti. We don't currently have a way to integrate it into the installer, so you will have to install it yourself.</p>
         <p>You can find install instructions here: <a href="https://docs.docker.com/engine/install/">https://docs.docker.com/engine/install/</a>. Please note that on Linux you have to follow the instructions very precisely otherwise you can end up installing Docker incorrectly!</p>
-        <p>If you have already installed it, please launch Docker Desktop or start the daemon and this page should display the Concierge installation options.</p>
+        <p>If you have already installed it, please launch Docker Desktop or start the daemon and this page should display the Shabti installation options.</p>
       </section>}
     </body> 
     <script src="index.js"></script>
@@ -81,7 +81,7 @@ app.get('/', async c => {
 app.post("/install", c => c.req.formData()
   .then(data => {
     if (!validateInstallForm(data)) return c.redirect("/?err=invalid-form")
-    return streamHtml(c, "Installing Concierge", async stream => {
+    return streamHtml(c, "Installing Shabti", async stream => {
       for await (const message of doInstall(data)) {
         await stream.writeln(await <p>{message}</p>)
       }
@@ -91,8 +91,11 @@ app.post("/install", c => c.req.formData()
 app.post("/remove", c => c.req.formData()
 .then(data => {
   const service = data.get("service")
-  if (service == "concierge") return streamHtml(c, "Removing Concierge service", async _ => {
+  if (service == "concierge") return streamHtml(c, "Removing Shabti API service", async _ => {
     await $`docker container rm --force concierge`
+  })
+    if (service == "concierge-web") return streamHtml(c, "Removing Shabti Web UI service", async _ => {
+    await $`docker container rm --force concierge-web`
   })
   if (service == "ollama") return streamHtml(c, "Removing Ollama service", async _ => {
     await $`docker container rm --force ollama`

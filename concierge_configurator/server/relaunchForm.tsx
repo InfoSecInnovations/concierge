@@ -9,7 +9,7 @@ export const RelaunchForm = async (props: {devMode: boolean, apiIsRunning?: bool
                 <input type="checkbox" id="launch_with_gpu" name="use_gpu" checked={envs.OLLAMA_SERVICE=="ollama-gpu"}></input>
                 <label for="launch_with_gpu">Enable GPU Acceleration</label>
             </p>
-            <button type="submit">Launch Concierge</button>
+            <button type="submit">Launch Shabti</button>
             {props.devMode && <>
                 <button type="submit" name="environment" value="local">Launch API Locally (Docker)</button>         
                 {

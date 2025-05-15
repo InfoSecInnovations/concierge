@@ -22,8 +22,8 @@ export default async function* (options: FormData, installVenv = true) {
         Object.entries(envs).forEach(([key, value]) => process.env[key] = value)
         return Bun.write(getEnvPath(), envfile.stringify(envs))
     }
-    envs.WEB_HOST = options.get("host")?.toString() || "localhost"
-    envs.WEB_PORT = options.get("port")?.toString() || "15130"
+    envs.WEB_HOST = options.get("web-host")?.toString() || "localhost"
+    envs.WEB_PORT = options.get("web-port")?.toString() || "15130"
     envs.API_HOST = options.get("api-host")?.toString() || "localhost"
     envs.API_PORT = options.get("api-port")?.toString() || "15131"
     const securityLevel = options.get("security_level")?.toString()

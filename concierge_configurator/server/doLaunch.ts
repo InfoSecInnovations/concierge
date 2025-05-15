@@ -25,7 +25,7 @@ export default async function* (options: FormData, state: {apiWorker?: Subproces
    }
    const envs = envfile.parse(await Bun.file(getEnvPath()).text()) 
    envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
-   yield logMessage(`Launching Concierge ${envs.OLLAMA_SERVICE.endsWith("gpu") ? "with" : "without"} GPU acceleration.`)
+   yield logMessage(`Launching Shabti ${envs.OLLAMA_SERVICE.endsWith("gpu") ? "with" : "without"} GPU acceleration.`)
    await Bun.write(getEnvPath(), envfile.stringify(envs))
 
    if (environment == "local") {
@@ -35,9 +35,9 @@ export default async function* (options: FormData, state: {apiWorker?: Subproces
       await $`docker compose -f ./docker_compose/docker-compose-local.yml up -d`
    } 
    else if (environment == "development") {
-      yield logMessage("Launching Docker Compose configuration to run Concierge code locally...")
+      yield logMessage("Launching Docker Compose configuration to run Shabti API code locally...")
       await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
-      yield logMessage("Running Concierge from local codebase...")
+      yield logMessage("Running Shabti from local codebase...")
       state.apiWorker = Bun.spawn([platform() == "win32" ? ".\\Scripts\\python" : "./bin/python", "-m", "dev_launcher"], {cwd: path.resolve(path.join("..", "docker_containers", "concierge_api"))})
    } 
    else if (environment == "web_local") {
@@ -47,13 +47,13 @@ export default async function* (options: FormData, state: {apiWorker?: Subproces
       await $`docker compose -f ./docker_compose/docker-compose-web-local.yml up -d`
    } 
    else if (environment == "web_development") {
-      yield logMessage("Launching Docker Compose configuration to run Concierge code locally...")
+      yield logMessage("Launching Docker Compose configuration to run Shabti Web UI code locally...")
       await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`
-      yield logMessage("Running Concierge from local codebase...")
+      yield logMessage("Running Shabti from local codebase...")
       state.webWorker = Bun.spawn([platform() == "win32" ? ".\\Scripts\\python" : "./bin/python", "-m", "dev_launcher"], {cwd: path.resolve(path.join("..", "docker_containers", "concierge_web"))})
    } 
    else {
-      yield logMessage("Launching Concierge Docker Compose configuration...")
+      yield logMessage("Launching Shabti Docker Compose configuration...")
       await $`docker compose -f ./docker_compose/docker-compose.yml up -d`
    } 
 }

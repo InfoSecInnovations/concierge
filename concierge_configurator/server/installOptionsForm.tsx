@@ -44,16 +44,26 @@ export const InstallOptionsForm = async (props: {devMode: boolean}) => {
                 </p>
             </fieldset>
             <fieldset>
-                <legend>Web UI Access</legend>
+                <legend>Hosts and Ports</legend>
                 <p>
-                    <label for="host">Host</label>
-                    <input type="text" name="host" id="host" value="localhost"></input>
-                    This should be the URL from which Concierge is being accessed. Leave it as "localhost" unless you need to access Concierge from another machine.
+                    <label for="web-host">Web Host</label>
+                    <input type="text" name="web-host" id="web-host" value="localhost"></input>
+                    This should be the URL from which the Shabti Web UI is being accessed. Leave it as "localhost" unless you need to access Shabti from another machine.
                 </p>
                 <p>
-                    <label for="port">Port</label>
-                    <input type="number" name="port" id="port" value="15130"></input>
-                    Concierge will be served on this port.
+                    <label for="web-port">Web Port</label>
+                    <input type="number" name="web-port" id="web-port" value="15130"></input>
+                    The Shabti Web UI will be served on this port.
+                </p>
+                <p>
+                    <label for="host">API Host</label>
+                    <input type="text" name="api-host" id="host" value="localhost"></input>
+                    This should be the URL from which the Shabti API is being accessed. Leave it as "localhost" unless you need to access Shabti from another machine.
+                </p>
+                <p>
+                    <label for="port">API Port</label>
+                    <input type="number" name="api-port" id="port" value="15131"></input>
+                    The Shabti API will be served on this port.
                 </p>
             </fieldset>
             <fieldset>
@@ -70,7 +80,7 @@ export const InstallOptionsForm = async (props: {devMode: boolean}) => {
                     <input type="radio" value="enabled" id="security_enabled" name="security_level" checked={securityEnabled && !demoEnabled}></input>
                     <label for="security_enabled">Enabled</label>
                 </p>
-                <p>If you don't enable security anyone who can access the web UI will have full privileges to interact with your Concierge instance!</p>
+                <p>If you don't enable security anyone who can access the web UI will have full privileges to interact with your Shabti instance!</p>
                 <p>The demo configuration should never be used for production as it is a very insecure configuration designed to show off the different access levels using test users.</p>
                 {keycloakEnabled ? <div id="keycloak_config">
                     <p><strong>There is an existing Keycloak installation.</strong></p>

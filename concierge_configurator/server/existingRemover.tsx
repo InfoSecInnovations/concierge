@@ -25,8 +25,8 @@ export const ExistingRemover = async () => {
         <p>If you're switching between having security enabled and disabled or vice-versa, it's strongly recommended that you remove all existing containers except for Ollama.</p>
         <p>Be aware that if you remove Ollama you will have to redownload the LLM models which are quite large.</p>
         <form action="/remove" method="post">
-            {conciergeExists && <button type="submit" name="service" value="concierge">Remove Concierge API service</button>}
-            {conciergeWebExists && <button type="submit" name="service" value="concierge-web">Remove Concierge Web UI service</button>}
+            {conciergeExists && <button type="submit" name="service" value="concierge">Remove Shabti API service</button>}
+            {conciergeWebExists && <button type="submit" name="service" value="concierge-web">Remove Shabti Web UI service</button>}
             {ollamaExists && <button type="submit" name="service" value="ollama">Remove Ollama service</button>}
             {keycloakExists && <button type="submit" name="service" value="keycloak">Remove Keycloak service</button>}
             {opensearchExists && <button type="submit" name="service" value="opensearch">Remove OpenSearch service</button>}
