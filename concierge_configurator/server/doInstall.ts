@@ -102,7 +102,7 @@ export default async function* (options: FormData, installVenv = true) {
     }
     envs.ENVIRONMENT = environment
     envs.CONCIERGE_VERSION = getVersion()
-    envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
+    envs.LOCALAI_SERVICE = options.has("use_gpu") ? "localai-gpu" : "localai"
     await updateEnv()
     yield logMessage("launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...")
     if (environment == "development") {
@@ -133,6 +133,6 @@ export default async function* (options: FormData, installVenv = true) {
     }
     yield logMessage("pulling language model. This can take quite a long time if you haven't downloaded the model before.")
     // TODO use options.get("language_model")
-    await $`docker exec -it ollama ollama pull mistral`
+    //await $`docker exec -it ollama ollama pull mistral`
     console.log("Installation done\n")
 }

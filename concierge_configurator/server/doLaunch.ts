@@ -24,8 +24,8 @@ export default async function* (options: FormData, state: {apiWorker?: Subproces
       return
    }
    const envs = envfile.parse(await Bun.file(getEnvPath()).text()) 
-   envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama"
-   yield logMessage(`Launching Shabti ${envs.OLLAMA_SERVICE.endsWith("gpu") ? "with" : "without"} GPU acceleration.`)
+   envs.LOCALAI_SERVICE = options.has("use_gpu") ? "localai-gpu" : "localai"
+   yield logMessage(`Launching Shabti ${envs.LOCALAI_SERVICE.endsWith("gpu") ? "with" : "without"} GPU acceleration.`)
    await Bun.write(getEnvPath(), envfile.stringify(envs))
 
    if (environment == "local") {

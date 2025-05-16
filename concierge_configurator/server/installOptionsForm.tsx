@@ -9,7 +9,7 @@ export const InstallOptionsForm = async (props: {devMode: boolean}) => {
     const envs = await envFile.exists() && await envFile.text().then(body => envfile.parse(body))
     const securityEnabled = envs && envs.CONCIERGE_SECURITY_ENABLED == "True"
     const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True"
-    const gpuEnabled = envs && envs.OLLAMA_SERVICE == "ollama-gpu"
+    const gpuEnabled = envs && envs.LOCALAI_SERVICE == "localai-gpu"
     const keycloakEnabled = await keycloakExists()
     return (
         <form action="/install" method="post" id="install_form">

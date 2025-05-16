@@ -6,7 +6,7 @@ export const RelaunchForm = async (props: {devMode: boolean, apiIsRunning?: bool
     return (
         <form action="/launch" method="post">
             <p>
-                <input type="checkbox" id="launch_with_gpu" name="use_gpu" checked={envs.OLLAMA_SERVICE=="ollama-gpu"}></input>
+                <input type="checkbox" id="launch_with_gpu" name="use_gpu" checked={envs.LOCALAI_SERVICE=="localai-gpu"}></input>
                 <label for="launch_with_gpu">Enable GPU Acceleration</label>
             </p>
             <button type="submit">Launch Shabti</button>

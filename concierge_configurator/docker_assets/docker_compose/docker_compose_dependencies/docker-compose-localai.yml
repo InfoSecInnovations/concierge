@@ -1,0 +1,19 @@
+services:
+  localai:
+    container_name: localai
+    image: localai/localai:latest-cpu
+    ports:
+      - "11434:11434"
+    volumes:
+      - localai:/build/models:cached
+    restart: unless-stopped
+  localai-gpu:
+    extends: localai
+    image: localai/localai:latest-gpu-nvidia-cuda-12
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

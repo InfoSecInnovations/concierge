@@ -1,0 +1,19 @@
+services:
+  vllm:
+    container_name: vllm
+    image: vllm/vllm-openai
+    ports:
+      - "11434:11434"
+    volumes:
+      - vllm:/root/.cache
+    restart: unless-stopped
+    command: --model "mistralai/Mistral-7B-v0.3"
+  vllm-gpu:
+    extends: vllm
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
