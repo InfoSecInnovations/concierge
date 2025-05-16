@@ -45,6 +45,10 @@ class ConciergeClient(BaseConciergeClient):
             async for line in response.aiter_lines():
                 yield line
 
+    async def api_status(self):
+        response = await self.__make_request("GET", "/")
+        return response.status_code == 200
+
     async def create_collection(self, collection_name: str) -> str:
         response = await self.__make_request(
             "POST", "collections", {"collection_name": collection_name}

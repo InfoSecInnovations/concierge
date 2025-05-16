@@ -12,6 +12,10 @@ from typing import Generator, Any
 
 class BaseConciergeClient(ABC):
     @abstractmethod
+    async def api_status(self) -> bool:
+        pass
+
+    @abstractmethod
     async def delete_collection(self, collection_id: str) -> str:
         pass
 

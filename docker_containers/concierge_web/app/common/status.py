@@ -13,6 +13,7 @@ def status_server(
 ):
     opensearch_status = reactive.value("loading")
     ollama_status = reactive.value("loading")
+    api_status = reactive.value("loading")
 
     @reactive.extended_task
     async def get_ollama_status():
@@ -21,6 +22,10 @@ def status_server(
     @reactive.extended_task
     async def get_opensearch_status():
         return await client.opensearch_status()
+
+    @reactive.extended_task
+    async def get_api_status():
+        return await client.api_status()
 
     @reactive.effect
     def set_ollama_status():
@@ -31,14 +36,29 @@ def status_server(
         opensearch_status.set("online" if get_opensearch_status.result() else "offline")
 
     @reactive.effect
+    def set_api_status():
+        api_status.set("online" if get_api_status.result() else "offline")
+
+    @reactive.effect
     def poll():
         reactive.invalidate_later(10)
-        get_ollama_status()
-        get_opensearch_status()
+        get_api_status()
+
+    @reactive.effect
+    def on_api_status():
+        if api_status.get() == "online":
+            get_ollama_status()
+            get_opensearch_status()
 
     @render.ui
     def status_widget():
         items = []
+        if api_status.get() != "loading":
+            items.append(
+                ui.markdown(
+                    f"{'🟢' if api_status.get() == 'online' else '🔴'} Shabti API Service"
+                )
+            )
         if opensearch_status.get() != "loading":
             items.append(
                 ui.markdown(
@@ -57,6 +77,7 @@ def status_server(
     @reactive.calc
     def result():
         return {
+            "api": api_status.get() == "online",
             "opensearch": opensearch_status.get() == "online",
             "ollama": ollama_status.get() == "online",
         }

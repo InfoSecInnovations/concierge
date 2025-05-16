@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from concierge_util import auth_enabled
@@ -32,6 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # without security the API routes are simplified
 
 if not auth_enabled():
@@ -45,6 +46,11 @@ else:
         )
 
     app.include_router(secure_routes.router)
+
+
+@app.get("/")
+def is_online():
+    return Response("Shabti API is up and running!")
 
 
 @app.exception_handler(CollectionExistsError)

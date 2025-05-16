@@ -107,6 +107,10 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
             yield line
         await response.aclose()
 
+    async def api_status(self):
+        response = await self.__make_request("GET", "/")
+        return response.status_code == 200
+
     async def create_collection(
         self, collection_name: str, location: str, owner_username: str | None = None
     ) -> str:
