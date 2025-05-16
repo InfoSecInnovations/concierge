@@ -134,5 +134,6 @@ export default async function* (options: FormData, installVenv = true) {
     yield logMessage("pulling language model. This can take quite a long time if you haven't downloaded the model before.")
     // TODO use options.get("language_model")
     //await $`docker exec -it ollama ollama pull mistral`
+    await $`docker exec -it localai ./local-ai models install ollama://mistral:7b`
     console.log("Installation done\n")
 }

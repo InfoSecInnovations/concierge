@@ -3,7 +3,7 @@ services:
     container_name: localai
     image: localai/localai:latest-cpu
     ports:
-      - "11434:11434"
+      - "11434:8080"
     volumes:
       - localai:/build/models:cached
     restart: unless-stopped
