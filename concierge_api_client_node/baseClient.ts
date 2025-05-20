@@ -135,6 +135,16 @@ export class BaseConciergeClient {
     return this.streamRequest("POST", "prompt", null, { collection_id: collectionId, user_input: prompt, task, persona, enhancers })
   }
 
+  async apiStatus(): Promise<boolean> {
+    try {
+      const res = await this.makeRequest("GET", "/")
+      return res.status == 200
+    }
+    catch {
+      return false
+    }
+  }
+
   async ollamaStatus(): Promise<boolean> {
     const res = await this.makeRequest("GET", "status/ollama")
     const json = await res.json()
