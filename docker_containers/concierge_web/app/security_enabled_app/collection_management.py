@@ -20,6 +20,7 @@ def collection_management_server(
     client: ConciergeAuthorizationClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[AuthzCollectionInfo]],
+    api_status: reactive.Value,
     opensearch_status: reactive.Value,
     user_info: reactive.Value,
     permissions: reactive.Value[set],
@@ -42,20 +43,17 @@ def collection_management_server(
 
     @render.ui
     def collection_management_content():
-        if opensearch_status.get():
-            perms = permissions.get()
-            show_toggle = (
-                "collection:shared:create" in perms
-                and "collection:private:create" in perms
-            )
-
-            return ui.TagList(
-                collection_create_ui("collection_create", show_toggle),
-                collection_selector_ui("collection_select"),
-                ui.output_ui("collection_view"),
-            )
-        else:
-            return ui.markdown("OpenSearch is offline!")
+        if not api_status.get() or not opensearch_status.get():
+            return ui.markdown("Requirements are not online, see sidebar!")
+        perms = permissions.get()
+        show_toggle = (
+            "collection:shared:create" in perms and "collection:private:create" in perms
+        )
+        return ui.TagList(
+            collection_create_ui("collection_create", show_toggle),
+            collection_selector_ui("collection_select"),
+            ui.output_ui("collection_view"),
+        )
 
     @render.ui
     def collection_view():

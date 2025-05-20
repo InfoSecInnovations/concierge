@@ -1,4 +1,4 @@
-from shiny import ui, Inputs, Outputs, Session, module, reactive, render
+from shiny import ui, Inputs, Outputs, Session, module, reactive, render, req
 from ..common.collection_selector_ui import collection_selector_ui
 from ..common.markdown_renderer import md
 from concierge_api_client import BaseConciergeClient
@@ -28,6 +28,7 @@ def prompter_server(
     client: BaseConciergeClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[TCollectionInfo]],
+    api_status: reactive.Value,
     opensearch_status: reactive.Value,
     ollama_status: reactive.Value,
     collection_selector_server,
@@ -112,7 +113,11 @@ def prompter_server(
                     "Please create a collection and ingest some documents into it first!"
                 )
             return ui.output_ui("chat_area")
-        if not ollama_status.get() or not opensearch_status.get():
+        if (
+            not api_status.get()
+            or not ollama_status.get()
+            or not opensearch_status.get()
+        ):
             return ui.markdown("Requirements are not online, see sidebar!")
         if not tasks.get():
             return ui.markdown("Loading prompter config, please wait...")
@@ -217,4 +222,5 @@ def prompter_server(
 
     @reactive.effect
     def update_config():
+        req(api_status.get())
         load_prompter_config()

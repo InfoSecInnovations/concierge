@@ -108,8 +108,11 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
         await response.aclose()
 
     async def api_status(self):
-        response = await self.__make_request("GET", "/")
-        return response.status_code == 200
+        try:
+            response = await self.__make_request("GET", "/")
+            return response.status_code == 200
+        except Exception:
+            return False
 
     async def create_collection(
         self, collection_name: str, location: str, owner_username: str | None = None

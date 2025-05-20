@@ -19,6 +19,7 @@ def collection_management_server(
     client: ConciergeClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[CollectionInfo]],
+    api_status: reactive.Value,
     opensearch_status: reactive.Value,
 ):
     collection_create_server(
@@ -36,14 +37,13 @@ def collection_management_server(
 
     @render.ui
     def collection_management_content():
-        if opensearch_status.get():
-            return ui.TagList(
-                collection_create_ui("collection_create"),
-                collection_selector_ui("collection_select"),
-                ui.output_ui("collection_view"),
-            )
-        else:
-            return ui.markdown("OpenSearch is offline!")
+        if not api_status.get() or not opensearch_status.get():
+            return ui.markdown("Requirements are not online, see sidebar!")
+        return ui.TagList(
+            collection_create_ui("collection_create"),
+            collection_selector_ui("collection_select"),
+            ui.output_ui("collection_view"),
+        )
 
     @render.ui
     def collection_view():

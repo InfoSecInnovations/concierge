@@ -19,6 +19,7 @@ from concierge_types import AuthzCollectionInfo
 from ..common.prompter import prompter_ui, prompter_server
 from .collection_selector_server import collection_selector_server
 from .get_api_url import get_api_url
+from ..common.update_status import update_status_reactives
 
 
 app_ui = ui.page_auto(
@@ -43,6 +44,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         keycloak_client=get_keycloak_client(),
         verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")),
     )
+    api_status = reactive.value(False)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -122,6 +124,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         client,
         selected_collection,
         collections,
+        api_status,
         opensearch_status,
         user_info,
         permissions,
@@ -131,6 +134,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         client,
         selected_collection,
         collections,
+        api_status,
         opensearch_status,
         ollama_status,
         lambda str, selected_collection, collections: collection_selector_server(
@@ -140,9 +144,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.effect
     def update_status():
-        current_status = status()
-        opensearch_status.set(current_status["opensearch"])
-        ollama_status.set(current_status["ollama"])
+        update_status_reactives(status, api_status, opensearch_status, ollama_status)
 
     @reactive.extended_task
     async def fetch_collections():

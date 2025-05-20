@@ -24,6 +24,7 @@ app_ui = ui.page_auto(
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
     client = ConciergeClient(get_api_url())
+    api_status = reactive.value(False)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)
     selected_collection = reactive.value("")
@@ -51,12 +52,13 @@ def server(input: Inputs, output: Outputs, session: Session):
         client,
         selected_collection,
         collections,
+        api_status,
         opensearch_status,
     )
 
     @reactive.effect
     def update_status():
-        update_status_reactives(status, opensearch_status, ollama_status)
+        update_status_reactives(status, api_status, opensearch_status, ollama_status)
 
     @reactive.extended_task
     async def fetch_collections():
@@ -91,6 +93,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         client,
         selected_collection,
         collections,
+        api_status,
         opensearch_status,
         ollama_status,
         collection_selector_server,
