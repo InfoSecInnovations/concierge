@@ -63,8 +63,6 @@ def server(input: Inputs, output: Outputs, session: Session):
         info = get_info.result()
         user_info.set(info)
 
-    get_info()
-
     @reactive.extended_task
     async def get_permissions():
         return await client.get_permissions()
@@ -74,7 +72,12 @@ def server(input: Inputs, output: Outputs, session: Session):
         permissions_value = get_permissions.result()
         permissions.set(permissions_value)
 
-    get_permissions()
+    @reactive.effect
+    def get_user_data():
+        # gate these calls behind the API status otherwise they will fail
+        if api_status.get():
+            get_info()
+            get_permissions()
 
     @reactive.calc
     def nav_items():
@@ -169,7 +172,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.effect
     def update_collections():
-        if opensearch_status.get():
+        if api_status.get() and opensearch_status.get():
             fetch_collections()
         else:
             collections.set(CollectionsData(collections={}, loading=False))
