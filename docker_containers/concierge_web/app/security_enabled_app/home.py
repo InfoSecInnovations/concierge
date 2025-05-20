@@ -2,6 +2,12 @@ from shiny import ui, Inputs, Outputs, Session, render, module, req
 from ..common.markdown_renderer import md
 from ..common.home_texts import TITLE, QUICKSTART, TIPS, CONTRIBUTING
 
+API_OFFLINE = """
+### Getting started:
+
+Shabti API is offline, unable to load data.
+"""
+
 LOADING = """
 ### Getting started:
 
@@ -37,7 +43,7 @@ def home_ui():
 
 @module.server
 def home_server(
-    input: Inputs, output: Outputs, session: Session, user_info, permissions
+    input: Inputs, output: Outputs, session: Session, user_info, permissions, api_status
 ):
     @render.ui
     def profile():
@@ -63,7 +69,9 @@ def home_server(
     def home_text():
         perms = permissions.get()
         items = [TITLE]
-        if perms is None:
+        if not api_status.get():
+            items.append(API_OFFLINE)
+        elif perms is None:
             items.append(LOADING)
         elif (
             "collection:private:create" in perms

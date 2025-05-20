@@ -83,9 +83,9 @@ def server(input: Inputs, output: Outputs, session: Session):
     def nav_items():
         perms = permissions.get()
         items = [ui.nav_panel("Home", home_ui("home"))]
-        if perms is None:
+        if api_status.get() and perms is None:
             items.append(ui.nav_control(ui.markdown("Loading your permissions...")))
-        elif (
+        elif perms and (
             "collection:private:create" in perms
             or "collection:shared:create" in perms
             or "update" in perms
@@ -121,7 +121,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     status = status_server("status_widget", client)
 
-    home_server("home", user_info, permissions)
+    home_server("home", user_info, permissions, api_status)
     collection_management_server(
         "collection_management",
         client,
