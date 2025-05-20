@@ -5,10 +5,10 @@ include:
   - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
 
 services:
-  # ollama:
-  #   extends:
-  #     file: docker_compose_dependencies/docker-compose-ollama.yml
-  #     service: ${OLLAMA_SERVICE:-ollama}
+  ollama:
+    extends:
+      file: docker_compose_dependencies/docker-compose-ollama.yml
+      service: ${OLLAMA_SERVICE:-ollama}
   localai:
     extends:
       file: docker_compose_dependencies/docker-compose-localai.yml
@@ -21,6 +21,7 @@ services:
 volumes:
   opensearch-data1:
   localai:
+  ollama:
 
 networks:
   default:
