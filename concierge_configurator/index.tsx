@@ -57,6 +57,7 @@ app.get("/", async (c) => {
 			</head>
 			<body>
 				<h1>Shabti Configurator</h1>
+				<div id="form_errors" class="error"></div>
 				<p>
 					This is a utility to install and configure Shabti AI, a tool made by{" "}
 					<a

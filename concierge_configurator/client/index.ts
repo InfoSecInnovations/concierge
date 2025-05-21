@@ -138,3 +138,5 @@ formEl.onchange = setFormVisibility;
 const params = new URLSearchParams(window.location.search);
 const err = params.get("err");
 if (err == "invalid-form") patchFormErrors("Form data was invalid");
+else if (err)
+	patchFormErrors([h("p", "Error occurred during installation:"), h("p", err)]);

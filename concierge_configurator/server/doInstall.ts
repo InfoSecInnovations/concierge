@@ -126,6 +126,7 @@ export default async function* (options: FormData, installVenv = true) {
 	envs.ENVIRONMENT = environment;
 	envs.CONCIERGE_VERSION = getVersion();
 	envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama";
+	if (securityLevel == "demo") envs.IS_SECURITY_DEMO = "True";
 	await updateEnv();
 	yield logMessage(
 		"launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",
@@ -167,8 +168,6 @@ export default async function* (options: FormData, installVenv = true) {
 	}
 	if (securityLevel == "demo") {
 		yield logMessage("adding demo users");
-		envs.IS_SECURITY_DEMO = "True";
-		await updateEnv();
 		if (environment == "development")
 			await runPython("add_keycloak_demo_users", [
 				"docker_containers",

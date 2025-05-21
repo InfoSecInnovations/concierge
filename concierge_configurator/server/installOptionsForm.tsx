@@ -179,7 +179,6 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 				)}
 				<div id="password_status" class="error"></div>
 			</fieldset>
-			<div id="form_errors" class="error"></div>
 			<button type="submit" id="install_submit" class="install_button">
 				Start Installation!
 			</button>
