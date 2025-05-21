@@ -8,7 +8,10 @@ repos:
       args: [ --fix ]
     # Run the formatter.
     - id: ruff-format
-- repo: https://github.com/biomejs/pre-commit
-  rev: v0.6.1
+- repo: local
   hooks:
-    - id: biome-format
+    - id: local-biome-format
+      name: biome format
+      entry: bunx biome format --write --no-errors-on-unmatched
+      language: system
+      types: [text]
