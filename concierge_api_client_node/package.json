@@ -7,9 +7,9 @@
 	"files": ["dist"],
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"build:js": "esbuild index.ts --bundle --platform=node --outdir=dist --packages=external",
+		"build:js": "bun build index.ts --bundle --platform=node --outdir=dist --packages=external",
 		"build:types": "tsc --declaration index.ts --emitDeclarationOnly --outDir ./dist",
-		"build": "npm-run-all --serial build:js build:types"
+		"build": "bun run build:js && bun run build:types"
 	},
 	"keywords": [],
 	"author": "",

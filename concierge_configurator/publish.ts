@@ -77,7 +77,6 @@ const npmJson: any = await fetch(
 const nodeClientDir = path.resolve(
 	path.join(import.meta.dir, "..", "concierge_api_client_node"),
 );
-await $`bun install`.cwd(nodeClientDir);
 await $`bun run build`.cwd(nodeClientDir);
 if (npmJson.versions[conciergeApiPackageJson.version]) {
 	console.log("Shabti API Node Client already up to date");
@@ -96,7 +95,6 @@ await $`bun run build_win`;
 await $`bun run build_linux`;
 await $`bun run build_mac`;
 const cliDir = path.resolve(path.join(import.meta.dir, "..", "concierge_cli"));
-await $`bun install`.cwd(cliDir);
 await $`rm -rf ./dist`.cwd(cliDir); // clean dist directory in case we've been running stuff from there
 await $`bun run build_win`.cwd(cliDir);
 await $`bun run build_linux`.cwd(cliDir);
