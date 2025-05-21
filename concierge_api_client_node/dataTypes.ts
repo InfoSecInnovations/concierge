@@ -1,103 +1,122 @@
 export class CollectionInfo {
-  collectionName: string
-  collectionId: string
+	collectionName: string;
+	collectionId: string;
 
-  constructor(collectionName: string, collectionId: string) {
-    this.collectionName = collectionName
-    this.collectionId = collectionId
-  }
+	constructor(collectionName: string, collectionId: string) {
+		this.collectionName = collectionName;
+		this.collectionId = collectionId;
+	}
 }
 
 export class UserInfo {
-  username: string
-  userId: string
+	username: string;
+	userId: string;
 
-  constructor(username: string, userId: string) {
-    this.username = username
-    this.userId = userId
-  }
+	constructor(username: string, userId: string) {
+		this.username = username;
+		this.userId = userId;
+	}
 }
 
 export class AuthzCollectionInfo extends CollectionInfo {
-  location: string
-  owner: UserInfo
+	location: string;
+	owner: UserInfo;
 
-  constructor(collectionName: string, collectionId: string, location: string, owner: UserInfo) {
-    super(collectionName, collectionId)
-    this.location = location
-    this.owner = owner
-  }
+	constructor(
+		collectionName: string,
+		collectionId: string,
+		location: string,
+		owner: UserInfo,
+	) {
+		super(collectionName, collectionId);
+		this.location = location;
+		this.owner = owner;
+	}
 }
 
 export class DocumentInfo {
-  type: string
-  source: string
-  ingestDate: number
-  filename?: string
-  mediaType?: string
-  documentId: string
-  pageCount: number
-  vectorCount: number
-  constructor(documentId: string, type: string, source: string, ingestDate: number, pageCount: number, vectorCount: number, mediaType?: string, filename?: string) {
-    this.documentId = documentId
-    this.type = type
-    this.source = source
-    this.ingestDate = ingestDate
-    this.pageCount = pageCount
-    this.vectorCount = vectorCount
-    this.mediaType = mediaType
-    this.filename = filename
-  }
+	type: string;
+	source: string;
+	ingestDate: number;
+	filename?: string;
+	mediaType?: string;
+	documentId: string;
+	pageCount: number;
+	vectorCount: number;
+	constructor(
+		documentId: string,
+		type: string,
+		source: string,
+		ingestDate: number,
+		pageCount: number,
+		vectorCount: number,
+		mediaType?: string,
+		filename?: string,
+	) {
+		this.documentId = documentId;
+		this.type = type;
+		this.source = source;
+		this.ingestDate = ingestDate;
+		this.pageCount = pageCount;
+		this.vectorCount = vectorCount;
+		this.mediaType = mediaType;
+		this.filename = filename;
+	}
 }
 
 export class DocumentIngestInfo {
-  progress: number
-  total: number
-  documentId: string
-  documentType: string
-  label: string
+	progress: number;
+	total: number;
+	documentId: string;
+	documentType: string;
+	label: string;
 
-  constructor(progress: number, total: number, documentId: string, documentType: string, label: string) {
-    this.progress = progress;
-    this.total = total;
-    this.documentId = documentId;
-    this.documentType = documentType;
-    this.label = label;
-  }
+	constructor(
+		progress: number,
+		total: number,
+		documentId: string,
+		documentType: string,
+		label: string,
+	) {
+		this.progress = progress;
+		this.total = total;
+		this.documentId = documentId;
+		this.documentType = documentType;
+		this.label = label;
+	}
 }
 
 export class PromptConfigInfo {
-  prompt?: string
-  constructor(prompt?: string) {
-    this.prompt = prompt
-  }
+	prompt?: string;
+	constructor(prompt?: string) {
+		this.prompt = prompt;
+	}
 }
 
 export class TaskInfo extends PromptConfigInfo {
-  greeting: string
-  constructor(greeting: string, prompt?: string) {
-    super(prompt)
-    this.greeting = greeting
-  }
+	greeting: string;
+	constructor(greeting: string, prompt?: string) {
+		super(prompt);
+		this.greeting = greeting;
+	}
 }
 
 export class ModelLoadInfo {
-  progress: number
-  total: number
-  modelName: string
-  constructor(progress: number, total: number, modelName: string) {
-    this.progress = progress
-    this.total = total
-    this.modelName = modelName
-  }
+	progress: number;
+	total: number;
+	modelName: string;
+	constructor(progress: number, total: number, modelName: string) {
+		this.progress = progress;
+		this.total = total;
+		this.modelName = modelName;
+	}
 }
 
 export class WebFile {
-  bytes: Blob
-  mediaType: string
-  constructor(bytes: Blob, mediaType: string) {
-    this.bytes = bytes
-    this.mediaType = mediaType
-  }
+	bytes: Blob;
+	mediaType: string;
+	constructor(bytes: Blob, mediaType: string) {
+		this.bytes = bytes;
+		this.mediaType = mediaType;
+	}
 }
-

@@ -1,1 +1,1 @@
-export const EXPECTED_CODES = [200, 201]
+export const EXPECTED_CODES = [200, 201];

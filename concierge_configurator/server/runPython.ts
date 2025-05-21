@@ -1,8 +1,13 @@
-import { $ } from "bun"
-import { platform } from "node:os"
-import path from "node:path"
+import { platform } from "node:os";
+import path from "node:path";
+import { $ } from "bun";
 
 export default (command: string, directoryPath: string[] = []) => {
-    if (platform() == 'win32') return $`Scripts\\python -m ${{raw: command}}`.cwd(path.resolve(path.join("..", ...directoryPath)))
-    return $`./bin/python -m ${{raw: command}}`.cwd(path.resolve(path.join("..", ...directoryPath)))
-}
+	if (platform() == "win32")
+		return $`Scripts\\python -m ${{ raw: command }}`.cwd(
+			path.resolve(path.join("..", ...directoryPath)),
+		);
+	return $`./bin/python -m ${{ raw: command }}`.cwd(
+		path.resolve(path.join("..", ...directoryPath)),
+	);
+};

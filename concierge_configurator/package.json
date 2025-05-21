@@ -2,9 +2,7 @@
 	"name": "bun_installer",
 	"module": "index.ts",
 	"type": "module",
-	"workspaces": [
-		"client/"
-	],
+	"workspaces": ["client/"],
 	"devDependencies": {
 		"@types/adm-zip": "^0.5.7",
 		"@types/bun": "latest",

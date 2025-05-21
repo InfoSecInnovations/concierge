@@ -1,9 +1,9 @@
 {
-    "policies": [
-        {
-            "name": "Owner Policy",
-            "fileName": "owner-policy.js",
-            "description": "The user owns the resource"
-        }
-    ]
+	"policies": [
+		{
+			"name": "Owner Policy",
+			"fileName": "owner-policy.js",
+			"description": "The user owns the resource"
+		}
+	]
 }

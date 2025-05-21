@@ -1,14 +1,14 @@
 {
-  "name": "node_client_runner_test",
-  "private": true,
-  "devDependencies": {
-    "@types/bun": "latest"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "concierge-api-client": "../concierge_api_client_node",
-    "dotenv": "^16.5.0"
-  }
+	"name": "node_client_runner_test",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"concierge-api-client": "../concierge_api_client_node",
+		"dotenv": "^16.5.0"
+	}
 }
