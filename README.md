@@ -104,11 +104,9 @@ git clone repo or extract zip.
 
 `cd concierge` go into the cloned project directory.
 
-You should not create a virtual environment as the installer will handle it for you.
+do `bun install` in the repository root. This will set up all the JavaScript projects.
 
-`cd bun_installer` to go into the subdirectory containing all the Bun scripts for the configurator.
-
-`bun install` to add all dependencies.
+`cd concierge_configurator` to go to the configurator directory.
 
 `bun run dev_install` will launch the web server in dev mode which provides additional install and launch options compared to the distributed executable. Once the server is running go to http://localhost:3000 to see the configuration options. Click the "Install Development Configuration" button to install the dependencies in a way which will allow you to run local code with your changes.
 
