@@ -53,7 +53,7 @@ We will be adding this as an automated step to PR submissions, so running the te
 
 We welcome contributions of additional tests as there are many code paths still lacking coverage!
 
-We're having trouble getting the Shiny Playwright testing framework to play nicely with asynchronous functions, which is the reason those tests are skipped. We're not currently working on this, so it would be a great issue to tackle if you have some experience in this area: https://github.com/InfoSecInnovations/concierge/issues/42
+We're having trouble getting the Shiny Playwright testing framework to play nicely with asynchronous functions, which is the reason those tests are skipped. We're not currently working on this, so it would be a great issue to tackle if you have some experience in this area: https://github.com/InfoSecInnovations/shabti/issues/42
 
 ## Pull Requests
 

@@ -1,8 +1,8 @@
 twine
 build
 
--e python_packages/concierge_api_client
--e python_packages/concierge_keycloak
--e python_packages/concierge_types
+-e python_packages/shabti_api_client
+-e python_packages/shabti_keycloak
+-e python_packages/shabti_types
 
 -r requirements.txt

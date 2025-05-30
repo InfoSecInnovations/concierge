@@ -11,7 +11,7 @@
 			"node_modules",
 			"dist",
 			"Lib",
-			"concierge_configurator/assets",
+			"shabti_configurator/assets",
 			"zip_keycloak_policies"
 		]
 	},

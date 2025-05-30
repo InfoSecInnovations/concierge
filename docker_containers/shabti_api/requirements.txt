@@ -1,0 +1,16 @@
+fastapi[standard]~=0.115.11
+python-keycloak~=5.3.1
+isi-util==0.3a1
+shabti-util==0.3a1
+shabti-types==0.1a2
+shabti-keycloak==0.1a1
+sentence-transformers~=3.4.1
+opensearch-py~=2.8.0
+langchain~=0.3.20
+langchain-community~=0.3.19
+binaryornot~=0.4.4
+pypdf~=5.3.1
+beautifulsoup4~=4.13.3
+configobj~=5.0.9
+pyjwt~=2.10.1
+lxml~=5.4.0

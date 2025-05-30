@@ -1,4 +1,4 @@
-from concierge_api_client.client import ConciergeClient
+from shabti_api_client.client import ConciergeClient
 import asyncio
 import os
 
@@ -11,7 +11,7 @@ file_path = os.path.join(
     os.path.dirname(__file__),
     "..",
     "docker_containers",
-    "concierge_api",
+    "shabti_api",
     "tests",
     "assets",
     filename,

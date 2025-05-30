@@ -1,0 +1,9 @@
+pytest~=8.3.4
+pytest-asyncio~=0.25.3
+
+-e ../../python_packages/isi_util
+-e ../../python_packages/shabti_util
+-e ../../python_packages/shabti_types
+-e ../../python_packages/shabti_keycloak
+
+-r requirements.txt

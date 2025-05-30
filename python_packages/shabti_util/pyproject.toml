@@ -1,0 +1,11 @@
+[project]
+name = "shabti-util"
+version = "0.3a2"
+requires-python = ">=3.10"
+dependencies = [
+    "pyyaml"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

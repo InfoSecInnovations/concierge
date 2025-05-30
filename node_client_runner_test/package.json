@@ -8,7 +8,7 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"concierge-api-client": "../concierge_api_client_node",
+		"@infosecinnovations/shabti-api-client": "../shabti_api_client_node",
 		"dotenv": "^16.5.0"
 	}
 }

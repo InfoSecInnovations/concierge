@@ -1,6 +1,5 @@
 # config files used by Shabti
 .env
-concierge.yml
 
 # generated certificates
 self_signed_certificates

@@ -57,15 +57,15 @@ Start by opening up https://localhost:8443 in your browser. Here you should see 
 
 You should refer to the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html) to find out how to configure the type of login you wish to support. You can enable a variety of social network logins, OpenID, LDAP or just username and password.
 
-The configuration we have supplied has already created the super admin user (the one you used to connect to Keycloak above), and a realm called `concierge` with some roles the provide various levels of access to Shabti. Make sure to configure logins and users in this realm and not the master realm.
+The configuration we have supplied has already created the super admin user (the one you used to connect to Keycloak above), and a realm called `shabti` with some roles the provide various levels of access to Shabti. Make sure to configure logins and users in this realm and not the master realm.
 
 The super admin user only serves to administrate the Keycloak instance, they do not have any permissions to access Shabti as a user.
 
-If using authorization, there are shared and private collections. A private collection can only be viewed by the user who created it, a shared collection can be viewed by any user with required role. In the future we will add options to switch a collection from private to shared. If you need more specific permissions you can configure those in the `concierge-auth` client using the resources that represent collections.
+If using authorization, there are shared and private collections. A private collection can only be viewed by the user who created it, a shared collection can be viewed by any user with required role. In the future we will add options to switch a collection from private to shared. If you need more specific permissions you can configure those in the `shabti-auth` client using the resources that represent collections.
 
 ### Roles
 
-The roles that grant access to Shabti collections can be found within the `concierge-auth` client in the `concierge` realm.
+The roles that grant access to Shabti collections can be found within the `shabti-auth` client in the `shabti` realm.
 
 - `admin` - can do everything including viewing, updating and deleting other users' private collections. This is different from the super admin user in the master realm.
 - `private_collection` - can create and manage personal collections not accessible by other users (except the admin).
@@ -76,7 +76,7 @@ The roles that grant access to Shabti collections can be found within the `conci
 
 If you want to quickly try out some of the options, you can go ahead and create some users in the Keycloak admin console and assign the above roles to them. We'd recommend using a more secure method of user registration for a production environment.
 
-Make sure to log in as the super admin account and switch the realm to "concierge" in the admin UI.
+Make sure to log in as the super admin account and switch the realm to "shabti" in the admin UI.
 
 Select the Users view in the menu.
 
@@ -84,7 +84,7 @@ Click "Add user" and assign them a username, click "Create".
 
 If you're creating this user for testing purposes you can use the "Credentials" tab to set a password, and you can even toggle off "Temporary" so you won't have to change it when logging in.
 
-Go to the "Role mapping" tab, click "Assign role", make sure "Filter by clients" is selected, and locate the roles prefixed with `concierge-auth`. Assign the desired roles to your user.
+Go to the "Role mapping" tab, click "Assign role", make sure "Filter by clients" is selected, and locate the roles prefixed with `shabti-auth`. Assign the desired roles to your user.
 
 You will now be able to use the username and password you created to log into the web app.
 
@@ -102,11 +102,11 @@ The ones listed at the top of this page, and:
 
 git clone repo or extract zip. 
 
-`cd concierge` go into the cloned project directory.
+`cd shabti` go into the cloned project directory.
 
 do `bun install` in the repository root. This will set up all the JavaScript projects.
 
-`cd concierge_configurator` to go to the configurator directory.
+`cd shabti_configurator` to go to the configurator directory.
 
 `bun run dev_install` will launch the web server in dev mode which provides additional install and launch options compared to the distributed executable. Once the server is running go to http://localhost:3000 to see the configuration options. Click the "Install Development Configuration" button to install the dependencies in a way which will allow you to run local code with your changes.
 
@@ -128,7 +128,7 @@ The "Launch Shabti" button shouldn't be used to test local changes to the Python
 
 ### Launch API in dev mode with reloading
 
-- Navigate to `docker_containers/concierge_api`
+- Navigate to `docker_containers/shabti_api`
 - Enable the virtual environment
 - Navigate to the `app` subdirectory
 - `fastapi dev app.py`

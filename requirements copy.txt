@@ -14,6 +14,6 @@ sentence-transformers~=3.3.1
 shiny~=1.2.1
 git+https://github.com/posit-dev/py-shinyswatch.git@256d763
 isi-util==0.2a2
-concierge-util==0.2a2
+shabti-util==0.2a2
 python-keycloak~=5.1.1
 httpx~=0.23.2

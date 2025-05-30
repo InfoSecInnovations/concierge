@@ -2,9 +2,9 @@ import subprocess
 import os
 import shutil
 from importlib.resources import files
-from concierge_scripts.load_dotenv import load_env
+from shabti_scripts.load_dotenv import load_env
 
-cwd = os.path.abspath(os.path.join(files(), "..", "concierge_configurator"))
+cwd = os.path.abspath(os.path.join(files(), "..", "shabti_configurator"))
 
 
 def destroy_instance():

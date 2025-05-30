@@ -1,5 +1,5 @@
 {
-	"name": "concierge",
+	"name": "shabti",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,
@@ -10,9 +10,5 @@
 	"peerDependencies": {
 		"typescript": "^5"
 	},
-	"workspaces": [
-		"concierge_configurator",
-		"concierge_cli",
-		"concierge_api_client_node"
-	]
+	"workspaces": ["shabti_configurator", "shabti_cli", "shabti_api_client_node"]
 }

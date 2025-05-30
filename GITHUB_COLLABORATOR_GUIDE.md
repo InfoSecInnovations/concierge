@@ -19,7 +19,7 @@ We're using [Python Version Specifiers](https://packaging.python.org/en/latest/s
 
 You shouldn't update the version in `bun_installer/package.json` manually, the script will take care of it.
 
-If you have made changes to either of the packages in `concierge_packages` you should manually set the version in the relevant `pyproject.toml`. Make sure to update `requirements.txt` to use the new version. You only need to increment the version when publishing a release as the online versions are only used in the production docker image. Both the development environment and the local docker build use your local versions of the packages. Use pre-release versioning for the packages until doing a major release, at which point you should also set non pre-release versions on the packages.
+If you have made changes to either of the packages in `shabti_packages` you should manually set the version in the relevant `pyproject.toml`. Make sure to update `requirements.txt` to use the new version. You only need to increment the version when publishing a release as the online versions are only used in the production docker image. Both the development environment and the local docker build use your local versions of the packages. Use pre-release versioning for the packages until doing a major release, at which point you should also set non pre-release versions on the packages.
 
 ### Major release
 
@@ -45,8 +45,9 @@ We have an all in one release script that requires a bit of setup up front but a
 #### Requirements
 
 - Permission to push changes to this repository on GitHub
-- Permission to push images to the `infosecinnovations/concierge` repository on Docker Hub
-- Permission to upload new versions of `concierge-util` and `isi-util` to PyPI
+- Permission to push images to the `infosecinnovations/shabti` and `infosecinnovations/shabti-web` repositories on Docker Hub
+- Permission to upload new versions of `shabti-util` and `isi-util` to PyPI
+- Permission to upload new versions of `@infosecinnovations/shabti-api-client` to the npm registry
 - Bun 1.2.1
 - Python 3.12
 - git command line configured to be able to use your GitHub account
@@ -58,6 +59,7 @@ We have an all in one release script that requires a bit of setup up front but a
 #### Running the script
 
 - Make sure you're using the git branch you wish to release from.
+- Ensure gh, npm and docker are logged in.
 - Navigate to the `bun_installer` subdirectory.
 - Run `bun run publish.ts`.
 - Input the new version number for your release, make sure it's different from the current one to avoid any conflicts.

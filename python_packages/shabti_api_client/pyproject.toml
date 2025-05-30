@@ -1,0 +1,13 @@
+[project]
+name = "shabti-api-client"
+version = "0.1a3"
+requires-python = ">=3.12"
+dependencies = [
+  "httpx",
+  "python-keycloak",
+  "shabti-types"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

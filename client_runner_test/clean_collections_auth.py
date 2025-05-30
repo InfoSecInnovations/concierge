@@ -1,6 +1,6 @@
-from concierge_api_client.auth_client import ConciergeAuthorizationClient
-from docker_containers.concierge_api.app.authentication import get_keycloak_client
-from concierge_scripts.load_dotenv import load_env
+from shabti_api_client.auth_client import ConciergeAuthorizationClient
+from docker_containers.shabti_api.app.authentication import get_keycloak_client
+from shabti_scripts.load_dotenv import load_env
 import asyncio
 import os
 import ssl

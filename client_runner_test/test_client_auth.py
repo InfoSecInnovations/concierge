@@ -1,9 +1,9 @@
-from concierge_api_client.auth_client import ConciergeAuthorizationClient
+from shabti_api_client.auth_client import ConciergeAuthorizationClient
 import asyncio
-from concierge_scripts.load_dotenv import load_env
+from shabti_scripts.load_dotenv import load_env
 import ssl
 import os
-from concierge_keycloak import get_keycloak_client
+from shabti_keycloak import get_keycloak_client
 
 load_env()
 
@@ -25,7 +25,7 @@ file_path = os.path.join(
     os.path.dirname(__file__),
     "..",
     "docker_containers",
-    "concierge_api",
+    "shabti_api",
     "tests",
     "assets",
     filename,

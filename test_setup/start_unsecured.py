@@ -1,5 +1,5 @@
 from .util import destroy_instance, create_instance
-from concierge_scripts.load_dotenv import load_env
+from shabti_scripts.load_dotenv import load_env
 
 load_env()
 

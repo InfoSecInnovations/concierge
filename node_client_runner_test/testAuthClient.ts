@@ -1,5 +1,5 @@
 import path from "node:path";
-import { ConciergeAuthorizationClient } from "concierge-api-client";
+import { ConciergeAuthorizationClient } from "shabti-api-client";
 import * as dotenv from "dotenv";
 import * as openIdClient from "openid-client";
 import getOpenIdConfig from "./getOpenIdConfig";
@@ -9,7 +9,7 @@ const run = async () => {
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 	dotenv.config({
 		path: path.resolve(
-			path.join("..", "concierge_configurator", "docker_compose", ".env"),
+			path.join("..", "shabti_configurator", "docker_compose", ".env"),
 		),
 	});
 	const config = await getOpenIdConfig();

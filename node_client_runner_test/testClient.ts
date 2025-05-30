@@ -1,4 +1,4 @@
-import { ConciergeClient } from "concierge-api-client";
+import { ConciergeClient } from "shabti-api-client";
 
 const client = new ConciergeClient("http://localhost:8000");
 
