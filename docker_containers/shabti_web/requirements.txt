@@ -2,9 +2,9 @@ humanize~=4.12.2
 shiny~=1.4.0
 shinyswatch~=0.9.0
 isi-util==0.3a1
-shabti-util==0.3a1
-shabti-types==0.1a2
-shabti-keycloak==0.1a1
-shabti-api-client==0.1a2
+shabti-util==0.3a2
+shabti-types==0.1a3
+shabti-keycloak==0.1a2
+shabti-api-client==0.1a3
 tqdm~=4.67.1
 python-dotenv~=1.1.0
