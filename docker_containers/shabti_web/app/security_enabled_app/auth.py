@@ -9,12 +9,12 @@ class CookieNotPresentError(Exception):
 
 
 def load_token_from_cookies(cookies):
-    if "concierge_token_chunk_count" not in cookies:
+    if "shabti_token_chunk_count" not in cookies:
         raise CookieNotPresentError()
-    chunk_count = int(cookies["concierge_token_chunk_count"])
+    chunk_count = int(cookies["shabti_token_chunk_count"])
     token = ""
     for i in range(chunk_count):
-        token += cookies[f"concierge_auth_{i}"]
+        token += cookies[f"shabti_auth_{i}"]
     parsed_token = json.loads(token)
     return parsed_token
 

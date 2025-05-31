@@ -16,7 +16,7 @@ def get_keycloak_client():
     keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
     client = KeycloakOpenID(
         server_url=server_url(),
-        realm_name="concierge",
+        realm_name="shabti",
         client_id=keycloak_client_id,
         client_secret_key=keycloak_client_secret,
         verify=os.getenv("ROOT_CA"),
@@ -29,7 +29,7 @@ def get_service_account_connection():
     keycloak_client_secret = os.getenv("KEYCLOAK_CLIENT_SECRET")
     keycloak_connection = KeycloakOpenIDConnection(
         server_url=server_url(),
-        realm_name="concierge",
+        realm_name="shabti",
         client_id=keycloak_client_id,
         client_secret_key=keycloak_client_secret,
         grant_type="client_credentials",

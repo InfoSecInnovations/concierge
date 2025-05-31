@@ -13,7 +13,7 @@ import getAuthClient from "./getAuthClient";
 import getClient from "./getClient";
 
 // we set this to 'executable' when building the standalone
-const environment = process.env.CONCIERGE_ENVIRONMENT_TYPE || "local";
+const environment = process.env.SHABTI_ENVIRONMENT_TYPE || "local";
 // the environment file is in a different location when running in the executable as opposed to the local code
 const envPath =
 	environment == "executable"
@@ -23,7 +23,7 @@ dotenv.config({ path: path.resolve(path.join(...envPath)) });
 
 const program = new commander.Command();
 
-const authEnabled = process.env.CONCIERGE_SECURITY_ENABLED == "True";
+const authEnabled = process.env.SHABTI_SECURITY_ENABLED == "True";
 const client = authEnabled ? await getAuthClient() : getClient();
 
 const collection = program.command("collection");

@@ -24,7 +24,7 @@ from ..common.update_status import update_status_reactives
 
 app_ui = ui.page_auto(
     ui.output_ui("script_output"),
-    ui.output_ui("concierge_main"),
+    ui.output_ui("shabti_main"),
     theme=shinyswatch.theme.pulse,
 )
 
@@ -112,11 +112,11 @@ def server(input: Inputs, output: Outputs, session: Session):
         return items
 
     @render.ui
-    def concierge_main():
+    def shabti_main():
         return ui.navset_pill_list(
             *nav_items(),
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
-            id="concierge_nav",
+            id="shabti_nav",
         )
 
     status = status_server("status_widget", client)
@@ -181,7 +181,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     @reactive.event(input.openid_logout, ignore_init=True, ignore_none=True)
     def handle_logout():
         @render.ui
-        def concierge_main():
+        def shabti_main():
             return ui.tags.script('window.location.href = "/logout"')
 
 

@@ -1,8 +1,8 @@
-name: concierge
+name: shabti
 
 include:
   - ./docker_compose_dependencies/docker-compose-keycloak.yml
 
 networks:
   default:
-    name: concierge
+    name: shabti

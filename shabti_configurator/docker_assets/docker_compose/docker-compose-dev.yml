@@ -1,4 +1,4 @@
-name: concierge
+name: shabti
 
 # this is a bit of a hack to conditionally include keycloak if we're running security, the blank compose stops Docker from complaining when doing an unsecured instance.
 include:
@@ -20,4 +20,4 @@ volumes:
 
 networks:
   default:
-    name: concierge
+    name: shabti

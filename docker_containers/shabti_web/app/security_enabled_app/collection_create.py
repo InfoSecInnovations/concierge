@@ -31,7 +31,7 @@ def collection_create_server(
     new_collection_name = text_input_enter_server("new_collection", creating)
 
     @reactive.extended_task
-    async def create_concierge_collection(collection_name: str, location: str):
+    async def create_shabti_collection(collection_name: str, location: str):
         collection_id = await client.create_collection(collection_name, location)
         new_collections = await client.get_collections()
         return (collection_id, new_collections)
@@ -39,7 +39,7 @@ def collection_create_server(
     @reactive.effect
     def create_collection_effect():
         try:
-            collection_id, new_collections = create_concierge_collection.result()
+            collection_id, new_collections = create_shabti_collection.result()
             collections.set(
                 CollectionsData(
                     collections={
@@ -70,4 +70,4 @@ def collection_create_server(
         else:
             location = "shared" if input.toggle_shared() else "private"
         creating.set(True)
-        create_concierge_collection(new_name, location)
+        create_shabti_collection(new_name, location)

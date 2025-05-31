@@ -2,6 +2,6 @@ services:
   zip:
     image: javieraviles/zip
     volumes:
-      - ./keycloak_javascript:/input
-      - ./bun_installer/docker_assets/docker_compose/docker_compose_dependencies/keycloak_javascript:/output
-    command: sh -c "cd /input; zip -r /output/concierge.jar ."
+      - ./policies:/input
+      - ../shabti_configurator/docker_assets/docker_compose/docker_compose_dependencies/keycloak_javascript:/output
+    command: sh -c "cd /input; zip -r /output/shabti.jar ."

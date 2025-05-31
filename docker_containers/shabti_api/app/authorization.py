@@ -52,7 +52,7 @@ async def create_resource(resource_name, resource_type, owner_id):
             "name": f"{identifier}_{resource_name}",
             "displayName": resource_name,
             "type": resource_type,
-            "attributes": {"concierge_owner": [owner_id]},
+            "attributes": {"shabti_owner": [owner_id]},
             "scopes": ["read", "update", "delete"],
         },
     )

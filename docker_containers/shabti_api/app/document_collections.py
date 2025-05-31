@@ -43,8 +43,8 @@ async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionI
                 collection_id=resource["_id"],
                 location=resource["type"].replace("collection:", ""),
                 owner=UserInfo(
-                    user_id=resource["attributes"]["concierge_owner"][0],
-                    username=get_username(resource["attributes"]["concierge_owner"][0]),
+                    user_id=resource["attributes"]["shabti_owner"][0],
+                    username=get_username(resource["attributes"]["shabti_owner"][0]),
                 ),
             )
             for resource in available_resources

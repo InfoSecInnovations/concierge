@@ -12,18 +12,18 @@ def set_token_cookies(token, response):
     token_chunks = [
         bytes_token[i : i + max_bytes] for i in range(0, len(bytes_token), max_bytes)
     ]
-    response.set_cookie("concierge_token_chunk_count", len(token_chunks), httponly=True)
+    response.set_cookie("shabti_token_chunk_count", len(token_chunks), httponly=True)
     for index, chunk in enumerate(token_chunks):
-        response.set_cookie(f"concierge_auth_{index}", chunk.decode(), httponly=True)
+        response.set_cookie(f"shabti_auth_{index}", chunk.decode(), httponly=True)
 
 
 def get_token_from_cookies(request: Request):
-    chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
+    chunk_count = int(request.cookies.get("shabti_token_chunk_count"))
     if not chunk_count:
         return None
     token_string = ""
     for i in range(chunk_count):
-        token_string += request.cookies.get(f"concierge_auth_{i}")
+        token_string += request.cookies.get(f"shabti_auth_{i}")
     return json.loads(token_string)
 
 
@@ -57,9 +57,9 @@ async def logout(request: Request):
     if token:
         keycloak_openid = get_keycloak_client()
         await keycloak_openid.a_logout(token["refresh_token"])
-    chunk_count = int(request.cookies.get("concierge_token_chunk_count"))
+    chunk_count = int(request.cookies.get("shabti_token_chunk_count"))
     response = RedirectResponse(url="/")
-    response.delete_cookie("concierge_token_chunk_count")
+    response.delete_cookie("shabti_token_chunk_count")
     for index in range(chunk_count):
-        response.delete_cookie(f"concierge_auth_{index}")
+        response.delete_cookie(f"shabti_auth_{index}")
     return response

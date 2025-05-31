@@ -2,34 +2,34 @@ import { dockerItemExists } from "./dockerItemsExist";
 
 export const ExistingRemover = async () => {
 	const [
-		conciergeExists,
+		shabtiExists,
 		ollamaExists,
 		keycloakExists,
 		opensearchExists,
-		conciergeWebExists,
+		shabtiWebExists,
 	] = await Promise.all([
-		dockerItemExists("concierge", "container"),
+		dockerItemExists("shabti", "container"),
 		Promise.all([
 			dockerItemExists("ollama", "container"),
-			dockerItemExists("concierge_ollama", "volume"),
+			dockerItemExists("shabti_ollama", "volume"),
 		]).then((res) => res.some((exists) => exists)),
 		Promise.all([
 			dockerItemExists("keycloak", "container"),
 			dockerItemExists("postgres", "container"),
-			dockerItemExists("concierge_postgres_data", "volume"),
+			dockerItemExists("shabti_postgres_data", "volume"),
 		]).then((res) => res.some((exists) => exists)),
 		Promise.all([
 			dockerItemExists("opensearch", "container"),
-			dockerItemExists("concierge_opensearch-data1", "volume"),
+			dockerItemExists("shabti_opensearch-data1", "volume"),
 		]).then((res) => res.some((exists) => exists)),
-		dockerItemExists("concierge-web", "container"),
+		dockerItemExists("shabti-web", "container"),
 	]);
 	if (
-		!conciergeExists &&
+		!shabtiExists &&
 		!ollamaExists &&
 		!keycloakExists &&
 		!opensearchExists &&
-		!conciergeWebExists
+		!shabtiWebExists
 	)
 		return <></>;
 	return (
@@ -49,13 +49,13 @@ export const ExistingRemover = async () => {
 				models which are quite large.
 			</p>
 			<form action="/remove" method="post">
-				{conciergeExists && (
-					<button type="submit" name="service" value="concierge">
+				{shabtiExists && (
+					<button type="submit" name="service" value="shabti">
 						Remove Shabti API service
 					</button>
 				)}
-				{conciergeWebExists && (
-					<button type="submit" name="service" value="concierge-web">
+				{shabtiWebExists && (
+					<button type="submit" name="service" value="shabti-web">
 						Remove Shabti Web UI service
 					</button>
 				)}

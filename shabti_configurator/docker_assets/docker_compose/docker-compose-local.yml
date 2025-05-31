@@ -1,13 +1,13 @@
-name: concierge
+name: shabti
 
 include:
   - ./docker-compose-dev.yml
 
 services:
-  concierge:
+  shabti:
     extends:
-      file: ./docker_compose_dependencies/docker-compose-concierge.yml
-      service: ${CONCIERGE_SERVICE:-concierge}
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti}
     build:
       context: ../../docker_containers/shabti_api
       additional_contexts: 
@@ -16,4 +16,4 @@ services:
 
 networks:
   default:
-    name: concierge
+    name: shabti

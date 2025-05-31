@@ -8,7 +8,7 @@ import dockerComposeZip from "./assets/docker_compose.zip" with {
 };
 import js from "./assets/index.js" with { type: "file" };
 import css from "./assets/style.css" with { type: "file" };
-import conciergeIsConfigured from "./server/conciergeIsConfigured";
+import shabtiIsConfigured from "./server/shabtiIsConfigured";
 import doInstall from "./server/doInstall";
 import doLaunch from "./server/doLaunch";
 import dockerIsRunning from "./server/dockerIsRunning";
@@ -49,7 +49,7 @@ app.get("/index.js", async (c) =>
 );
 app.get("/", async (c) => {
 	const dockerStatus = await dockerIsRunning();
-	const conciergeIsInstalled = await conciergeIsConfigured();
+	const shabtiIsInstalled = await shabtiIsConfigured();
 	return await c.html(
 		<html>
 			<head>
@@ -71,7 +71,7 @@ app.get("/", async (c) => {
 				<p>
 					Having trouble? Got suggestions for improving Shabti? Head over to our{" "}
 					<a
-						href="https://github.com/InfoSecInnovations/concierge"
+						href="https://github.com/InfoSecInnovations/shabti"
 						target="_blank"
 						rel="noreferrer"
 					>
@@ -81,7 +81,7 @@ app.get("/", async (c) => {
 				</p>
 				{dockerStatus ? (
 					<>
-						{conciergeIsInstalled ? (
+						{shabtiIsInstalled ? (
 							<section>
 								<h3>Launch Shabti</h3>
 								<p>Shabti appears to be configured on this system</p>
@@ -149,28 +149,28 @@ app.post("/install", (c) =>
 app.post("/remove", (c) =>
 	c.req.formData().then((data) => {
 		const service = data.get("service");
-		if (service == "concierge")
+		if (service == "shabti")
 			return streamHtml(c, "Removing Shabti API service", async (_) => {
-				await $`docker container rm --force concierge`;
+				await $`docker container rm --force shabti`;
 			});
-		if (service == "concierge-web")
+		if (service == "shabti-web")
 			return streamHtml(c, "Removing Shabti Web UI service", async (_) => {
-				await $`docker container rm --force concierge-web`;
+				await $`docker container rm --force shabti-web`;
 			});
 		if (service == "ollama")
 			return streamHtml(c, "Removing Ollama service", async (_) => {
 				await $`docker container rm --force ollama`;
-				await $`docker volume rm --force concierge_ollama`;
+				await $`docker volume rm --force shabti_ollama`;
 			});
 		if (service == "opensearch")
 			return streamHtml(c, "Removing OpenSearch service", async (_) => {
 				await $`docker container rm --force opensearch-node1`;
-				await $`docker volume rm --force concierge_opensearch-data1`;
+				await $`docker volume rm --force shabti_opensearch-data1`;
 			});
 		if (service == "keycloak")
 			return streamHtml(c, "Removing Keycloak service", async (_) => {
 				await $`docker container rm --force keycloak postgres`;
-				await $`docker volume rm --force concierge_postgres_data`;
+				await $`docker volume rm --force shabti_postgres_data`;
 			});
 		return c.html(<p>Invalid service name was provided!</p>);
 	}),

@@ -1,19 +1,19 @@
 services:
-  concierge:
-    image: infosecinnovations/concierge:${CONCIERGE_VERSION:-latest}
-    container_name: concierge
+  shabti:
+    image: infosecinnovations/concierge:${SHABTI_VERSION:-latest}
+    container_name: shabti
     environment:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
-      - CONCIERGE_SECURITY_ENABLED=False
+      - SHABTI_SECURITY_ENABLED=False
     ports:
       - ${API_PORT:-15131}:15131
     restart: unless-stopped
-  concierge-enable-security:
-    extends: concierge
+  shabti-enable-security:
+    extends: shabti
     environment:
       - KEYCLOAK_HOST=keycloak
-      - CONCIERGE_SECURITY_ENABLED=True
+      - SHABTI_SECURITY_ENABLED=True
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
       - ROOT_CA=opensearch_certs/root-ca.pem
@@ -26,23 +26,23 @@ services:
       - ${ROOT_CA:-empty}:/opensearch_certs/root-ca.pem
       - ${OPENSEARCH_CLIENT_CERT:-empty}:/opensearch_certs/opensearch-admin-client-cert.pem
       - ${OPENSEARCH_CLIENT_KEY:-empty}:/opensearch_certs/opensearch-admin-client-key.pem
-  concierge-web:
-    image: infosecinnovations/concierge-web:${CONCIERGE_VERSION:-latest}
-    container_name: concierge-web
+  shabti-web:
+    image: infosecinnovations/concierge-web:${SHABTI_VERSION:-latest}
+    container_name: shabti-web
     environment:
       - OPENSEARCH_HOST=opensearch-node1
       - OLLAMA_HOST=ollama
-      - CONCIERGE_SECURITY_ENABLED=False
-      - API_HOST=concierge
+      - SHABTI_SECURITY_ENABLED=False
+      - API_HOST=shabti
       - API_PORT=${API_PORT:-15131}
     ports:
       - ${WEB_PORT:-15130}:15130
     restart: unless-stopped
-  concierge-web-enable-security:
-    extends: concierge-web
+  shabti-web-enable-security:
+    extends: shabti-web
     environment:
       - KEYCLOAK_HOST=keycloak
-      - CONCIERGE_SECURITY_ENABLED=True
+      - SHABTI_SECURITY_ENABLED=True
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
       - ROOT_CA=opensearch_certs/root-ca.pem

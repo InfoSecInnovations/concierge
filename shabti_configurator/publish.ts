@@ -1,11 +1,11 @@
 import path from "node:path";
 import util from "node:util";
 import { $ } from "bun";
-import conciergeApiPackageJson from "../shabti_api_client_node/package.json";
-import conciergeApiPyProject from "../python_packages/shabti_api_client/pyproject.toml";
-import conciergeKeycloakPyProject from "../python_packages/shabti_keycloak/pyproject.toml";
-import conciergeTypesPyProject from "../python_packages/shabti_types/pyproject.toml";
-import conciergeUtilPyProject from "../python_packages/shabti_util/pyproject.toml";
+import shabtiApiPackageJson from "../shabti_api_client_node/package.json";
+import shabtiApiPyProject from "../python_packages/shabti_api_client/pyproject.toml";
+import shabtiKeycloakPyProject from "../python_packages/shabti_keycloak/pyproject.toml";
+import shabtiTypesPyProject from "../python_packages/shabti_types/pyproject.toml";
+import shabtiUtilPyProject from "../python_packages/shabti_util/pyproject.toml";
 import isiUtilPyProject from "../python_packages/isi_util/pyproject.toml";
 import packageJson from "./package.json";
 import runPython from "./server/runPython";
@@ -58,19 +58,11 @@ const handlePyPi = async (
 		`twine upload ${path.join(packageDir, "dist").replaceAll("\\", "\\\\")}/* -u __token__ -p ${pyPiKey}`,
 	);
 };
-await handlePyPi("shabti-util", "shabti_util", conciergeUtilPyProject);
+await handlePyPi("shabti-util", "shabti_util", shabtiUtilPyProject);
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject);
-await handlePyPi(
-	"shabti-api-client",
-	"shabti_api_client",
-	conciergeApiPyProject,
-);
-await handlePyPi(
-	"shabti-keycloak",
-	"shabti_keycloak",
-	conciergeKeycloakPyProject,
-);
-await handlePyPi("shabti-types", "shabti_types", conciergeTypesPyProject);
+await handlePyPi("shabti-api-client", "shabti_api_client", shabtiApiPyProject);
+await handlePyPi("shabti-keycloak", "shabti_keycloak", shabtiKeycloakPyProject);
+await handlePyPi("shabti-types", "shabti_types", shabtiTypesPyProject);
 const npmJson: any = await fetch(
 	"https://registry.npmjs.org/@infosecinnovations/shabti-api-client",
 ).then((res) => res.json());
@@ -78,7 +70,7 @@ const nodeClientDir = path.resolve(
 	path.join(import.meta.dir, "..", "shabti_api_client_node"),
 );
 await $`bun run build`.cwd(nodeClientDir);
-if (npmJson.versions[conciergeApiPackageJson.version]) {
+if (npmJson.versions[shabtiApiPackageJson.version]) {
 	console.log("Shabti API Node Client already up to date");
 } else {
 	await $`bun publish --access public`.cwd(nodeClientDir); // TODO: detect if prerelease

@@ -32,12 +32,12 @@ services:
       - KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/tls/key.pem
       - KC_HOSTNAME=${WEB_HOST:-localhost}
       - KC_HOSTNAME_BACKCHANNEL_DYNAMIC
-      - CONCIERGE_HOST=${WEB_HOST:-localhost}
-      - CONCIERGE_PORT=${WEB_PORT:-15130}
+      - SHABTI_HOST=${WEB_HOST:-localhost}
+      - SHABTI_PORT=${WEB_PORT:-15130}
     restart: unless-stopped
     volumes:
       - ./keycloak_import:/opt/keycloak/data/import
-      - ./keycloak_javascript/concierge.jar:/opt/keycloak/providers/concierge.jar
+      - ./keycloak_javascript/shabti.jar:/opt/keycloak/providers/shabti.jar
       - ${KEYCLOAK_CERT}:/opt/keycloak/tls/cert.pem
       - ${KEYCLOAK_CERT_KEY}:/opt/keycloak/tls/key.pem
     command: start --import-realm --auto-build --features=scripts

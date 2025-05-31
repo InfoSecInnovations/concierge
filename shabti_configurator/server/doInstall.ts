@@ -36,9 +36,9 @@ export default async function* (options: FormData, installVenv = true) {
 	const securityLevel = options.get("security_level")?.toString();
 	if (securityLevel && securityLevel != "none") {
 		yield logMessage("configuring security...");
-		envs.CONCIERGE_SECURITY_ENABLED = "True";
-		envs.CONCIERGE_SERVICE = "concierge-enable-security";
-		envs.CONCIERGE_WEB_SERVICE = "concierge-web-enable-security";
+		envs.SHABTI_SECURITY_ENABLED = "True";
+		envs.SHABTI_SERVICE = "shabti-enable-security";
+		envs.SHABTI_WEB_SERVICE = "shabti-web-enable-security";
 		const certDir = path.resolve("self_signed_certificates");
 		await createCertificates(certDir);
 		envs.ROOT_CA = path.join(certDir, "root-ca.pem");
@@ -59,10 +59,10 @@ export default async function* (options: FormData, installVenv = true) {
 		envs.OPENSEARCH_NODE_KEY = path.join(certDir, "opensearch-node1-key.pem");
 		envs.KEYCLOAK_CERT = path.join(certDir, "keycloak-cert.pem");
 		envs.KEYCLOAK_CERT_KEY = path.join(certDir, "keycloak-key.pem");
-		envs.API_CERT = path.join(certDir, "concierge-cert.pem");
-		envs.API_KEY = path.join(certDir, "concierge-key.pem");
-		envs.WEB_CERT = path.join(certDir, "concierge-web-cert.pem");
-		envs.WEB_KEY = path.join(certDir, "concierge-web-key.pem");
+		envs.API_CERT = path.join(certDir, "shabti-cert.pem");
+		envs.API_KEY = path.join(certDir, "shabti-key.pem");
+		envs.WEB_CERT = path.join(certDir, "shabti-web-cert.pem");
+		envs.WEB_KEY = path.join(certDir, "shabti-web-key.pem");
 		yield logMessage("configured TLS certificates.");
 		if (!(await keycloakExists())) {
 			const keycloakPassword = options.get("keycloak_password")?.toString();
@@ -71,7 +71,7 @@ export default async function* (options: FormData, installVenv = true) {
 				throw new Error("Keycloak admin password is invalid!");
 			// TODO: validate password strength
 			// in case we have old postgres data we should remove it to avoid mismatches
-			await $`docker volume rm --force concierge_postgres_data`.quiet();
+			await $`docker volume rm --force shabti_postgres_data`.quiet();
 			envs.KEYCLOAK_INITIAL_ADMIN_PASSWORD = keycloakPassword;
 			const postgresPassword = crypto.randomBytes(25).toString("hex");
 			// TODO: validate password strength
@@ -103,7 +103,7 @@ export default async function* (options: FormData, installVenv = true) {
 					});
 					const secret = await kcClient.clients.getClientSecret({
 						id: "7a3ec428-36f2-49c4-91b1-8288dc44acb0",
-						realm: "concierge",
+						realm: "shabti",
 					});
 					envs.KEYCLOAK_CLIENT_ID = "shabti-auth";
 					envs.KEYCLOAK_CLIENT_SECRET = secret.value!;
@@ -117,14 +117,14 @@ export default async function* (options: FormData, installVenv = true) {
 		envs.OPENSEARCH_SERVICE = "opensearch-node-enable-security";
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-keycloak.yml";
 	} else {
-		envs.CONCIERGE_SERVICE = "concierge";
-		envs.CONCIERGE_WEB_SERVICE = "concierge-web";
-		envs.CONCIERGE_SECURITY_ENABLED = "False";
+		envs.SHABTI_SERVICE = "shabti";
+		envs.SHABTI_WEB_SERVICE = "shabti-web";
+		envs.SHABTI_SECURITY_ENABLED = "False";
 		envs.OPENSEARCH_SERVICE = "opensearch-node-disable-security";
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml";
 	}
 	envs.ENVIRONMENT = environment;
-	envs.CONCIERGE_VERSION = getVersion();
+	envs.SHABTI_VERSION = getVersion();
 	envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama";
 	if (securityLevel == "demo") envs.IS_SECURITY_DEMO = "True";
 	await updateEnv();
@@ -169,7 +169,7 @@ export default async function* (options: FormData, installVenv = true) {
 				"docker_containers",
 				"shabti_api",
 			]);
-		else await $`docker exec -d concierge python -m add_keycloak_demo_users`;
+		else await $`docker exec -d shabti python -m add_keycloak_demo_users`;
 	}
 	yield logMessage(
 		"pulling language model. This can take quite a long time if you haven't downloaded the model before.",

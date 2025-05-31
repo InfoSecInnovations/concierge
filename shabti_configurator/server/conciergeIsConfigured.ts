@@ -11,7 +11,7 @@ export default async () => {
 		]).then((res) => res.every((exists) => exists))
 	) {
 		const envs = envfile.parse(await envFile.text());
-		if (envs.CONCIERGE_VERSION) return true;
+		if (envs.SHABTI_VERSION) return true;
 		// this isn't exhaustive but should in most cases be sufficient to confirm that the user has an existing configuration
 	}
 	return false;

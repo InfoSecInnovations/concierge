@@ -16,7 +16,7 @@ from .collection_selector_server import collection_selector_server
 from .get_api_url import get_api_url
 
 app_ui = ui.page_auto(
-    ui.output_ui("concierge_main"),
+    ui.output_ui("shabti_main"),
     theme=shinyswatch.theme.pulse,
 )
 
@@ -33,7 +33,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     )
 
     @render.ui
-    def concierge_main():
+    def shabti_main():
         return ui.navset_pill_list(
             ui.nav_panel("Home", home_ui("home")),
             ui.nav_panel(
@@ -42,7 +42,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             ),
             ui.nav_panel("Prompter", prompter_ui("prompter")),
             ui.nav_control(status_ui("status_widget"), shinyswatch.theme_picker_ui()),
-            id="concierge_nav",
+            id="shabti_nav",
         )
 
     home_server("home")
