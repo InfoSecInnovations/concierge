@@ -1,7 +1,7 @@
 from shiny import ui, Inputs, Outputs, Session, module, reactive, render, req
 from ..common.collection_selector_ui import collection_selector_ui
 from ..common.markdown_renderer import md
-from shabti_api_client import BaseConciergeClient
+from shabti_api_client import BaseShabtiClient
 from ..common.collections_data import CollectionsData
 import asyncio
 import humanize
@@ -25,7 +25,7 @@ def prompter_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: BaseConciergeClient,
+    client: BaseShabtiClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[TCollectionInfo]],
     api_status: reactive.Value,

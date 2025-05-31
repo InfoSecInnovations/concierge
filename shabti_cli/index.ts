@@ -2,8 +2,8 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import * as cliProgress from "cli-progress";
 import * as commander from "commander";
-import type { ConciergeAuthorizationClient } from "shabti-api-client";
-import type { ConciergeClient } from "shabti-api-client";
+import type { ShabtiAuthorizationClient } from "shabti-api-client";
+import type { ShabtiClient } from "shabti-api-client";
 import type {
 	DocumentIngestInfo,
 	PromptConfigInfo,
@@ -36,7 +36,7 @@ if (authEnabled) {
 			"username this collection will be owned by",
 		)
 		.action((name, options) =>
-			(client as ConciergeAuthorizationClient)
+			(client as ShabtiAuthorizationClient)
 				.createCollection(name, options.location, options.owner)
 				.then((collectionId) =>
 					console.log(`Created collection ${name} with id ${collectionId}`),
@@ -44,7 +44,7 @@ if (authEnabled) {
 		);
 } else {
 	collection.command("create <name>").action((name) => {
-		(client as ConciergeClient)
+		(client as ShabtiClient)
 			.createCollection(name)
 			.then((collectionId) =>
 				console.log(`Created collection ${name} with id ${collectionId}`),

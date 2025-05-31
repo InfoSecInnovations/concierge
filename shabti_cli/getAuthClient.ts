@@ -1,4 +1,4 @@
-import { ConciergeAuthorizationClient } from "shabti-api-client";
+import { ShabtiAuthorizationClient } from "shabti-api-client";
 import * as openIdClient from "openid-client";
 import getOpenIdConfig from "./getOpenIdConfig";
 
@@ -10,5 +10,5 @@ export default async () => {
 	const url =
 		process.env.API_URL ||
 		`https://${process.env.API_HOST || "localhost"}:${process.env.API_PORT || "8000"}`;
-	return new ConciergeAuthorizationClient(url, token, config);
+	return new ShabtiAuthorizationClient(url, token, config);
 };

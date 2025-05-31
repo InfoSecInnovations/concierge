@@ -1,5 +1,5 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
-from shabti_api_client import BaseConciergeClient
+from shabti_api_client import BaseShabtiClient
 from httpx import ConnectError
 
 
@@ -10,7 +10,7 @@ def status_ui():
 
 @module.server
 def status_server(
-    input: Inputs, output: Outputs, session: Session, client: BaseConciergeClient
+    input: Inputs, output: Outputs, session: Session, client: BaseShabtiClient
 ):
     opensearch_status = reactive.value("loading")
     ollama_status = reactive.value("loading")

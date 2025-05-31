@@ -4,7 +4,7 @@ from ssl import SSLContext
 from urllib.parse import urljoin
 from keycloak import KeycloakOpenID
 from asyncio import create_task, Task
-from .exceptions import ConciergeRequestError
+from .exceptions import ShabtiRequestError
 from .codes import EXPECTED_CODES
 import json
 from shabti_types import (
@@ -16,19 +16,19 @@ from shabti_types import (
     ModelLoadInfo,
     WebFile,
 )
-from .base_client import BaseConciergeClient
+from .base_client import BaseShabtiClient
 from .raise_error import raise_error
 
 
-class ConciergeAuthenticationError(ConciergeRequestError):
+class ShabtiAuthenticationError(ShabtiRequestError):
     pass
 
 
-class ConciergeTokenExpiredError(ConciergeRequestError):
+class ShabtiTokenExpiredError(ShabtiRequestError):
     pass
 
 
-class ConciergeAuthorizationClient(BaseConciergeClient):
+class ShabtiAuthorizationClient(BaseShabtiClient):
     def __init__(
         self,
         server_url: str,
@@ -58,9 +58,9 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
             )
             response = await self.httpx_client.send(request, stream=stream)
             if response.status_code == 401:
-                raise ConciergeTokenExpiredError(status_code=401)
+                raise ShabtiTokenExpiredError(status_code=401)
             if response.status_code == 403:
-                raise ConciergeAuthenticationError(status_code=403)
+                raise ShabtiAuthenticationError(status_code=403)
             if response.status_code not in EXPECTED_CODES:
                 raise_error(response)
             return response
@@ -73,7 +73,7 @@ class ConciergeAuthorizationClient(BaseConciergeClient):
                 await self.refresh_task
             result = await task
             return result
-        except ConciergeTokenExpiredError:
+        except ShabtiTokenExpiredError:
             # if the token being used is still the same as the stored one, it probably expired
             if token == self.token:
                 # if we're not already refreshing, we should launch the refresh task

@@ -1,8 +1,8 @@
-from shabti_api_client.client import ConciergeClient
+from shabti_api_client.client import ShabtiClient
 import asyncio
 import os
 
-client = ConciergeClient(server_url="http://127.0.0.1:8000")
+client = ShabtiClient(server_url="http://127.0.0.1:8000")
 collection_id = None
 document_id = None
 

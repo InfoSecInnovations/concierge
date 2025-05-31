@@ -1,13 +1,13 @@
 from __future__ import annotations
 from langchain_community.document_loaders import PyPDFLoader
-from loaders.base_loader import ConciergeFileLoader, ConciergeDocument, get_current_time
+from loaders.base_loader import ShabtiFileLoader, ShabtiDocument, get_current_time
 from dataclasses import dataclass
 from pathlib import Path
 
 
-class PDFLoader(ConciergeFileLoader):
+class PDFLoader(ShabtiFileLoader):
     @dataclass(kw_only=True)
-    class PDFPageMetadata(ConciergeDocument.ConciergePage.PageMetadata):
+    class PDFPageMetadata(ShabtiDocument.ShabtiPage.PageMetadata):
         page: int
 
     @staticmethod
@@ -15,13 +15,13 @@ class PDFLoader(ConciergeFileLoader):
         return full_path.endswith(".pdf")
 
     @staticmethod
-    def load(full_path: str, filename: str | None) -> ConciergeDocument:
+    def load(full_path: str, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
         loader = PyPDFLoader(full_path)
         pages = loader.load_and_split()
 
-        return ConciergeDocument(
-            metadata=ConciergeFileLoader.FileMetaData(
+        return ShabtiDocument(
+            metadata=ShabtiFileLoader.FileMetaData(
                 type="pdf",
                 source=full_path,
                 filename=filename or Path(full_path).name,
@@ -29,7 +29,7 @@ class PDFLoader(ConciergeFileLoader):
                 media_type="application/pdf",
             ),
             pages=[
-                ConciergeDocument.ConciergePage(
+                ShabtiDocument.ShabtiPage(
                     metadata=PDFLoader.PDFPageMetadata(page=page.metadata["page"] + 1),
                     content=page.page_content,
                 )

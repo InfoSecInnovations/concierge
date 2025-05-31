@@ -1,23 +1,23 @@
 import * as client from "openid-client";
-import { BaseConciergeClient } from "./baseClient";
+import { BaseShabtiClient } from "./baseClient";
 import { EXPECTED_CODES } from "./codes";
 import { AuthzCollectionInfo, UserInfo } from "./dataTypes";
 
-class ConciergeTokenExpiredError extends Error {
+class ShabtiTokenExpiredError extends Error {
 	constructor(...params: any[]) {
 		super(...params);
 		this.name = "TokenExpiredError";
 	}
 }
 
-class ConciergeAuthenticationError extends Error {
+class ShabtiAuthenticationError extends Error {
 	constructor(...params: any[]) {
 		super(...params);
-		this.name = "ConciergeAuthenticationError";
+		this.name = "ShabtiAuthenticationError";
 	}
 }
 
-export class ConciergeAuthorizationClient extends BaseConciergeClient {
+export class ShabtiAuthorizationClient extends BaseShabtiClient {
 	token: client.TokenEndpointResponse;
 	openIdConfig: client.Configuration;
 	refreshTask: Promise<client.TokenEndpointResponse> | null = null;
@@ -58,10 +58,10 @@ export class ConciergeAuthorizationClient extends BaseConciergeClient {
 				headers,
 			});
 			if (response.status === 401) {
-				throw new ConciergeTokenExpiredError("Token expired");
+				throw new ShabtiTokenExpiredError("Token expired");
 			}
 			if (response.status === 403) {
-				throw new ConciergeAuthenticationError("Authentication failed");
+				throw new ShabtiAuthenticationError("Authentication failed");
 			}
 			if (!EXPECTED_CODES.includes(response.status)) {
 				const text = await response.text();
@@ -79,7 +79,7 @@ export class ConciergeAuthorizationClient extends BaseConciergeClient {
 			}
 			return await doRequest(this.token);
 		} catch (error) {
-			if (error instanceof ConciergeTokenExpiredError) {
+			if (error instanceof ShabtiTokenExpiredError) {
 				if (currentToken === this.token) {
 					// this means we're probably using an expired token
 					if (!this.refreshTask) {

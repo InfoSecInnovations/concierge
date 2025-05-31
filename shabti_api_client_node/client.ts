@@ -1,8 +1,8 @@
 import path = require("node:path");
-import { BaseConciergeClient } from "./baseClient";
+import { BaseShabtiClient } from "./baseClient";
 import { CollectionInfo } from "./dataTypes";
 
-export class ConciergeClient extends BaseConciergeClient {
+export class ShabtiClient extends BaseShabtiClient {
 	constructor(serverUrl: string) {
 		super(serverUrl);
 	}

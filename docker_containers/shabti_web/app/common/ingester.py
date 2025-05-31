@@ -3,7 +3,7 @@ from tqdm import tqdm
 from ..common.text_list import text_list_ui, text_list_server
 from typing import AsyncGenerator, Any
 from shabti_types import DocumentIngestInfo
-from shabti_api_client import BaseConciergeClient
+from shabti_api_client import BaseShabtiClient
 import os
 
 
@@ -21,7 +21,7 @@ def ingester_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: BaseConciergeClient,
+    client: BaseShabtiClient,
     selected_collection: reactive.Value,
 ):
     file_input_trigger = reactive.value(0)

@@ -2,7 +2,7 @@ from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from ..common.ingester import ingester_ui, ingester_server
 from shiny._utils import rand_hex
 from ..common.collections_data import CollectionsData
-from shabti_api_client import ConciergeClient
+from shabti_api_client import ShabtiClient
 from .collection_create import collection_create_ui, collection_create_server
 from ..common.collection_selector_ui import collection_selector_ui
 from .collection_selector_server import collection_selector_server
@@ -16,7 +16,7 @@ def collection_management_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: ConciergeClient,
+    client: ShabtiClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[CollectionInfo]],
     api_status: reactive.Value,

@@ -1,6 +1,6 @@
 # Adding a Loader
 
-Loaders are functions which take a source of information such as a file or URL, vectorize the contents and output metadata in a format suitable for ingestion by Concierge.
+Loaders are functions which take a source of information such as a file or URL, vectorize the contents and output metadata in a format suitable for ingestion by Shabti.
 
 For examples of the existing loaders, look at the `loaders` directory inside this repository. `base_loader.py` contains the base classes which need to be inherited by the other loaders.
 
@@ -10,9 +10,9 @@ For examples of the existing loaders, look at the `loaders` directory inside thi
 
 The top level element, this represents the input to the loader, such as a file or URL.
 
-In the Shabti code base the class `ConciergeDocument` holds all the other elements relating to the document.
+In the Shabti code base the class `ShabtiDocument` holds all the other elements relating to the document.
 
-`ConciergeDocument.DocumentMetadata` contains the following fields:
+`ShabtiDocument.DocumentMetadata` contains the following fields:
     
     type: str
     source: str
@@ -27,9 +27,9 @@ The document is split into "pages" which can correspond to actual pages or some 
 So far our loaders have come from the Langchain framework and the splitting into pages is based on how the `load_and_split` function delimits pages. 
 
 > [!NOTE]
-> Splitting a document into pages is not the same as splitting the text into chunks for vectorization, this step is performed later on by existing code inside Concierge.
+> Splitting a document into pages is not the same as splitting the text into chunks for vectorization, this step is performed later on by existing code inside Shabti.
 
-`ConciergeDocument.ConciergePage` is the class that hold the data for a page. The corresponding metadata class is `ConciergeDocument.ConciergePage.PageMetadata`, this base class is empty but can be extended to contain page metadata such as the page number. `ConciergeDocument.ConciergePage` also has a field called `content` which contains the actual text of the page.
+`ShabtiDocument.ShabtiPage` is the class that hold the data for a page. The corresponding metadata class is `ShabtiDocument.ShabtiPage.PageMetadata`, this base class is empty but can be extended to contain page metadata such as the page number. `ShabtiDocument.ShabtiPage` also has a field called `content` which contains the actual text of the page.
 
 ## File Loader
 
@@ -37,9 +37,9 @@ The simplest type of loader to implement is one for loading files, as we already
 
 ### Implementing The Class
 
-Create a class which inherits from `ConciergeFileLoader` which itself inherits from `ConciergeDocLoader`.
+Create a class which inherits from `ShabtiFileLoader` which itself inherits from `ShabtiDocLoader`.
 
-If you need extra metadata fields on top of the ones existant in `ConciergeFileLoader.FileMetaData` and `ConciergeDocument.ConciergePage.PageMetadata` you must extend those classes.
+If you need extra metadata fields on top of the ones existant in `ShabtiFileLoader.FileMetaData` and `ShabtiDocument.ShabtiPage.PageMetadata` you must extend those classes.
 
 Implement the following method in the class:
 
@@ -51,13 +51,13 @@ This will override the abstract base method. Based on the file's path this shoul
 Implement the following method in the class:
 
     @staticmethod
-    def load(full_path: str) -> ConciergeDocument:
+    def load(full_path: str) -> ShabtiDocument:
 
-This is where we will process the document and output it in the format expected by Concierge. `ConciergeDocument` has `metadata` and `pages` fields. 
+This is where we will process the document and output it in the format expected by Shabti. `ShabtiDocument` has `metadata` and `pages` fields. 
 
 #### metadata
 
-`metadata` should be `ConciergeFileLoader.FileMetaData` or a class that inherits from it.
+`metadata` should be `ShabtiFileLoader.FileMetaData` or a class that inherits from it.
 
 You can import `get_current_time` from `base_loader.py` in order to get the date in the correct format for `ingest_date`. 
 
@@ -71,13 +71,13 @@ You can import `get_current_time` from `base_loader.py` in order to get the date
 
 While there are a variety of ways you could process the files, we recommend looking at the [Langchain Document Loaders](https://python.langchain.com/v0.1/docs/modules/data_connection/document_loaders/) and [Langchain Community Document Loaders](https://python.langchain.com/v0.1/docs/integrations/document_loaders/) as these cover a vast array of data source types and it's likely the file type you wish to ingest is already handled by one of them.
 
-Load and split the document as per the documentation of the loader you're using and map each resulting page to a `ConciergeDocument.ConciergePage` object and its accompanying `ConciergeDocument.ConciergePage.PageMetadata` or derived class object. The `content` field should contain the `page_content` value from the page, and any items you deem important from the `metadata` dictionary can go into the extended page metadata class.
+Load and split the document as per the documentation of the loader you're using and map each resulting page to a `ShabtiDocument.ShabtiPage` object and its accompanying `ShabtiDocument.ShabtiPage.PageMetadata` or derived class object. The `content` field should contain the `page_content` value from the page, and any items you deem important from the `metadata` dictionary can go into the extended page metadata class.
 
-### Adding Your Loader To Concierge
+### Adding Your Loader To Shabti
 
 Now you've created the loader class and its metadata classes, you need to tell Shabti to look for it when loading files. 
 
-Open `concierge_backend_lib/loading.py`.
+Open `docker_containers/shabti_api/app/loading.py`.
 
 Import your loader class and add it to the `loaders` list, the loaders are checked in the order of this list, so you should leave `TextFileLoader` as the last element as this is (currently) the fallback loader if none of the others work, bear in mind that your loader will take precedence over any of the ones following it.
 
@@ -87,6 +87,6 @@ That's it, if you implemented the class methods properly you should be able to l
 
 By default the Shiny app will generate links to the ingested files, however it's possible to override this behavior by adding a custom case for the page and document links.
 
-Go to `concierge_shiny/functions.py` and add a statement matching your file type in the `page_link` and/or `doc_link` functions. Use the provided `doc_url` and `md_link` helper functions to create a Markdown formatted link that will load the original document a new tab in the browser.
+Go to `docker_containers/shabti_web/app/common` and open the `doc_link.py` and `doc_page_link.py` see the current implementations for examples of custom link handling.
 
 `page_link` is used for the references in the chatbot interface and `doc_link` displays the document in the collection management screen.

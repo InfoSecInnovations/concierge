@@ -1,6 +1,6 @@
 from shiny import ui, Inputs, Outputs, Session, reactive, render, App
 import shinyswatch
-from shabti_api_client import ConciergeClient
+from shabti_api_client import ShabtiClient
 from ..common.collections_data import CollectionsData
 from ..common.status import status_ui, status_server
 from .home import home_ui, home_server
@@ -23,7 +23,7 @@ app_ui = ui.page_auto(
 
 def server(input: Inputs, output: Outputs, session: Session):
     shinyswatch.theme_picker_server()
-    client = ConciergeClient(get_api_url())
+    client = ShabtiClient(get_api_url())
     api_status = reactive.value(False)
     opensearch_status = reactive.value(False)
     ollama_status = reactive.value(False)

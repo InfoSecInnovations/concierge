@@ -9,7 +9,7 @@ def get_current_time():
 
 
 @dataclass(kw_only=True)
-class ConciergeDocument:
+class ShabtiDocument:
     @dataclass(kw_only=True)
     class DocumentMetadata:
         type: str
@@ -17,7 +17,7 @@ class ConciergeDocument:
         ingest_date: int
 
     @dataclass(kw_only=True)
-    class ConciergePage:
+    class ShabtiPage:
         @dataclass(kw_only=True)
         class PageMetadata:
             pass
@@ -25,21 +25,21 @@ class ConciergeDocument:
         metadata: PageMetadata
         content: str
 
-    pages: list[ConciergePage]
+    pages: list[ShabtiPage]
     metadata: DocumentMetadata
 
 
-class ConciergeDocLoader(metaclass=ABCMeta):
+class ShabtiDocLoader(metaclass=ABCMeta):
     @staticmethod
     @abstractmethod
-    def load(full_path: str, filename: str | None) -> ConciergeDocument:
+    def load(full_path: str, filename: str | None) -> ShabtiDocument:
         # load pages
         pass
 
 
-class ConciergeFileLoader(ConciergeDocLoader):
+class ShabtiFileLoader(ShabtiDocLoader):
     @dataclass(kw_only=True)
-    class FileMetaData(ConciergeDocument.DocumentMetadata):
+    class FileMetaData(ShabtiDocument.DocumentMetadata):
         filename: str
         media_type: str | None = None
 

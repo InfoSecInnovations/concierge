@@ -1,4 +1,4 @@
-// This script was implemented to enable automated tests to set up Concierge
+// This script was implemented to enable automated tests to set up Shabti
 // It provides a Shabti install without having to go through the web UI
 // Use at your own risk for other purposes!
 

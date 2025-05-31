@@ -654,13 +654,13 @@
 			"alwaysDisplayInConsole": false,
 			"clientAuthenticatorType": "client-secret",
 			"redirectUris": [
-				"http://${shabti_HOST}:${shabti_PORT}/callback",
-				"https://${shabti_HOST}:${shabti_PORT}/callback",
+				"http://${SHABTI_HOST}:${SHABTI_PORT}/callback",
+				"https://${SHABTI_HOST}:${SHABTI_PORT}/callback",
 				"http://127.0.0.1:8000/*"
 			],
 			"webOrigins": [
-				"https://${shabti_HOST}:${shabti_PORT}",
-				"http://${shabti_HOST}:${shabti_PORT}",
+				"https://${SHABTI_HOST}:${SHABTI_PORT}",
+				"http://${SHABTI_HOST}:${SHABTI_PORT}",
 				"http://127.0.0.1:8000"
 			],
 			"notBefore": 0,

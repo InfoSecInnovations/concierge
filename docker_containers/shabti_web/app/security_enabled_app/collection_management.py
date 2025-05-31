@@ -7,7 +7,7 @@ from shiny._utils import rand_hex
 from .format_collection_name import format_collection_name
 from ..common.collections_data import CollectionsData
 from ..common.collection_document import document_ui, document_server
-from shabti_api_client import ConciergeAuthorizationClient
+from shabti_api_client import ShabtiAuthorizationClient
 from ..common.document_item import DocumentItem
 from shabti_types import AuthzCollectionInfo
 
@@ -17,7 +17,7 @@ def collection_management_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: ConciergeAuthorizationClient,
+    client: ShabtiAuthorizationClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[AuthzCollectionInfo]],
     api_status: reactive.Value,

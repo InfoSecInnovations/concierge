@@ -1,5 +1,5 @@
 import path from "node:path";
-import { ConciergeAuthorizationClient } from "shabti-api-client";
+import { ShabtiAuthorizationClient } from "shabti-api-client";
 import * as dotenv from "dotenv";
 import * as openIdClient from "openid-client";
 import getOpenIdConfig from "./getOpenIdConfig";
@@ -17,7 +17,7 @@ const run = async () => {
 		username: "testadmin",
 		password: "test",
 	});
-	const client = new ConciergeAuthorizationClient(
+	const client = new ShabtiAuthorizationClient(
 		"http://localhost:8000",
 		token,
 		config,

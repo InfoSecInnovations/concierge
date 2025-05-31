@@ -25,7 +25,7 @@ If there are no collections present you will need to ask someone with write acce
 QUICKSTART_NO_ACCESS = """
 ### Getting started:
 
-You currently don't have permission to do anything in Concierge, please contact an administrator to be assigned the correct roles!
+You currently don't have permission to do anything in Shabti, please contact an administrator to be assigned the correct roles!
 """
 
 ADMIN_TIPS = """

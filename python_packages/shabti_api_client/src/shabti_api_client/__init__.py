@@ -1,3 +1,3 @@
-from .client import ConciergeClient as ConciergeClient
-from .auth_client import ConciergeAuthorizationClient as ConciergeAuthorizationClient
-from .base_client import BaseConciergeClient as BaseConciergeClient
+from .client import ShabtiClient as ShabtiClient
+from .auth_client import ShabtiAuthorizationClient as ShabtiAuthorizationClient
+from .base_client import BaseShabtiClient as BaseShabtiClient

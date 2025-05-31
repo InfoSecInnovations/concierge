@@ -1,11 +1,11 @@
-from loaders.base_loader import ConciergeFileLoader, ConciergeDocument
+from loaders.base_loader import ShabtiFileLoader, ShabtiDocument
 from loaders.pdf import PDFLoader
 from loaders.text import TextFileLoader
 
-loaders: list[ConciergeFileLoader] = [PDFLoader, TextFileLoader]
+loaders: list[ShabtiFileLoader] = [PDFLoader, TextFileLoader]
 
 
-def load_file(full_path, filename) -> ConciergeDocument | None:
+def load_file(full_path, filename) -> ShabtiDocument | None:
     for loader in loaders:
         if loader.can_load(full_path):
             try:

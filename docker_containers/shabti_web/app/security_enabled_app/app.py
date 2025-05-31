@@ -2,7 +2,7 @@ import os
 from shiny import ui, Inputs, Outputs, Session, reactive, App, render
 import shinyswatch
 from ..common.collections_data import CollectionsData
-from shabti_api_client import ConciergeAuthorizationClient
+from shabti_api_client import ShabtiAuthorizationClient
 from shabti_keycloak import get_keycloak_client
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
@@ -38,7 +38,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     token = get_auth_token(session)
     if not token:
         return
-    client = ConciergeAuthorizationClient(
+    client = ShabtiAuthorizationClient(
         server_url=get_api_url(),
         token=token,
         keycloak_client=get_keycloak_client(),

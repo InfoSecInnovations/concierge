@@ -1,6 +1,6 @@
 import httpx
 from urllib.parse import urljoin
-from .exceptions import ConciergeRequestError
+from .exceptions import ShabtiRequestError
 from .codes import EXPECTED_CODES
 import json
 from shabti_types import (
@@ -12,11 +12,11 @@ from shabti_types import (
     ModelLoadInfo,
     WebFile,
 )
-from .base_client import BaseConciergeClient
+from .base_client import BaseShabtiClient
 from .raise_error import raise_error
 
 
-class ConciergeClient(BaseConciergeClient):
+class ShabtiClient(BaseShabtiClient):
     def __init__(self, server_url: str):
         self.server_url = server_url
         self.httpx_client = httpx.AsyncClient(timeout=None)
@@ -39,7 +39,7 @@ class ConciergeClient(BaseConciergeClient):
         ) as response:
             if response.status_code not in EXPECTED_CODES:
                 message = await response.aread()
-                raise ConciergeRequestError(
+                raise ShabtiRequestError(
                     status_code=response.status_code, message=message.decode()
                 )
             async for line in response.aiter_lines():

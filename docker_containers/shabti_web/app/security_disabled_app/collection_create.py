@@ -1,7 +1,7 @@
 from shiny import module, reactive, ui, req, Inputs, Outputs, Session
 from ..common.collections_data import CollectionsData
 from shabti_types import CollectionExistsError
-from shabti_api_client import ConciergeClient
+from shabti_api_client import ShabtiClient
 from ..common.text_input_enter import text_input_enter_ui, text_input_enter_server
 from shabti_types import CollectionInfo
 
@@ -20,7 +20,7 @@ def collection_create_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: ConciergeClient,
+    client: ShabtiClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[CollectionInfo]],
 ):

@@ -1,7 +1,7 @@
 from opensearchpy import helpers
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter
 from .embeddings import create_embeddings
-from loaders.base_loader import ConciergeDocument, ConciergeFileLoader
+from loaders.base_loader import ShabtiDocument, ShabtiFileLoader
 from dataclasses import fields
 from .opensearch import get_client, delete_opensearch_document
 from shabti_types import DocumentIngestInfo
@@ -30,7 +30,7 @@ def get_field_type(python_type):
 
 def insert(
     collection_id: str,
-    document: ConciergeDocument,
+    document: ShabtiDocument,
     binary: bytes | None = None,
 ):
     client = get_client()
@@ -135,7 +135,7 @@ def insert(
                 document_id=doc_lookup_id,
                 document_type=document.metadata.type,
                 label=document.metadata.filename
-                if isinstance(document.metadata, ConciergeFileLoader.FileMetaData)
+                if isinstance(document.metadata, ShabtiFileLoader.FileMetaData)
                 else document.metadata.source,
             )
         helpers.bulk(client, entries, refresh=True)

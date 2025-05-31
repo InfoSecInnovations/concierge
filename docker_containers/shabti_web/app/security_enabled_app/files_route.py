@@ -1,6 +1,6 @@
 from starlette.responses import Response
 from starlette.requests import Request
-from shabti_api_client import ConciergeAuthorizationClient
+from shabti_api_client import ShabtiAuthorizationClient
 from shabti_keycloak import get_keycloak_client
 from .auth import load_token_from_cookies
 from .get_api_url import get_api_url
@@ -10,7 +10,7 @@ import os
 
 async def serve_files(request: Request):
     token = load_token_from_cookies(request.cookies)
-    client = ConciergeAuthorizationClient(
+    client = ShabtiAuthorizationClient(
         server_url=get_api_url(),
         token=token,
         keycloak_client=get_keycloak_client(),

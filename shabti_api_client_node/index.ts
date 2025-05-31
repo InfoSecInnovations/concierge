@@ -1,3 +1,3 @@
-export { ConciergeClient } from "./client";
-export { BaseConciergeClient } from "./baseClient";
-export { ConciergeAuthorizationClient } from "./authClient";
+export { ShabtiClient } from "./client";
+export { BaseShabtiClient } from "./baseClient";
+export { ShabtiAuthorizationClient } from "./authClient";

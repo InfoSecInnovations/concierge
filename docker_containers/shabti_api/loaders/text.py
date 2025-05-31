@@ -2,14 +2,14 @@ from __future__ import annotations
 from langchain_community.document_loaders import TextLoader
 from binaryornot.check import is_binary
 import os
-from loaders.base_loader import ConciergeFileLoader, ConciergeDocument, get_current_time
+from loaders.base_loader import ShabtiFileLoader, ShabtiDocument, get_current_time
 from dataclasses import dataclass
 from pathlib import Path
 
 
-class TextFileLoader(ConciergeFileLoader):
+class TextFileLoader(ShabtiFileLoader):
     @dataclass(kw_only=True)
-    class TextFileMetadata(ConciergeFileLoader.FileMetaData):
+    class TextFileMetadata(ShabtiFileLoader.FileMetaData):
         extension: str
 
     @staticmethod
@@ -17,11 +17,11 @@ class TextFileLoader(ConciergeFileLoader):
         return not is_binary(full_path)
 
     @staticmethod
-    def load(full_path: str, filename: str | None) -> ConciergeDocument:
+    def load(full_path: str, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
         loader = TextLoader(full_path)
         pages = loader.load()
-        return ConciergeDocument(
+        return ShabtiDocument(
             metadata=TextFileLoader.TextFileMetadata(
                 source=full_path,
                 filename=filename or Path(full_path).name,
@@ -30,8 +30,8 @@ class TextFileLoader(ConciergeFileLoader):
                 type="plaintext",
             ),
             pages=[  # we just load the whole file into a single sub document
-                ConciergeDocument.ConciergePage(
-                    metadata=ConciergeDocument.ConciergePage.PageMetadata(),
+                ShabtiDocument.ShabtiPage(
+                    metadata=ShabtiDocument.ShabtiPage.PageMetadata(),
                     content=page.page_content,
                 )
                 for page in pages

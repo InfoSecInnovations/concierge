@@ -1,6 +1,6 @@
-import { ConciergeClient } from "shabti-api-client";
+import { ShabtiClient } from "shabti-api-client";
 
-const client = new ConciergeClient("http://localhost:8000");
+const client = new ShabtiClient("http://localhost:8000");
 
 const run = async () => {
 	const collectionId = await client

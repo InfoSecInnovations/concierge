@@ -1,4 +1,4 @@
-// This script was implemented to enable automated tests to tear down Concierge
+// This script was implemented to enable automated tests to tear down Shabti
 // Use at your own risk for other purposes!
 
 import { $ } from "bun";

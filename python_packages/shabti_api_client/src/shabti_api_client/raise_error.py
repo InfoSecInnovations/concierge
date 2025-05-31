@@ -1,5 +1,5 @@
 from httpx import Response
-from .exceptions import ConciergeRequestError
+from .exceptions import ShabtiRequestError
 from shabti_types import CollectionExistsError
 
 
@@ -10,4 +10,4 @@ def raise_error(response: Response):
             if body["error_type"] == "CollectionExistsError":
                 raise CollectionExistsError
 
-    raise ConciergeRequestError(status_code=response.status_code, message=body)
+    raise ShabtiRequestError(status_code=response.status_code, message=body)

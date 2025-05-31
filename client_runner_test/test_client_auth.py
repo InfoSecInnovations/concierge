@@ -1,4 +1,4 @@
-from shabti_api_client.auth_client import ConciergeAuthorizationClient
+from shabti_api_client.auth_client import ShabtiAuthorizationClient
 import asyncio
 from shabti_scripts.load_dotenv import load_env
 import ssl
@@ -10,7 +10,7 @@ load_env()
 keycloak_client = get_keycloak_client()
 token = keycloak_client.token("testadmin", "test")
 
-client = ConciergeAuthorizationClient(
+client = ShabtiAuthorizationClient(
     server_url="http://127.0.0.1:8000",
     verify=ssl.create_default_context(cafile=os.getenv("ROOT_CA")),
     keycloak_client=keycloak_client,

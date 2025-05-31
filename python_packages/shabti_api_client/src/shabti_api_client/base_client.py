@@ -10,7 +10,7 @@ from shabti_types import (
 from typing import Generator, Any
 
 
-class BaseConciergeClient(ABC):
+class BaseShabtiClient(ABC):
     @abstractmethod
     async def api_status(self) -> bool:
         pass

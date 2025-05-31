@@ -1,5 +1,5 @@
 from __future__ import annotations
-from loaders.base_loader import ConciergeDocLoader, ConciergeDocument, get_current_time
+from loaders.base_loader import ShabtiDocLoader, ShabtiDocument, get_current_time
 from dataclasses import dataclass
 from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
 from bs4 import BeautifulSoup
@@ -11,24 +11,24 @@ def bs4_extractor(html: str) -> str:
     return re.sub(r"\n\n+", "\n\n", soup.text).strip()
 
 
-class WebLoader(ConciergeDocLoader):
+class WebLoader(ShabtiDocLoader):
     @dataclass(kw_only=True)
-    class WebPageMetadata(ConciergeDocument.ConciergePage.PageMetadata):
+    class WebPageMetadata(ShabtiDocument.ShabtiPage.PageMetadata):
         title: str | None
         language: str | None
         source: str
 
     @staticmethod
-    def load(full_path: str) -> ConciergeDocument:
+    def load(full_path: str) -> ShabtiDocument:
         date_time = get_current_time()
         loader = RecursiveUrlLoader(full_path, max_depth=50, extractor=bs4_extractor)
         pages = loader.load_and_split()
-        return ConciergeDocument(
-            metadata=ConciergeDocument.DocumentMetadata(
+        return ShabtiDocument(
+            metadata=ShabtiDocument.DocumentMetadata(
                 source=full_path, ingest_date=date_time, type="web"
             ),
             pages=[
-                ConciergeDocument.ConciergePage(
+                ShabtiDocument.ShabtiPage(
                     metadata=WebLoader.WebPageMetadata(
                         source=page.metadata["source"],
                         title=None

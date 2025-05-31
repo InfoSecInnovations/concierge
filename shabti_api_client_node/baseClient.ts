@@ -11,7 +11,7 @@ import {
 	WebFile,
 } from "./dataTypes";
 
-export class BaseConciergeClient {
+export class BaseShabtiClient {
 	serverUrl: string;
 	constructor(serverUrl: string) {
 		this.serverUrl = serverUrl;

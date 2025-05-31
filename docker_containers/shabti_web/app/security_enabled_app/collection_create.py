@@ -1,7 +1,7 @@
 from shiny import module, reactive, ui, Inputs, Outputs, Session
 from ..common.collections_data import CollectionsData
 from shabti_types import CollectionExistsError, AuthzCollectionInfo
-from shabti_api_client import ConciergeAuthorizationClient
+from shabti_api_client import ShabtiAuthorizationClient
 from ..common.text_input_enter import text_input_enter_ui, text_input_enter_server
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
@@ -22,7 +22,7 @@ def collection_create_server(
     input: Inputs,
     output: Outputs,
     session: Session,
-    client: ConciergeAuthorizationClient,
+    client: ShabtiAuthorizationClient,
     selected_collection: reactive.Value,
     collections: reactive.Value[CollectionsData[AuthzCollectionInfo]],
     permissions: reactive.Value[set],
