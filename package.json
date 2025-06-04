@@ -10,5 +10,10 @@
 	"peerDependencies": {
 		"typescript": "^5"
 	},
-	"workspaces": ["shabti_configurator", "shabti_cli", "shabti_api_client_node"]
+	"workspaces": [
+		"shabti_configurator/",
+		"shabti_configurator/client/",
+		"shabti_cli/",
+		"shabti_api_client_node/"
+	]
 }
