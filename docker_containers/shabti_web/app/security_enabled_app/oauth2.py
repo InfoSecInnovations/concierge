@@ -56,7 +56,10 @@ async def logout(request: Request):
     token = get_token_from_cookies(request)
     if token:
         keycloak_openid = get_keycloak_client()
-        await keycloak_openid.a_logout(token["refresh_token"])
+        try:
+            await keycloak_openid.a_logout(token["refresh_token"])
+        except Exception:
+            pass  # if logout fails we don't need to do anything special, cookie will be deleted below
     chunk_count = int(request.cookies.get("shabti_token_chunk_count"))
     response = RedirectResponse(url="/")
     response.delete_cookie("shabti_token_chunk_count")

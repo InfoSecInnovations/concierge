@@ -15,5 +15,6 @@
 		"shabti_configurator/client/",
 		"shabti_cli/",
 		"shabti_api_client_node/"
-	]
+	],
+	"version": "0.7a9"
 }
