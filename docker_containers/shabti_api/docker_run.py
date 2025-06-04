@@ -1,12 +1,6 @@
 import uvicorn
 from app.app import app
 from shabti_util import auth_enabled
-from sentence_transformers import SentenceTransformer
-
-print(
-    "initializing embeddings model (if this is the first run, it can take some time)..."
-)
-SentenceTransformer("sentence-transformers/paraphrase-multilingual-mpnet-base-v2")
 
 if auth_enabled():
     uvicorn.run(
