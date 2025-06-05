@@ -91,18 +91,18 @@ await $`docker image push infosecinnovations/concierge-web:${version}`;
 await $`git add -A`;
 await $`git commit -m 'increment version to ${version}'`;
 await $`git push`;
-await $`rm -rf ./dist`; // clean dist directory in case we've been running stuff from there
-await $`bun run build_win`;
-await $`bun run build_linux`;
-await $`bun run build_mac`;
+const configuratorDir = path.resolve(
+	path.join(import.meta.dir, "shabti_configurator"),
+);
+await $`rm -rf ./dist`.cwd(configuratorDir); // clean dist directory in case we've been running stuff from there
+await $`bun run build_win`.cwd(configuratorDir);
+await $`bun run build_linux`.cwd(configuratorDir);
+await $`bun run build_mac`.cwd(configuratorDir);
 const cliDir = path.resolve(path.join(import.meta.dir, "shabti_cli"));
 await $`rm -rf ./dist`.cwd(cliDir); // clean dist directory in case we've been running stuff from there
 await $`bun run build_win`.cwd(cliDir);
 await $`bun run build_linux`.cwd(cliDir);
 await $`bun run build_mac`.cwd(cliDir);
-const configuratorDir = path.resolve(
-	path.join(import.meta.dir, "shabti_configurator"),
-);
 const winZip = new AdmZip();
 winZip.addLocalFile(
 	path.join(configuratorDir, "dist", "windows", "shabti.exe"),
