@@ -45,7 +45,7 @@ def server(input: Inputs, output: Outputs, session: Session):
             id="shabti_nav",
         )
 
-    home_server("home")
+    home_server("home", api_status)
     status = status_server("status_widget", client)
     collection_management_server(
         "collection_management",

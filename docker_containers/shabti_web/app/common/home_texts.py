@@ -7,6 +7,12 @@ Shabti is an open-source AI framework built specifically for
 how you use data.
 """
 
+LOADING_API = """
+### Shabti API is offline
+
+If you just installed Shabti, please wait, it can take a while to download the embeddings model. When it's ready you should see a log that says `Application startup complete` in the `shabti` Docker container logs. 
+"""
+
 QUICKSTART = """
 ### Getting started:  
 1. Create a collection with Collection Management.  
