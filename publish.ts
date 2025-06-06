@@ -103,20 +103,21 @@ await $`rm -rf ./dist`.cwd(cliDir); // clean dist directory in case we've been r
 await $`bun run build_win`.cwd(cliDir);
 await $`bun run build_linux`.cwd(cliDir);
 await $`bun run build_mac`.cwd(cliDir);
+const distDir = path.resolve(path.join(import.meta.dir, "dist"));
 const winZip = new AdmZip();
 winZip.addLocalFile(
 	path.join(configuratorDir, "dist", "windows", "shabti.exe"),
 );
 winZip.addLocalFile(path.join(cliDir, "dist", "windows", "shabti_cli.exe"));
-winZip.writeZip(path.join("dist", "shabti_win.zip"));
+winZip.writeZip(path.resolve(path.join(distDir, "shabti_win.zip")));
 const linuxZip = new AdmZip();
 linuxZip.addLocalFile(path.join(configuratorDir, "dist", "linux", "shabti"));
 linuxZip.addLocalFile(path.join(cliDir, "dist", "linux", "shabti_cli"));
-linuxZip.writeZip(path.join("dist", "shabti_linux.zip"));
+linuxZip.writeZip(path.resolve(path.join(distDir, "shabti_linux.zip")));
 const macZip = new AdmZip();
 macZip.addLocalFile(path.join(configuratorDir, "dist", "mac", "shabti"));
 macZip.addLocalFile(path.join(cliDir, "dist", "mac", "shabti_cli"));
-macZip.writeZip(path.join("dist", "shabti_mac.zip"));
+macZip.writeZip(path.resolve(path.join(distDir, "shabti_mac.zip")));
 const gitBranch = await $`git branch --show-current`
 	.text()
 	.then((branch) => branch.trim());
