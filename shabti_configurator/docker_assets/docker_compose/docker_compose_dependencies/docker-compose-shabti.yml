@@ -1,6 +1,6 @@
 services:
   shabti:
-    image: infosecinnovations/concierge:${SHABTI_VERSION:-latest}
+    image: infosecinnovations/shabti:${SHABTI_VERSION:-latest}
     container_name: shabti
     environment:
       - OPENSEARCH_HOST=opensearch-node1
@@ -27,7 +27,7 @@ services:
       - ${OPENSEARCH_CLIENT_CERT:-empty}:/opensearch_certs/opensearch-admin-client-cert.pem
       - ${OPENSEARCH_CLIENT_KEY:-empty}:/opensearch_certs/opensearch-admin-client-key.pem
   shabti-web:
-    image: infosecinnovations/concierge-web:${SHABTI_VERSION:-latest}
+    image: infosecinnovations/shabti-web:${SHABTI_VERSION:-latest}
     container_name: shabti-web
     environment:
       - OPENSEARCH_HOST=opensearch-node1

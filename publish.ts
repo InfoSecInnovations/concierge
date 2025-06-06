@@ -84,10 +84,10 @@ if (npmJson.versions[shabtiApiPackageJson.version]) {
 } else {
 	await $`bun publish --access public`.cwd(nodeClientDir); // TODO: detect if prerelease
 }
-await $`docker build -t infosecinnovations/concierge:${version} ./docker_containers/shabti_api`;
-await $`docker image push infosecinnovations/concierge:${version}`;
-await $`docker build -t infosecinnovations/concierge-web:${version} ./docker_containers/shabti_web`;
-await $`docker image push infosecinnovations/concierge-web:${version}`;
+await $`docker build -t infosecinnovations/shabti:${version} ./docker_containers/shabti_api`;
+await $`docker image push infosecinnovations/shabti:${version}`;
+await $`docker build -t infosecinnovations/shabti-web:${version} ./docker_containers/shabti_web`;
+await $`docker image push infosecinnovations/shabti-web:${version}`;
 await $`git add -A`;
 await $`git commit -m 'increment version to ${version}'`;
 await $`git push`;
