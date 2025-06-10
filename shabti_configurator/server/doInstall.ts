@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import util from "node:util";
 import KcAdminClient from "@keycloak/keycloak-admin-client";
 import { $ } from "bun";
 import * as envfile from "envfile";
@@ -12,11 +11,7 @@ import getEnvPath from "./getEnvPath";
 import getVersion from "./getVersion";
 import logMessage from "./logMessage";
 import runPython from "./runPython";
-const exec = util.promisify(
-	await import("node:child_process").then(
-		(child_process) => child_process.exec,
-	),
-);
+import createVenv from "./createVenv";
 
 export default async function* (options: FormData, installVenv = true) {
 	const environment =
@@ -139,24 +134,11 @@ export default async function* (options: FormData, installVenv = true) {
 			yield logMessage(
 				"configuring Python environments. This can take some time if you have slow internet...",
 			);
-			await exec("python3 -m venv ..");
-			await runPython("pip install -r dev_requirements.txt");
+			await createVenv();
 			await configurePreCommit();
 			await configurePlaywright();
-			await exec("python3 -m venv .", {
-				cwd: path.resolve(path.join("..", "docker_containers", "shabti_api")),
-			});
-			await runPython("pip install -r dev_requirements.txt", [
-				"docker_containers",
-				"shabti_api",
-			]);
-			await exec("python3 -m venv .", {
-				cwd: path.resolve(path.join("..", "docker_containers", "shabti_web")),
-			});
-			await runPython("pip install -r dev_requirements.txt", [
-				"docker_containers",
-				"shabti_web",
-			]);
+			await createVenv(["docker_containers", "shabti_api"]);
+			await createVenv(["docker_containers", "shabti_web"]);
 		}
 	} else {
 		await $`docker compose -f ./docker_compose/docker-compose.yml pull`;
