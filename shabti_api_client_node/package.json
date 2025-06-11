@@ -1,6 +1,6 @@
 {
 	"name": "@infosecinnovations/shabti-api-client",
-	"version": "0.1.0-alpha.1",
+	"version": "0.1.0-alpha.2",
 	"description": "Node.js client to make calls to the Shabti REST API",
 	"main": "dist/index.js",
 	"types": "./dist/index.d.ts",
