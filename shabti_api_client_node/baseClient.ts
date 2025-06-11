@@ -188,13 +188,26 @@ export class BaseShabtiClient {
 		enhancers?: string[],
 		filePath?: string,
 	): Promise<ReadableStream<any>> {
-		// TODO: upload file if filePath is provided
+		const fileId = await (async () => {
+			if (filePath) {
+				const res = await this.makeRequest(
+					"POST",
+					"/prompt/source_file",
+					undefined,
+					await this.createFormData("file", [filePath]),
+				).then((res) => res.json());
+				return res.id;
+			}
+			return undefined;
+		})();
+
 		return this.streamRequest("POST", "prompt", null, {
 			collection_id: collectionId,
 			user_input: prompt,
 			task,
 			persona,
 			enhancers,
+			file_id: fileId,
 		});
 	}
 
