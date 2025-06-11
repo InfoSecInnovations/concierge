@@ -29,7 +29,6 @@ def get_context_from_opensearch(
     page_metadata = {}
 
     for hit in hits:
-        print(f"{hit['text']}\n")
         if hit["page_index"] not in page_metadata:
             page_metadata[hit["page_index"]] = {}
         if hit["page_id"] not in page_metadata[hit["page_index"]]:

@@ -167,7 +167,13 @@ program
 					console.log("Answering using the following sources:");
 					sourceFound = true;
 				}
-				console.log(item.source.page_metadata.source);
+				let docText = "";
+				if (item.source.page_metadata.page)
+					docText += `page ${item.source.page_metadata.page} of `;
+				if (item.source.doc_metadata.filename)
+					docText += item.source.doc_metadata.filename;
+				else docText += item.source.doc_metadata.source;
+				console.log(docText);
 			}
 			if (item.response) {
 				process.stdout.write(item.response);
