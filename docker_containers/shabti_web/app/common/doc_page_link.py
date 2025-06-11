@@ -10,7 +10,7 @@ def page_link(collection_id: str, page: dict[str, Any]):
     if page["type"] == "pdf":
         return f"PDF File: {
             md_link(
-                f'{doc_url(collection_id, doc_metadata["id"])}#page={page_metadata["page"]}',
+                f'{doc_url(collection_id, doc_metadata["doc_lookup_id"])}#page={page_metadata["page"]}',
                 f'page {page_metadata["page"]} of {doc_metadata["filename"]}',
             )
         }"
@@ -21,7 +21,7 @@ def page_link(collection_id: str, page: dict[str, Any]):
     if "filename" in doc_metadata:
         return f"{doc_metadata['extension']} file {
             md_link(
-                doc_url(collection_id, doc_metadata['id']),
+                doc_url(collection_id, doc_metadata['doc_lookup_id']),
                 doc_metadata['filename'],
             )
         }"

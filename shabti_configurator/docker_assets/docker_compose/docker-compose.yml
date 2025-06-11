@@ -25,6 +25,7 @@ services:
 volumes:
   opensearch-data1:
   ollama:
+  shabti-models:
 
 networks:
   default:

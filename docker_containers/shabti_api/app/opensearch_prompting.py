@@ -19,7 +19,7 @@ def get_context_from_opensearch(
                 }
             }
         },
-        "_source": {"includes": ["page_index", "page_id", "text"]},
+        "_source": {"includes": ["page_index", "page_id", "text", "doc_lookup_id"]},
     }
 
     response = client.search(body=query, index=f"{collection_id}.vectors")
@@ -34,7 +34,10 @@ def get_context_from_opensearch(
             page_metadata[hit["page_index"]] = {}
         if hit["page_id"] not in page_metadata[hit["page_index"]]:
             response = client.get(hit["page_index"], hit["page_id"])
-            page_metadata[hit["page_index"]][hit["page_id"]] = response["_source"]
+            page_metadata[hit["page_index"]][hit["page_id"]] = {
+                **response["_source"],
+                "doc_lookup_id": hit["doc_lookup_id"],
+            }
 
     doc_metadata = {}
 
@@ -47,6 +50,7 @@ def get_context_from_opensearch(
                 doc_metadata[value["doc_index"]][value["doc_id"]] = {
                     **response["_source"],
                     "id": value["doc_id"],
+                    "doc_lookup_id": value["doc_lookup_id"],
                 }
 
     sources = []
