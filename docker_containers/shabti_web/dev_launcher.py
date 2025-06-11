@@ -1,7 +1,7 @@
 import os
 from shabti_util import auth_enabled
 from shiny import run_app
-from shabti_scripts.load_dotenv import load_env
+from load_dotenv import load_env
 
 load_env()
 port = int(os.getenv("WEB_PORT", "15130"))
