@@ -153,6 +153,14 @@ export default async function* (options: FormData, installVenv = true) {
 			]);
 		else await $`docker exec -d shabti python -m add_keycloak_demo_users`;
 	}
+	yield logMessage("waiting for Ollama to come online...");
+	// while ollama is failing to fetch or returning a non 200 status code, we keep looping
+	while (
+		await fetch("http://localhost:11434/").then(
+			(res) => res.status != 200,
+			() => true,
+		)
+	) {}
 	yield logMessage(
 		"pulling language model. This can take quite a long time if you haven't downloaded the model before.",
 	);
