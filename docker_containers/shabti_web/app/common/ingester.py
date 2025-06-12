@@ -25,8 +25,10 @@ def ingester_server(
     selected_collection: reactive.Value,
 ):
     file_input_trigger = reactive.value(0)
+    url_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
-    url_values = text_list_server("url_input_list", file_input_trigger)
+    files_are_ingesting = reactive.value(False)
+    url_values = text_list_server("url_input_list", url_input_trigger)
 
     @render.ui
     def ingester_content():
@@ -39,8 +41,12 @@ def ingester_server(
         )
 
     @render.ui
-    @reactive.event(file_input_trigger, ignore_none=False, ignore_init=False)
+    @reactive.event(
+        file_input_trigger, files_are_ingesting, ignore_none=False, ignore_init=False
+    )
     def file_input():
+        if files_are_ingesting.get():
+            return ui.markdown("Currently ingesting files...")
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
     async def load_doc(stream: AsyncGenerator[DocumentIngestInfo, Any]):
@@ -58,6 +64,7 @@ def ingester_server(
                 page_progress.refresh()
         page_progress.close()
 
+    @reactive.extended_task
     async def ingest_files(files: list[dict], collection_id: str):
         print("ingest files")
         # we want to conserve the original file names
@@ -70,39 +77,47 @@ def ingester_server(
         ui.notification_show("Finished ingesting files!")
         print("finished ingesting files")
 
+    @ui.bind_task_button(button_id="ingest")
+    @reactive.extended_task
     async def ingest_urls(urls: list[str], collection_id: str):
         print("ingest URLs")
         await load_doc(client.insert_urls(collection_id, urls))
         ui.notification_show("Finished ingesting URLs!")
         print("finished ingesting URLs")
 
-    @ui.bind_task_button(button_id="ingest")
-    @reactive.extended_task
-    async def ingest(files, urls, collection_name):
-        if files and len(files):
-            await ingest_files(files, collection_name)
-        if urls and len(urls):
-            await ingest_urls(urls, collection_name)
-
     @reactive.effect
-    def ingest_effect():
-        ingest.result()
+    def ingest_urls_effect():
+        ingest_urls.result()
         with reactive.isolate():
             ingesting_done.set(ingesting_done.get() + 1)
 
     @reactive.effect
-    @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
-    def handle_click():
-        urls = list(filter(None, url_values()))
-        files = None
-        if "ingester_files" in input:
-            files = input.ingester_files()
-        if (not urls or not len(urls)) and (not files or not len(files)):
+    def ingest_files_effect():
+        ingest_files.result()
+        with reactive.isolate():
+            files_are_ingesting.set(False)
+            ingesting_done.set(ingesting_done.get() + 1)
+
+    @reactive.effect
+    @reactive.event(input.ingester_files, ignore_none=True, ignore_init=True)
+    def handle_file_upload():
+        files = input.ingester_files()
+        if not len(files):
             return
         collection_id = selected_collection.get()
         print(f"ingesting documents into collection {collection_id}")
-        del input.ingester_files
         file_input_trigger.set(file_input_trigger.get() + 1)
-        ingest(files, urls, collection_id)
+        files_are_ingesting.set(True)
+        ingest_files(files, collection_id)
+
+    @reactive.effect
+    @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
+    def handle_url_ingest_click():
+        urls = list(filter(None, url_values()))
+        if not urls or not len(urls):
+            return
+        collection_id = selected_collection.get()
+        print(f"ingesting documents into collection {collection_id}")
+        ingest_urls(urls, collection_id)
 
     return ingesting_done
