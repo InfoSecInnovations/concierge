@@ -61,12 +61,9 @@ export class BaseShabtiClient {
 		files?: FormData,
 	): Promise<ReadableStream<T>> {
 		const res = await this.makeRequest(method, url, json, files);
-		const reader = res.body?.getReader();
-		if (!reader) {
-			throw new Error("Failed to get reader from response body");
-		}
-
+		const reader = res.body.getReader();
 		const decoder = new TextDecoder();
+		let current = "";
 		const stream = new ReadableStream<T>({
 			async pull(controller) {
 				const { done, value } = await reader.read();
@@ -74,12 +71,22 @@ export class BaseShabtiClient {
 					controller.close();
 					return;
 				}
-
 				const text = decoder.decode(value, { stream: true });
-				const lines = text.split("\n").filter((line) => line.trim() !== "");
-				for (const line of lines) {
-					const json = JSON.parse(line);
-					controller.enqueue(resultFunction ? resultFunction(json) : json);
+				// it's possible we don't receive a full line in one chunk if the lines are long
+				const splits = text.split("\n");
+				if (splits.length == 1) {
+					// this means there was no newline in the whole chunk
+					current += splits[0];
+				} else if (splits.length) {
+					// there was a newline somewhere
+					// we add the first split to the currently collected text
+					const lines = [current + splits[0], ...splits.slice(1, -1)];
+					// the last split is either empty due to the newline being at the end or contains the start of a new chunk
+					current = splits[splits.length - 1];
+					for (const line of lines.filter((line) => line.trim())) {
+						const json = JSON.parse(line);
+						controller.enqueue(resultFunction ? resultFunction(json) : json);
+					}
 				}
 			},
 		});
