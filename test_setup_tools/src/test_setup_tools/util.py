@@ -4,7 +4,7 @@ import shutil
 from importlib.resources import files
 from shabti_scripts.load_dotenv import load_env
 
-cwd = os.path.abspath(os.path.join(files(), "..", "shabti_configurator"))
+cwd = os.path.abspath(os.path.join(files(), "..", "..", "..", "shabti_configurator"))
 
 
 def destroy_instance():

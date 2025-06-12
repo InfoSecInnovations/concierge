@@ -1,6 +1,6 @@
-from loaders.base_loader import ShabtiFileLoader, ShabtiDocument
-from loaders.pdf import PDFLoader
-from loaders.text import TextFileLoader
+from ..loaders.base_loader import ShabtiFileLoader, ShabtiDocument
+from ..loaders.pdf import PDFLoader
+from ..loaders.text import TextFileLoader
 
 loaders: list[ShabtiFileLoader] = [PDFLoader, TextFileLoader]
 

@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
-from app.app import app
-from app.opensearch import get_temp_file
+from ...app.app import app
+from ...app.opensearch import get_temp_file
 import os
 
 client = TestClient(app)

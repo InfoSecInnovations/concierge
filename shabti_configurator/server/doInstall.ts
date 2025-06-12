@@ -3,7 +3,7 @@ import path from "node:path";
 import KcAdminClient from "@keycloak/keycloak-admin-client";
 import { $ } from "bun";
 import * as envfile from "envfile";
-import configurePlaywright from "./configurePlaywright";
+// import configurePlaywright from "./configurePlaywright";
 import configurePreCommit from "./configurePreCommit";
 import createCertificates from "./createCertificates";
 import { keycloakExists } from "./dockerItemsExist";
@@ -136,7 +136,8 @@ export default async function* (options: FormData, installVenv = true) {
 			);
 			await createVenv();
 			await configurePreCommit();
-			await configurePlaywright();
+			// we don't currently use Playwright and it takes some time to configure, so this is disabled for now
+			// await configurePlaywright();
 			await createVenv(["docker_containers", "shabti_api"]);
 			await createVenv(["docker_containers", "shabti_web"]);
 		}

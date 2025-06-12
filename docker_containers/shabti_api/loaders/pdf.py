@@ -1,6 +1,6 @@
 from __future__ import annotations
 from langchain_community.document_loaders import PyPDFLoader
-from loaders.base_loader import ShabtiFileLoader, ShabtiDocument, get_current_time
+from .base_loader import ShabtiFileLoader, ShabtiDocument, get_current_time
 from dataclasses import dataclass
 from pathlib import Path
 

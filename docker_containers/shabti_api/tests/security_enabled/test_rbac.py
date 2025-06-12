@@ -2,9 +2,9 @@
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
-from app.authentication import get_keycloak_client, get_keycloak_admin_openid_token
-from app.authorization import UnauthorizedOperationError
-from app.document_collections import (
+from shabti_keycloak import get_keycloak_client, get_keycloak_admin_openid_token
+from ...app.authorization import UnauthorizedOperationError
+from ...app.document_collections import (
     delete_collection,
     get_documents,
     delete_document,
@@ -14,7 +14,7 @@ from keycloak import KeycloakPostError, KeycloakAuthenticationError
 import asyncio
 import secrets
 from .lib import create_collection_for_user, clean_up_collections, ingest_document
-from app.app import app
+from ...app.app import app
 from fastapi.testclient import TestClient
 import os
 import json

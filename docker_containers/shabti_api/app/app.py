@@ -5,7 +5,7 @@ from shabti_util import auth_enabled
 from . import insecure_routes
 from . import secure_routes
 import os
-from load_dotenv import load_env
+from ..load_dotenv import load_env
 from keycloak import KeycloakPostError
 import json
 from shabti_types import (

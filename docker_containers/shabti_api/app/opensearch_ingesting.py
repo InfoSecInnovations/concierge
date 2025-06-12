@@ -1,7 +1,7 @@
 from opensearchpy import helpers
 from langchain.text_splitter import SentenceTransformersTokenTextSplitter
 from .embeddings import create_embeddings
-from loaders.base_loader import ShabtiDocument, ShabtiFileLoader
+from ..loaders.base_loader import ShabtiDocument, ShabtiFileLoader
 from dataclasses import fields
 from .opensearch import get_client, delete_opensearch_document
 from shabti_types import DocumentIngestInfo

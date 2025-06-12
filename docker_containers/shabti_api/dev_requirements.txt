@@ -6,5 +6,6 @@ pipdeptree~=2.26.1
 -e ../../python_packages/shabti_util
 -e ../../python_packages/shabti_types
 -e ../../python_packages/shabti_keycloak
+-e ../../test_setup_tools
 
 -r requirements.txt

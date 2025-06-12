@@ -4,5 +4,8 @@ build
 -e python_packages/shabti_api_client
 -e python_packages/shabti_keycloak
 -e python_packages/shabti_types
+-e python_packages/isi_util
+-e test_setup_tools/
 
 -r requirements.txt
+-r docker_containers/shabti_api/requirements.txt # we need to install all the dependencies at the top level for pytest to work

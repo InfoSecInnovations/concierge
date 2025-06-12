@@ -1,8 +1,8 @@
-from app.app import app
+from ...app.app import app
 from fastapi.testclient import TestClient
 from .lib import create_collection_for_user, ingest_document
 import asyncio
-from app.authentication import get_keycloak_client
+from shabti_keycloak import get_keycloak_client
 import pytest
 from keycloak import KeycloakPostError
 

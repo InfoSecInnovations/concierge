@@ -1,5 +1,5 @@
 from fastapi.responses import StreamingResponse
-from loaders.web import WebLoader
+from ..loaders.web import WebLoader
 from .ingesting import insert_document
 
 

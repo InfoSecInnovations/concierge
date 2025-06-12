@@ -1,4 +1,4 @@
-from app.document_collections import (
+from ...app.document_collections import (
     create_collection,
     delete_collection,
     CollectionExistsError,

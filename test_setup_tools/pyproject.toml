@@ -1,0 +1,11 @@
+[project]
+name = "test-setup-tools"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+  "pytest"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from loaders.base_loader import ShabtiDocLoader, ShabtiDocument, get_current_time
+from .base_loader import ShabtiDocLoader, ShabtiDocument, get_current_time
 from dataclasses import dataclass
 from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
 from bs4 import BeautifulSoup

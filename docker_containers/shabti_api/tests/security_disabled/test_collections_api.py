@@ -1,11 +1,15 @@
 from fastapi.testclient import TestClient
-from app.app import app
+from ...app.app import app
 import os
-from app.document_collections import delete_collection, get_collections, get_documents
+from ...app.document_collections import (
+    delete_collection,
+    get_collections,
+    get_documents,
+)
 import asyncio
 from isi_util.list_util import find
-from app.ingesting import insert_document
-from app.loading import load_file
+from ...app.ingesting import insert_document
+from ...app.loading import load_file
 
 client = TestClient(app)
 
