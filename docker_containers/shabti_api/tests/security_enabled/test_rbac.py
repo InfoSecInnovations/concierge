@@ -14,8 +14,6 @@ from keycloak import KeycloakPostError, KeycloakAuthenticationError
 import asyncio
 import secrets
 from .lib import create_collection_for_user, clean_up_collections, ingest_document
-from ...app.app import app
-from fastapi.testclient import TestClient
 import os
 import json
 
@@ -23,8 +21,6 @@ import json
 # we will use the collections created in the first tests for the subsequent tests
 collection_lookup = {}
 collection_ids = []
-
-client = TestClient(app)
 
 
 @pytest.mark.parametrize(
@@ -36,7 +32,7 @@ client = TestClient(app)
         ("testprivate", "private"),
     ],
 )
-async def test_can_create_collection(user, location):
+async def test_can_create_collection(user, location, shabti_client):
     # test function behind the API call
     collection_name = f"{user}'s {location} collection"
     collection_id = await create_collection_for_user(user, location, collection_name)
@@ -47,7 +43,7 @@ async def test_can_create_collection(user, location):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     collection_name = f"{user}'s {location} API collection"
-    response = client.post(
+    response = shabti_client.post(
         "/collections",
         headers={"Authorization": f"Bearer {token['access_token']}"},
         json={"collection_name": collection_name, "location": location},
@@ -70,7 +66,7 @@ async def test_can_create_collection(user, location):
         ("testnothing", "shared"),
     ],
 )
-async def test_cannot_create_collection(user, location):
+async def test_cannot_create_collection(user, location, shabti_client):
     with pytest.raises((KeycloakPostError, KeycloakAuthenticationError)):
         # test function behind the API call
         await create_collection_for_user(
@@ -81,7 +77,7 @@ async def test_cannot_create_collection(user, location):
         keycloak_client = get_keycloak_client()
         token = keycloak_client.token(user, "test")
         collection_name = f"{user}'s {location} API collection"
-        client.post(
+        shabti_client.post(
             "/collections",
             headers={"Authorization": f"Bearer {token['access_token']}"},
             json={"collection_name": collection_name, "location": location},
@@ -99,14 +95,14 @@ async def test_cannot_create_collection(user, location):
         ("testprivate", "testprivate's private collection"),
     ],
 )
-async def test_can_read_collection(user, collection_name):
+async def test_can_read_collection(user, collection_name, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     docs = await get_documents(
         token["access_token"], collection_lookup[collection_name]
     )
     assert docs is not None
-    response = client.get(
+    response = shabti_client.get(
         f"/collections/{collection_lookup[collection_name]}/documents",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
@@ -125,14 +121,14 @@ async def test_can_read_collection(user, collection_name):
         ("testnothing", "testadmin's private collection"),
     ],
 )
-async def test_cannot_read_collection(user, collection_name):
+async def test_cannot_read_collection(user, collection_name, shabti_client):
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         keycloak_client = get_keycloak_client()
         token = keycloak_client.token(user, "test")
         await get_documents(token["access_token"], collection_lookup[collection_name])
-        client.get(
+        shabti_client.get(
             f"/collections/{collection_lookup[collection_name]}/documents",
             headers={"Authorization": f"Bearer {token['access_token']}"},
         )
@@ -142,10 +138,10 @@ filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
-def ingest_document_api(user, collection_id):
+def ingest_document_api(user, collection_id, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    response = client.post(
+    response = shabti_client.post(
         f"/collections/{collection_id}/documents/files",
         files=[("files", open(file_path, "rb"))],
         headers={"Authorization": f"Bearer {token['access_token']}"},
@@ -200,18 +196,18 @@ async def delete_document_with_user(user, collection_name):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     return await delete_document(
-        token["access_token"], collection_lookup[collection_name], "plaintext", doc_id
+        token["access_token"], collection_lookup[collection_name], doc_id
     )
 
 
-async def delete_document_api_with_user(user, collection_name):
+async def delete_document_api_with_user(user, collection_name, shabti_client):
     # create a new entry each time to avoid accidentally trying to delete the same one multiple times
     doc_id = await ingest_document(
         "testadmin", collection_lookup[collection_name]
     )  # testadmin should be able to ingest documents into any collection
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    return client.delete(
+    return shabti_client.delete(
         f"/collections/{collection_lookup[collection_name]}/documents/plaintext/{doc_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
@@ -264,14 +260,14 @@ async def delete_collection_with_user(user, owner, location):
     return await delete_collection(token["access_token"], collection_id)
 
 
-async def delete_collection_api_with_user(user, owner, location):
+async def delete_collection_api_with_user(user, owner, location, shabti_client):
     # we will create a collection each time to avoid trying to delete an already deleted one
     collection_id = await create_collection_for_user(
         owner, location, secrets.token_hex(8)
     )  # we add a unique identifier to avoid running into name collision issues
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    return client.delete(
+    return shabti_client.delete(
         f"/collections/{collection_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )

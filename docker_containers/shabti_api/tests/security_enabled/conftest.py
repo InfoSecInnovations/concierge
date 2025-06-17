@@ -3,10 +3,12 @@ from ...app.status import check_opensearch
 from ...load_dotenv import load_env
 from .lib import clean_up_collections
 import asyncio
+from ...app.app import create_app
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="session", autouse=True)
-def working_connection(security_enabled_instance):
+def shabti_client(security_enabled_instance):
     load_env()
     while True:
         try:
@@ -15,5 +17,5 @@ def working_connection(security_enabled_instance):
                 break
         except ConnectionError:
             continue
-    yield
+    yield TestClient(create_app())
     asyncio.run(clean_up_collections())

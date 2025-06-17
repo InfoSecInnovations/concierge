@@ -43,11 +43,9 @@ Ruff will attempt to fix any errors, if the checks fail but all errors are fixed
 > [!IMPORTANT]
 > The tests spin up all the Docker requirements for the configuration being tested. They run the full install process which can take quite a long time for the security enabled configuration. Please leave the tests running for quite a long time before giving up on them! 
 >
-> The security enabled test runs a local image build for the Shabti service, depending on the changes this can be a long process.
->
 > If there are changes to the required Docker dependencies, updating them may take a long time depending on your internet speed.
 
-End to end testing is in implemented, and some unit test coverage for the packages used by Shabti. To run the tests, enter the venv and simply use the `pytest` command. Green dots means all the tests passed. If you wish to stop the test run on the first failure (useful if you're trying to track down an error during testing) you can add the `-x` to the command.
+End to end testing is in the process of being implemented, and some unit test coverage for the packages used by Shabti. To run the tests, enter the venv and simply use the `pytest` command. Green dots means all the tests passed. If you wish to stop the test run on the first failure to see where errors are occurring you can add the `--show-capture=stderr -x` to the command. This is useful as failing tests can generate a lot of noise in the output without these options.
 
 We will be adding this as an automated step to PR submissions, so running the tests locally will allow you to save time getting your PR accepted.
 

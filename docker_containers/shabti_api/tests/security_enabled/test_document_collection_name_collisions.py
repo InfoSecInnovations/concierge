@@ -6,6 +6,11 @@ from .lib import create_collection_for_user, clean_up_collections
 import asyncio
 import pytest
 from shabti_types import CollectionExistsError
+from shabti_util import auth_enabled
+
+
+def test_auth_setting():
+    assert auth_enabled()
 
 
 async def test_own_private_collection_with_same_name():

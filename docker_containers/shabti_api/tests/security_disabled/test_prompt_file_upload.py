@@ -1,16 +1,12 @@
-from fastapi.testclient import TestClient
-from ...app.app import app
 from ...app.opensearch import get_temp_file
 import os
-
-client = TestClient(app)
 
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
-def test_source_file():
-    response = client.post(
+def test_source_file(shabti_client):
+    response = shabti_client.post(
         "/prompt/source_file", files=[("file", open(file_path, "rb"))]
     )
     assert response.status_code == 200

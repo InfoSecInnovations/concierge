@@ -166,6 +166,6 @@ export default async function* (options: FormData, installVenv = true) {
 		"pulling language model. This can take quite a long time if you haven't downloaded the model before.",
 	);
 	// TODO use options.get("language_model")
-	await $`docker exec -it ollama ollama pull mistral`;
+	await $`docker exec ollama ollama pull mistral`;
 	console.log("Installation done\n");
 }
