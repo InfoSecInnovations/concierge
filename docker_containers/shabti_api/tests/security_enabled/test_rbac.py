@@ -163,9 +163,9 @@ def ingest_document_api(user, collection_id, shabti_client):
         ("testprivate", "testprivate's private collection"),
     ],
 )
-async def test_can_ingest_document(user, collection_name):
+async def test_can_ingest_document(user, collection_name, shabti_client):
     assert await ingest_document(user, collection_lookup[collection_name])
-    assert ingest_document_api(user, collection_lookup[collection_name])
+    assert ingest_document_api(user, collection_lookup[collection_name], shabti_client)
 
 
 @pytest.mark.parametrize(
@@ -180,12 +180,14 @@ async def test_can_ingest_document(user, collection_name):
         ("testnothing", "testadmin's private collection"),
     ],
 )
-async def test_cannot_ingest_document(user, collection_name):
+async def test_cannot_ingest_document(user, collection_name, shabti_client):
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await ingest_document(user, collection_lookup[collection_name])
-        assert ingest_document_api(user, collection_lookup[collection_name])
+        assert ingest_document_api(
+            user, collection_lookup[collection_name], shabti_client
+        )
 
 
 async def delete_document_with_user(user, collection_name):
@@ -208,7 +210,7 @@ async def delete_document_api_with_user(user, collection_name, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     return shabti_client.delete(
-        f"/collections/{collection_lookup[collection_name]}/documents/plaintext/{doc_id}",
+        f"/collections/{collection_lookup[collection_name]}/documents/{doc_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
 
@@ -223,9 +225,9 @@ async def delete_document_api_with_user(user, collection_name, shabti_client):
         ("testprivate", "testprivate's private collection"),
     ],
 )
-async def test_can_delete_document(user, collection_name):
+async def test_can_delete_document(user, collection_name, shabti_client):
     assert await delete_document_with_user(user, collection_name)
-    response = await delete_document_api_with_user(user, collection_name)
+    response = await delete_document_api_with_user(user, collection_name, shabti_client)
     assert response.status_code == 200
     assert "document_id" in response.json()
 
@@ -242,12 +244,12 @@ async def test_can_delete_document(user, collection_name):
         ("testnothing", "testadmin's private collection"),
     ],
 )
-async def test_cannot_delete_document(user, collection_name):
+async def test_cannot_delete_document(user, collection_name, shabti_client):
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_document_with_user(user, collection_name)
-        await delete_document_api_with_user(user, collection_name)
+        await delete_document_api_with_user(user, collection_name, shabti_client)
 
 
 async def delete_collection_with_user(user, owner, location):
@@ -284,9 +286,11 @@ async def delete_collection_api_with_user(user, owner, location, shabti_client):
         ("testprivate", "testprivate", "private"),
     ],
 )
-async def test_can_delete_collection(user, owner, location):
+async def test_can_delete_collection(user, owner, location, shabti_client):
     await delete_collection_with_user(user, owner, location)
-    response = await delete_collection_api_with_user(user, owner, location)
+    response = await delete_collection_api_with_user(
+        user, owner, location, shabti_client
+    )
     assert response.status_code == 200
     assert "collection_id" in response.json()
 
@@ -303,12 +307,12 @@ async def test_can_delete_collection(user, owner, location):
         ("testnothing", "testadmin", "private"),
     ],
 )
-async def test_cannot_delete_collection(user, owner, location):
+async def test_cannot_delete_collection(user, owner, location, shabti_client):
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_collection_with_user(user, owner, location)
-        await delete_collection_api_with_user(user, owner, location)
+        await delete_collection_api_with_user(user, owner, location, shabti_client)
 
 
 async def clean_up_local_collections():
