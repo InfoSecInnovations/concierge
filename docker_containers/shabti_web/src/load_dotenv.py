@@ -9,6 +9,7 @@ def load_env():
             files(),
             "..",
             "..",
+            "..",
             "shabti_configurator",
             "docker_compose",
             ".env",

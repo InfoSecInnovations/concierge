@@ -5,7 +5,7 @@ from shabti_util import auth_enabled
 
 if auth_enabled():
     run_app(
-        app="app.app:app",
+        app="src.app.app:app",
         port=15130,
         launch_browser=False,
         host="0.0.0.0",
@@ -13,4 +13,4 @@ if auth_enabled():
         ssl_certfile="web_certs/cert.pem",
     )
 else:
-    run_app(app="app.app:app", port=15130, launch_browser=False, host="0.0.0.0")
+    run_app(app="src.app.app:app", port=15130, launch_browser=False, host="0.0.0.0")
