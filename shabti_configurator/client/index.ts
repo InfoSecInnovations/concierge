@@ -50,6 +50,7 @@ let passwordStatus: VNode = toVNode(
 	document.getElementById("password_status")!,
 );
 let formErrors: VNode = toVNode(document.getElementById("form_errors")!);
+let formSuccess: VNode = toVNode(document.getElementById("form_success")!);
 
 const patchPassword = (contents: VNodeChildren) => {
 	passwordStatus = patch(
@@ -60,6 +61,10 @@ const patchPassword = (contents: VNodeChildren) => {
 
 const patchFormErrors = (contents: VNodeChildren) => {
 	formErrors = patch(formErrors, h("div#form_errors.error", contents));
+};
+
+const patchFormSuccess = (contents: VNodeChildren) => {
+	formSuccess = patch(formSuccess, h("div#form_success.success", contents));
 };
 
 const enableSubmit = () =>
@@ -140,3 +145,5 @@ const err = params.get("err");
 if (err == "invalid-form") patchFormErrors("Form data was invalid");
 else if (err)
 	patchFormErrors([h("p", "Error occurred during installation:"), h("p", err)]);
+const success = params.get("done");
+if (success) patchFormSuccess(success);

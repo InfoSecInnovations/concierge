@@ -58,6 +58,7 @@ app.get("/", async (c) => {
 			<body>
 				<h1>Shabti Configurator</h1>
 				<div id="form_errors" class="error"></div>
+				<div id="form_success" class="success"></div>
 				<p>
 					This is a utility to install and configure Shabti AI, a tool made by{" "}
 					<a
@@ -139,11 +140,16 @@ app.get("/", async (c) => {
 app.post("/install", (c) =>
 	c.req.formData().then((data) => {
 		if (!validateInstallForm(data)) return c.redirect("/?err=invalid-form");
-		return streamHtml(c, "Installing Shabti", async (stream) => {
-			for await (const message of doInstall(data)) {
-				await stream.writeln(await (<p>{message}</p>));
-			}
-		});
+		return streamHtml(
+			c,
+			"Installing Shabti",
+			async (stream) => {
+				for await (const message of doInstall(data)) {
+					await stream.writeln(await (<p>{message}</p>));
+				}
+			},
+			"Shabti installed successfully.",
+		);
 	}),
 );
 app.post("/remove", (c) =>

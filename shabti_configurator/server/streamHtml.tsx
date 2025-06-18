@@ -6,6 +6,7 @@ export default (
 	c: Context,
 	startMessage: string,
 	func: (stream: StreamingApi) => Promise<void>,
+	endMessage?: string,
 ) => {
 	const resp = stream(
 		c,
@@ -22,6 +23,15 @@ export default (
 			);
 			await func(stream);
 			await stream.writeln("Done! returning to main page!");
+			await stream.writeln(
+				await (
+					<script
+						dangerouslySetInnerHTML={{
+							__html: `window.location="/?done=${encodeURIComponent(endMessage || "Operation completed successfully.")}";`,
+						}}
+					></script>
+				),
+			);
 		},
 		async (err, stream) => {
 			console.log(err);
