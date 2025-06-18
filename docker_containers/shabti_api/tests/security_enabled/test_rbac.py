@@ -3,8 +3,8 @@
 # Do not use this on a production instance!
 
 from shabti_keycloak import get_keycloak_client, get_keycloak_admin_openid_token
-from ...app.authorization import UnauthorizedOperationError
-from ...app.document_collections import (
+from ...src.app.authorization import UnauthorizedOperationError
+from ...src.app.document_collections import (
     delete_collection,
     get_documents,
     delete_document,

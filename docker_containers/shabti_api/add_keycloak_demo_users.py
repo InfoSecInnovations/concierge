@@ -2,7 +2,7 @@ import json
 from importlib.resources import files
 import os
 from shabti_keycloak import get_keycloak_admin_client
-from load_dotenv import load_env
+from src.load_dotenv import load_env
 
 
 def add_users():

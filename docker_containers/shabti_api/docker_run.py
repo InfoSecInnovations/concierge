@@ -1,5 +1,5 @@
 import uvicorn
-from app.app import app
+from src.app.app import app
 from shabti_util import auth_enabled
 
 if auth_enabled():

@@ -1,7 +1,7 @@
 import pytest
-from ...app.status import check_opensearch
-from ...load_dotenv import load_env
-from ...app.app import create_app
+from ...src.app.status import check_opensearch
+from ...src.load_dotenv import load_env
+from ...src.app.app import create_app
 from fastapi.testclient import TestClient
 
 

@@ -1,13 +1,13 @@
 import os
-from ...app.document_collections import (
+from ...src.app.document_collections import (
     delete_collection,
     get_collections,
     get_documents,
 )
 import asyncio
 from isi_util.list_util import find
-from ...app.ingesting import insert_document
-from ...app.loading import load_file
+from ...src.app.ingesting import insert_document
+from ...src.app.loading import load_file
 from shabti_util import auth_enabled
 
 filename = "test_doc.txt"

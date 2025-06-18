@@ -2,12 +2,12 @@ from shabti_keycloak import (
     get_keycloak_client,
     get_keycloak_admin_openid_token,
 )
-from ...app.document_collections import (
+from ...src.app.document_collections import (
     create_collection,
     delete_collection,
 )
-from ...app.ingesting import insert_document
-from ...app.loading import load_file
+from ...src.app.ingesting import insert_document
+from ...src.app.loading import load_file
 import os
 
 

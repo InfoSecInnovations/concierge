@@ -1,7 +1,7 @@
 import uvicorn
-from app.app import app
+from src.app.app import app
 from shabti_util import auth_enabled
-from load_dotenv import load_env
+from src.load_dotenv import load_env
 import os
 
 load_env()
