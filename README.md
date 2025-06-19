@@ -31,9 +31,9 @@ Refer to the documentation from NVIDIA for information on how to do this for you
 
 ## System Requirements ##
 
-It is unlikely you'll be able to run Shabti with less than 8GB RAM, at least 16GB is desirable.
+It is unlikely you'll be able to run Shabti with less than 16GB RAM.
 
-If you're using Docker Desktop you need to make sure at least 4GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 8GB RAM and haven't modified your configuration it's likely you don't need to do anything.
+If you're using Docker Desktop you need to make sure at least 8GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 16GB RAM and haven't modified your configuration it's likely you don't need to do anything.
 
 You should perform the following system configuration steps according to your Operating System: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, otherwise you may not be able to run the OpenSearch container Shabti depends on.
 
@@ -47,11 +47,13 @@ Note that the installer launches all the requirements for you, you generally won
 
 ## Usage
 
-Once you have completed the installation process, Shabti will be running on localhost:15130 or the host and port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
+Once you have completed the installation process, Shabti will be running on localhost:15130 or the host and port you selected during setup. It can take a little while for the containers to be ready after install or relaunch, especially on the first launch as the API needs to pull the embeddings model.
 
-## Configuring Authentication and Authorization
+## Using Security Features
 
-If you chose to enable login and access controls during installation, you will have to configure the Keycloak instance we have provided to set up some users with the appropriate permissions.
+Currently Shabti is using self-signed HTTPS certificates to secure connections. In the future we will add more options to use your own certificates and/or install the generated ones. For the moment you should just ignore the warnings in the web browser, in some browsers you have to expand the warning first in order to proceed.
+
+If you chose to enable security during installation, you will have to configure the Keycloak instance we have provided to set up some users with the appropriate permissions.
 
 Start by opening up https://localhost:8443 in your browser. Here you should see the Keycloak login page, input the username `admin` and the password you set during installation.
 
