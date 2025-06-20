@@ -92,6 +92,24 @@ You will now be able to use the username and password you created to log into th
 
 If you need to switch user you may need to revoke the session of the currently logged in user, which is available in the "Sessions" tab for that user, otherwise clicking the login button may just automatically log you in with the same user again.
 
+## Troubleshooting
+
+### Shabti API is down
+
+Check the Docker logs for the container called `shabti`. If you don't see a log that says "Application startup complete", keep waiting, it may still be loading the embeddings model.
+
+### Shabti Web UI is broken or blank
+
+Perform an "Empty Cache and Hard Reload" on the page. Depending on your browser you may need to open the dev tools to do this.
+
+### Blank response when using the prompter
+
+Check the Docker logs for the container called `ollama`. If you see a warning about Ollama not having enough memory allocated, you must increase the amount of RAM available to Docker.
+
+### Other issues
+
+Please create an issue [here](https://github.com/InfoSecInnovations/concierge/issues). Check the Docker logs of the containers inside the `shabti` compose stack for any errors or warnings and include those in your report. Also include any errors displayed in the Web UI or the console during the install process.
+
 ## Setup: development environment
 
 ### Dependencies
