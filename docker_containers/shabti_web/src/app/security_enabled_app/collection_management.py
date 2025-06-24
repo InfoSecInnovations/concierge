@@ -49,11 +49,11 @@ def collection_management_server(
         show_toggle = (
             "collection:shared:create" in perms and "collection:private:create" in perms
         )
-        return ui.TagList(
-            collection_create_ui("collection_create", show_toggle),
-            collection_selector_ui("collection_select"),
-            ui.output_ui("collection_view"),
-        )
+        elements = [collection_create_ui("collection_create", show_toggle)]
+        if selected_collection.get():
+            elements.append(collection_selector_ui("collection_select"))
+        elements.append(ui.output_ui("collection_view"))
+        return ui.TagList(*elements)
 
     @render.ui
     def collection_view():

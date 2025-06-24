@@ -39,11 +39,11 @@ def collection_management_server(
     def collection_management_content():
         if not api_status.get() or not opensearch_status.get():
             return ui.markdown("Requirements are not online, see sidebar!")
-        return ui.TagList(
-            collection_create_ui("collection_create"),
-            collection_selector_ui("collection_select"),
-            ui.output_ui("collection_view"),
-        )
+        elements = [collection_create_ui("collection_create")]
+        if selected_collection.get():
+            elements.append(collection_selector_ui("collection_select"))
+        elements.append(ui.output_ui("collection_view"))
+        return ui.TagList(*elements)
 
     @render.ui
     def collection_view():
