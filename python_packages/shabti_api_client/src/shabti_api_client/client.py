@@ -1,6 +1,5 @@
 import httpx
 from urllib.parse import urljoin
-from .exceptions import ShabtiRequestError
 from .codes import EXPECTED_CODES
 import json
 from shabti_types import (
@@ -38,10 +37,8 @@ class ShabtiClient(BaseShabtiClient):
             method=method, url=urljoin(self.server_url, url), json=json, files=files
         ) as response:
             if response.status_code not in EXPECTED_CODES:
-                message = await response.aread()
-                raise ShabtiRequestError(
-                    status_code=response.status_code, message=message.decode()
-                )
+                await response.aread()
+                raise_error(response)
             async for line in response.aiter_lines():
                 yield line
 

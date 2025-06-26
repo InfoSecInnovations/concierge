@@ -62,6 +62,7 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
             if response.status_code == 403:
                 raise ShabtiAuthenticationError(status_code=403)
             if response.status_code not in EXPECTED_CODES:
+                await response.aread()
                 raise_error(response)
             return response
 
