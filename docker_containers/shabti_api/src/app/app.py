@@ -13,6 +13,7 @@ from shabti_types import (
     InvalidLocationError,
     InvalidUserError,
 )
+import logging
 
 
 def create_app():
@@ -56,6 +57,8 @@ def create_app():
 
     @app.exception_handler(CollectionExistsError)
     def collection_exists_error_handler(request: Request, exc: CollectionExistsError):
+        logger = logging.getLogger("shabti")
+        logger.error(exc)
         return JSONResponse(
             content={
                 "error_type": "CollectionExistsError",
