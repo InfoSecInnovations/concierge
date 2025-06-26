@@ -106,7 +106,8 @@ async def create_collection(
         except KeycloakPostError as e:
             if e.response_code == 409:
                 raise CollectionExistsError(
-                    f"a {location} collection with the name {display_name} already exists"
+                    display_name,
+                    f"a {location} collection with the name {display_name} already exists",
                 )
             else:
                 raise e
@@ -114,7 +115,8 @@ async def create_collection(
         existing = get_collection_mapping(display_name)
         if existing:
             raise CollectionExistsError(
-                f"a collection with the name {display_name} already exists"
+                display_name,
+                f"a collection with the name {display_name} already exists",
             )
         resource_id = str(uuid4())
         # if we don't have authz configured, we write the collection name mapping to OpenSearch

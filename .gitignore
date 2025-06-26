@@ -1,5 +1,6 @@
 # config files used by Shabti
 .env
+shabti_log.json
 
 # generated certificates
 self_signed_certificates

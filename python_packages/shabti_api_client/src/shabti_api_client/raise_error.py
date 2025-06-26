@@ -8,5 +8,5 @@ def raise_error(response: Response):
     if response.status_code == 500:
         if "error_type" in body:
             if body["error_type"] == "CollectionExistsError":
-                raise CollectionExistsError(body["error_message"])
+                raise CollectionExistsError(body["collection_name"], body["message"])
     raise ShabtiRequestError(status_code=response.status_code, message=body)

@@ -24,7 +24,6 @@ handlers:
   shabti:
     formatter: shabti
     class: logging.FileHandler
-    # stream: ext://sys.stderr
     filename: "./shabti_log.json"
     mode: a
     encoding:

@@ -58,11 +58,17 @@ def create_app():
     @app.exception_handler(CollectionExistsError)
     def collection_exists_error_handler(request: Request, exc: CollectionExistsError):
         logger = logging.getLogger("shabti")
-        logger.error(exc)
+        logger.info(
+            exc.message,
+            extra={
+                "action": "INTERNAL SERVER ERROR",
+                "collection_name": exc.collection_name,
+            },
+        )
         return JSONResponse(
             content={
                 "error_type": "CollectionExistsError",
-                "error_message": exc.message,
+                **vars(exc),
             },
             status_code=500,
         )
