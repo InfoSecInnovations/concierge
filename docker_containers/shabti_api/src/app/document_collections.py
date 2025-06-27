@@ -32,6 +32,7 @@ from shabti_types import (
     InvalidLocationError,
     InvalidUserError,
 )
+from .shabti_logging import log_user_action
 
 
 async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
@@ -124,12 +125,18 @@ async def create_collection(
     await asyncify(create_collection_index, resource_id)
     print(f"created {location or ''} collection {display_name} with ID {resource_id}")
     if auth_enabled():
-        return AuthzCollectionInfo(
+        info = AuthzCollectionInfo(
             collection_name=display_name,
             collection_id=resource_id,
             location=location,
             owner=UserInfo(user_id=owner_id, username=get_username(owner_id)),
         )
+        await log_user_action(
+            token,
+            f"Create {location} collection {display_name}",
+            collection=info.model_dump(),
+        )
+        return info
     else:
         return CollectionInfo(collection_name=display_name, collection_id=resource_id)
 
