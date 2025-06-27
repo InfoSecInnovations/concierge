@@ -9,9 +9,7 @@ from ..load_dotenv import load_env
 from keycloak import KeycloakPostError
 import json
 from shabti_types import (
-    CollectionExistsError,
-    InvalidLocationError,
-    InvalidUserError,
+    ShabtiError,
 )
 import logging
 
@@ -55,39 +53,24 @@ def create_app():
     def is_online():
         return Response("Shabti API is up and running!")
 
-    @app.exception_handler(CollectionExistsError)
-    def collection_exists_error_handler(request: Request, exc: CollectionExistsError):
+    @app.exception_handler(ShabtiError)
+    def shabti_error_handler(request: Request, exc: ShabtiError):
         logger = logging.getLogger("shabti")
         logger.info(
             exc.message,
             extra={
-                "action": "INTERNAL SERVER ERROR",
-                "collection_name": exc.collection_name,
+                "action": "HTTP ERROR",
+                "error_type": exc.__class__.__name__,
+                **{key: value for key, value in vars(exc).items() if key != "message"},
             },
         )
+        # TODO: 400 series codes
         return JSONResponse(
             content={
-                "error_type": "CollectionExistsError",
+                "error_type": exc.__class__.__name__,
                 **vars(exc),
             },
-            status_code=500,
-        )
-
-    @app.exception_handler(InvalidLocationError)
-    def invalid_location_error_handler(request: Request, exc: InvalidLocationError):
-        return JSONResponse(
-            content={
-                "error_type": "InvalidLocationError",
-                "error_message": 'location must be "private" or "shared"',
-            },
-            status_code=500,
-        )
-
-    @app.exception_handler(InvalidUserError)
-    def invalid_user_error_handler(request: Request, exc: InvalidUserError):
-        return JSONResponse(
-            content={"error_type": "InvalidUserError", "error_message": exc.message},
-            status_code=500,
+            status_code=exc.status,
         )
 
     return app

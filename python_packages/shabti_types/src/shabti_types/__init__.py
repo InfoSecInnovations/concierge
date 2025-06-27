@@ -17,6 +17,7 @@ from .models import (
     WebFile as WebFile,
 )
 from .exceptions import (
+    ShabtiError as ShabtiError,
     CollectionExistsError as CollectionExistsError,
     InvalidLocationError as InvalidLocationError,
     InvalidUserError as InvalidUserError,
