@@ -64,7 +64,6 @@ def create_app():
                 **{key: value for key, value in vars(exc).items() if key != "message"},
             },
         )
-        # TODO: 400 series codes
         return JSONResponse(
             content={
                 "error_type": exc.__class__.__name__,
