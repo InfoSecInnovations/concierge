@@ -6,7 +6,7 @@ from . import insecure_routes
 from . import secure_routes
 import os
 from ..load_dotenv import load_env
-from keycloak import KeycloakPostError
+from keycloak import KeycloakPostError, KeycloakAuthenticationError
 import json
 from shabti_types import (
     ShabtiError,
@@ -40,8 +40,14 @@ def create_app():
     else:
 
         @app.exception_handler(KeycloakPostError)
+        def keycloak_post_error_handler(request: Request, exc: KeycloakPostError):
+            return JSONResponse(
+                content=json.loads(exc.response_body), status_code=exc.response_code
+            )
+
+        @app.exception_handler(KeycloakAuthenticationError)
         def keycloak_authentication_error_handler(
-            request: Request, exc: KeycloakPostError
+            request: Request, exc: KeycloakAuthenticationError
         ):
             return JSONResponse(
                 content=json.loads(exc.response_body), status_code=exc.response_code

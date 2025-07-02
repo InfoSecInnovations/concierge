@@ -19,7 +19,7 @@ from .opensearch import (
     get_collection_mapping,
     get_opensearch_documents,
     delete_opensearch_document,
-    get_collection_info,
+    get_opensearch_collection_info,
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
@@ -34,6 +34,8 @@ from shabti_types import (
     InvalidUserError,
 )
 from .shabti_logging import log_user_action, log_action
+
+type Location = Literal["private", "shared"]
 
 
 async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
@@ -69,7 +71,27 @@ async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionI
         ]
 
 
-type Location = Literal["private", "shared"]
+async def get_collection_info(collection_id) -> CollectionInfo | AuthzCollectionInfo:
+    if auth_enabled():
+        admin_client = get_keycloak_admin_client()
+        client_id = await admin_client.a_get_client_id("shabti-auth")
+        resource = await admin_client.a_get_client_authz_resource(
+            client_id=client_id, resource_id=collection_id
+        )
+        return AuthzCollectionInfo(
+            collection_name=resource["displayName"],
+            collection_id=resource["_id"],
+            location=resource["type"].replace("collection:", ""),
+            owner=UserInfo(
+                user_id=resource["attributes"]["shabti_owner"][0],
+                username=get_username(resource["attributes"]["shabti_owner"][0]),
+            ),
+        )
+    opensearch_info = get_opensearch_collection_info(collection_id)
+    return CollectionInfo(
+        collection_id=collection_id,
+        collection_name=opensearch_info["collection_name"],
+    )
 
 
 # in an unsecured instance collections don't have a location, so None is valid in that case
@@ -148,32 +170,13 @@ async def create_collection(
 
 async def delete_collection(token, collection_id):
     print(f"deleting collection with ID {collection_id}")
-    info = None
+    info = await get_collection_info(collection_id)
     if auth_enabled():
         authorized = await authorize(token, collection_id, "delete")
         if not authorized:
             raise UnauthorizedOperationError()
-        admin_client = get_keycloak_admin_client()
-        client_id = await admin_client.a_get_client_id("shabti-auth")
-        resource = await admin_client.a_get_client_authz_resource(
-            client_id=client_id, resource_id=collection_id
-        )
-        info = AuthzCollectionInfo(
-            collection_name=resource["displayName"],
-            collection_id=resource["_id"],
-            location=resource["type"].replace("collection:", ""),
-            owner=UserInfo(
-                user_id=resource["attributes"]["shabti_owner"][0],
-                username=get_username(resource["attributes"]["shabti_owner"][0]),
-            ),
-        )
         await delete_resource(collection_id)
     else:
-        opensearch_info = get_collection_info(collection_id)
-        info = CollectionInfo(
-            collection_id=collection_id,
-            collection_name=opensearch_info["collection_name"],
-        )
         await asyncify(delete_index_mapping, collection_id)
     await asyncify(delete_collection_indices, collection_id)
     print(f"deleted collection with ID {collection_id}")

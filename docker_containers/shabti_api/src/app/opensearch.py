@@ -122,7 +122,7 @@ def get_collection_mapping(collection_name: str):
     return None
 
 
-def get_collection_info(collection_id: str):
+def get_opensearch_collection_info(collection_id: str):
     client = get_client()
     if not client.indices.exists(MAPPING_INDEX_NAME):
         return None
@@ -143,6 +143,55 @@ def delete_collection_indices(collection_id: str):
         print(f"Failed to delete indices for {collection_id}")
         return False
     return True
+
+
+def add_document_metadata(collection_id, doc):
+    client = get_client()
+    # TODO: this might be counting binaries too?
+    query = {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"doc_id": doc["id"]}},
+                    {"term": {"doc_index": doc["index"]}},
+                ],
+                "must_not": {
+                    "exists": {
+                        "field": "document_vector"
+                    }  # if there's no vector field this is a page
+                },
+            }
+        }
+    }
+    doc["page_count"] = client.count(body=query, index=collection_id)["count"]
+    query = {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"doc_id": doc["id"]}},
+                    {"term": {"doc_index": doc["index"]}},
+                ],
+                "must": {
+                    "exists": {"field": "document_vector"}  # we want vectors only here
+                },
+            }
+        }
+    }
+    doc["vector_count"] = client.count(body=query, index=collection_id)["count"]
+    return doc
+
+
+def get_document(collection_id: str, doc_lookup_id: str):
+    client = get_client()
+    lookup_index = f"{collection_id}.document_lookup"
+    lookup = client.get(lookup_index, doc_lookup_id)
+    doc_index = lookup["_source"]["doc_index"]
+    doc_id = lookup["_source"]["doc_id"]
+    item = client.get(doc_index, doc_id)
+    doc = {**item["_source"], "id": item["_id"], "index": item["_index"]}
+    doc = add_document_metadata(collection_id, doc)
+    doc["doc_lookup_id"] = doc_lookup_id
+    return doc
 
 
 def get_opensearch_documents(collection_id: str):
@@ -170,39 +219,7 @@ def get_opensearch_documents(collection_id: str):
         for hit in response["hits"]["hits"]
     ]
     for doc in docs:
-        # TODO: this might be counting binaries too?
-        query = {
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"term": {"doc_id": doc["id"]}},
-                        {"term": {"doc_index": doc["index"]}},
-                    ],
-                    "must_not": {
-                        "exists": {
-                            "field": "document_vector"
-                        }  # if there's no vector field this is a page
-                    },
-                }
-            }
-        }
-        doc["page_count"] = client.count(body=query, index=collection_id)["count"]
-        query = {
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"term": {"doc_id": doc["id"]}},
-                        {"term": {"doc_index": doc["index"]}},
-                    ],
-                    "must": {
-                        "exists": {
-                            "field": "document_vector"
-                        }  # we want vectors only here
-                    },
-                }
-            }
-        }
-        doc["vector_count"] = client.count(body=query, index=collection_id)["count"]
+        add_document_metadata(collection_id, doc)
         query = {
             "size": 1,
             "query": {"bool": {"filter": [{"term": {"doc_id": doc["id"]}}]}},

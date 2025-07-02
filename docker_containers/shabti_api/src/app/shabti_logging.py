@@ -1,8 +1,15 @@
 import logging
 from shabti_keycloak import get_token_info
+import os
+
+
+def logging_enabled():
+    return os.getenv("SHABTI_LOGGING_ENABLED") == "True"
 
 
 async def log_user_action(token, message, **kwargs):
+    if not logging_enabled():
+        return
     logger = logging.getLogger("shabti")
     token_info = await get_token_info(token)
     user_id = token_info["sub"]
@@ -13,5 +20,7 @@ async def log_user_action(token, message, **kwargs):
 
 
 async def log_action(message, **kwargs):
+    if not logging_enabled():
+        return
     logger = logging.getLogger("shabti")
     logger.info(message, extra={**kwargs})

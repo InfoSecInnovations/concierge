@@ -8,9 +8,10 @@ from logging_config import logging_config
 load_env()
 port = int(os.getenv("API_PORT", "15131"))
 host = "localhost"
-log_config = (
-    logging_config() if os.getenv("SHABTI_BASE_SERVICE").endswith("logging") else None
-)
+logging_enabled = os.getenv("SHABTI_BASE_SERVICE").endswith("logging")
+log_config = logging_config() if logging_enabled else None
+if logging_enabled:
+    os.environ["SHABTI_LOGGING_ENABLED"] = "True"
 
 if auth_enabled():
     uvicorn.run(
