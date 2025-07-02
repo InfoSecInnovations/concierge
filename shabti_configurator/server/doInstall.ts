@@ -112,7 +112,7 @@ export default async function* (options: FormData, installVenv = true) {
 		envs.OPENSEARCH_SERVICE = "opensearch-node-enable-security";
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-keycloak.yml";
 	} else {
-		envs.SHABTI_SERVICE = "shabti";
+		envs.SHABTI_SERVICE = "shabti-disable-security";
 		envs.SHABTI_WEB_SERVICE = "shabti-web";
 		envs.SHABTI_SECURITY_ENABLED = "False";
 		envs.OPENSEARCH_SERVICE = "opensearch-node-disable-security";
@@ -122,6 +122,13 @@ export default async function* (options: FormData, installVenv = true) {
 	envs.SHABTI_VERSION = getVersion();
 	envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama";
 	if (securityLevel == "demo") envs.IS_SECURITY_DEMO = "True";
+	if (options.has("activity_logging")) {
+		envs.SHABTI_BASE_SERVICE = "shabti-logging";
+		envs.SHABTI_LOG_DIR = options.get("logging_location")?.toString() || "";
+	} else {
+		envs.SHABTI_BASE_SERVICE = "shabti";
+	}
+
 	await updateEnv();
 	yield logMessage(
 		"launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",

@@ -1,4 +1,11 @@
 from pythonjsonlogger.core import RESERVED_ATTRS
+from pythonjsonlogger.jsonlogger import JsonFormatter
+import time
+import os
+
+
+class UtcFormatter(JsonFormatter):
+    converter = time.gmtime
 
 
 def logging_config():
@@ -15,7 +22,7 @@ def logging_config():
                 "format": '%(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s',
             },
             "shabti": {
-                "()": "pythonjsonlogger.jsonlogger.JsonFormatter",
+                "()": UtcFormatter,
                 "format": "%(asctime)s %(levelname)s %(message)s %(name)",
                 "json_ensure_ascii": False,
                 "rename_fields": {
@@ -40,7 +47,9 @@ def logging_config():
             "shabti": {
                 "formatter": "shabti",
                 "class": "logging.FileHandler",
-                "filename": "./shabti_log.json",
+                "filename": os.path.join(os.getenv("SHABTI_LOG_DIR"), "shabti_log.json")
+                if os.getenv("SHABTI_LOG_DIR")
+                else "./shabti_log.json",
                 "mode": "a",
                 "encoding": None,
                 "delay": False,

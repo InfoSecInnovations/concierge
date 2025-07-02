@@ -46,23 +46,13 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 					<label for="activity_logging">Enable Activity Logging</label>
 				</p>
 				<p class="logging_element">
-					<label for="logging_directory">Logging Directory</label>
+					<label for="logging_location">Log Directory</label>
 					<input
 						type="text"
-						name="logging_directory"
-						id="logging_directory"
-						value={path.join(getDefaultDirectory()!, "logs")}
+						name="logging_location"
+						id="logging_location"
+						value={path.join(getDefaultDirectory()!, "shabti", "logs")}
 					></input>
-				</p>
-				<p class="logging_element">
-					<label for="logging_retention">Logging Retention</label>
-					<input
-						type="number"
-						name="logging_retention"
-						id="logging_retention"
-						value="90"
-					></input>
-					days
 				</p>
 			</fieldset>
 			<fieldset>
