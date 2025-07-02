@@ -107,7 +107,7 @@ def get_collection_mappings():
     return collections
 
 
-def get_collection_mapping(collection_name):
+def get_collection_mapping(collection_name: str):
     client = get_client()
     if not client.indices.exists(MAPPING_INDEX_NAME):
         return None
@@ -120,6 +120,17 @@ def get_collection_mapping(collection_name):
     if ids:
         return ids[0]
     return None
+
+
+def get_collection_info(collection_id: str):
+    client = get_client()
+    if not client.indices.exists(MAPPING_INDEX_NAME):
+        return None
+    item = client.get(MAPPING_INDEX_NAME, collection_id)
+    return {
+        "collection_id": item["_id"],
+        "collection_name": item["_source"]["collection_name"],
+    }
 
 
 def delete_collection_indices(collection_id: str):

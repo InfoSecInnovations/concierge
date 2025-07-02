@@ -20,7 +20,6 @@ from shabti_types import (
     TaskInfo,
     PromptConfigInfo,
     TempFileInfo,
-    CollectionInfo,
     ModelInfo,
 )
 from .insert_uploaded_files import insert_uploaded_files
@@ -79,7 +78,7 @@ async def create_collection_route(
 async def delete_collection_route(
     collection_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> CollectionInfo:
+) -> AuthzCollectionInfo:
     return await delete_collection(credentials, collection_id)
 
 

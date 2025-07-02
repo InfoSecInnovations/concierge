@@ -10,3 +10,8 @@ async def log_user_action(token, message, **kwargs):
     logger.info(
         message, extra={"user": {"name": username, "user_id": user_id}, **kwargs}
     )
+
+
+async def log_action(message, **kwargs):
+    logger = logging.getLogger("shabti")
+    logger.info(message, extra={**kwargs})

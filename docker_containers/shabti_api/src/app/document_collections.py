@@ -19,6 +19,7 @@ from .opensearch import (
     get_collection_mapping,
     get_opensearch_documents,
     delete_opensearch_document,
+    get_collection_info,
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
@@ -32,7 +33,7 @@ from shabti_types import (
     InvalidLocationError,
     InvalidUserError,
 )
-from .shabti_logging import log_user_action
+from .shabti_logging import log_user_action, log_action
 
 
 async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionInfo]:
@@ -138,21 +139,55 @@ async def create_collection(
         )
         return info
     else:
-        return CollectionInfo(collection_name=display_name, collection_id=resource_id)
+        info = CollectionInfo(collection_name=display_name, collection_id=resource_id)
+        await log_action(
+            f"Create collection {display_name}", collection=info.model_dump()
+        )
+        return info
 
 
 async def delete_collection(token, collection_id):
     print(f"deleting collection with ID {collection_id}")
+    info = None
     if auth_enabled():
         authorized = await authorize(token, collection_id, "delete")
         if not authorized:
             raise UnauthorizedOperationError()
+        admin_client = get_keycloak_admin_client()
+        client_id = await admin_client.a_get_client_id("shabti-auth")
+        resource = await admin_client.a_get_client_authz_resource(
+            client_id=client_id, resource_id=collection_id
+        )
+        info = AuthzCollectionInfo(
+            collection_name=resource["displayName"],
+            collection_id=resource["_id"],
+            location=resource["type"].replace("collection:", ""),
+            owner=UserInfo(
+                user_id=resource["attributes"]["shabti_owner"][0],
+                username=get_username(resource["attributes"]["shabti_owner"][0]),
+            ),
+        )
         await delete_resource(collection_id)
     else:
+        opensearch_info = get_collection_info(collection_id)
+        info = CollectionInfo(
+            collection_id=collection_id,
+            collection_name=opensearch_info["collection_name"],
+        )
         await asyncify(delete_index_mapping, collection_id)
     await asyncify(delete_collection_indices, collection_id)
     print(f"deleted collection with ID {collection_id}")
-    return CollectionInfo(collection_id=collection_id)
+    if auth_enabled():
+        await log_user_action(
+            token,
+            f"Delete collection with ID {collection_id}",
+            collection=info.model_dump(),
+        )
+    else:
+        await log_action(
+            f"Delete collection with ID {collection_id}", collection=info.model_dump()
+        )
+    return info
 
 
 async def get_documents(token, collection_id):
