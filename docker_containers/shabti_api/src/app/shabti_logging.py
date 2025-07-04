@@ -7,7 +7,7 @@ def logging_enabled():
     return os.getenv("SHABTI_LOGGING_ENABLED") == "True"
 
 
-async def log_user_action(token, message, **kwargs):
+async def log_user_action(token, action, message, **kwargs):
     if not logging_enabled():
         return
     logger = logging.getLogger("shabti")
@@ -15,12 +15,17 @@ async def log_user_action(token, message, **kwargs):
     user_id = token_info["sub"]
     username = token_info["name"]
     logger.info(
-        message, extra={"user": {"name": username, "user_id": user_id}, **kwargs}
+        message,
+        extra={
+            "action": action,
+            "user": {"name": username, "user_id": user_id},
+            **kwargs,
+        },
     )
 
 
-async def log_action(message, **kwargs):
+async def log_action(action, message, **kwargs):
     if not logging_enabled():
         return
     logger = logging.getLogger("shabti")
-    logger.info(message, extra={**kwargs})
+    logger.info(message, extra={"action": action, **kwargs})

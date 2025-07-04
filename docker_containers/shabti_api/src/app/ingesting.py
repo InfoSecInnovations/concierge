@@ -36,12 +36,14 @@ async def insert_document(
         if auth_enabled():
             await log_user_action(
                 token,
+                "INSERT DOCUMENT",
                 f"Ingest document with ID {x.document_id} into collection with ID {collection_id}",
                 collection=collection_info.model_dump(),
                 document=document_info.model_dump(),
             )
         else:
             await log_action(
+                "INSERT DOCUMENT",
                 f"Ingest document with ID {x.document_id} into collection with ID {collection_id}",
                 collection=collection_info.model_dump(),
                 document=document_info.model_dump(),

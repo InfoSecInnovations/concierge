@@ -156,6 +156,7 @@ async def create_collection(
         )
         await log_user_action(
             token,
+            "CREATE COLLECTION",
             f"Create {location} collection {display_name}",
             collection=info.model_dump(),
         )
@@ -163,7 +164,9 @@ async def create_collection(
     else:
         info = CollectionInfo(collection_name=display_name, collection_id=resource_id)
         await log_action(
-            f"Create collection {display_name}", collection=info.model_dump()
+            "CREATE COLLECTION",
+            f"Create collection {display_name}",
+            collection=info.model_dump(),
         )
         return info
 
@@ -183,12 +186,15 @@ async def delete_collection(token, collection_id):
     if auth_enabled():
         await log_user_action(
             token,
+            "DELETE COLLECTION",
             f"Delete collection with ID {collection_id}",
             collection=info.model_dump(),
         )
     else:
         await log_action(
-            f"Delete collection with ID {collection_id}", collection=info.model_dump()
+            "DELETE COLLECTION",
+            f"Delete collection with ID {collection_id}",
+            collection=info.model_dump(),
         )
     return info
 
