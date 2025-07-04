@@ -12,6 +12,10 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 	const securityEnabled = envs && envs.SHABTI_SECURITY_ENABLED == "True";
 	const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True";
 	const gpuEnabled = envs && envs.OLLAMA_SERVICE == "ollama-gpu";
+	const loggingEnabled = envs && envs.SHABTI_BASE_SERVICE.endsWith("logging");
+	const logDir =
+		(envs && envs.SHABTI_LOG_DIR) ||
+		path.join(getDefaultDirectory()!, "shabti", "logs");
 	const keycloakEnabled = await keycloakExists();
 	return (
 		<form action="/install" method="post" id="install_form">
@@ -42,6 +46,7 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 						type="checkbox"
 						id="activity_logging"
 						name="activity_logging"
+						checked={loggingEnabled}
 					></input>
 					<label for="activity_logging">Enable Activity Logging</label>
 				</p>
@@ -51,7 +56,7 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 						type="text"
 						name="logging_location"
 						id="logging_location"
-						value={path.join(getDefaultDirectory()!, "shabti", "logs")}
+						value={logDir}
 					></input>
 				</p>
 			</fieldset>
