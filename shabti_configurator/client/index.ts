@@ -147,3 +147,4 @@ else if (err)
 	patchFormErrors([h("p", "Error occurred during installation:"), h("p", err)]);
 const success = params.get("done");
 if (success) patchFormSuccess(success);
+window.history.replaceState(null, "", "/"); // delete the URL params after patching the page
