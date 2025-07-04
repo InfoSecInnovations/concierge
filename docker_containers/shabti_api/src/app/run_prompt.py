@@ -6,6 +6,9 @@ from .prompting import stream_response, get_context
 from .opensearch import get_temp_file
 from .load_prompter_config import load_prompter_config
 import json
+from .shabti_logging import log_action, log_user_action, logging_enabled
+from shabti_util import auth_enabled
+from .document_collections import get_collection_info
 
 
 async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingResponse:
@@ -51,9 +54,12 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
         def no_sources_response():
             yield f"{json.dumps({'response': 'No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data.'})}\n"
 
+        # TODO: log the no sources response
+
         return StreamingResponse(no_sources_response())
 
     async def stream_context_and_response():
+        response = ""
         for source in context["sources"]:
             yield f"{json.dumps({'source': source})}\n"
         async for x in stream_response(
@@ -64,5 +70,45 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
             source_file_contents=source_file_contents,
         ):
             yield x
+            if logging_enabled():
+                obj = json.loads(x)
+                if "response" in obj:
+                    response += obj["response"]
+
+        if logging_enabled():
+            prompt = {
+                "response": response,
+                "sources": context["sources"],
+                "input": prompt_info.user_input,
+                "task": prompt_info.task,
+            }
+            if prompt_info.persona:
+                prompt["persona"] = prompt_info.persona
+            if prompt_info.enhancers:
+                prompt["enhancers"] = prompt_info.enhancers
+            if prompt_info.file_id:
+                prompt["input_file"] = {
+                    "file_id": prompt_info.file_id,
+                    "contents": source_file_contents,
+                }
+            if auth_enabled():
+                await log_user_action(
+                    token,
+                    "QUERY",
+                    f"User ran a prompt on collection with ID {prompt_info.collection_id}",
+                    collection=(
+                        await get_collection_info(prompt_info.collection_id)
+                    ).model_dump(),
+                    prompt=prompt,
+                )
+            else:
+                await log_action(
+                    "QUERY",
+                    f"User ran a prompt on collection with ID {prompt_info.collection_id}",
+                    collection=(
+                        await get_collection_info(prompt_info.collection_id)
+                    ).model_dump(),
+                    prompt=prompt,
+                )
 
     return StreamingResponse(stream_context_and_response())
