@@ -20,6 +20,7 @@ from .opensearch import (
     get_opensearch_documents,
     delete_opensearch_document,
     get_opensearch_collection_info,
+    get_document,
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
@@ -33,7 +34,7 @@ from shabti_types import (
     InvalidLocationError,
     InvalidUserError,
 )
-from .shabti_logging import log_user_action, log_action
+from .shabti_logging import log_user_action, log_action, logging_enabled
 
 type Location = Literal["private", "shared"]
 
@@ -199,22 +200,32 @@ async def delete_collection(token, collection_id):
     return info
 
 
+def create_document_info(doc):
+    return DocumentInfo(
+        type=doc["type"],
+        source=doc["source"],
+        ingest_date=doc["ingest_date"],
+        vector_count=doc["vector_count"],
+        document_id=doc["doc_lookup_id"],
+        page_count=doc["page_count"],
+        media_type=doc["media_type"] if "media_type" in doc else None,
+        filename=doc["filename"] if "filename" in doc else None,
+    )
+
+
+async def get_document_info(collection_id, document_id):
+    return create_document_info(
+        await asyncify(get_document, collection_id, document_id)
+    )
+
+
 async def get_documents(token, collection_id):
     if auth_enabled():
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
     return [
-        DocumentInfo(
-            type=doc["type"],
-            source=doc["source"],
-            ingest_date=doc["ingest_date"],
-            vector_count=doc["vector_count"],
-            document_id=doc["doc_lookup_id"],
-            page_count=doc["page_count"],
-            media_type=doc["media_type"] if "media_type" in doc else None,
-            filename=doc["filename"] if "filename" in doc else None,
-        )
+        create_document_info(doc)
         for doc in await asyncify(get_opensearch_documents, collection_id)
     ]
 
@@ -224,13 +235,39 @@ async def delete_document(token, collection_id, document_id):
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
             raise UnauthorizedOperationError()
-    return DeletedDocumentInfo(
+    doc_info = None
+    if logging_enabled():
+        doc_info = await get_document_info(collection_id, document_id)
+    info = DeletedDocumentInfo(
         collection_id=collection_id,
         document_id=document_id,
         deleted_element_count=await asyncify(
             delete_opensearch_document, collection_id, document_id
         ),
     )
+    if logging_enabled():
+        if auth_enabled():
+            await log_user_action(
+                token,
+                "DELETE DOCUMENT",
+                f"Deleted document with ID {document_id} from collection with ID {collection_id}",
+                collection=(await get_collection_info(collection_id)).model_dump(),
+                document={
+                    **doc_info.model_dump(),
+                    "deleted_element_count": info.deleted_element_count,
+                },
+            )
+        else:
+            await log_action(
+                "DELETE DOCUMENT",
+                f"Deleted document with ID {document_id} from collection with ID {collection_id}",
+                collection=(await get_collection_info(collection_id)).model_dump(),
+                document={
+                    **doc_info.model_dump(),
+                    "deleted_element_count": info.deleted_element_count,
+                },
+            )
+    return info
 
 
 async def get_collection_scopes(token, collection_id):

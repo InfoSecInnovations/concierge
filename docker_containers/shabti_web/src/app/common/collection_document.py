@@ -43,7 +43,6 @@ def document_server(
     async def delete():
         return await delete_function(
             collection,
-            doc.type,
             doc.document_id,
         )
 
