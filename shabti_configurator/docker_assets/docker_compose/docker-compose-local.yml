@@ -13,6 +13,14 @@ services:
       additional_contexts: 
         python_packages: ../../python_packages
       dockerfile: Dockerfile.local
+      target: cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 networks:
   default:

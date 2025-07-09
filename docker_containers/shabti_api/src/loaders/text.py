@@ -19,7 +19,7 @@ class TextFileLoader(ShabtiFileLoader):
     @staticmethod
     def load(full_path: str, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
-        loader = TextLoader(full_path)
+        loader = TextLoader(full_path, autodetect_encoding=True)
         pages = loader.load()
         return ShabtiDocument(
             metadata=TextFileLoader.TextFileMetadata(

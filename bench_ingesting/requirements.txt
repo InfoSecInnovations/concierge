@@ -1,0 +1,6 @@
+-e ../python_packages/shabti_api_client
+
+langchain~=0.3.20
+langchain-community~=0.3.19
+sentence-transformers~=3.4.1
+chardet~=5.2.0
