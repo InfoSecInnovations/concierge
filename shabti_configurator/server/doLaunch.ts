@@ -27,9 +27,9 @@ export default async function* (
 		return;
 	}
 	const envs = envfile.parse(await Bun.file(getEnvPath()).text());
-	envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama";
+	envs.SHABTI_COMPUTE = options.has("use_gpu") ? "cuda" : "cpu";
 	yield logMessage(
-		`Launching Shabti ${envs.OLLAMA_SERVICE.endsWith("gpu") ? "with" : "without"} GPU acceleration.`,
+		`Launching Shabti ${envs.SHABTI_COMPUTE == "cuda" ? "with" : "without"} GPU acceleration.`,
 	);
 	await Bun.write(getEnvPath(), envfile.stringify(envs));
 

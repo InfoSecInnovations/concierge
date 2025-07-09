@@ -16,7 +16,7 @@ def create_instance(enable_security, launch_local):
     print("create instance")
     load_env()
     args = ["--host", "localhost", "--port", "15130"]
-    if os.getenv("OLLAMA_SERVICE", "ollama").endswith("gpu"):
+    if os.getenv("SHABTI_COMPUTE", "cpu") == "cuda":
         args.append("--use-gpu")
     args.append("--dev-mode")
     if enable_security:

@@ -11,7 +11,7 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 		(await envFile.text().then((body) => envfile.parse(body)));
 	const securityEnabled = envs && envs.SHABTI_SECURITY_ENABLED == "True";
 	const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True";
-	const gpuEnabled = envs && envs.OLLAMA_SERVICE == "ollama-gpu";
+	const gpuEnabled = envs && envs.SHABTI_COMPUTE == "cuda";
 	const loggingEnabled = envs && envs.SHABTI_BASE_SERVICE.endsWith("logging");
 	const logDir =
 		(envs && envs.SHABTI_LOG_DIR) ||

@@ -14,7 +14,7 @@ export const RelaunchForm = async (props: {
 					type="checkbox"
 					id="launch_with_gpu"
 					name="use_gpu"
-					checked={envs.OLLAMA_SERVICE == "ollama-gpu"}
+					checked={envs.SHABTI_COMPUTE == "cuda"}
 				></input>
 				<label for="launch_with_gpu">Enable GPU Acceleration</label>
 			</p>

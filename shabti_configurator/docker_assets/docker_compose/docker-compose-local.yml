@@ -7,13 +7,13 @@ services:
   shabti:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml
-      service: ${SHABTI_SERVICE:-shabti}
+      service: ${SHABTI_SERVICE:-shabti-cpu}
     build:
       context: ../../docker_containers/shabti_api
       additional_contexts: 
         python_packages: ../../python_packages
       dockerfile: Dockerfile.local
-      target: cuda
+      target: ${SHABTI_COMPUTE:-cpu}
     deploy:
       resources:
         reservations:

@@ -1,5 +1,5 @@
 services:
-  ollama:
+  ollama-cpu:
     container_name: ollama
     image: ollama/ollama:latest
     environment:
@@ -9,8 +9,8 @@ services:
     volumes:
       - ollama:/root/.ollama
     restart: unless-stopped
-  ollama-gpu:
-    extends: ollama
+  ollama-cuda:
+    extends: ollama-cpu
     deploy:
       resources:
         reservations:

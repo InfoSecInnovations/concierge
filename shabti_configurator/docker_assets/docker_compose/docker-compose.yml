@@ -8,7 +8,7 @@ services:
   ollama:
     extends:
       file: docker_compose_dependencies/docker-compose-ollama.yml
-      service: ${OLLAMA_SERVICE:-ollama}
+      service: ollama-${SHABTI_COMPUTE:-cpu}
   opensearch-node1:
     extends:
       file: docker_compose_dependencies/docker-compose-opensearch.yml
@@ -16,7 +16,7 @@ services:
   shabti:
     extends:
       file: docker_compose_dependencies/docker-compose-shabti.yml
-      service: ${SHABTI_SERVICE:-shabti}
+      service: ${SHABTI_SERVICE:-shabti-cpu}
   shabti-web:
     extends:
       file: docker_compose_dependencies/docker-compose-shabti.yml

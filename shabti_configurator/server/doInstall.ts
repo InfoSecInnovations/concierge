@@ -120,7 +120,7 @@ export default async function* (options: FormData, installVenv = true) {
 	}
 	envs.ENVIRONMENT = environment;
 	envs.SHABTI_VERSION = getVersion();
-	envs.OLLAMA_SERVICE = options.has("use_gpu") ? "ollama-gpu" : "ollama";
+	envs.SHABTI_COMPUTE = options.has("use_gpu") ? "cuda" : "cpu";
 	if (securityLevel == "demo") envs.IS_SECURITY_DEMO = "True";
 	if (options.has("activity_logging")) {
 		envs.SHABTI_BASE_SERVICE = "shabti-logging";
