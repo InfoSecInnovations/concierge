@@ -157,8 +157,5 @@ export default async (certDir: string) => {
 		createSignedCert("keycloak", ["localhost", "keycloak"]),
 		createSignedCert("shabti", ["localhost", "shabti"]),
 		createSignedCert("shabti-web", ["localhost", "shabti-web"]),
-		createSignedCert("opensearch-node1", ["localhost", "opensearch-node1"]),
-		createSignedCert("opensearch-admin"),
-		createSignedCert("opensearch-admin-client", ["opensearch-admin-client"]),
 	]);
 };

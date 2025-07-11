@@ -9,6 +9,8 @@ services:
       - cluster.initial_cluster_manager_nodes=opensearch-node1 # Nodes eligible to serve as cluster manager
       - bootstrap.memory_lock=true # Disable JVM heap memory swapping
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Set min and max JVM heap sizes to at least 50% of system RAM
+      - "DISABLE_SECURITY_PLUGIN=true"
+      - "DISABLE_INSTALL_DEMO_CONFIG=true" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
     ulimits:
       memlock:
         soft: -1 # Set memlock to unlimited (no soft or hard limit)
@@ -22,24 +24,3 @@ services:
     ports:
       - 9200:9200 # REST API
       - 9600:9600 # Performance Analyzer
-  opensearch-node-disable-security:
-    extends: opensearch-node-base
-    environment:
-      - "DISABLE_SECURITY_PLUGIN=true"
-      - "DISABLE_INSTALL_DEMO_CONFIG=true" # Prevents execution of bundled demo script which installs demo certificates and security configurations to OpenSearch
-  opensearch-node-enable-security:
-    extends: opensearch-node-base
-    environment:
-      - "DISABLE_SECURITY_PLUGIN=false"
-      - "DISABLE_INSTALL_DEMO_CONFIG=true"
-    volumes:
-      # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
-      - ${ROOT_CA:-empty}:/usr/share/opensearch/config/root-ca.pem
-      - ${OPENSEARCH_ADMIN_CERT:-empty}:/usr/share/opensearch/config/admin.pem
-      - ${OPENSEARCH_ADMIN_KEY:-empty}:/usr/share/opensearch/config/admin-key.pem
-      - ${OPENSEARCH_NODE_CERT:-empty}:/usr/share/opensearch/config/node1.pem
-      - ${OPENSEARCH_NODE_KEY:-empty}:/usr/share/opensearch/config/node1-key.pem
-      - ./opensearch_config/opensearch.yml:/usr/share/opensearch/config/opensearch.yml
-      - ./opensearch_config/opensearch-security/config.yml:/usr/share/opensearch/config/opensearch-security/config.yml
-      - ./opensearch_config/opensearch-security/roles_mapping.yml:/usr/share/opensearch/config/opensearch-security/roles_mapping.yml
-      - ./opensearch_config/opensearch-security/internal_users.yml:/usr/share/opensearch/config/opensearch-security/internal_users.yml

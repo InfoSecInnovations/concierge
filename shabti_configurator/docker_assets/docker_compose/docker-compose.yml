@@ -12,7 +12,7 @@ services:
   opensearch-node1:
     extends:
       file: docker_compose_dependencies/docker-compose-opensearch.yml
-      service: ${OPENSEARCH_SERVICE:-opensearch-node-disable-security}
+      service: opensearch-node-base
   shabti:
     extends:
       file: docker_compose_dependencies/docker-compose-shabti.yml

@@ -1,10 +1,5 @@
 import os
-from opensearchpy import OpenSearch, RequestsHttpConnection
-from shabti_util import auth_enabled
-
-
-def host():
-    return os.getenv("OPENSEARCH_HOST", "localhost")
+from opensearchpy import OpenSearch
 
 
 MAPPING_INDEX_NAME = "collection_mappings"
@@ -13,19 +8,10 @@ FILES_INDEX_NAME = "file_mappings"
 
 def get_client():
     port = 9200
-
-    if auth_enabled():
-        return OpenSearch(
-            hosts=[{"host": host(), "port": port}],
-            use_ssl=True,
-            verify_certs=True,
-            client_cert=os.getenv("OPENSEARCH_CLIENT_CERT"),
-            client_key=os.getenv("OPENSEARCH_CLIENT_KEY"),
-            ca_certs=os.getenv("ROOT_CA"),
-            connection_class=RequestsHttpConnection,
-        )
-
-    return OpenSearch(hosts=[{"host": host(), "port": port}], use_ssl=False)
+    return OpenSearch(
+        hosts=[{"host": os.getenv("OPENSEARCH_HOST", "localhost"), "port": port}],
+        use_ssl=False,
+    )
 
 
 def create_collection_index(collection_id):

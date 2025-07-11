@@ -109,13 +109,11 @@ export default async function* (options: FormData, installVenv = true) {
 			}
 			yield logMessage("got Keycloak credentials.");
 		}
-		envs.OPENSEARCH_SERVICE = "opensearch-node-enable-security";
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-keycloak.yml";
 	} else {
 		envs.SHABTI_SERVICE = "shabti-disable-security";
 		envs.SHABTI_WEB_SERVICE = "shabti-web";
 		envs.SHABTI_SECURITY_ENABLED = "False";
-		envs.OPENSEARCH_SERVICE = "opensearch-node-disable-security";
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml";
 	}
 	envs.ENVIRONMENT = environment;
