@@ -12,7 +12,8 @@
 			"dist",
 			"Lib",
 			"shabti_configurator/assets",
-			"zip_keycloak_policies"
+			"zip_keycloak_policies",
+			"shabti_log.json"
 		]
 	},
 	"formatter": {
