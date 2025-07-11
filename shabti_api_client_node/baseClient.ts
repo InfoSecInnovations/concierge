@@ -125,14 +125,16 @@ export class BaseShabtiClient {
 		return this.streamRequest(
 			"POST",
 			`collections/${collectionId}/documents/files`,
-			(json) =>
-				new DocumentIngestInfo(
+			(json) => {
+				if (json.error) throw new Error(`${json.error}: ${json.message}`);
+				return new DocumentIngestInfo(
 					json.progress,
 					json.total,
 					json.document_id,
 					json.document_type,
 					json.label,
-				),
+				);
+			},
 			undefined,
 			await this.createFormData("files", filePaths),
 		);

@@ -2,7 +2,7 @@ from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 from tqdm import tqdm
 from ..common.text_list import text_list_ui, text_list_server
 from typing import AsyncGenerator, Any
-from shabti_types import DocumentIngestInfo
+from shabti_types import DocumentIngestInfo, UnsupportedFileError
 from shabti_api_client import BaseShabtiClient
 import os
 
@@ -73,9 +73,12 @@ def ingester_server(
             named_file = os.path.join(os.path.dirname(file["datapath"]), file["name"])
             os.rename(file["datapath"], named_file)
             named_files.append(named_file)
-        await load_doc(client.insert_files(collection_id, named_files))
-        ui.notification_show("Finished ingesting files!")
-        print("finished ingesting files")
+        try:
+            await load_doc(client.insert_files(collection_id, named_files))
+            ui.notification_show("Finished ingesting files!")
+            print("finished ingesting files")
+        except UnsupportedFileError as e:
+            ui.notification_show(e.message, type="error")
 
     @ui.bind_task_button(button_id="ingest")
     @reactive.extended_task

@@ -3,6 +3,8 @@ import aiofiles
 from .ingesting import insert_document
 from .loading import load_file
 from fastapi.responses import StreamingResponse
+from shabti_types import UnsupportedFileError
+import json
 
 
 async def insert_uploaded_files(
@@ -19,11 +21,14 @@ async def insert_uploaded_files(
 
     async def response_json():
         for filename, data in paths.items():
-            doc = load_file(data["path"], filename)
-            if doc:
+            try:
+                doc = load_file(data["path"], filename)
                 async for result in insert_document(
                     token, collection_id, doc, data["binary"]
                 ):
                     yield f"{result.model_dump_json(exclude_unset=True)}\n"
+            except UnsupportedFileError as e:
+                yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': e.message, 'filename': e.filename})}\n"
+                break
 
     return StreamingResponse(response_json())

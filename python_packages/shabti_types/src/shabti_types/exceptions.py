@@ -19,3 +19,9 @@ class InvalidLocationError(ShabtiError):
 class InvalidUserError(ShabtiError):
     def __init__(self, message=""):
         super().__init__(message)
+
+
+class UnsupportedFileError(Exception):
+    def __init__(self, filename, message=""):
+        self.message = message
+        self.filename = filename

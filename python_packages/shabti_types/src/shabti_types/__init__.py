@@ -21,4 +21,5 @@ from .exceptions import (
     CollectionExistsError as CollectionExistsError,
     InvalidLocationError as InvalidLocationError,
     InvalidUserError as InvalidUserError,
+    UnsupportedFileError as UnsupportedFileError,
 )

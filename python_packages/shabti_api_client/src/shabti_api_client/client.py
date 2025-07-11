@@ -10,6 +10,7 @@ from shabti_types import (
     PromptConfigInfo,
     ModelLoadInfo,
     WebFile,
+    UnsupportedFileError,
 )
 from .base_client import BaseShabtiClient
 from .raise_error import raise_error
@@ -75,7 +76,10 @@ class ShabtiClient(BaseShabtiClient):
             f"/collections/{collection_id}/documents/files",
             files=[("files", open(file_path, "rb")) for file_path in file_paths],
         ):
-            yield DocumentIngestInfo(**json.loads(line))
+            json_obj = json.loads(line)
+            if "error" in json_obj and json_obj["error"] == "UnsupportedFileError":
+                raise UnsupportedFileError(json_obj["filename"], json_obj["message"])
+            yield DocumentIngestInfo(**json_obj)
 
     async def insert_urls(self, collection_id: str, urls: list[str]):
         async for line in self.__stream_request(
