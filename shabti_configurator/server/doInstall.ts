@@ -145,6 +145,13 @@ export default async function* (options: FormData, installVenv = true) {
 			// await configurePlaywright();
 			await createVenv(["docker_containers", "shabti_api"]);
 			await createVenv(["docker_containers", "shabti_web"]);
+			if (envs.SHABTI_COMPUTE == "cuda") {
+				yield logMessage("Installing CUDA version of pytorch");
+				await runPython(
+					"pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126",
+					["docker_containers", "shabti_api"],
+				);
+			}
 		}
 	} else {
 		await $`docker compose -f ./docker_compose/docker-compose.yml pull`;
