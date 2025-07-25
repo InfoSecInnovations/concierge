@@ -1,9 +1,10 @@
 import path from "path";
 import * as forge from "node-forge";
+import { randomInt } from "crypto";
 
 // should be a stringified non zero positive 20 bit integer with a leading 0
 const generateSerial = () =>
-	(Math.floor(Math.random() * 1048574) + 1).toString().padStart(2, "0");
+	(randomInt(1048574) + 1).toString().padStart(2, "0");
 
 export default async (certDir: string) => {
 	const rootKeys = forge.pki.rsa.generateKeyPair(4096);
