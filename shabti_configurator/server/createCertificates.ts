@@ -1,13 +1,16 @@
 import path from "path";
 import * as forge from "node-forge";
 
+// should be a stringified non zero positive 20 bit integer with a leading 0
+const generateSerial = () =>
+	(Math.floor(Math.random() * 1048574) + 1).toString().padStart(2, "0");
+
 export default async (certDir: string) => {
 	const rootKeys = forge.pki.rsa.generateKeyPair(4096);
 	const rootCert = forge.pki.createCertificate();
-
 	rootCert.publicKey = rootKeys.publicKey;
 	// serial number doesn't really matter for self signed?
-	rootCert.serialNumber = "01";
+	rootCert.serialNumber = generateSerial();
 	rootCert.validity.notBefore = new Date();
 	rootCert.validity.notAfter = new Date();
 	// CA cert is valid for 10 years
@@ -70,8 +73,7 @@ export default async (certDir: string) => {
 		const keys = forge.pki.rsa.generateKeyPair(4096);
 		const cert = forge.pki.createCertificate();
 		cert.publicKey = keys.publicKey;
-		// serial number doesn't really matter for self signed?
-		cert.serialNumber = "01";
+		cert.serialNumber = generateSerial();
 		cert.validity.notBefore = new Date();
 		cert.validity.notAfter = new Date();
 		// cert is valid for 1 year
