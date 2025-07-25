@@ -120,9 +120,11 @@ async def list_scopes(token, resource_id):
             return []
         return response[0]["scopes"]
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
-        # 401 means no authorization provided, 403 means not authorized, so we can return an empty list
-        if e.response_code == 401 or e.response_code == 403:
+        # 403 means not authorized, so we can return an empty list
+        if e.response_code == 403:
             return []
+        # if it's not a 403 we want to raise as normal and the client will deal with it as appropriate
+        raise e
 
 
 async def delete_resource(resource_id):

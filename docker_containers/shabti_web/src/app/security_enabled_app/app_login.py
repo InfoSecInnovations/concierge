@@ -1,7 +1,7 @@
 from shiny import App, ui, Inputs, Outputs, Session, reactive, render
 from shabti_keycloak import get_keycloak_client
 
-scope = "profile email openid"
+scope = "profile email openid offline_access"
 
 app_ui = ui.page_fillable(
     ui.output_ui("script_output"),

@@ -10,7 +10,7 @@ We skipped a couple of versions because we ended up working concurrently on some
 - The backend code has been moved to a REST API so you can integrate Shabti into your own stack or build your own front end if you wish. We have provided Python and Node.js client packages to provide a more streamlined experience calling the API.
 - The CLI has been revamped and now calls the REST API.
 - The base Docker image has been switched to the Python slim image which has much fewer known vulnerabilities than the full Python image and reduces the image size slightly, although we're aware that it's still quite large.
-- Logging: TODO
+- Implemented JSON logging to a file. Logging can be enabled or disabled when setting up Shabti.
 - Still a work in progress but some automated tests are now present. This will help us catch bugs more easily in the various permutations of Shabti that are possible.
 
 ## 0.4.0 - 2024-09-05
