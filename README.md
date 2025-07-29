@@ -51,46 +51,9 @@ Once you have completed the installation process, Shabti will be running on loca
 
 ## Using Security Features
 
-Currently Shabti is using self-signed HTTPS certificates to secure connections. In the future we will add more options to use your own certificates and/or install the generated ones. For the moment you should just ignore the warnings in the web browser, in some browsers you have to expand the warning first in order to proceed.
+As a cybersecurity company, security considerations are driving the development of Shabti. You can just run on a local machine without any security features if that suits your needs, but if you need an enterprise solution that can run LLM tools while having full control of the data being fed into them, Shabti's security features may well be a good fit for you! We have built our Identity and Access Management solution on top of Keycloak, which is a very flexible tool allowing you to connect to existing user accounts from the vast majority of providers. We provide an extensible Role-Based Access Control configuration so you can manage how your users are able to access the data ingested into Shabti.
 
-If you chose to enable security during installation, you will have to configure the Keycloak instance we have provided to set up some users with the appropriate permissions.
-
-Start by opening up https://localhost:8443 in your browser. Here you should see the Keycloak login page, input the username `admin` and the password you set during installation.
-
-You should refer to the [Keycloak documentation](https://www.keycloak.org/docs/latest/server_admin/index.html) to find out how to configure the type of login you wish to support. You can enable a variety of social network logins, OpenID, LDAP or just username and password.
-
-The configuration we have supplied has already created the super admin user (the one you used to connect to Keycloak above), and a realm called `shabti` with some roles the provide various levels of access to Shabti. Make sure to configure logins and users in this realm and not the master realm.
-
-The super admin user only serves to administrate the Keycloak instance, they do not have any permissions to access Shabti as a user.
-
-If using authorization, there are shared and private collections. A private collection can only be viewed by the user who created it, a shared collection can be viewed by any user with required role. In the future we will add options to switch a collection from private to shared. If you need more specific permissions you can configure those in the `shabti-auth` client using the resources that represent collections.
-
-### Roles
-
-The roles that grant access to Shabti collections can be found within the `shabti-auth` client in the `shabti` realm.
-
-- `admin` - can do everything including viewing, updating and deleting other users' private collections. This is different from the super admin user in the master realm.
-- `private_collection` - can create and manage personal collections not accessible by other users (except the admin).
-- `shared_read` - can query the shared collections, but not modify in any way.
-- `shared_read_write` - has full control of shared collections.
-
-### Creating users with roles
-
-If you want to quickly try out some of the options, you can go ahead and create some users in the Keycloak admin console and assign the above roles to them. We'd recommend using a more secure method of user registration for a production environment.
-
-Make sure to log in as the super admin account and switch the realm to "shabti" in the admin UI.
-
-Select the Users view in the menu.
-
-Click "Add user" and assign them a username, click "Create".
-
-If you're creating this user for testing purposes you can use the "Credentials" tab to set a password, and you can even toggle off "Temporary" so you won't have to change it when logging in.
-
-Go to the "Role mapping" tab, click "Assign role", make sure "Filter by clients" is selected, and locate the roles prefixed with `shabti-auth`. Assign the desired roles to your user.
-
-You will now be able to use the username and password you created to log into the web app.
-
-If you need to switch user you may need to revoke the session of the currently logged in user, which is available in the "Sessions" tab for that user, otherwise clicking the login button may just automatically log you in with the same user again.
+See the [dedicated guide](Security_and_RBAC_Features.md) about using Shabti with security enabled.
 
 ## Troubleshooting
 
