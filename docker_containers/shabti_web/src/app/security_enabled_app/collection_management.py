@@ -148,20 +148,21 @@ def collection_management_server(
             )
         )
         if len(new_collections):
-            selected_collection.set(new_collections[0]["_id"])
+            selected_collection.set(new_collections[0].collection_id)
         else:
             selected_collection.set(None)
-
-    @reactive.effect
-    @reactive.event(input.delete, ignore_init=True)
-    def on_delete():
-        delete(selected_collection.get())
 
     @reactive.extended_task
     async def get_documents_task(collection_id):
         scopes = await client.get_collection_scopes(collection_id)
         docs = await client.get_documents(collection_id)
         return (scopes, docs)
+
+    @reactive.effect
+    @reactive.event(input.delete, ignore_init=True)
+    def on_delete():
+        get_documents_task.cancel()
+        delete(selected_collection.get())
 
     @reactive.effect
     def get_documents_effect():
@@ -182,6 +183,7 @@ def collection_management_server(
     def on_collection_change():
         req(selected_collection.get())
         fetching_docs.set(True)
+        get_documents_task.cancel()
         get_documents_task(selected_collection.get())
 
     @reactive.effect
