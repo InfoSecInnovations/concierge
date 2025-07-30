@@ -26,6 +26,7 @@ app_ui = ui.page_auto(
     ui.output_ui("script_output"),
     ui.output_ui("shabti_main"),
     theme=shinyswatch.theme.pulse,
+    lang="en",
 )
 
 # we're only able to run HTTP in VSCode so we need to allow Oauthlib to use HTTP if we're in the VSCode environment

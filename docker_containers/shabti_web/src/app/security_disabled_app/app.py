@@ -16,8 +16,7 @@ from .collection_selector_server import collection_selector_server
 from .get_api_url import get_api_url
 
 app_ui = ui.page_auto(
-    ui.output_ui("shabti_main"),
-    theme=shinyswatch.theme.pulse,
+    ui.output_ui("shabti_main"), theme=shinyswatch.theme.pulse, lang="en"
 )
 
 
