@@ -54,6 +54,9 @@ def ingester_server(
         with ui.Progress(0) as p:
             p.set(0, message="ingesting...")
             async for x in stream:
+                if isinstance(x, UnsupportedFileError):
+                    ui.notification_show(x.message, type="error")
+                    continue
                 p.max = x.total
                 p.set(
                     x.progress + 1,
@@ -73,12 +76,9 @@ def ingester_server(
             named_file = os.path.join(os.path.dirname(file["datapath"]), file["name"])
             os.rename(file["datapath"], named_file)
             named_files.append(named_file)
-        try:
-            await load_doc(client.insert_files(collection_id, named_files))
-            ui.notification_show("Finished ingesting files!")
-            print("finished ingesting files")
-        except UnsupportedFileError as e:
-            ui.notification_show(e.message, type="error")
+        await load_doc(client.insert_files(collection_id, named_files))
+        ui.notification_show("Finished ingesting files!")
+        print("finished ingesting files")
 
     @ui.bind_task_button(button_id="ingest")
     @reactive.extended_task

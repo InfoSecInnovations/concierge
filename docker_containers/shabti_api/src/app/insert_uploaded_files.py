@@ -29,6 +29,5 @@ async def insert_uploaded_files(
                     yield f"{result.model_dump_json(exclude_unset=True)}\n"
             except UnsupportedFileError as e:
                 yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': e.message, 'filename': e.filename})}\n"
-                break
 
     return StreamingResponse(response_json())

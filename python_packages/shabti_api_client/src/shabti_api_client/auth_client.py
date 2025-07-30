@@ -152,7 +152,8 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
         ):
             json_obj = json.loads(line)
             if "error" in json_obj and json_obj["error"] == "UnsupportedFileError":
-                raise UnsupportedFileError(json_obj["filename"], json_obj["message"])
+                yield UnsupportedFileError(json_obj["filename"], json_obj["message"])
+                continue
             yield DocumentIngestInfo(**json_obj)
 
     async def insert_urls(self, collection_id: str, urls: list[str]):

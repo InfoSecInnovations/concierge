@@ -21,7 +21,6 @@ async def insert_document(
         yield x
     if logging_enabled():
         collection_info = await get_collection_info(collection_id)
-        # TODO: instead of making some janky version of DocumentInfo just get DocumentInfo!
         doc = get_document(collection_id, x.document_id)
         document_info = DocumentInfo(
             type=doc["type"],
