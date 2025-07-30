@@ -8,6 +8,7 @@ app_ui = ui.page_fillable(
     ui.markdown("# Shabti AI"),
     ui.div(ui.input_action_button("login_button", "Log In")),
     gap="1em",
+    lang="en",
 )
 
 
