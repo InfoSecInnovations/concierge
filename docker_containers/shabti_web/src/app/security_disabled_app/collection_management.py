@@ -129,6 +129,8 @@ def collection_management_server(
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
     def on_delete():
+        get_documents_task.cancel()
+        fetching_docs.set(True)
         delete(selected_collection.get())
 
     @reactive.extended_task
@@ -153,6 +155,7 @@ def collection_management_server(
     def on_collection_change():
         req(selected_collection.get())
         fetching_docs.set(True)
+        get_documents_task.cancel()
         get_documents_task(selected_collection.get())
 
     @reactive.effect

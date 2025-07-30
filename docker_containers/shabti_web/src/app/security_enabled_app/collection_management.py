@@ -162,6 +162,7 @@ def collection_management_server(
     @reactive.event(input.delete, ignore_init=True)
     def on_delete():
         get_documents_task.cancel()
+        fetching_docs.set(True)
         delete(selected_collection.get())
 
     @reactive.effect
