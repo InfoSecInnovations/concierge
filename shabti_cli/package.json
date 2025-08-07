@@ -1,6 +1,6 @@
 {
 	"name": "shabti_cli",
-	"version": "0.1.0-alpha",
+	"version": "0.1.0-alpha.3",
 	"module": "index.ts",
 	"type": "module",
 	"private": true,

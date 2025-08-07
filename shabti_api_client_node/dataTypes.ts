@@ -86,6 +86,16 @@ export class DocumentIngestInfo {
 	}
 }
 
+export class UnsupportedFileError {
+	message: string;
+	filename: string;
+
+	constructor(message: string, filename: string) {
+		this.message = message;
+		this.filename = filename;
+	}
+}
+
 export class PromptConfigInfo {
 	prompt?: string;
 	constructor(prompt?: string) {

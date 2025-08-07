@@ -2,11 +2,12 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import * as cliProgress from "cli-progress";
 import * as commander from "commander";
+import { UnsupportedFileError } from "shabti-api-client";
 import type { ShabtiAuthorizationClient } from "shabti-api-client";
 import type { ShabtiClient } from "shabti-api-client";
-import type {
-	DocumentIngestInfo,
-	PromptConfigInfo,
+import {
+	type DocumentIngestInfo,
+	type PromptConfigInfo,
 } from "shabti-api-client/dist/dataTypes";
 import * as dotenv from "dotenv";
 import getAuthClient from "./getAuthClient";
@@ -74,11 +75,18 @@ collection
 			),
 	);
 
-const insert = async (insertStream: ReadableStream<DocumentIngestInfo>) => {
+const insert = async (
+	insertStream: ReadableStream<DocumentIngestInfo | UnsupportedFileError>,
+) => {
 	let bar: cliProgress.SingleBar | undefined = undefined;
 	let currentLabel;
 	let currentId;
 	for await (const item of insertStream) {
+		if (item instanceof UnsupportedFileError) {
+			if (bar) bar.stop();
+			console.log(item.message);
+			continue;
+		}
 		if (currentLabel != item.label) {
 			if (bar) {
 				bar.stop();

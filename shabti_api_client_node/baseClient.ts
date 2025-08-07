@@ -8,6 +8,7 @@ import {
 	ModelLoadInfo,
 	PromptConfigInfo,
 	TaskInfo,
+	UnsupportedFileError,
 	WebFile,
 } from "./dataTypes";
 
@@ -126,7 +127,11 @@ export class BaseShabtiClient {
 			"POST",
 			`collections/${collectionId}/documents/files`,
 			(json) => {
-				if (json.error) throw new Error(`${json.error}: ${json.message}`);
+				if (json.error) {
+					if (json.error == "UnsupportedFileError")
+						return new UnsupportedFileError(json.message, json.filename);
+					throw new Error(`${json.error}: ${json.message}`);
+				}
 				return new DocumentIngestInfo(
 					json.progress,
 					json.total,
