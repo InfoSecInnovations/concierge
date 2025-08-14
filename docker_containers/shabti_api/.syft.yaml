@@ -6,3 +6,32 @@ output:
 
 source:
   name: "Shabti API"
+
+file:
+
+  metadata: 
+    # select which files should be captured by the file-metadata cataloger and included in the SBOM. 
+    # Options include:
+    #  - "all": capture all files from the search space
+    #  - "owned-by-package": capture only files owned by packages
+    #  - "none", "": do not capture any files
+    # SYFT_FILE_METADATA_SELECTION env var
+    selection: "none"
+
+    # the file digest algorithms to use when cataloging files (options: "md5", "sha1", "sha224", "sha256", "sha384", "sha512")
+    # SYFT_FILE_METADATA_DIGESTS env var
+    digests:
+    - "sha256"
+    - "sha1"
+
+  # capture the contents of select files in the SBOM
+  content:
+    # skip searching a file entirely if it is above the given size (default = 1MB; unit = bytes)
+    # SYFT_FILE_CONTENT_SKIP_FILES_ABOVE_SIZE env var
+    skip-files-above-size: 1048576
+  
+    # file globs for the cataloger to match on
+    # SYFT_FILE_CONTENT_GLOBS env var
+    globs: [
+      "docker_run.py"
+    ]

@@ -2,10 +2,10 @@
   "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
-  "serialNumber": "urn:uuid:c63f3564-9d1b-4a00-8608-16e8b9ccced1",
+  "serialNumber": "urn:uuid:71efc487-e677-4b00-b905-94af7b0f6ca8",
   "version": 1,
   "metadata": {
-    "timestamp": "2025-08-13T16:38:36+02:00",
+    "timestamp": "2025-08-14T08:16:00+02:00",
     "tools": {
       "components": [
         {
@@ -37650,7 +37650,7 @@
     {
       "ref": "pkg:pypi/anyio@4.9.0?package-id=0c6b71d887eb5ab3",
       "dependsOn": [
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f"
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4"
       ]
     },
     {
@@ -37690,7 +37690,7 @@
       "dependsOn": [
         "pkg:pypi/chardet@5.2.0?package-id=87cc5d0e9ad11d9f",
         "pkg:pypi/packageurl-python@0.17.5?package-id=ea541d3e4dc49cc2",
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f",
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4",
         "pkg:pypi/pip-requirements-parser@32.0.1?package-id=5df2b4901192c622",
         "pkg:pypi/tomli@2.0.1?package-id=a5ebf698ea65bb4e"
       ]
@@ -37716,7 +37716,7 @@
     {
       "ref": "pkg:pypi/deprecation@2.1.0?package-id=02ae996f2ac84e73",
       "dependsOn": [
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f"
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4"
       ]
     },
     {
@@ -37763,7 +37763,7 @@
     {
       "ref": "pkg:pypi/importlib-metadata@8.0.0?package-id=fcc13e3e3acd54ce",
       "dependsOn": [
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f"
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4"
       ]
     },
     {
@@ -37826,7 +37826,7 @@
       "dependsOn": [
         "pkg:pypi/httpx@0.28.1?package-id=84a7c700bb39598e",
         "pkg:pypi/orjson@3.10.18?package-id=51480bb5f77cab22",
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f",
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4",
         "pkg:pypi/pydantic@2.11.5?package-id=5d54391c0e1370da",
         "pkg:pypi/pytest@8.3.5?package-id=79412792e43c1c67",
         "pkg:pypi/requests-toolbelt@1.0.0?package-id=a5cd64812c0c740a",
@@ -37881,7 +37881,7 @@
       "ref": "pkg:pypi/pillow@11.2.1?package-id=54399ca70ed1bd36",
       "dependsOn": [
         "pkg:pypi/defusedxml@0.7.1?package-id=0a5b093694050ab3",
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f",
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4",
         "pkg:pypi/pytest@8.3.5?package-id=79412792e43c1c67",
         "pkg:pypi/typing-extensions@4.14.0?package-id=2d797df3c0582dc7"
       ]
@@ -37889,7 +37889,7 @@
     {
       "ref": "pkg:pypi/pip-requirements-parser@32.0.1?package-id=5df2b4901192c622",
       "dependsOn": [
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f",
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4",
         "pkg:pypi/pyparsing@3.2.3?package-id=34afb34c2a4a4fa9",
         "pkg:pypi/pytest@8.3.5?package-id=79412792e43c1c67"
       ]
@@ -37924,7 +37924,7 @@
       "dependsOn": [
         "pkg:pypi/colorama@0.4.6?package-id=a773b50e9833abd4",
         "pkg:pypi/iniconfig@2.1.0?package-id=b9640e45e18e5a3c",
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f",
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4",
         "pkg:pypi/requests@2.32.3?package-id=bd0a703c9d367c4b",
         "pkg:pypi/setuptools@80.9.0?package-id=5195972492cc1003"
       ]
@@ -38084,7 +38084,7 @@
     {
       "ref": "pkg:pypi/typeguard@4.3.0?package-id=66a21d3d397fa56b",
       "dependsOn": [
-        "pkg:pypi/packaging@24.2?package-id=7a16761bc8dfb69f"
+        "pkg:pypi/packaging@24.2?package-id=7a46f1ec941fc9d4"
       ]
     },
     {
