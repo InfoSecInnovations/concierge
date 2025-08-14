@@ -13,7 +13,10 @@
 			"Lib",
 			"shabti_configurator/assets",
 			"zip_keycloak_policies",
-			"shabti_log.json"
+			"shabti_log.json",
+			"syft_sbom.json",
+			"sbom-trivy.json",
+			"sbom.json"
 		]
 	},
 	"formatter": {

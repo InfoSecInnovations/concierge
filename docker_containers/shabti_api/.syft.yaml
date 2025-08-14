@@ -1,0 +1,8 @@
+format:
+  pretty: true
+
+output:
+  - "cyclonedx-json=syft_sbom.json"
+
+source:
+  name: "Shabti API"

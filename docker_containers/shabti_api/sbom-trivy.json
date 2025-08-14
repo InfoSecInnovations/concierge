@@ -1,0 +1,248 @@
+{
+	"spdxVersion": "SPDX-2.3",
+	"dataLicense": "CC0-1.0",
+	"SPDXID": "SPDXRef-DOCUMENT",
+	"name": ".",
+	"documentNamespace": "http://trivy.dev/filesystem/.-cd1d892c-880c-4af0-8920-57c38c8743ac",
+	"creationInfo": {
+		"creators": ["Organization: aquasecurity", "Tool: trivy-0.65.0"],
+		"created": "2025-08-08T15:38:41Z"
+	},
+	"packages": [
+		{
+			"name": "requirements.txt",
+			"SPDXID": "SPDXRef-Application-81de20a339858bba",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": false,
+			"primaryPackagePurpose": "APPLICATION",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "Class: lang-pkgs"
+				},
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "Type: pip"
+				}
+			]
+		},
+		{
+			"name": "isi-util",
+			"SPDXID": "SPDXRef-Package-3d7816abb94ef945",
+			"versionInfo": "0.3a1",
+			"supplier": "NOASSERTION",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": false,
+			"sourceInfo": "package found in: requirements.txt",
+			"licenseConcluded": "NOASSERTION",
+			"licenseDeclared": "NOASSERTION",
+			"externalRefs": [
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType": "purl",
+					"referenceLocator": "pkg:pypi/isi-util@0.3a1"
+				}
+			],
+			"primaryPackagePurpose": "LIBRARY",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "PkgType: pip"
+				}
+			]
+		},
+		{
+			"name": "my-test-package",
+			"SPDXID": "SPDXRef-Package-1a24ae9e58cc0917",
+			"versionInfo": "1.0",
+			"supplier": "NOASSERTION",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": true,
+			"packageVerificationCode": {
+				"packageVerificationCodeValue": "18032efae12d3ad43bf0383129765bf34f11c617"
+			},
+			"licenseConcluded": "LicenseRef-46a595249fa2fe46",
+			"licenseDeclared": "LicenseRef-46a595249fa2fe46",
+			"externalRefs": [
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType": "purl",
+					"referenceLocator": "pkg:pypi/my-test-package@1.0"
+				}
+			],
+			"primaryPackagePurpose": "LIBRARY",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "PkgType: python-pkg"
+				}
+			]
+		},
+		{
+			"name": "shabti-keycloak",
+			"SPDXID": "SPDXRef-Package-648451373b6f63d2",
+			"versionInfo": "0.1a2",
+			"supplier": "NOASSERTION",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": false,
+			"sourceInfo": "package found in: requirements.txt",
+			"licenseConcluded": "NOASSERTION",
+			"licenseDeclared": "NOASSERTION",
+			"externalRefs": [
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType": "purl",
+					"referenceLocator": "pkg:pypi/shabti-keycloak@0.1a2"
+				}
+			],
+			"primaryPackagePurpose": "LIBRARY",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "PkgType: pip"
+				}
+			]
+		},
+		{
+			"name": "shabti-types",
+			"SPDXID": "SPDXRef-Package-a251574954a3825f",
+			"versionInfo": "0.1a6",
+			"supplier": "NOASSERTION",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": false,
+			"sourceInfo": "package found in: requirements.txt",
+			"licenseConcluded": "NOASSERTION",
+			"licenseDeclared": "NOASSERTION",
+			"externalRefs": [
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType": "purl",
+					"referenceLocator": "pkg:pypi/shabti-types@0.1a6"
+				}
+			],
+			"primaryPackagePurpose": "LIBRARY",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "PkgType: pip"
+				}
+			]
+		},
+		{
+			"name": "shabti-util",
+			"SPDXID": "SPDXRef-Package-e99d68a8da2866d0",
+			"versionInfo": "0.3a2",
+			"supplier": "NOASSERTION",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": false,
+			"sourceInfo": "package found in: requirements.txt",
+			"licenseConcluded": "NOASSERTION",
+			"licenseDeclared": "NOASSERTION",
+			"externalRefs": [
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType": "purl",
+					"referenceLocator": "pkg:pypi/shabti-util@0.3a2"
+				}
+			],
+			"primaryPackagePurpose": "LIBRARY",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "PkgType: pip"
+				}
+			]
+		},
+		{
+			"name": ".",
+			"SPDXID": "SPDXRef-Filesystem-1465386cfbe4e9c7",
+			"downloadLocation": "NONE",
+			"filesAnalyzed": false,
+			"primaryPackagePurpose": "SOURCE",
+			"annotations": [
+				{
+					"annotator": "Tool: trivy-0.65.0",
+					"annotationDate": "2025-08-08T15:38:41Z",
+					"annotationType": "OTHER",
+					"comment": "SchemaVersion: 2"
+				}
+			]
+		}
+	],
+	"files": [
+		{
+			"fileName": "Lib/site-packages/pkg_resources/tests/data/my-test-package_zipped-egg/my_test_package-1.0-py3.7.egg",
+			"SPDXID": "SPDXRef-File-2012adce2efed092",
+			"checksums": [
+				{
+					"algorithm": "SHA1",
+					"checksumValue": "6d7a67c18613be4b255812111b4619de979abc28"
+				}
+			],
+			"copyrightText": ""
+		}
+	],
+	"hasExtractedLicensingInfos": [
+		{
+			"licenseId": "LicenseRef-46a595249fa2fe46",
+			"extractedText": "This component is licensed under \"UNKNOWN\"",
+			"name": "UNKNOWN"
+		}
+	],
+	"relationships": [
+		{
+			"spdxElementId": "SPDXRef-Application-81de20a339858bba",
+			"relatedSpdxElement": "SPDXRef-Package-3d7816abb94ef945",
+			"relationshipType": "CONTAINS"
+		},
+		{
+			"spdxElementId": "SPDXRef-Application-81de20a339858bba",
+			"relatedSpdxElement": "SPDXRef-Package-648451373b6f63d2",
+			"relationshipType": "CONTAINS"
+		},
+		{
+			"spdxElementId": "SPDXRef-Application-81de20a339858bba",
+			"relatedSpdxElement": "SPDXRef-Package-a251574954a3825f",
+			"relationshipType": "CONTAINS"
+		},
+		{
+			"spdxElementId": "SPDXRef-Application-81de20a339858bba",
+			"relatedSpdxElement": "SPDXRef-Package-e99d68a8da2866d0",
+			"relationshipType": "CONTAINS"
+		},
+		{
+			"spdxElementId": "SPDXRef-DOCUMENT",
+			"relatedSpdxElement": "SPDXRef-Filesystem-1465386cfbe4e9c7",
+			"relationshipType": "DESCRIBES"
+		},
+		{
+			"spdxElementId": "SPDXRef-Filesystem-1465386cfbe4e9c7",
+			"relatedSpdxElement": "SPDXRef-Application-81de20a339858bba",
+			"relationshipType": "CONTAINS"
+		},
+		{
+			"spdxElementId": "SPDXRef-Filesystem-1465386cfbe4e9c7",
+			"relatedSpdxElement": "SPDXRef-Package-1a24ae9e58cc0917",
+			"relationshipType": "CONTAINS"
+		},
+		{
+			"spdxElementId": "SPDXRef-Package-1a24ae9e58cc0917",
+			"relatedSpdxElement": "SPDXRef-File-2012adce2efed092",
+			"relationshipType": "CONTAINS"
+		}
+	]
+}
