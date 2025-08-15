@@ -1,0 +1,7 @@
+services:
+  unstructured:
+    image: downloads.unstructured.io/unstructured-io/unstructured-api:latest
+    restart: unless-stopped
+    container_name: unstructured
+    ports:
+      - "8000:8000"

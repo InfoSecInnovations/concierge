@@ -1,9 +1,10 @@
 from ..loaders.base_loader import ShabtiFileLoader, ShabtiDocument
 from ..loaders.pdf import PDFLoader
 from ..loaders.text import TextFileLoader
+from ..loaders.fallback import FallbackFileLoader
 from shabti_types import UnsupportedFileError
 
-loaders: list[ShabtiFileLoader] = [PDFLoader, TextFileLoader]
+loaders: list[ShabtiFileLoader] = [PDFLoader, TextFileLoader, FallbackFileLoader]
 
 
 def load_file(full_path, filename) -> ShabtiDocument | None:

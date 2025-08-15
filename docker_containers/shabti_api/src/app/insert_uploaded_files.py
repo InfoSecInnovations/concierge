@@ -12,6 +12,8 @@ async def insert_uploaded_files(
 ):
     paths = {}
     for file in files:
+        # TODO: if zip file, extract and add extracted files to paths object
+        # TODO: make this recursive
         async with aiofiles.tempfile.NamedTemporaryFile(
             suffix=file.filename, delete=False
         ) as fp:
