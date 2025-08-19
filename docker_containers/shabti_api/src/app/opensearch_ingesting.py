@@ -71,6 +71,7 @@ def insert(
                             "doc_id": {"type": "keyword"},
                             "data": {"type": "binary"},
                             "media_type": {"type": "keyword"},
+                            "filename": {"type": "keyword"},
                         }
                     },
                 }
@@ -82,6 +83,7 @@ def insert(
                     "doc_id": doc_id,
                     "data": binary.hex(),
                     "media_type": document.metadata.media_type or "text/plain",
+                    "filename": document.metadata.filename,
                 },
             )
 

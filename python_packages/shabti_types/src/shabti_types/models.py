@@ -89,3 +89,4 @@ class TempFileInfo(BaseModel):
 class WebFile(BaseModel):
     bytes: bytes
     media_type: str
+    content_disposition: str

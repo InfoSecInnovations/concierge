@@ -27,6 +27,7 @@ class PDFLoader(ShabtiFileLoader):
                 filename=filename or Path(full_path).name,
                 ingest_date=date_time,
                 media_type="application/pdf",
+                extension="pdf",
             ),
             pages=[
                 ShabtiDocument.ShabtiPage(

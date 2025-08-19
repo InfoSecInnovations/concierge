@@ -245,4 +245,9 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
     async def get_file(self, collection_id: str, doc_id: str):
         response = await self.__make_request("GET", f"/files/{collection_id}/{doc_id}")
         media_type = response.headers.get("content-type")
-        return WebFile(bytes=await response.aread(), media_type=media_type)
+        content_disposition = response.headers.get("content-disposition")
+        return WebFile(
+            bytes=await response.aread(),
+            media_type=media_type,
+            content_disposition=content_disposition,
+        )

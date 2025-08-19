@@ -3,15 +3,10 @@ from langchain_community.document_loaders import TextLoader
 from binaryornot.check import is_binary
 import os
 from .base_loader import ShabtiFileLoader, ShabtiDocument, get_current_time
-from dataclasses import dataclass
 from pathlib import Path
 
 
 class TextFileLoader(ShabtiFileLoader):
-    @dataclass(kw_only=True)
-    class TextFileMetadata(ShabtiFileLoader.FileMetaData):
-        extension: str
-
     @staticmethod
     def can_load(full_path: str) -> bool:
         return not is_binary(full_path)
@@ -22,7 +17,7 @@ class TextFileLoader(ShabtiFileLoader):
         loader = TextLoader(full_path, autodetect_encoding=True)
         pages = loader.load()
         return ShabtiDocument(
-            metadata=TextFileLoader.TextFileMetadata(
+            metadata=ShabtiFileLoader.FileMetaData(
                 source=full_path,
                 filename=filename or Path(full_path).name,
                 extension=os.path.splitext(full_path)[1],

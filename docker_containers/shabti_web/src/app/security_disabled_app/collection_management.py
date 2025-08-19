@@ -163,7 +163,7 @@ def collection_management_server(
         for doc in current_docs.get():
             document_server(
                 doc.element_id,
-                client.delete_collection,
+                client.delete_document,
                 selected_collection.get(),
                 doc,
                 on_delete_document,

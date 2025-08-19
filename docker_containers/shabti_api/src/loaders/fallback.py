@@ -1,6 +1,7 @@
 from .base_loader import ShabtiFileLoader, ShabtiDocument, get_current_time
 from langchain_unstructured.document_loaders import UnstructuredLoader
 from pathlib import Path
+import os
 
 
 class FallbackFileLoader(ShabtiFileLoader):
@@ -21,7 +22,11 @@ class FallbackFileLoader(ShabtiFileLoader):
                 type="file",
                 source=full_path,
                 filename=filename or Path(full_path).name,
+                extension=os.path.splitext(full_path)[1],
                 ingest_date=date_time,
+                media_type=pages[0].metadata["filetype"]
+                if len(pages) and "filetype" in pages[0].metadata
+                else None,
             ),
             pages=[
                 ShabtiDocument.ShabtiPage(

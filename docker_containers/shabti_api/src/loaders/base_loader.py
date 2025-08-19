@@ -41,6 +41,7 @@ class ShabtiFileLoader(ShabtiDocLoader):
     @dataclass(kw_only=True)
     class FileMetaData(ShabtiDocument.DocumentMetadata):
         filename: str
+        extension: str
         media_type: str | None = None
 
     @staticmethod
