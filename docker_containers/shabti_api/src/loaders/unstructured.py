@@ -4,7 +4,7 @@ from pathlib import Path
 import os
 
 
-class FallbackFileLoader(ShabtiFileLoader):
+class UnstructuredFileLoader(ShabtiFileLoader):
     @staticmethod
     def can_load(full_path: str) -> bool:
         return True
@@ -12,10 +12,7 @@ class FallbackFileLoader(ShabtiFileLoader):
     @staticmethod
     def load(full_path: str, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
-        # TODO: set URL to Docker container if running in Docker
-        loader = UnstructuredLoader(
-            file_path=full_path, url="localhost:8000", partition_via_api=True
-        )
+        loader = UnstructuredLoader(file_path=full_path, strategy="fast")
         pages = loader.load()
         return ShabtiDocument(
             metadata=ShabtiFileLoader.FileMetaData(
@@ -30,7 +27,7 @@ class FallbackFileLoader(ShabtiFileLoader):
             ),
             pages=[
                 ShabtiDocument.ShabtiPage(
-                    metadata=ShabtiDocument.ShabtiPage.PageMetadata(),
+                    metadata=ShabtiDocument.ShabtiPage.PageMetadata(),  # TODO: use page_number from metadata, there's other good stuff in the metadata too!
                     content=page.page_content,
                 )
                 for page in pages
