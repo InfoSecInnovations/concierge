@@ -7,6 +7,7 @@ services:
       - OLLAMA_HOST=ollama
       - SHABTI_SECURITY_ENABLED=False
       - SHABTI_LOGGING_ENABLED=False
+      - OMP_THREAD_LIMIT=1 # This makes OCR much faster, see https://stackoverflow.com/a/78657711 , it's unclear why this works.
     ports:
       - ${API_PORT:-15131}:15131
     volumes:

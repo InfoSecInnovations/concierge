@@ -14,7 +14,13 @@ class UnstructuredFileLoader(ShabtiFileLoader):
     def load(full_path: str, filename: str | None) -> ShabtiDocument:
         try:
             date_time = get_current_time()
-            loader = UnstructuredLoader(file_path=full_path, strategy="fast")
+            # try:
+            #     loader = UnstructuredLoader(file_path=full_path, strategy="fast")
+            #     pages = loader.load()
+            # except ValueError:
+            loader = UnstructuredLoader(
+                file_path=full_path, strategy="auto", chunking_strategy="by_title"
+            )
             pages = loader.load()
             return ShabtiDocument(
                 metadata=ShabtiFileLoader.FileMetaData(
