@@ -12,6 +12,6 @@ COPY --from=python_packages ./shabti_api_client /python_packages/shabti_api_clie
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r local_requirements.txt
 
 COPY . /
-CMD [ "python", "docker_run.py" ]
+CMD [ "python", "docker_run.py", "--development"]
 
 EXPOSE 15130

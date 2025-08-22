@@ -133,7 +133,8 @@ export default async function* (options: FormData, installVenv = true) {
 	);
 	if (environment == "development") {
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`;
-		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`;
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml build`;
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d --watch`;
 		if (installVenv) {
 			// if we're running the install for automated testing we assume the venv is already configured, so we want to skip this step
 			yield logMessage(
@@ -141,17 +142,6 @@ export default async function* (options: FormData, installVenv = true) {
 			);
 			await createVenv();
 			await configurePreCommit();
-			// we don't currently use Playwright and it takes some time to configure, so this is disabled for now
-			// await configurePlaywright();
-			await createVenv(["docker_containers", "shabti_api"]);
-			await createVenv(["docker_containers", "shabti_web"]);
-			if (envs.SHABTI_COMPUTE == "cuda") {
-				yield logMessage("Installing CUDA version of pytorch");
-				await runPython(
-					"pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126",
-					["docker_containers", "shabti_api"],
-				);
-			}
 		}
 	} else {
 		await $`docker compose -f ./docker_compose/docker-compose.yml pull`;

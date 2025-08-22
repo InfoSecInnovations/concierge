@@ -13,10 +13,50 @@ services:
     extends:
       file: ./docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node-base
-  # unstructured:
-  #   extends:
-  #     file: docker_compose_dependencies/docker-compose-unstructured.yml
-  #     service: unstructured
+  shabti:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti-cpu}
+    build:
+      context: ../../docker_containers/shabti_api
+      additional_contexts: 
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile.local
+      target: ${SHABTI_COMPUTE:-cpu}
+    develop:
+      watch:
+        - action: sync
+          path: ../../docker_containers/shabti_api
+          target: /
+          ignore:
+            - pyvenv.cfg
+            - share/
+            - \[Ss]cripts/
+            - \[Ll]ib/
+            - \[Ii]nclude/
+            - __pycache__/
+  shabti-web:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_WEB_SERVICE:-shabti-web}
+    build:
+      context: ../../docker_containers/shabti_web
+      additional_contexts: 
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile.local
+    develop:
+      watch:
+        - action: sync
+          path: ../../docker_containers/shabti_web
+          target: /
+          ignore:
+            - pyvenv.cfg
+            - share/
+            - \[Ss]cripts/
+            - \[Ll]ib/
+            - \[Ii]nclude/
+            - __pycache__/
+  
 
 volumes:
   opensearch-data1:
