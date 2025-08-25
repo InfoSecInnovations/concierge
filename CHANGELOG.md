@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0
+
+- Added Unstructured.IO document processing solution to Shabti's dependencies. This allows you to load many types of document out of the box including Microsoft Office and open document formats, but also images of text using its built-in OCR capabilities!
+- The development environment has been reworked to only support running the code within Docker. It was already tricky to support running the project on the user's local system, but the addition of Unstructured has increased the dependencies which need to be installed. On top of that there were still issues relating to the Python version available on the user's machine. Running in Docker ensures that the code runs exactly as it will in production. The development environment uses Docker Compose's watch feature to sync changes between the directory containing the code and the Docker containers.
+
 ## 0.7.0 - TBD
 
 We skipped a couple of versions because we ended up working concurrently on some features from our planned 0.5, 0.6 and 0.7 releases. We hope you enjoy this big release that brings some of the most important features to Shabti/Concierge!
