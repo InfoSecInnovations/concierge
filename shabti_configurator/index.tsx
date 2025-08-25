@@ -34,6 +34,9 @@ const { values } = parseArgs({
 const devMode = !!values["dev-mode"];
 
 const app = new Hono();
+const state: { watchProcess?: Bun.Subprocess } = {
+	watchProcess: undefined,
+};
 
 app.get("/style.css", async (c) =>
 	c.body(await file(css).text(), 201, {
@@ -93,7 +96,10 @@ app.get("/", async (c) => {
 									Bear in mind that if you just installed Shabti it can take a
 									few minutes before it's up and running.
 								</p>
-								<RelaunchForm devMode={devMode}></RelaunchForm>
+								<RelaunchForm
+									devMode={devMode}
+									localIsRunning={!!state.watchProcess}
+								></RelaunchForm>
 							</section>
 						) : null}
 						<ExistingRemover></ExistingRemover>
@@ -178,7 +184,7 @@ app.post("/remove", (c) =>
 app.post("/launch", (c) =>
 	c.req.formData().then((data) =>
 		streamHtml(c, "Launching Shabti", async (stream) => {
-			for await (const message of doLaunch(data)) {
+			for await (const message of doLaunch(data, state)) {
 				await stream.writeln(await (<p>{message}</p>));
 			}
 		}),

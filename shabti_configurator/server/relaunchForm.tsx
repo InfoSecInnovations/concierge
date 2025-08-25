@@ -3,6 +3,7 @@ import getEnvPath from "./getEnvPath";
 
 export const RelaunchForm = async (props: {
 	devMode: boolean;
+	localIsRunning: boolean;
 }) => {
 	const envs = envfile.parse(await Bun.file(getEnvPath()).text());
 	return (
@@ -17,13 +18,20 @@ export const RelaunchForm = async (props: {
 				<label for="launch_with_gpu">Enable GPU Acceleration</label>
 			</p>
 			<button type="submit">Launch Shabti</button>
-			{props.devMode && (
-				<>
-					<button type="submit" name="environment" value="local">
-						Launch Docker Configuration for Local Development
-					</button>
-				</>
-			)}
+			{props.devMode &&
+				(props.localIsRunning ? (
+					<>
+						<button type="submit" name="environment" value="stop_local">
+							Stop Docker Configuration for Local Development
+						</button>
+					</>
+				) : (
+					<>
+						<button type="submit" name="environment" value="local">
+							Launch Docker Configuration for Local Development
+						</button>
+					</>
+				))}
 		</form>
 	);
 };

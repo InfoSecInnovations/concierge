@@ -10,7 +10,6 @@ import { keycloakExists } from "./dockerItemsExist";
 import getEnvPath from "./getEnvPath";
 import getVersion from "./getVersion";
 import logMessage from "./logMessage";
-import runPython from "./runPython";
 import createVenv from "./createVenv";
 
 export default async function* (options: FormData, installVenv = true) {
@@ -134,7 +133,7 @@ export default async function* (options: FormData, installVenv = true) {
 	if (environment == "development") {
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`;
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml build`;
-		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up --watch`;
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`;
 		if (installVenv) {
 			// if we're running the install for automated testing we assume the venv is already configured, so we want to skip this step
 			yield logMessage(
@@ -149,12 +148,7 @@ export default async function* (options: FormData, installVenv = true) {
 	}
 	if (securityLevel == "demo") {
 		yield logMessage("adding demo users");
-		if (environment == "development")
-			await runPython("add_keycloak_demo_users", [
-				"docker_containers",
-				"shabti_api",
-			]);
-		else await $`docker exec -d shabti python -m add_keycloak_demo_users`;
+		await $`docker exec -d shabti python -m add_keycloak_demo_users`;
 	}
 	yield logMessage("waiting for Ollama to come online...");
 	// while ollama is failing to fetch or returning a non 200 status code, we keep looping
@@ -169,5 +163,9 @@ export default async function* (options: FormData, installVenv = true) {
 	);
 	// TODO use options.get("language_model")
 	await $`docker exec ollama ollama pull mistral`;
+	if (environment == "development") {
+		// in the development environment we stop the containers as the expectation is that they will be run in watch mode
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml stop`;
+	}
 	console.log("Installation done\n");
 }
