@@ -17,6 +17,8 @@ services:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml
       service: ${SHABTI_SERVICE:-shabti-cpu}
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
     build:
       context: ../../docker_containers/shabti_api
       additional_contexts: 
@@ -27,18 +29,13 @@ services:
       watch:
         - action: sync
           path: ../../docker_containers/shabti_api
-          target: /
-          ignore:
-            - pyvenv.cfg
-            - share/
-            - \[Ss]cripts/
-            - \[Ll]ib/
-            - \[Ii]nclude/
-            - __pycache__/
+          target: /shabti
   shabti-web:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml
       service: ${SHABTI_WEB_SERVICE:-shabti-web}
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
     build:
       context: ../../docker_containers/shabti_web
       additional_contexts: 
@@ -48,14 +45,7 @@ services:
       watch:
         - action: sync
           path: ../../docker_containers/shabti_web
-          target: /
-          ignore:
-            - pyvenv.cfg
-            - share/
-            - \[Ss]cripts/
-            - \[Ll]ib/
-            - \[Ii]nclude/
-            - __pycache__/
+          target: /shabti_web
   
 
 volumes:

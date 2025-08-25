@@ -8,8 +8,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 COPY requirements.txt /
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r requirements.txt
 
-COPY . /
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/
+COPY . /shabti/
+WORKDIR /shabti/
 CMD [ "python", "docker_run.py" ]
 
 EXPOSE 15130

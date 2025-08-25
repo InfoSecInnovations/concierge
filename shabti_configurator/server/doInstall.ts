@@ -134,7 +134,7 @@ export default async function* (options: FormData, installVenv = true) {
 	if (environment == "development") {
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`;
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml build`;
-		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d --watch`;
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up --watch`;
 		if (installVenv) {
 			// if we're running the install for automated testing we assume the venv is already configured, so we want to skip this step
 			yield logMessage(

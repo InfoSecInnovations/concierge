@@ -15,7 +15,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN --mount=type=cache,target=/root/.cache/pip pip install -r local_requirements.txt
 EXPOSE 15130
 ENV PYTHONUNBUFFERED=1
-COPY . /
+ENV PYTHONPATH=/
+COPY . /shabti/
+WORKDIR /shabti/
 CMD [ "python", "docker_run.py", "--development" ]
 
 FROM cpu AS cuda

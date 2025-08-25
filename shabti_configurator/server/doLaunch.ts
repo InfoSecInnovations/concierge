@@ -20,7 +20,7 @@ export default async function* (options: FormData) {
 		yield logMessage(
 			"Launching Docker Compose configuration with local code...",
 		);
-		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d --watch`;
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up --watch`;
 	} else {
 		yield logMessage("Launching Shabti Docker Compose configuration...");
 		await $`docker compose -f ./docker_compose/docker-compose.yml up -d`;
