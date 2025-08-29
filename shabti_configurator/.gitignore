@@ -1,7 +1,3 @@
-# Docker compose files unzipped by running in dev mode
-
-/docker_compose/
-
 # Self-signed certificates generated during install
 
 self_signed_certificates/

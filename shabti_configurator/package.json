@@ -24,10 +24,9 @@
 		"readline-sync": "^1.4.10"
 	},
 	"scripts": {
-		"dev_server": "bun run --watch index.tsx",
 		"dev_client": "bun build ./client/index.ts --outfile ./assets/index.js --watch",
-		"dev_install": "bun run build_zip && bun run build_client && bun run --watch index.tsx --dev-mode",
-		"build_zip": "bun run ./docker_assets/zipDockerCompose.ts",
+		"dev_install": "bun run build_client && bun run --watch index.tsx --dev-mode",
+		"build_zip": "bun run ./zipDockerCompose.ts",
 		"build_client": "bun build ./client/index.ts --outfile ./assets/index.js --minify",
 		"build_win": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-windows-x64 --outfile dist/windows/shabti",
 		"build_linux": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-linux-x64 --outfile dist/linux/shabti",

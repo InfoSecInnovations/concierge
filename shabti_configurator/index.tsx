@@ -194,11 +194,13 @@ app.post("/launch", (c) =>
 console.log("Shabti Configurator");
 console.log(`${getVersion()}\n`);
 
-// we need the compose files to be available outside of the executable bundle so the shell can use them
-const buf = await file(dockerComposeZip).arrayBuffer();
-const zip = new AdmZip(Buffer.from(buf));
-zip.extractAllTo(".", true);
-console.log("Extracted docker compose files.\n");
+if (!devMode) {
+	// we need the compose files to be available outside of the executable bundle so the shell can use them
+	const buf = await file(dockerComposeZip).arrayBuffer();
+	const zip = new AdmZip(Buffer.from(buf));
+	zip.extractAllTo(".", true);
+	console.log("Extracted docker compose files.\n");
+}
 
 Bun.serve({ ...app, idleTimeout: 0 });
 console.log("visit http://localhost:3000 to install or manage Shabti");
