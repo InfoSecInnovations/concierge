@@ -18,7 +18,7 @@ ENV UV_LINK_MODE=copy
 RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project
 COPY . /shabti/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
-CMD [ "uv", "docker_run.py", "--development" ]
+CMD [ "uv", "run", "docker_run.py", "--development" ]
 
 FROM cpu AS cuda
 RUN --mount=type=cache,target=/root/.cache/uv uv add torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126
