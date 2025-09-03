@@ -1,11 +1,8 @@
 import { parseArgs } from "node:util";
 import AdmZip from "adm-zip";
-import { type Subprocess, file } from "bun";
+import { file } from "bun";
 import { $ } from "bun";
 import { Hono } from "hono";
-import dockerComposeZip from "./assets/docker_compose.zip" with {
-	type: "file",
-};
 import js from "./assets/index.js" with { type: "file" };
 import css from "./assets/style.css" with { type: "file" };
 import shabtiIsConfigured from "./server/shabtiIsConfigured";
@@ -195,6 +192,9 @@ console.log("Shabti Configurator");
 console.log(`${getVersion()}\n`);
 
 if (!devMode) {
+	const dockerComposeZip = await import("./assets/docker_compose.zip", {
+		with: { type: "file" },
+	});
 	// we need the compose files to be available outside of the executable bundle so the shell can use them
 	const buf = await file(dockerComposeZip).arrayBuffer();
 	const zip = new AdmZip(Buffer.from(buf));

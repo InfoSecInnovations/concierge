@@ -28,6 +28,7 @@ services:
     develop:
       watch:
         - action: sync
+          x-initialSync: true
           path: ../../docker_containers/shabti_api
           target: /shabti
   shabti-web:
@@ -44,6 +45,7 @@ services:
     develop:
       watch:
         - action: sync
+          x-initialSync: true
           path: ../../docker_containers/shabti_web
           target: /shabti_web
   
