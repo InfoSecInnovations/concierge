@@ -21,6 +21,6 @@ RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
 CMD [ "uv", "run", "docker_run.py", "--development" ]
 
 FROM cpu AS cuda
-RUN --mount=type=cache,target=/root/.cache/uv uv add torch==2.7.1 torchvision==0.22.1 torchaudio==2.7.1 --index-url https://download.pytorch.org/whl/cu126
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --extra cu126
 
 
