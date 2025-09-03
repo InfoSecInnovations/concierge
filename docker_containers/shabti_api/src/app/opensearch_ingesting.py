@@ -37,7 +37,7 @@ def insert(
     entries = []
 
     doc_index_name = f"{collection_id}.{document.metadata.type}"
-    if not client.indices.exists(doc_index_name):
+    if not client.indices.exists(index=doc_index_name):
         index_body = {
             "aliases": {collection_id: {}},
             "mappings": {
@@ -47,11 +47,11 @@ def insert(
                 }
             },
         }
-        client.indices.create(doc_index_name, body=index_body)
-    doc_id = client.index(doc_index_name, vars(document.metadata))["_id"]
+        client.indices.create(index=doc_index_name, body=index_body)
+    doc_id = client.index(index=doc_index_name, body=vars(document.metadata))["_id"]
     doc_lookup_id = client.index(
-        f"{collection_id}.document_lookup",
-        {"doc_id": doc_id, "doc_index": doc_index_name},
+        index=f"{collection_id}.document_lookup",
+        body={"doc_id": doc_id, "doc_index": doc_index_name},
     )["_id"]
 
     total = len(document.pages)
@@ -62,7 +62,7 @@ def insert(
     try:
         if binary:
             binary_index_name = f"{collection_id}.binary"
-            if not client.indices.exists(binary_index_name):
+            if not client.indices.exists(index=binary_index_name):
                 index_body = {
                     "aliases": {collection_id: {}},
                     "mappings": {
@@ -75,10 +75,10 @@ def insert(
                         }
                     },
                 }
-                client.indices.create(binary_index_name, index_body)
+                client.indices.create(index=binary_index_name, body=index_body)
             client.index(
-                binary_index_name,
-                {
+                index=binary_index_name,
+                body={
                     "doc_index": doc_index_name,
                     "doc_id": doc_id,
                     "data": binary.hex(),
@@ -89,7 +89,7 @@ def insert(
 
         page = document.pages[0]
         page_index_name = f"{doc_index_name}.pages"
-        if not client.indices.exists(page_index_name):
+        if not client.indices.exists(index=page_index_name):
             index_body = {
                 "aliases": {collection_id: {}},
                 "mappings": {
@@ -103,12 +103,12 @@ def insert(
                     }
                 },
             }
-            client.indices.create(page_index_name, body=index_body)
+            client.indices.create(index=page_index_name, body=index_body)
 
         for index, page in enumerate(document.pages):
             page_id = client.index(
-                page_index_name,
-                {
+                index=page_index_name,
+                body={
                     "doc_index": doc_index_name,
                     "doc_id": doc_id,
                     **vars(page.metadata),

@@ -40,7 +40,7 @@ def create_collection_index(collection_id):
             }
         },
     }
-    client.indices.create(index_name, body=index_body)
+    client.indices.create(index=index_name, body=index_body)
     document_ids_index = f"{collection_id}.document_lookup"
     document_ids_body = {
         "aliases": {collection_id: {}},
@@ -51,18 +51,18 @@ def create_collection_index(collection_id):
             }
         },
     }
-    client.indices.create(document_ids_index, body=document_ids_body)
+    client.indices.create(index=document_ids_index, body=document_ids_body)
 
 
 def create_index_mapping(collection_id, collection_name):
     client = get_client()
-    if not client.indices.exists(MAPPING_INDEX_NAME):
+    if not client.indices.exists(index=MAPPING_INDEX_NAME):
         index_body = {
             "mappings": {"properties": {"collection_name": {"type": "keyword"}}}
         }
-        client.indices.create(MAPPING_INDEX_NAME, body=index_body)
+        client.indices.create(index=MAPPING_INDEX_NAME, body=index_body)
     client.index(
-        MAPPING_INDEX_NAME,
+        index=MAPPING_INDEX_NAME,
         body={"collection_name": collection_name},
         id=collection_id,
         refresh=True,
@@ -71,12 +71,12 @@ def create_index_mapping(collection_id, collection_name):
 
 def delete_index_mapping(collection_id):
     client = get_client()
-    client.delete(MAPPING_INDEX_NAME, id=collection_id, refresh=True)
+    client.delete(index=MAPPING_INDEX_NAME, id=collection_id, refresh=True)
 
 
 def get_collection_mappings():
     client = get_client()
-    if not client.indices.exists(MAPPING_INDEX_NAME):
+    if not client.indices.exists(index=MAPPING_INDEX_NAME):
         return []
     query = {
         "size": 10000,  # this is the maximum allowed value
@@ -95,7 +95,7 @@ def get_collection_mappings():
 
 def get_collection_mapping(collection_name: str):
     client = get_client()
-    if not client.indices.exists(MAPPING_INDEX_NAME):
+    if not client.indices.exists(index=MAPPING_INDEX_NAME):
         return None
     query = {
         "size": 1,
@@ -110,9 +110,9 @@ def get_collection_mapping(collection_name: str):
 
 def get_opensearch_collection_info(collection_id: str):
     client = get_client()
-    if not client.indices.exists(MAPPING_INDEX_NAME):
+    if not client.indices.exists(index=MAPPING_INDEX_NAME):
         return None
-    item = client.get(MAPPING_INDEX_NAME, collection_id)
+    item = client.get(index=MAPPING_INDEX_NAME, id=collection_id)
     return {
         "collection_id": item["_id"],
         "collection_name": item["_source"]["collection_name"],
@@ -122,7 +122,7 @@ def get_opensearch_collection_info(collection_id: str):
 def delete_collection_indices(collection_id: str):
     client = get_client()
     # get all indices in alias
-    indices = client.indices.resolve_index(collection_id)["aliases"][0]["indices"]
+    indices = client.indices.resolve_index(name=collection_id)["aliases"][0]["indices"]
     # deleting all indices also removes the alias
     response = client.indices.delete(index=",".join(indices))
     if not response["acknowledged"]:
@@ -170,10 +170,10 @@ def add_document_metadata(collection_id, doc):
 def get_document(collection_id: str, doc_lookup_id: str):
     client = get_client()
     lookup_index = f"{collection_id}.document_lookup"
-    lookup = client.get(lookup_index, doc_lookup_id)
+    lookup = client.get(index=lookup_index, id=doc_lookup_id)
     doc_index = lookup["_source"]["doc_index"]
     doc_id = lookup["_source"]["doc_id"]
-    item = client.get(doc_index, doc_id)
+    item = client.get(index=doc_index, id=doc_id)
     doc = {**item["_source"], "id": item["_id"], "index": item["_index"]}
     doc = add_document_metadata(collection_id, doc)
     doc["doc_lookup_id"] = doc_lookup_id
@@ -183,9 +183,9 @@ def get_document(collection_id: str, doc_lookup_id: str):
 def get_opensearch_documents(collection_id: str):
     client = get_client()
     # get all indices in alias
-    indices = client.indices.resolve_index(collection_id)["aliases"][0]["indices"]
+    indices = client.indices.resolve_index(name=collection_id)["aliases"][0]["indices"]
     # locate top level indices in collection alias
-    mappings = client.indices.get_mapping(",".join(indices))
+    mappings = client.indices.get_mapping(index=",".join(indices))
     top_level = [
         index
         for index in indices
@@ -220,7 +220,7 @@ def get_opensearch_documents(collection_id: str):
 def delete_opensearch_document(collection_id: str, doc_lookup_id: str):
     client = get_client()
     lookup_index = f"{collection_id}.document_lookup"
-    lookup = client.get(lookup_index, doc_lookup_id)
+    lookup = client.get(index=lookup_index, id=doc_lookup_id)
     doc_index = lookup["_source"]["doc_index"]
     doc_id = lookup["_source"]["doc_id"]
     query = {
@@ -235,17 +235,17 @@ def delete_opensearch_document(collection_id: str, doc_lookup_id: str):
     }
     response = client.delete_by_query(body=query, index=collection_id)
     deleted_count = response["deleted"]
-    client.delete(doc_index, doc_id, refresh=True)
+    client.delete(index=doc_index, id=doc_id, refresh=True)
     return deleted_count + 1
 
 
 def set_temp_file(file_path: str):
     client = get_client()
-    if not client.indices.exists(FILES_INDEX_NAME):
+    if not client.indices.exists(index=FILES_INDEX_NAME):
         index_body = {"mappings": {"properties": {"file_path": {"type": "keyword"}}}}
-        client.indices.create(FILES_INDEX_NAME, body=index_body)
+        client.indices.create(index=FILES_INDEX_NAME, body=index_body)
     response = client.index(
-        FILES_INDEX_NAME,
+        index=FILES_INDEX_NAME,
         body={"file_path": file_path},
         refresh=True,
     )
@@ -254,6 +254,6 @@ def set_temp_file(file_path: str):
 
 def get_temp_file(id: str):
     client = get_client()
-    if client.indices.exists(FILES_INDEX_NAME):
-        response = client.get(FILES_INDEX_NAME, id)
+    if client.indices.exists(index=FILES_INDEX_NAME):
+        response = client.get(index=FILES_INDEX_NAME, id=id)
         return response["_source"]["file_path"]

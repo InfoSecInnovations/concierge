@@ -32,7 +32,7 @@ def get_context_from_opensearch(
         if hit["page_index"] not in page_metadata:
             page_metadata[hit["page_index"]] = {}
         if hit["page_id"] not in page_metadata[hit["page_index"]]:
-            response = client.get(hit["page_index"], hit["page_id"])
+            response = client.get(index=hit["page_index"], id=hit["page_id"])
             page_metadata[hit["page_index"]][hit["page_id"]] = {
                 **response["_source"],
                 "doc_lookup_id": hit["doc_lookup_id"],
@@ -45,7 +45,7 @@ def get_context_from_opensearch(
             if value["doc_index"] not in doc_metadata:
                 doc_metadata[value["doc_index"]] = {}
             if value["doc_id"] not in doc_metadata[value["doc_index"]]:
-                response = client.get(value["doc_index"], value["doc_id"])
+                response = client.get(index=value["doc_index"], id=value["doc_id"])
                 doc_metadata[value["doc_index"]][value["doc_id"]] = {
                     **response["_source"],
                     "id": value["doc_id"],
