@@ -5,7 +5,6 @@ from shabti_util import auth_enabled
 from . import insecure_routes
 from . import secure_routes
 import os
-from ..load_dotenv import load_env
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
 import json
 from shabti_types import (
@@ -15,8 +14,6 @@ import logging
 
 
 def create_app():
-    load_env()
-
     app = FastAPI(
         swagger_ui_init_oauth={
             "clientId": os.getenv("KEYCLOAK_CLIENT_ID"),

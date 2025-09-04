@@ -7,15 +7,14 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/
-COPY . /shabti/
 WORKDIR /shabti/
 ENV UV_LINK_MODE=copy
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --no-sources
 COPY . /shabti/
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
-CMD [ "python", "docker_run.py" ]
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-sources
+CMD [ "uv", "run", "docker_run.py" ]
 
-EXPOSE 15130
+EXPOSE 15131
 
 FROM cpu AS cuda
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --extra cu126
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --extra cu126 --no-sources

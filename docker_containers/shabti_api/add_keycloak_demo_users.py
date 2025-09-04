@@ -2,11 +2,9 @@ import json
 from importlib.resources import files
 import os
 from shabti_keycloak import get_keycloak_admin_client
-from src.load_dotenv import load_env
 
 
 def add_users():
-    load_env()
     print("\nAdding demo Keycloak users...")
     with open(os.path.join(files(), "keycloak_users", "users.json"), "r") as file:
         users_data = json.load(file)

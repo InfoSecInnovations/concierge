@@ -10,7 +10,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
 /bin/sh -c set -eux; apt-get update; apt-get install -y --no-install-recommends poppler-utils pandoc tesseract-ocr libreoffice libgl1 libglib2.0-0
 
-EXPOSE 15130
+EXPOSE 15131
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/
 WORKDIR /shabti/
