@@ -1,5 +1,4 @@
 import path from "node:path";
-import util from "node:util";
 import { $ } from "bun";
 import shabtiApiPackageJson from "./shabti_api_client_node/package.json";
 import shabtiApiPyProject from "./python_packages/shabti_api_client/pyproject.toml";
@@ -8,24 +7,8 @@ import shabtiTypesPyProject from "./python_packages/shabti_types/pyproject.toml"
 import shabtiUtilPyProject from "./python_packages/shabti_util/pyproject.toml";
 import isiUtilPyProject from "./python_packages/isi_util/pyproject.toml";
 import packageJson from "./package.json";
-import { platform } from "node:os";
-const exec = util.promisify(
-	await import("node:child_process").then(
-		(child_process) => child_process.exec,
-	),
-);
 import AdmZip from "adm-zip";
 import * as readline from "readline-sync";
-
-const runPython = (command: string, directoryPath: string[] = []) => {
-	if (platform() == "win32")
-		return $`Scripts\\python -m ${{ raw: command }}`.cwd(
-			path.resolve(path.join(...directoryPath)),
-		);
-	return $`./bin/python -m ${{ raw: command }}`.cwd(
-		path.resolve(path.join(...directoryPath)),
-	);
-};
 
 console.log("Shabti release publisher\n");
 console.log(`Current version: ${packageJson.version}`);
@@ -61,11 +44,8 @@ const handlePyPi = async (
 		path.join(import.meta.dir, "python_packages", packageName),
 	);
 	await $`rm -rf ${path.join(packageDir, "dist")}`;
-	await exec("python3 -m build", { cwd: packageDir });
-	// single backslashes get stripped out by the command line so we need to double them
-	await runPython(
-		`twine upload ${path.join(packageDir, "dist").replaceAll("\\", "\\\\")}/* -u __token__ -p ${pyPiKey}`,
-	);
+	await $`uv build`.cwd(packageDir);
+	await $`uv publish --token ${pyPiKey}`.cwd(packageDir);
 };
 await handlePyPi("shabti-util", "shabti_util", shabtiUtilPyProject);
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject);
