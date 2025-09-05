@@ -202,13 +202,12 @@ async def delete_collection(token, collection_id):
 
 def create_document_info(doc):
     return DocumentInfo(
-        type=doc["type"],
         source=doc["source"],
         ingest_date=doc["ingest_date"],
         vector_count=doc["vector_count"],
         document_id=doc["doc_lookup_id"],
         page_count=doc["page_count"],
-        media_type=doc["media_type"] if "media_type" in doc else None,
+        media_type=doc["media_type"],
         filename=doc["filename"] if "filename" in doc else None,
     )
 

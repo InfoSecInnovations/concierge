@@ -3,6 +3,9 @@
 .env.example
 ruff.toml
 
+# we don't use the lock file as there may be conflicts between the way things are installed in the local environment and the Docker environment
+uv.lock
+
 # we don't want tests in the Docker image
 tests/
 

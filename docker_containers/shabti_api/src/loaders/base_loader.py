@@ -12,15 +12,18 @@ def get_current_time():
 class ShabtiDocument:
     @dataclass(kw_only=True)
     class DocumentMetadata:
-        type: str
+        media_type: str
         source: str
         ingest_date: int
+        filename: str | None
+        language: str
 
     @dataclass(kw_only=True)
     class ShabtiPage:
         @dataclass(kw_only=True)
         class PageMetadata:
-            pass
+            page_number: int | None
+            source: str | None
 
         metadata: PageMetadata
         content: str
@@ -34,18 +37,4 @@ class ShabtiDocLoader(metaclass=ABCMeta):
     @abstractmethod
     def load(full_path: str, filename: str | None) -> ShabtiDocument:
         # load pages
-        pass
-
-
-class ShabtiFileLoader(ShabtiDocLoader):
-    @dataclass(kw_only=True)
-    class FileMetaData(ShabtiDocument.DocumentMetadata):
-        filename: str
-        extension: str
-        media_type: str | None = None
-
-    @staticmethod
-    @abstractmethod
-    def can_load(full_path: str) -> bool:
-        # check if this loader can load the file
         pass

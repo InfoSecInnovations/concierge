@@ -1,0 +1,2 @@
+# you're not really supposed to local install the project so we ignore the lock file here
+uv.lock

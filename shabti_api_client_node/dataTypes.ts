@@ -35,26 +35,23 @@ export class AuthzCollectionInfo extends CollectionInfo {
 }
 
 export class DocumentInfo {
-	type: string;
 	source: string;
 	ingestDate: number;
 	filename?: string;
-	mediaType?: string;
+	mediaType: string;
 	documentId: string;
 	pageCount: number;
 	vectorCount: number;
 	constructor(
 		documentId: string,
-		type: string,
 		source: string,
 		ingestDate: number,
 		pageCount: number,
 		vectorCount: number,
-		mediaType?: string,
+		mediaType: string,
 		filename?: string,
 	) {
 		this.documentId = documentId;
-		this.type = type;
 		this.source = source;
 		this.ingestDate = ingestDate;
 		this.pageCount = pageCount;

@@ -27,11 +27,10 @@ class AuthzCollectionInfo(CollectionInfo):
 
 
 class DocumentInfo(BaseModel):
-    type: str
     source: str
     ingest_date: int
     filename: Optional[str] = None
-    media_type: Optional[str] = None
+    media_type: str
     document_id: str
     page_count: int
     vector_count: int
