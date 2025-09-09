@@ -5,14 +5,12 @@ from urllib.parse import quote
 
 async def serve_binary(collection_id: str, doc_id: str):
     client = get_client()
-    lookup = client.get(index=f"{collection_id}.document_lookup", id=doc_id)
     client_response = client.search(
         body={
             "query": {
                 "bool": {
                     "filter": [
-                        {"term": {"doc_id": lookup["_source"]["doc_id"]}},
-                        {"term": {"doc_index": lookup["_source"]["doc_index"]}},
+                        {"term": {"doc_id": doc_id}},
                     ]
                 }
             }

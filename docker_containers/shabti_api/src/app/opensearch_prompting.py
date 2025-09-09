@@ -27,39 +27,31 @@ def get_context_from_opensearch(
     hits = [hit["_source"] for hit in response["hits"]["hits"]]
 
     page_metadata = {}
+    page_index = f"{collection_id}.pages"
+    document_index = f"{collection_id}.documents"
 
     for hit in hits:
-        if hit["page_index"] not in page_metadata:
-            page_metadata[hit["page_index"]] = {}
-        if hit["page_id"] not in page_metadata[hit["page_index"]]:
-            response = client.get(index=hit["page_index"], id=hit["page_id"])
-            page_metadata[hit["page_index"]][hit["page_id"]] = {
-                **response["_source"],
-                "doc_lookup_id": hit["doc_lookup_id"],
-            }
+        if hit["page_id"] not in page_metadata:
+            response = client.get(index=page_index, id=hit["page_id"])
+            page_metadata[hit["page_id"]] = {**response["_source"]}
 
     doc_metadata = {}
 
     for item in page_metadata.values():
         for value in item.values():
-            if value["doc_index"] not in doc_metadata:
-                doc_metadata[value["doc_index"]] = {}
-            if value["doc_id"] not in doc_metadata[value["doc_index"]]:
-                response = client.get(index=value["doc_index"], id=value["doc_id"])
-                doc_metadata[value["doc_index"]][value["doc_id"]] = {
+            if value["doc_id"] not in doc_metadata:
+                response = client.get(index=document_index, id=value["doc_id"])
+                doc_metadata[value["doc_id"]] = {
                     **response["_source"],
                     "id": value["doc_id"],
-                    "doc_lookup_id": value["doc_lookup_id"],
                 }
 
     sources = []
 
     for hit in hits:
-        page = page_metadata[hit["page_index"]][hit["page_id"]]
-        doc = doc_metadata[page["doc_index"]][page["doc_id"]]
-        sources.append(
-            {"type": doc["type"], "page_metadata": page, "doc_metadata": doc}
-        )
+        page = page_metadata[hit["page_id"]]
+        doc = doc_metadata[page["doc_id"]]
+        sources.append({"page_metadata": page, "doc_metadata": doc})
 
     return {
         "context": "\n".join([hit["text"] for hit in hits]),

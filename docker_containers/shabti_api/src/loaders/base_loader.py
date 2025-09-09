@@ -2,6 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from abc import ABCMeta, abstractmethod
 import time
+from typing import Optional
 
 
 def get_current_time():
@@ -15,15 +16,15 @@ class ShabtiDocument:
         media_type: str
         source: str
         ingest_date: int
-        filename: str | None
-        language: str
+        filename: Optional[str] = None
+        languages: list[str]
 
     @dataclass(kw_only=True)
     class ShabtiPage:
         @dataclass(kw_only=True)
         class PageMetadata:
-            page_number: int | None
-            source: str | None
+            page_number: Optional[int] = None
+            source: Optional[str] = None
 
         metadata: PageMetadata
         content: str

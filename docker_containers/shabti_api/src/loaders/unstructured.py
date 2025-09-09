@@ -13,13 +13,14 @@ class UnstructuredFileLoader(ShabtiDocLoader):
         pages = loader.load()
         if not len(pages):
             return None
+        print(pages[0].metadata)
         return ShabtiDocument(
             metadata=ShabtiDocument.DocumentMetadata(
                 source=full_path,
                 filename=filename or Path(full_path).name,
                 ingest_date=date_time,
                 media_type=pages[0].metadata["filetype"],
-                language=pages[0].metadata["language"],
+                languages=pages[0].metadata["languages"],
             ),
             pages=[
                 ShabtiDocument.ShabtiPage(

@@ -34,6 +34,7 @@ class DocumentInfo(BaseModel):
     document_id: str
     page_count: int
     vector_count: int
+    languages: list[str]
 
 
 class DeletedDocumentInfo(BaseModel):

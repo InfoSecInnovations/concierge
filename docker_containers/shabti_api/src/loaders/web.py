@@ -23,7 +23,7 @@ class WebLoader(ShabtiDocLoader):
                 source=full_path,
                 ingest_date=date_time,
                 media_type="text/html",
-                language=pages[0].metadata["language"],
+                languages=[pages[0].metadata["language"]],
             ),
             pages=[
                 ShabtiDocument.ShabtiPage(

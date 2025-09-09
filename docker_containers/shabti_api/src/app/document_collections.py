@@ -205,7 +205,7 @@ def create_document_info(doc):
         source=doc["source"],
         ingest_date=doc["ingest_date"],
         vector_count=doc["vector_count"],
-        document_id=doc["doc_lookup_id"],
+        document_id=doc["id"],
         page_count=doc["page_count"],
         media_type=doc["media_type"],
         filename=doc["filename"] if "filename" in doc else None,

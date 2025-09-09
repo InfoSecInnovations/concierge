@@ -16,8 +16,8 @@ def get_client():
 
 def create_collection_index(collection_id):
     client = get_client()
-    index_name = f"{collection_id}.vectors"
-    index_body = {
+    collection_index_name = f"{collection_id}.vectors"
+    collection_index_body = {
         "aliases": {collection_id: {"is_write_index": True}},
         "settings": {"index": {"knn": True}},
         "mappings": {
@@ -32,26 +32,51 @@ def create_collection_index(collection_id):
                         "parameters": {},
                     },
                 },
-                "page_index": {"type": "keyword"},
                 "page_id": {"type": "keyword"},
-                "doc_index": {"type": "keyword"},
                 "doc_id": {"type": "keyword"},
-                "doc_lookup_id": {"type": "keyword"},
             }
         },
     }
-    client.indices.create(index=index_name, body=index_body)
-    document_ids_index = f"{collection_id}.document_lookup"
-    document_ids_body = {
+    client.indices.create(index=collection_index_name, body=collection_index_body)
+    documents_index_name = f"{collection_id}.documents"
+    documents_index_body = {
         "aliases": {collection_id: {}},
         "mappings": {
             "properties": {
-                "doc_index": {"type": "keyword"},
-                "doc_id": {"type": "keyword"},
+                "filename": {"type": "keyword"},
+                "source": {"type": "keyword"},
+                "media_type": {"type": "keyword"},
+                "ingest_date": {"type": "unsigned_long"},
+                "languages": {"type": "keyword"},
             }
         },
     }
-    client.indices.create(index=document_ids_index, body=document_ids_body)
+    client.indices.create(index=documents_index_name, body=documents_index_body)
+    binary_index_name = f"{collection_id}.binary"
+    binary_index_body = {
+        "aliases": {collection_id: {}},
+        "mappings": {
+            "properties": {
+                "doc_id": {"type": "keyword"},
+                "data": {"type": "binary"},
+                "media_type": {"type": "keyword"},
+                "filename": {"type": "keyword"},
+            }
+        },
+    }
+    client.indices.create(index=binary_index_name, body=binary_index_body)
+    pages_index_name = f"{collection_id}.pages"
+    pages_index_body = {
+        "aliases": {collection_id: {}},
+        "mappings": {
+            "properties": {
+                "doc_id": {"type": "keyword"},
+                "page_number": {"type": "integer"},
+                "source": {"type": "keyword"},
+            }
+        },
+    }
+    client.indices.create(index=pages_index_name, body=pages_index_body)
 
 
 def create_index_mapping(collection_id, collection_name):
@@ -133,110 +158,61 @@ def delete_collection_indices(collection_id: str):
 
 def add_document_metadata(collection_id, doc):
     client = get_client()
-    # TODO: this might be counting binaries too?
+    query = {
+        "query": {
+            "bool": {
+                "filter": [{"term": {"doc_id": doc["id"]}}],
+            }
+        }
+    }
+    doc["page_count"] = client.count(body=query, index=f"{collection_id}.pages")[
+        "count"
+    ]
     query = {
         "query": {
             "bool": {
                 "filter": [
                     {"term": {"doc_id": doc["id"]}},
-                    {"term": {"doc_index": doc["index"]}},
                 ],
-                "must_not": {
-                    "exists": {
-                        "field": "document_vector"
-                    }  # if there's no vector field this is a page
-                },
             }
         }
     }
-    doc["page_count"] = client.count(body=query, index=collection_id)["count"]
-    query = {
-        "query": {
-            "bool": {
-                "filter": [
-                    {"term": {"doc_id": doc["id"]}},
-                    {"term": {"doc_index": doc["index"]}},
-                ],
-                "must": {
-                    "exists": {"field": "document_vector"}  # we want vectors only here
-                },
-            }
-        }
-    }
-    doc["vector_count"] = client.count(body=query, index=collection_id)["count"]
+    doc["vector_count"] = client.count(body=query, index=f"{collection_id}.vectors")[
+        "count"
+    ]
     return doc
 
 
-def get_document(collection_id: str, doc_lookup_id: str):
+def get_document(collection_id: str, doc_id: str):
     client = get_client()
-    lookup_index = f"{collection_id}.document_lookup"
-    lookup = client.get(index=lookup_index, id=doc_lookup_id)
-    doc_index = lookup["_source"]["doc_index"]
-    doc_id = lookup["_source"]["doc_id"]
+    doc_index = f"{collection_id}.documents"
     item = client.get(index=doc_index, id=doc_id)
-    doc = {**item["_source"], "id": item["_id"], "index": item["_index"]}
+    doc = {**item["_source"], "id": item["_id"]}
     doc = add_document_metadata(collection_id, doc)
-    doc["doc_lookup_id"] = doc_lookup_id
     return doc
 
 
 def get_opensearch_documents(collection_id: str):
     client = get_client()
-    # get all indices in alias
-    indices = client.indices.resolve_index(name=collection_id)["aliases"][0]["indices"]
-    # locate top level indices in collection alias
-    mappings = client.indices.get_mapping(index=",".join(indices))
-    top_level = [
-        index
-        for index in indices
-        if "doc_index" not in mappings[index]["mappings"]["properties"]
-    ]
-    # if there aren't any document indices we want to return here to avoid querying all existing data
-    if not top_level:
-        return []
+    document_index_name = f"{collection_id}.documents"
     # get documents from all of these
     query = {
         "size": 10000,  # this is the maximum allowed value
         "query": {"match_all": {}},
     }
-    response = client.search(body=query, index=",".join(top_level))
-    docs = [
-        {**hit["_source"], "id": hit["_id"], "index": hit["_index"]}
-        for hit in response["hits"]["hits"]
-    ]
+    response = client.search(body=query, index=document_index_name)
+    docs = [{**hit["_source"], "id": hit["_id"]} for hit in response["hits"]["hits"]]
     for doc in docs:
         add_document_metadata(collection_id, doc)
-        query = {
-            "size": 1,
-            "query": {"bool": {"filter": [{"term": {"doc_id": doc["id"]}}]}},
-        }
-        doc["doc_lookup_id"] = client.search(
-            body=query, index=f"{collection_id}.document_lookup"
-        )["hits"]["hits"][0]["_id"]
 
     return docs
 
 
-def delete_opensearch_document(collection_id: str, doc_lookup_id: str):
+def delete_opensearch_document(collection_id: str, doc_id: str):
     client = get_client()
-    lookup_index = f"{collection_id}.document_lookup"
-    lookup = client.get(index=lookup_index, id=doc_lookup_id)
-    doc_index = lookup["_source"]["doc_index"]
-    doc_id = lookup["_source"]["doc_id"]
-    query = {
-        "query": {
-            "bool": {
-                "filter": [
-                    {"term": {"doc_id": doc_id}},
-                    {"term": {"doc_index": doc_index}},
-                ]
-            }
-        }
-    }
-    response = client.delete_by_query(body=query, index=collection_id)
-    deleted_count = response["deleted"]
-    client.delete(index=doc_index, id=doc_id, refresh=True)
-    return deleted_count + 1
+    doc_index_name = f"{collection_id}.documents"
+    client.delete(index=doc_index_name, id=doc_id, refresh=True)
+    return 1  # TODO: evaluate what we should actually return here
 
 
 def set_temp_file(file_path: str):

@@ -111,7 +111,6 @@ export class BaseShabtiClient {
 			(item) =>
 				new DocumentInfo(
 					item.document_id,
-					item.type,
 					item.source,
 					item.ingest_date,
 					item.page_count,
