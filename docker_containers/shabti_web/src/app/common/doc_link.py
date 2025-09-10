@@ -5,17 +5,18 @@ import os
 
 
 def doc_link(collection_id: str, doc: DocumentInfo):
-    if doc.type == "pdf":
+    extension = None
+    if doc.media_type == "application/pdf":
         return f"PDF File: {
             md_link(doc_url(collection_id, doc.document_id), doc.filename)
         }"
-    if doc.type == "web":
+    if (
+        doc.media_type == "text/html" and not doc.filename
+    ):  # if there's a filename then this is an uploaded HTML file rather than a web page
         return f"Web page: {md_link(doc.source)}"
     if doc.filename:
-        extension = None
-        if doc.filename:
-            extension = os.path.splitext(doc.filename)[1]
-        return f"{extension or doc.type} file {
+        extension = os.path.splitext(doc.filename)[1]
+        return f"{extension} file {
             md_link(doc_url(collection_id, doc.document_id), doc.filename)
         }"
-    return f"{doc.type} type document from {doc.source}"
+    return f"{extension or doc.media_type} type document from {doc.source}"
