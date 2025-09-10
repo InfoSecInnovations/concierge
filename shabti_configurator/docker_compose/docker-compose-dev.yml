@@ -31,6 +31,10 @@ services:
           x-initialSync: true
           path: ../../docker_containers/shabti_api
           target: /shabti
+        - action: sync
+          x-initialSync: true
+          path: ../../python_packages
+          target: /
   shabti-web:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml

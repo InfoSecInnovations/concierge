@@ -1,5 +1,5 @@
 from .embeddings import create_embeddings
-from .opensearch import get_client
+from .opensearch import get_client, get_document
 
 
 def get_context_from_opensearch(
@@ -19,7 +19,7 @@ def get_context_from_opensearch(
                 }
             }
         },
-        "_source": {"includes": ["page_index", "page_id", "text", "doc_lookup_id"]},
+        "_source": {"includes": ["page_id", "text", "doc_id"]},
     }
 
     response = client.search(body=query, index=f"{collection_id}.vectors")
@@ -28,7 +28,6 @@ def get_context_from_opensearch(
 
     page_metadata = {}
     page_index = f"{collection_id}.pages"
-    document_index = f"{collection_id}.documents"
 
     for hit in hits:
         if hit["page_id"] not in page_metadata:
@@ -37,21 +36,18 @@ def get_context_from_opensearch(
 
     doc_metadata = {}
 
-    for item in page_metadata.values():
-        for value in item.values():
-            if value["doc_id"] not in doc_metadata:
-                response = client.get(index=document_index, id=value["doc_id"])
-                doc_metadata[value["doc_id"]] = {
-                    **response["_source"],
-                    "id": value["doc_id"],
-                }
+    for value in page_metadata.values():
+        if value["doc_id"] not in doc_metadata:
+            doc_metadata[value["doc_id"]] = get_document(collection_id, value["doc_id"])
 
     sources = []
 
     for hit in hits:
         page = page_metadata[hit["page_id"]]
         doc = doc_metadata[page["doc_id"]]
-        sources.append({"page_metadata": page, "doc_metadata": doc})
+        sources.append(
+            {"page_metadata": page, "doc_metadata": {**doc, "document_id": doc["id"]}}
+        )
 
     return {
         "context": "\n".join([hit["text"] for hit in hits]),

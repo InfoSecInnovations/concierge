@@ -180,10 +180,10 @@ def prompter_server(
             selected_enhancers,
             file_path,
         ):
-            if "response" in x:
-                yield x["response"]
-            elif "source" in x:
-                yield f"{page_link(collection_id, x['source'])}\n\n"
+            if x.response:
+                yield x.response
+            elif x.source:
+                yield f"{page_link(collection_id, x.source)}\n\n"
 
     @chat.on_user_submit
     async def on_chat_submit(user_input: str):

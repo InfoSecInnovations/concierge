@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from fastapi.responses import StreamingResponse
 import aiofiles
-from shabti_types import PromptInfo
+from shabti_types import PromptInfo, PromptChunk, PromptSource, DocumentInfo, PageInfo
 from .prompting import stream_response, get_context
 from .opensearch import get_temp_file
 from .load_prompter_config import load_prompter_config
@@ -61,7 +61,10 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
     async def stream_context_and_response():
         response = ""
         for source in context["sources"]:
-            yield f"{json.dumps({'source': source})}\n"
+            yield f"{PromptChunk(source=PromptSource(
+                document_metadata=DocumentInfo(**source["doc_metadata"]),
+                page_metadata=PageInfo(**source["page_metadata"])
+            )).model_dump_json(exclude_unset=True)}\n"
         async for x in stream_response(
             context=context["context"],
             task_prompt=task_prompt,
@@ -69,10 +72,10 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
             persona_prompt=persona_prompt,
             source_file_contents=source_file_contents,
         ):
-            yield x
-            if logging_enabled():
-                obj = json.loads(x)
-                if "response" in obj:
+            obj = json.loads(x)
+            if "response" in obj:
+                yield x
+                if logging_enabled():
                     response += obj["response"]
 
         if logging_enabled():

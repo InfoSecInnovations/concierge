@@ -11,6 +11,7 @@ from shabti_types import (
     ModelLoadInfo,
     WebFile,
     UnsupportedFileError,
+    PromptChunk,
 )
 from .base_client import BaseShabtiClient
 from .raise_error import raise_error
@@ -140,7 +141,7 @@ class ShabtiClient(BaseShabtiClient):
                 "file_id": file_id,
             },
         ):
-            yield json.loads(line)
+            yield PromptChunk(**json.loads(line))
 
     async def ollama_status(self) -> bool:
         response = await self.__make_request("GET", "status/ollama")

@@ -70,6 +70,21 @@ class PromptInfo(BaseModel):
     file_id: Optional[str] = None
 
 
+class PageInfo(BaseModel):
+    page_number: Optional[int] = None
+    source: Optional[str] = None
+
+
+class PromptSource(BaseModel):
+    document_metadata: DocumentInfo
+    page_metadata: PageInfo
+
+
+class PromptChunk(BaseModel):
+    response: Optional[str] = None
+    source: Optional[PromptSource] = None
+
+
 class ServiceStatus(BaseModel):
     running: bool
 

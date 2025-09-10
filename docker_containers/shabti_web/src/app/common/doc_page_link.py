@@ -1,28 +1,33 @@
 from .md_link import md_link
 from .doc_url import doc_url
-from typing import Any
 from datetime import datetime
+from shabti_types import PromptSource
+import os
 
 
-def page_link(collection_id: str, page: dict[str, Any]):
-    doc_metadata = page["doc_metadata"]
-    page_metadata = page["page_metadata"]
-    if page["type"] == "pdf":
+def page_link(collection_id: str, source: PromptSource):
+    if source.document_metadata.media_type == "application/pdf":
         return f"PDF File: {
             md_link(
-                f'{doc_url(collection_id, doc_metadata["doc_lookup_id"])}#page={page_metadata["page"]}',
-                f'page {page_metadata["page"]} of {doc_metadata["filename"]}',
+                f'{doc_url(collection_id, source.document_metadata.document_id)}#page={source.page_metadata.page_number}',
+                f'page {source.page_metadata.page_number} of {source.document_metadata.filename}',
             )
         }"
-    if page["type"] == "web":
+    if (
+        source.document_metadata.media_type == "application/pdf"
+        and not source.document_metadata.filename
+    ):
         # we store the timestamp in ms but Python uses s timestamps
-        ingest_time = datetime.fromtimestamp(doc_metadata["ingest_date"] / 1000)
-        return f"Web page: {md_link(page_metadata['source'])} scraped {ingest_time.ctime()} from parent URL {md_link(doc_metadata['source'])}"
-    if "filename" in doc_metadata:
-        return f"{doc_metadata['extension']} file {
+        ingest_time = datetime.fromtimestamp(
+            source.document_metadata.ingest_date / 1000
+        )
+        return f"Web page: {md_link(source.page_metadata.source)} scraped {ingest_time.ctime()} from parent URL {md_link(source.document_metadata.source)}"
+    if source.document_metadata.filename:
+        extension = os.path.splitext(source.document_metadata.filename)[1]
+        return f"{extension} file {
             md_link(
-                doc_url(collection_id, doc_metadata['doc_lookup_id']),
-                doc_metadata['filename'],
+                doc_url(collection_id, source.document_metadata.document_id),
+                source.document_metadata.filename,
             )
         }"
-    return f"{doc_metadata['type']} type document from {doc_metadata['source']}"
+    return f"{source.document_metadata.media_type} type document from {source.document_metadata.source}"

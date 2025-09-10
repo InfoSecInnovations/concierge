@@ -6,6 +6,7 @@ from shabti_types import (
     PromptConfigInfo,
     ModelLoadInfo,
     WebFile,
+    PromptChunk,
 )
 from typing import Generator, Any
 
@@ -60,7 +61,7 @@ class BaseShabtiClient(ABC):
         persona: str | None = None,
         enhancers: list[str] | None = None,
         file_path: str | None = None,
-    ) -> Generator[Any, Any, None]:
+    ) -> Generator[PromptChunk, Any, None]:
         pass
 
     @abstractmethod

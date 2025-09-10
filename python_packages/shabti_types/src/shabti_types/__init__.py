@@ -5,6 +5,7 @@ from .models import (
     CollectionInfo as CollectionInfo,
     AuthzCollectionInfo as AuthzCollectionInfo,
     DocumentInfo as DocumentInfo,
+    PageInfo as PageInfo,
     DeletedDocumentInfo as DeletedDocumentInfo,
     DocumentIngestInfo as DocumentIngestInfo,
     ModelLoadInfo as ModelLoadInfo,
@@ -15,6 +16,8 @@ from .models import (
     TaskInfo as TaskInfo,
     TempFileInfo as TempFileInfo,
     WebFile as WebFile,
+    PromptChunk as PromptChunk,
+    PromptSource as PromptSource,
 )
 from .exceptions import (
     ShabtiError as ShabtiError,
