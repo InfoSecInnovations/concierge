@@ -116,11 +116,12 @@ def ingester_server(
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
     def handle_url_ingest_click():
-        urls = list(filter(None, url_values()))
+        urls = [value for value in url_values() if value]
         if not urls or not len(urls):
             return
         collection_id = selected_collection.get()
         print(f"ingesting documents into collection {collection_id}")
+        url_input_trigger.set(url_input_trigger.get() + 1)
         ingest_urls(urls, collection_id)
 
     return ingesting_done
