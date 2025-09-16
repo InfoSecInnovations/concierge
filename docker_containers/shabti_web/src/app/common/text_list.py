@@ -71,6 +71,9 @@ def text_list_server(
     def clear_inputs():
         for id in input_ids.get():
             del input[id]
+            ui.remove_ui(
+                selector=f"div:has(> #{module.resolve_id(id)})", immediate=True
+            )
         input_ids.set([])
 
     return input_values

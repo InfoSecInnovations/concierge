@@ -47,6 +47,7 @@ def insert(
                     "media_type": document.metadata.media_type or "text/plain",
                     "filename": document.metadata.filename,
                 },
+                refresh=True,
             )
 
         page = document.pages[0]
@@ -59,6 +60,7 @@ def insert(
                     "doc_id": doc_id,
                     **vars(page.metadata),
                 },
+                refresh=True,
             )["_id"]
             chunks = splitter.split_text(page.content)
             vects = create_embeddings(chunks)

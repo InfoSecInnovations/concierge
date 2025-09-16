@@ -1,6 +1,6 @@
 from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 from tqdm import tqdm
-from ..common.text_list import text_list_ui, text_list_server
+from .text_input_list import text_input_list
 from typing import AsyncGenerator, Any
 from shabti_types import DocumentIngestInfo, UnsupportedFileError
 from shabti_api_client import BaseShabtiClient
@@ -25,10 +25,8 @@ def ingester_server(
     selected_collection: reactive.Value,
 ):
     file_input_trigger = reactive.value(0)
-    url_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
     files_are_ingesting = reactive.value(False)
-    url_values = text_list_server("url_input_list", url_input_trigger)
 
     @render.ui
     def ingester_content():
@@ -36,7 +34,7 @@ def ingester_server(
             ui.markdown("#### Files"),
             ui.output_ui("file_input"),
             ui.markdown("#### URLs"),
-            text_list_ui("url_input_list"),
+            text_input_list("url_input_list"),
             ui.input_task_button(id="ingest", label="Ingest"),
         )
 
@@ -116,7 +114,8 @@ def ingester_server(
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
     def handle_url_ingest_click():
-        urls = list(filter(None, url_values()))
+        urls = input.url_input_list()
+        print(urls)
         if not urls or not len(urls):
             return
         collection_id = selected_collection.get()

@@ -1,6 +1,8 @@
 # Shabti AI #  
 AI should be simple, safe, and amazing.  
 
+[Home Page](https://shabti.ai)
+
 ## TL;DR: ##
 Shabti AI is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
 

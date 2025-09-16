@@ -1,0 +1,19 @@
+name: shabti
+
+include:
+  - ./docker-compose-dev.yml
+
+services:
+  shabti-web:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_WEB_SERVICE:-shabti-web}
+    build:
+      context: ../../docker_containers/shabti_web
+      additional_contexts: 
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile.local
+
+networks:
+  default:
+    name: shabti
