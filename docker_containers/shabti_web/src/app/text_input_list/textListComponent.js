@@ -5,21 +5,27 @@ class TextInputListBinding extends Shiny.InputBinding {
 	}
 
 	addInput(el) {
+		const container = $(el).find(".list-container")[0];
+		const inputContainer = document.createElement("div");
 		const input = document.createElement("input");
 		input.className = "list-input";
-		el.appendChild(input);
+		inputContainer.appendChild(input);
+		container.appendChild(inputContainer);
 	}
 
 	initialize(el) {
+		const container = document.createElement("div");
+		container.className = "list-container";
+		el.appendChild(container);
 		this.addInput(el);
 		return [];
 	}
 
 	getValue(el) {
-		const inputs = [...$(el).find("input")];
+		const inputs = [...$(el).find(".list-input")];
 		const emptyInputs = inputs.filter((input) => !input.value);
 		if (emptyInputs.length > 1)
-			emptyInputs.slice(1).forEach((el) => $(el).remove());
+			emptyInputs.slice(1).forEach((el) => $(el).parent().remove());
 		if (!emptyInputs.length) this.addInput(el);
 		return inputs.map((input) => input.value).filter((value) => value);
 	}
