@@ -48,10 +48,11 @@ def insert(
             },
         }
         client.indices.create(doc_index_name, body=index_body)
-    doc_id = client.index(doc_index_name, vars(document.metadata))["_id"]
+    doc_id = client.index(doc_index_name, vars(document.metadata), refresh=True)["_id"]
     doc_lookup_id = client.index(
         f"{collection_id}.document_lookup",
         {"doc_id": doc_id, "doc_index": doc_index_name},
+        refresh=True,
     )["_id"]
 
     total = len(document.pages)
@@ -83,6 +84,7 @@ def insert(
                     "data": binary.hex(),
                     "media_type": document.metadata.media_type or "text/plain",
                 },
+                refresh=True,
             )
 
         page = document.pages[0]
@@ -111,6 +113,7 @@ def insert(
                     "doc_id": doc_id,
                     **vars(page.metadata),
                 },
+                refresh=True,
             )["_id"]
             chunks = splitter.split_text(page.content)
             vects = create_embeddings(chunks)

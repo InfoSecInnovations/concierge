@@ -1,5 +1,4 @@
 class TextInputListBinding extends Shiny.InputBinding {
-	// Find element to render in
 	find(scope) {
 		return $(scope).find(".shiny-text-list-output");
 	}
@@ -24,6 +23,7 @@ class TextInputListBinding extends Shiny.InputBinding {
 
 	getValue(el) {
 		const inputs = [...$(el).find(".list-input")];
+		// we must always have exactly 1 empty input so the user can add a value to the list
 		const emptyInputs = inputs.filter((input) => !input.value);
 		if (emptyInputs.length > 1)
 			emptyInputs.slice(1).forEach((el) => $(el).parent().remove());
@@ -38,7 +38,6 @@ class TextInputListBinding extends Shiny.InputBinding {
 	}
 }
 
-// Register the binding
 Shiny.inputBindings.register(
 	new TextInputListBinding(),
 	"shiny-text-list-output",
