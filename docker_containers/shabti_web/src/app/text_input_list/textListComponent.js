@@ -7,8 +7,9 @@ class TextInputListBinding extends Shiny.InputBinding {
 	addInput(el) {
 		const container = $(el).find(".list-container")[0];
 		const inputContainer = document.createElement("div");
+		inputContainer.className = "form-group";
 		const input = document.createElement("input");
-		input.className = "list-input";
+		input.className = "list-input form-control";
 		inputContainer.appendChild(input);
 		container.appendChild(inputContainer);
 	}
