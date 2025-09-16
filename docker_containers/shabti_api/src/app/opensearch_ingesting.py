@@ -29,7 +29,9 @@ def insert(
     entries = []
 
     doc_index_name = f"{collection_id}.documents"
-    doc_id = client.index(index=doc_index_name, body=vars(document.metadata))["_id"]
+    doc_id = client.index(
+        index=doc_index_name, body=vars(document.metadata), refresh=True
+    )["_id"]
 
     total = len(document.pages)
     if not total:  # this shouldn't really happen
