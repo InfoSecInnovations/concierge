@@ -61,10 +61,14 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
     async def stream_context_and_response():
         response = ""
         for source in context["sources"]:
-            yield f"{PromptChunk(source=PromptSource(
-                document_metadata=DocumentInfo(**source["doc_metadata"]),
-                page_metadata=PageInfo(**source["page_metadata"])
-            )).model_dump_json(exclude_unset=True)}\n"
+            yield f"{
+                PromptChunk(
+                    source=PromptSource(
+                        document_metadata=DocumentInfo(**source['doc_metadata']),
+                        page_metadata=PageInfo(**source['page_metadata']),
+                    )
+                ).model_dump_json(exclude_unset=True)
+            }\n"
         async for x in stream_response(
             context=context["context"],
             task_prompt=task_prompt,
