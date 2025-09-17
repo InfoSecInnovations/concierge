@@ -1,5 +1,5 @@
 from __future__ import annotations
-from .base_loader import ShabtiDocLoader, ShabtiDocument, get_current_time
+from .base_loader import ShabtiDocument, get_current_time
 from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
 from bs4 import BeautifulSoup
 import re
@@ -10,17 +10,17 @@ def bs4_extractor(html: str) -> str:
     return re.sub(r"\n\n+", "\n\n", soup.text).strip()
 
 
-class WebLoader(ShabtiDocLoader):
+class WebLoader:
     @staticmethod
-    def load(full_path: str) -> ShabtiDocument | None:
+    def load(url: str) -> ShabtiDocument | None:
         date_time = get_current_time()
-        loader = RecursiveUrlLoader(full_path, max_depth=50, extractor=bs4_extractor)
+        loader = RecursiveUrlLoader(url, max_depth=50, extractor=bs4_extractor)
         pages = loader.load_and_split()
         if not len(pages):
             return None
         return ShabtiDocument(
             metadata=ShabtiDocument.DocumentMetadata(
-                source=full_path,
+                source=url,
                 ingest_date=date_time,
                 media_type="text/html",
                 languages=[pages[0].metadata["language"]]

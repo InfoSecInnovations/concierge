@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from abc import ABCMeta, abstractmethod
 import time
 from typing import Optional
 
@@ -31,11 +30,3 @@ class ShabtiDocument:
 
     pages: list[ShabtiPage]
     metadata: DocumentMetadata
-
-
-class ShabtiDocLoader(metaclass=ABCMeta):
-    @staticmethod
-    @abstractmethod
-    def load(full_path: str, filename: str | None) -> ShabtiDocument:
-        # load pages
-        pass

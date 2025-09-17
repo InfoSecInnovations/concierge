@@ -2,5 +2,5 @@ from ..loaders.base_loader import ShabtiDocument
 from ..loaders.unstructured import UnstructuredFileLoader
 
 
-def load_file(full_path, filename) -> ShabtiDocument | None:
-    return UnstructuredFileLoader.load(full_path, filename)
+def load_file(file, filename) -> ShabtiDocument | None:
+    return UnstructuredFileLoader.load(file, filename)

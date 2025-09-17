@@ -1,23 +1,26 @@
-from .base_loader import ShabtiDocLoader, ShabtiDocument, get_current_time
+from .base_loader import ShabtiDocument, get_current_time
 from langchain_unstructured.document_loaders import UnstructuredLoader
-from pathlib import Path
 
 
-class UnstructuredFileLoader(ShabtiDocLoader):
+class UnstructuredFileLoader:
     @staticmethod
-    def load(full_path: str, filename: str | None) -> ShabtiDocument:
+    def load(file, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
         loader = UnstructuredLoader(
-            file_path=full_path, strategy="auto", chunking_strategy="by_title"
+            file=file,
+            strategy="auto",
+            chunking_strategy="by_title",
+            metadata_filename=filename,
         )
         pages = loader.load()
         if not len(pages):
+            print("The document had no pages!")
             return None
         print(pages[0].metadata)
         return ShabtiDocument(
             metadata=ShabtiDocument.DocumentMetadata(
-                source=full_path,
-                filename=filename or Path(full_path).name,
+                source=filename,
+                filename=filename,
                 ingest_date=date_time,
                 media_type=pages[0].metadata["filetype"],
                 languages=pages[0].metadata["languages"],
