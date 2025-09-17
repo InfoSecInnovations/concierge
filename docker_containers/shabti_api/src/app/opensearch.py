@@ -168,15 +168,6 @@ def add_document_metadata(collection_id, doc):
     doc["page_count"] = client.count(body=query, index=f"{collection_id}.pages")[
         "count"
     ]
-    query = {
-        "query": {
-            "bool": {
-                "filter": [
-                    {"term": {"doc_id": doc["id"]}},
-                ],
-            }
-        }
-    }
     doc["vector_count"] = client.count(body=query, index=f"{collection_id}.vectors")[
         "count"
     ]
@@ -210,6 +201,21 @@ def get_opensearch_documents(collection_id: str):
 
 def delete_opensearch_document(collection_id: str, doc_id: str):
     client = get_client()
+    query = {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"doc_id": doc_id}},
+                ],
+            }
+        }
+    }
+    vector_index_name = f"{collection_id}.vectors"
+    page_index_name = f"{collection_id}.pages"
+    binary_index_name = f"{collection_id}.binary"
+    client.delete_by_query(index=vector_index_name, body=query, refresh=True)
+    client.delete_by_query(index=page_index_name, body=query, refresh=True)
+    client.delete_by_query(index=binary_index_name, body=query, refresh=True)
     doc_index_name = f"{collection_id}.documents"
     client.delete(index=doc_index_name, id=doc_id, refresh=True)
     return 1  # TODO: evaluate what we should actually return here
