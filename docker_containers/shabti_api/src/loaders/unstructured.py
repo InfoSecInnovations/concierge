@@ -25,7 +25,9 @@ class UnstructuredFileLoader(ShabtiDocLoader):
             pages=[
                 ShabtiDocument.ShabtiPage(
                     metadata=ShabtiDocument.ShabtiPage.PageMetadata(
-                        page_number=pages[0].metadata["page_number"]
+                        page_number=page.metadata["page_number"]
+                        if "page_number" in page.metadata
+                        else None
                     ),
                     content=page.page_content,
                 )

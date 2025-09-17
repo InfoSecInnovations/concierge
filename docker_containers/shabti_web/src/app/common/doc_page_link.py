@@ -14,7 +14,7 @@ def page_link(collection_id: str, source: PromptSource):
             )
         }"
     if (
-        source.document_metadata.media_type == "application/pdf"
+        source.document_metadata.media_type == "text/html"
         and not source.document_metadata.filename
     ):
         # we store the timestamp in ms but Python uses s timestamps
@@ -29,5 +29,5 @@ def page_link(collection_id: str, source: PromptSource):
                 doc_url(collection_id, source.document_metadata.document_id),
                 source.document_metadata.filename,
             )
-        }"
+        }{f' (page {source.page_metadata.page_number})' if source.page_metadata.page_number else ''}"
     return f"{source.document_metadata.media_type} type document from {source.document_metadata.source}"
