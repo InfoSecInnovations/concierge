@@ -9,6 +9,8 @@
 
 We skipped a couple of versions because we ended up working concurrently on some features from our planned 0.5, 0.6 and 0.7 releases. We hope you enjoy this big release that brings some of the most important features to Shabti/Concierge!
 
+### Changes
+
 - The project is now called Shabti,
 - RBAC is here. Shabti can optionally be configured to use Keycloak to handle user accounts and permissions. You can keep using it without user accounts if you're just using it for personal use on a local machine. We imagine RBAC to be useful in an enterprise setting with multiple users being able to access the instance. Please let us know if you like this feature, and what additional controls we could ship with it.
 - The installer script has been replaced by an executable file available for Windows, Linux and MacOS. This executable serves up a web UI to enable you to configure Shabti locally or remotely. This should make it a lot easier to get Shabti up and running, we felt that the text based installer was no longer practical and it was running into issues with different OSes and Python versions.
@@ -17,6 +19,11 @@ We skipped a couple of versions because we ended up working concurrently on some
 - The base Docker image has been switched to the Python slim image which has much fewer known vulnerabilities than the full Python image and reduces the image size slightly, although we're aware that it's still quite large.
 - Implemented JSON logging to a file. Logging can be enabled or disabled when setting up Shabti.
 - Still a work in progress but some automated tests are now present. This will help us catch bugs more easily in the various permutations of Shabti that are possible.
+
+### Fixes
+
+- URL input list has been replaced with a custom component which should be much more robust.
+- Fixed an issue where newly inserted documents could be missing from the web UI, sometimes even causing errors.
 
 ## 0.4.0 - 2024-09-05
 
