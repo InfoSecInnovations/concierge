@@ -10,17 +10,17 @@ collection_ids = []
 
 
 async def test_collection_with_same_name():
-    collection_id = await create_collection(None, "collection_1")
-    collection_ids.append(collection_id)
+    collection_info = await create_collection(None, "collection_1")
+    collection_ids.append(collection_info.collection_id)
     with pytest.raises(CollectionExistsError):
-        collection_id = await create_collection(None, "collection_1")
-        collection_ids.append(collection_id)
+        collection_info = await create_collection(None, "collection_1")
+        collection_ids.append(collection_info.collection_id)
 
 
 async def test_collection_with_different_name():
-    collection_id = await create_collection(None, "collection_2")
-    collection_ids.append(collection_id)
-    assert collection_id
+    collection_info = await create_collection(None, "collection_2")
+    collection_ids.append(collection_info.collection_id)
+    assert collection_info
 
 
 async def clean_up_collections():
@@ -33,4 +33,5 @@ async def clean_up_collections():
 
 
 def teardown_module():
+    print("clean up")
     asyncio.run(clean_up_collections())

@@ -16,7 +16,6 @@ class UnstructuredFileLoader:
         if not len(pages):
             print("The document had no pages!")
             return None
-        print(pages[0].metadata)
         return ShabtiDocument(
             metadata=ShabtiDocument.DocumentMetadata(
                 source=filename,
