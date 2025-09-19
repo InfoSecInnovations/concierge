@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import path from "node:path";
-import KcAdminClient from "@keycloak/keycloak-admin-client";
 import { $ } from "bun";
 import * as envfile from "envfile";
 // import configurePlaywright from "./configurePlaywright";
@@ -11,6 +10,7 @@ import getEnvPath from "./getEnvPath";
 import getVersion from "./getVersion";
 import logMessage from "./logMessage";
 import createVenv from "./createVenv";
+import getKeycloakClientSecret from "./getKeycloakClientSecret";
 
 export default async function* (options: FormData, installVenv = true) {
 	const environment =
@@ -36,21 +36,6 @@ export default async function* (options: FormData, installVenv = true) {
 		const certDir = path.resolve("self_signed_certificates");
 		await createCertificates(certDir);
 		envs.ROOT_CA = path.join(certDir, "root-ca.pem");
-		envs.OPENSEARCH_CLIENT_CERT = path.join(
-			certDir,
-			"opensearch-admin-client-cert.pem",
-		);
-		envs.OPENSEARCH_CLIENT_KEY = path.join(
-			certDir,
-			"opensearch-admin-client-key.pem",
-		);
-		envs.OPENSEARCH_ADMIN_KEY = path.join(certDir, "opensearch-admin-key.pem");
-		envs.OPENSEARCH_ADMIN_CERT = path.join(
-			certDir,
-			"opensearch-admin-cert.pem",
-		);
-		envs.OPENSEARCH_NODE_CERT = path.join(certDir, "opensearch-node1-cert.pem");
-		envs.OPENSEARCH_NODE_KEY = path.join(certDir, "opensearch-node1-key.pem");
 		envs.KEYCLOAK_CERT = path.join(certDir, "keycloak-cert.pem");
 		envs.KEYCLOAK_CERT_KEY = path.join(certDir, "keycloak-key.pem");
 		envs.API_CERT = path.join(certDir, "shabti-cert.pem");
@@ -81,31 +66,7 @@ export default async function* (options: FormData, installVenv = true) {
 			// update the keycloak image otherwise it can get overwritten when we launch everything below
 			await $`docker compose -f ${keycloakComposeFile} pull`;
 			await $`docker compose -f ${keycloakComposeFile} up -d`;
-			// TODO: we need to use the root CA certs rather than disabling verification!
-			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-			// keep trying this until keycloak is up
-			while (true) {
-				try {
-					const kcClient = new KcAdminClient({
-						baseUrl: "https://localhost:8443",
-					});
-					await kcClient.auth({
-						username: "admin",
-						password: keycloakPassword,
-						grantType: "password",
-						clientId: "admin-cli",
-					});
-					const secret = await kcClient.clients.getClientSecret({
-						id: "7a3ec428-36f2-49c4-91b1-8288dc44acb0",
-						realm: "shabti",
-					});
-					envs.KEYCLOAK_CLIENT_ID = "shabti-auth";
-					envs.KEYCLOAK_CLIENT_SECRET = secret.value!;
-					break;
-				} catch (error) {
-					continue;
-				}
-			}
+			envs.KEYCLOAK_CLIENT_SECRET = await getKeycloakClientSecret();
 			yield logMessage("got Keycloak credentials.");
 		}
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-keycloak.yml";
@@ -148,7 +109,7 @@ export default async function* (options: FormData, installVenv = true) {
 	}
 	if (securityLevel == "demo") {
 		yield logMessage("adding demo users");
-		await $`docker exec -d shabti python -m add_keycloak_demo_users`;
+		await $`docker exec -d shabti uv run add_keycloak_demo_users`;
 	}
 	yield logMessage("waiting for Ollama to come online...");
 	// while ollama is failing to fetch or returning a non 200 status code, we keep looping

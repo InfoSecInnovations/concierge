@@ -20,13 +20,13 @@ async def test_own_private_collection_with_same_name():
 
 
 async def test_private_collection_with_different_name():
-    collection_id = await create_collection_for_user("testadmin", "private", "2")
-    assert collection_id
+    collection_info = await create_collection_for_user("testadmin", "private", "2")
+    assert collection_info
 
 
 async def test_shared_collection_with_existing_private_name():
-    collection_id = await create_collection_for_user("testadmin", "shared", "1")
-    assert collection_id
+    collection_info = await create_collection_for_user("testadmin", "shared", "1")
+    assert collection_info
 
 
 async def test_shared_collection_with_existing_name():
@@ -40,8 +40,8 @@ async def test_shared_collection_with_existing_name_and_different_user():
 
 
 async def test_private_collection_with_existing_name_and_different_user():
-    collection_id = await create_collection_for_user("testprivate", "private", "1")
-    assert collection_id
+    collection_info = await create_collection_for_user("testprivate", "private", "1")
+    assert collection_info
 
 
 def teardown_module():

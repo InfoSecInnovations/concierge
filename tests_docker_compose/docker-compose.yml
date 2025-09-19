@@ -1,5 +1,8 @@
 name: shabti
 
+include:
+  - ../shabti_configurator/docker_compose/docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
 services:
   ollama:
     extends:

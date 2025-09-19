@@ -1,3 +1,8 @@
 import pytest
+import os
 
-pytest.skip(reason="not implemented yet", allow_module_level=True)
+pytest.skipif(
+    os.getenv("SHABTI_SECURITY_ENABLED") == "False",
+    reason="security not enabled",
+    allow_module_level=True,
+)
