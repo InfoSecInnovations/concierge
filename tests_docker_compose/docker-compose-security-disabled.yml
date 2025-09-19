@@ -1,0 +1,32 @@
+name: shabti
+
+services:
+  ollama:
+    extends:
+      file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-ollama.yml
+      service: ollama-${SHABTI_COMPUTE:-cpu}
+  opensearch-node1:
+    extends:
+      file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
+      service: opensearch-node-base
+  shabti:
+    extends:
+      file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti-cpu}
+    build:
+      context: ../docker_containers/shabti_api
+      additional_contexts: 
+        python_packages: ../python_packages
+      dockerfile: Dockerfile.local
+      target: ${SHABTI_COMPUTE:-cpu}
+    command: ["uv", "run", "pytest"]
+    restart: no
+
+volumes:
+  opensearch-data1:
+  ollama:
+  shabti-models:
+
+networks:
+  default:
+    name: shabti

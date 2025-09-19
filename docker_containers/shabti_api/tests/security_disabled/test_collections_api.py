@@ -61,8 +61,8 @@ async def test_insert_urls(shabti_client):
 
 
 async def test_delete_document(shabti_client):
-    doc = load_file(file_path, filename)
     with open(file_path, "rb") as f:
+        doc = load_file(f, filename)
         binary = f.read()
     async for ingest_info in insert_document(
         None, collection_lookup[collection_name], doc, binary

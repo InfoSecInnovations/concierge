@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 
 @pytest.fixture(scope="session", autouse=True)
-def shabti_client(security_enabled_instance):
+def shabti_client():
     load_env()
     while True:
         try:

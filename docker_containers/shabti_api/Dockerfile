@@ -9,9 +9,9 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/
 WORKDIR /shabti/
 ENV UV_LINK_MODE=copy
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --no-sources
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --no-sources --no-dev
 COPY . /shabti/
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-sources
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-sources --no-dev
 CMD [ "uv", "run", "docker_run.py" ]
 
 EXPOSE 15131
