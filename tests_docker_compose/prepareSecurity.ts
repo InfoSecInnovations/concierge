@@ -31,4 +31,5 @@ API_KEY=${path.resolve(path.join(import.meta.dir, "self_signed_certificates", "s
 );
 await $`docker compose --env-file security-enabled-env --env-file .env build`;
 await $`docker compose --env-file security-enabled-env --env-file .env up -d`;
-await $`docker exec -d shabti uv run add_keycloak_demo_users`;
+await $`docker exec shabti uv run -m add_keycloak_demo_users`;
+await $`docker compose stop`;

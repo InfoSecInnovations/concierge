@@ -13,6 +13,7 @@ services:
       file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node-base
   shabti:
+    tty: true
     extends:
       file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-shabti.yml
       service: ${SHABTI_SERVICE:-shabti-cpu}
