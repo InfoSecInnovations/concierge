@@ -11,8 +11,8 @@ if __name__ == "__main__":
     args = {}
 
     if auth_enabled():
-        args["ssl_keyfile"] = "web_certs/key.pem"
-        args["ssl_certfile"] = "web_certs/cert.pem"
+        args["ssl_keyfile"] = "/web_certs/key.pem"
+        args["ssl_certfile"] = "/web_certs/cert.pem"
 
     run_app(
         app="src.app.app:app",

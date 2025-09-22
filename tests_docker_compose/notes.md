@@ -13,6 +13,6 @@ Fully automating the whole test sequence is a work in progress, eventually we wo
 - Navigate to the `tests_docker_compose` subdirectory of the repository
 - `bun --env-file=security-enabled-env run ./prepareSecurity.ts`
 - wait a bit, this does some of the same stuff that a full install does!
-- `docker compose --env-file security-enabled-env up --attach shabti` will run the tests and show the output in the console. You can also use the docker logs if you need to retrieve this result later.
+- `docker compose --env-file security-enabled-env --env-file .env up --attach shabti` will run the tests and show the output in the console. You can also use the docker logs if you need to retrieve this result later.
 
 Note that the paths in the env file seem weird because they are relative to the compose file that uses them rather than the CWD

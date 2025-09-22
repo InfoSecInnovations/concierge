@@ -18,8 +18,8 @@ if __name__ == "__main__":
         args["log_config"] = logging_config()
 
     if auth_enabled():
-        args["ssl_keyfile"] = "api_certs/key.pem"
-        args["ssl_certfile"] = "api_certs/cert.pem"
+        args["ssl_keyfile"] = "/api_certs/key.pem"
+        args["ssl_certfile"] = "/api_certs/cert.pem"
 
     uvicorn.run(
         app="src.app.app:app",

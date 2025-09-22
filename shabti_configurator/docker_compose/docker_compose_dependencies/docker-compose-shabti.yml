@@ -41,7 +41,7 @@ services:
       - SHABTI_SECURITY_ENABLED=True
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
-      - ROOT_CA=opensearch_certs/root-ca.pem
+      - ROOT_CA=/opensearch_certs/root-ca.pem
     volumes:
       # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
       - ${API_CERT:-empty}:/api_certs/cert.pem
@@ -66,7 +66,7 @@ services:
       - SHABTI_SECURITY_ENABLED=True
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
-      - ROOT_CA=opensearch_certs/root-ca.pem
+      - ROOT_CA=/opensearch_certs/root-ca.pem
     volumes:
       # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
       - ${WEB_CERT:-empty}:/web_certs/cert.pem

@@ -66,6 +66,7 @@ export default async function* (options: FormData, installVenv = true) {
 			// update the keycloak image otherwise it can get overwritten when we launch everything below
 			await $`docker compose -f ${keycloakComposeFile} pull`;
 			await $`docker compose -f ${keycloakComposeFile} up -d`;
+			envs.KEYCLOAK_CLIENT_ID = "shabti-auth";
 			envs.KEYCLOAK_CLIENT_SECRET = await getKeycloakClientSecret();
 			yield logMessage("got Keycloak credentials.");
 		}
@@ -109,7 +110,7 @@ export default async function* (options: FormData, installVenv = true) {
 	}
 	if (securityLevel == "demo") {
 		yield logMessage("adding demo users");
-		await $`docker exec -d shabti uv run add_keycloak_demo_users`;
+		await $`docker exec shabti uv run -m add_keycloak_demo_users`;
 	}
 	yield logMessage("waiting for Ollama to come online...");
 	// while ollama is failing to fetch or returning a non 200 status code, we keep looping

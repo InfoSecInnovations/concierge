@@ -28,8 +28,9 @@ async def create_collection_for_user(user, location, collection_name):
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 # we will use the same file for each test
-doc = load_file(file_path, filename)
+
 with open(file_path, "rb") as f:
+    doc = load_file(f, filename)
     binary = f.read()
 
 
