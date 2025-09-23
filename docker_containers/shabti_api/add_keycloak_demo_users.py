@@ -6,6 +6,7 @@ from shabti_keycloak import get_keycloak_admin_client
 
 def add_users():
     print("\nAdding demo Keycloak users...")
+    print(os.getenv("KEYCLOAK_CLIENT_SECRET"))
     with open(os.path.join(files(), "keycloak_users", "users.json"), "r") as file:
         users_data = json.load(file)
     client = get_keycloak_admin_client()

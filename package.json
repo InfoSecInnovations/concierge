@@ -16,5 +16,8 @@
 		"shabti_cli/",
 		"shabti_api_client_node/"
 	],
-	"version": "0.7a22"
+	"version": "0.7a22",
+	"dependencies": {
+		"dotenv": "^17.2.2"
+	}
 }

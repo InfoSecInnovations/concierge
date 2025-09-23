@@ -3,6 +3,9 @@
   "workspaces": {
     "": {
       "name": "shabti",
+      "dependencies": {
+        "dotenv": "^17.2.2",
+      },
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
         "@types/bun": "latest",
@@ -13,7 +16,7 @@
     },
     "shabti_api_client_node": {
       "name": "@infosecinnovations/shabti-api-client",
-      "version": "0.1.0-alpha.2",
+      "version": "0.1.0-alpha.4",
       "dependencies": {
         "openid-client": "^6.4.2",
       },
@@ -25,7 +28,7 @@
     },
     "shabti_cli": {
       "name": "shabti_cli",
-      "version": "0.1.0-alpha",
+      "version": "0.1.0-alpha.3",
       "dependencies": {
         "@infosecinnovations/shabti-api-client": "../shabti_api_client_node/",
         "cli-progress": "^3.12.0",
@@ -231,7 +234,7 @@
 
     "define-properties": ["define-properties@1.2.1", "", { "dependencies": { "define-data-property": "^1.0.1", "has-property-descriptors": "^1.0.0", "object-keys": "^1.1.1" } }, "sha512-8QmQKqEASLd5nx0U1B1okLElbUuuttJ/AnYmRXbbbGDWh6uS208EjD4Xqq/I9wK7u0v6O08XhTWnt5XtEbR6Dg=="],
 
-    "dotenv": ["dotenv@16.5.0", "", {}, "sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg=="],
+    "dotenv": ["dotenv@17.2.2", "", {}, "sha512-Sf2LSQP+bOlhKWWyhFsn0UsfdK/kCWRv1iuA2gXAwt3dyNabr6QSj00I2V10pidqz69soatm9ZwZvpQMTIOd5Q=="],
 
     "dunder-proto": ["dunder-proto@1.0.1", "", { "dependencies": { "call-bind-apply-helpers": "^1.0.1", "es-errors": "^1.3.0", "gopd": "^1.2.0" } }, "sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A=="],
 
@@ -500,6 +503,8 @@
     "shabti_cli/@infosecinnovations/shabti-api-client": ["@infosecinnovations/shabti-api-client@file:shabti_api_client_node", { "dependencies": { "openid-client": "^6.4.2" }, "devDependencies": { "@types/node": "^22.15.2", "esbuild": "^0.25.3", "npm-run-all": "^4.1.5" } }],
 
     "shabti_cli/@types/bun": ["@types/bun@1.2.18", "", { "dependencies": { "bun-types": "1.2.18" } }, "sha512-Xf6RaWVheyemaThV0kUfaAUvCNokFr+bH8Jxp+tTZfx7dAPA8z9ePnP9S9+Vspzuxxx9JRAXhnyccRj3GyCMdQ=="],
+
+    "shabti_cli/dotenv": ["dotenv@16.5.0", "", {}, "sha512-m/C+AwOAr9/W1UOIZUo232ejMNnJAJtYQjUbHoNTBNTJSvqzzDh7vnrei3o3r3m9blf6ZoDkvcw0VmozNRFJxg=="],
 
     "shabti_cli/@types/bun/bun-types": ["bun-types@1.2.18", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-04+Eha5NP7Z0A9YgDAzMk5PHR16ZuLVa83b26kH5+cp1qZW4F6FmAURngE7INf4tKOvCE69vYvDEwoNl1tGiWw=="],
   }
