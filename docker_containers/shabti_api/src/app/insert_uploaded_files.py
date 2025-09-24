@@ -59,7 +59,7 @@ async def insert_uploaded_files(
                             ):
                                 yield x
                         continue
-                    yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': f"File {file.filename} could not be loaded", 'filename': file.filename})}\n"
+                    yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': f'File {file.filename} could not be loaded', 'filename': file.filename})}\n"
 
         async for x in handle_files(new_files):
             yield x
