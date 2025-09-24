@@ -13,6 +13,7 @@ services:
       file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node-base
   shabti:
+    tty: true
     extends:
       file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-shabti.yml
       service: ${SHABTI_SERVICE:-shabti-cpu}
@@ -22,7 +23,8 @@ services:
         python_packages: ../python_packages
       dockerfile: Dockerfile.local
       target: ${SHABTI_COMPUTE:-cpu}
-    restart: unless-stopped
+    command: ["uv", "run", "pytest"]
+    restart: no
 
 volumes:
   opensearch-data1:

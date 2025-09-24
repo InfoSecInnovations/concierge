@@ -17,10 +17,27 @@ console.log(`
 -----------------------------------------------------
 `);
 
-dotenv.config({ path: "security-disabled-env", override: true });
+dotenv.config({ path: "security-disabled-env", override: true, quiet: true });
 await nukeExisting();
-await $`docker compose --env-file security-disabled-env build`.quiet();
-await $`docker compose --env-file security-disabled-env up --attach shabti`;
+await $`docker compose --env-file security-disabled-env -f ./docker-compose-pytest.yml build`.quiet();
+console.log(`
+____________RUNNING PYTHON TESTS______________
+`);
+await $`docker compose --env-file security-disabled-env -f ./docker-compose-pytest.yml up --attach shabti`;
+await $`docker compose --env-file security-disabled-env up -d`;
+console.log(`
+__________RUNNING NODE CLIENT TESTS___________
+`);
+console.log("waiting for API service to launch...");
+while (true) {
+	try {
+		await fetch("http://localhost:15131");
+		break;
+	} catch {
+		continue;
+	}
+}
+await $`bun test`.cwd("..").env({ ...process.env, FORCE_COLOR: "1" });
 
 console.log(`
 -----------------------------------------------------
@@ -28,7 +45,7 @@ console.log(`
 -----------------------------------------------------
 `);
 
-dotenv.config({ path: "security-enabled-env", override: true });
+dotenv.config({ path: "security-enabled-env", override: true, quiet: true });
 await nukeExisting();
 await createCertificates("./self_signed_certificates");
 await Bun.write(
@@ -41,7 +58,11 @@ API_CERT=${path.resolve(path.join(import.meta.dir, "self_signed_certificates", "
 API_KEY=${path.resolve(path.join(import.meta.dir, "self_signed_certificates", "shabti-key.pem"))}
 `,
 );
-dotenv.config({ path: ["security-enabled-env", ".env"], override: true }); // the local env seems to get applied to the Docker commands so it's important we keep it updated
+dotenv.config({
+	path: ["security-enabled-env", ".env"],
+	override: true,
+	quiet: true,
+}); // the local env seems to get applied to the Docker commands so it's important we keep it updated
 await $`docker compose --env-file security-enabled-env --env-file .env -f ../shabti_configurator/docker_compose/docker-compose-launch-keycloak.yml up -d`.quiet();
 console.log("Getting Keycloak Client Secret...");
 const secret = await getKeycloakClientSecret();
@@ -57,8 +78,15 @@ API_CERT=${path.resolve(path.join(import.meta.dir, "self_signed_certificates", "
 API_KEY=${path.resolve(path.join(import.meta.dir, "self_signed_certificates", "shabti-key.pem"))}
 `,
 );
-dotenv.config({ path: ["security-enabled-env", ".env"], override: true }); // the local env seems to get applied to the Docker commands so it's important we keep it updated
-await $`docker compose --env-file security-enabled-env --env-file .env build`.quiet();
-await $`docker compose --env-file security-enabled-env --env-file .env up -d`.quiet();
+dotenv.config({
+	path: ["security-enabled-env", ".env"],
+	override: true,
+	quiet: true,
+}); // the local env seems to get applied to the Docker commands so it's important we keep it updated
+await $`docker compose --env-file security-enabled-env --env-file .env -f ./docker-compose-pytest.yml build`.quiet();
+await $`docker compose --env-file security-enabled-env --env-file .env -f ./docker-compose-pytest.yml up -d`.quiet();
 await $`docker exec shabti uv run -m add_keycloak_demo_users`.quiet();
-await $`docker compose --env-file security-enabled-env --env-file .env up --attach shabti`;
+console.log(`
+____________RUNNING PYTHON TESTS______________
+`);
+await $`docker compose --env-file security-enabled-env --env-file .env -f ./docker-compose-pytest.yml up --attach shabti`;
