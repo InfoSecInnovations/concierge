@@ -6,7 +6,6 @@ from shabti_types import UnsupportedFileError
 import json
 import zipfile
 from typing import BinaryIO
-import traceback
 from io import BytesIO
 import os
 
@@ -60,7 +59,6 @@ async def insert_uploaded_files(
                             ):
                                 yield x
                         continue
-                    print(traceback.format_exc())
                     yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': f"File {file.filename} could not be loaded", 'filename': file.filename})}\n"
 
         async for x in handle_files(new_files):
