@@ -19,11 +19,15 @@ console.log(`
 
 dotenv.config({ path: "security-disabled-env", override: true, quiet: true });
 await nukeExisting();
+console.log(
+	"building Docker Compose... (can take some time if there are updates to the dependencies)",
+);
 await $`docker compose --env-file security-disabled-env -f ./docker-compose-pytest.yml build`.quiet();
 console.log(`
 ____________RUNNING PYTHON TESTS______________
 `);
 await $`docker compose --env-file security-disabled-env -f ./docker-compose-pytest.yml up --attach shabti`;
+// launch API
 await $`docker compose --env-file security-disabled-env up -d`;
 console.log(`
 __________RUNNING NODE CLIENT TESTS___________
@@ -63,6 +67,10 @@ dotenv.config({
 	override: true,
 	quiet: true,
 }); // the local env seems to get applied to the Docker commands so it's important we keep it updated
+console.log(
+	"building Docker Compose... (can take some time if there are updates to the dependencies)",
+);
+await $`docker compose --env-file security-enabled-env --env-file .env -f ./docker-compose-pytest.yml build`.quiet();
 await $`docker compose --env-file security-enabled-env --env-file .env -f ../shabti_configurator/docker_compose/docker-compose-launch-keycloak.yml up -d`.quiet();
 console.log("Getting Keycloak Client Secret...");
 const secret = await getKeycloakClientSecret();
@@ -90,3 +98,19 @@ console.log(`
 ____________RUNNING PYTHON TESTS______________
 `);
 await $`docker compose --env-file security-enabled-env --env-file .env -f ./docker-compose-pytest.yml up --attach shabti`;
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+// launch API
+await $`docker compose --env-file security-enabled-env --env-file .env up -d`;
+console.log(`
+__________RUNNING NODE CLIENT TESTS___________
+`);
+console.log("waiting for API service to launch...");
+while (true) {
+	try {
+		await fetch("https://localhost:15131");
+		break;
+	} catch {
+		continue;
+	}
+}
+await $`bun test`.cwd("..").env({ ...process.env, FORCE_COLOR: "1" });
