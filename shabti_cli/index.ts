@@ -2,13 +2,13 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import * as cliProgress from "cli-progress";
 import * as commander from "commander";
-import { UnsupportedFileError } from "shabti-api-client";
-import type { ShabtiAuthorizationClient } from "shabti-api-client";
-import type { ShabtiClient } from "shabti-api-client";
+import { UnsupportedFileError } from "@infosecinnovations/shabti-api-client";
+import type { ShabtiAuthorizationClient } from "@infosecinnovations/shabti-api-client";
+import type { ShabtiClient } from "@infosecinnovations/shabti-api-client";
 import {
 	type DocumentIngestInfo,
 	type PromptConfigInfo,
-} from "shabti-api-client/dist/dataTypes";
+} from "@infosecinnovations/shabti-api-client/dist/dataTypes";
 import * as dotenv from "dotenv";
 import getAuthClient from "./getAuthClient";
 import getClient from "./getClient";
