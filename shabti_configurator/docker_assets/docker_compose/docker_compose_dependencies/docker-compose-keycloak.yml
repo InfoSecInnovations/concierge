@@ -40,7 +40,7 @@ services:
       - ./keycloak_javascript/shabti.jar:/opt/keycloak/providers/shabti.jar
       - ${KEYCLOAK_CERT}:/opt/keycloak/tls/cert.pem
       - ${KEYCLOAK_CERT_KEY}:/opt/keycloak/tls/key.pem
-    command: start --import-realm --auto-build --features=scripts
+    command: start --import-realm --features=scripts
 
 volumes:
   postgres_data:
