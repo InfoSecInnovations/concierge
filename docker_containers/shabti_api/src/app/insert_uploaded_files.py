@@ -8,6 +8,7 @@ import zipfile
 from typing import BinaryIO
 from io import BytesIO
 import os
+from keycloak import KeycloakPostError, KeycloakAuthenticationError
 
 
 async def insert_uploaded_files(
@@ -39,6 +40,8 @@ async def insert_uploaded_files(
                         token, collection_id, doc, await file.read()
                     ):
                         yield f"{result.model_dump_json(exclude_unset=True)}\n"
+                except (KeycloakPostError, KeycloakAuthenticationError) as e:
+                    raise e
                 except UnsupportedFileError as e:
                     yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': e.message, 'filename': e.filename})}\n"
                 except Exception:
