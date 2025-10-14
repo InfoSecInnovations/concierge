@@ -12,7 +12,7 @@
 			}
 		],
 		"clientRoles": {
-			"shabti-auth": ["admin"]
+			"shabti-auth": ["collection_admin"]
 		}
 	},
 	{

@@ -12,7 +12,7 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 	const securityEnabled = envs && envs.SHABTI_SECURITY_ENABLED == "True";
 	const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True";
 	const gpuEnabled = envs && envs.SHABTI_COMPUTE == "cuda";
-	const loggingEnabled = envs && envs.SHABTI_BASE_SERVICE.endsWith("logging");
+	const loggingEnabled = envs && envs.SHABTI_BASE_SERVICE?.endsWith("logging");
 	const logDir =
 		(envs && envs.SHABTI_LOG_DIR) ||
 		path.join(getDefaultDirectory()!, "shabti", "logs");
