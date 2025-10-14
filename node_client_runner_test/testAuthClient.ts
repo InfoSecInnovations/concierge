@@ -8,8 +8,11 @@ const run = async () => {
 	// TODO: we need to use the root CA certs rather than disabling verification!
 	process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 	dotenv.config({
+		path: path.resolve(path.join("..", "tests_docker_compose", ".env")),
+	});
+	dotenv.config({
 		path: path.resolve(
-			path.join("..", "shabti_configurator", "docker_compose", ".env"),
+			path.join("..", "tests_docker_compose", "security-enabled-env"),
 		),
 	});
 	const config = await getOpenIdConfig();
@@ -59,6 +62,7 @@ const run = async () => {
 		unauthorizedToken,
 		config,
 	);
+	console.log("--------Run with unauthorized client--------");
 	for await (const item of await unauthorizedClient.insertFiles(collectionId, [
 		"./test.txt",
 	])) {
