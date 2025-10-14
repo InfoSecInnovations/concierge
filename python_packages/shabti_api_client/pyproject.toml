@@ -4,7 +4,7 @@ version = "0.1a6"
 requires-python = ">=3.12"
 dependencies = [
   "httpx",
-  "python-keycloak",
+  "python-keycloak~=5.8.1",
   "shabti-types"
 ]
 

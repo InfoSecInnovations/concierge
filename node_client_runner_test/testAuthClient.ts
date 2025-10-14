@@ -1,5 +1,5 @@
 import path from "node:path";
-import { ShabtiAuthorizationClient } from "shabti-api-client";
+import { ShabtiAuthorizationClient } from "@infosecinnovations/shabti-api-client";
 import * as dotenv from "dotenv";
 import * as openIdClient from "openid-client";
 import getOpenIdConfig from "./getOpenIdConfig";
@@ -18,7 +18,7 @@ const run = async () => {
 		password: "test",
 	});
 	const client = new ShabtiAuthorizationClient(
-		"http://localhost:8000",
+		"https://localhost:15131",
 		token,
 		config,
 	);
@@ -43,6 +43,24 @@ const run = async () => {
 	}
 	for await (const item of await client.insertUrls(collectionId, [
 		"https://en.wikipedia.org/wiki/Generative_artificial_intelligence",
+	])) {
+		console.log(item);
+	}
+	const unauthorizedToken = await openIdClient.genericGrantRequest(
+		config,
+		"password",
+		{
+			username: "testnothing",
+			password: "test",
+		},
+	);
+	const unauthorizedClient = new ShabtiAuthorizationClient(
+		"https://localhost:15131",
+		unauthorizedToken,
+		config,
+	);
+	for await (const item of await unauthorizedClient.insertFiles(collectionId, [
+		"./test.txt",
 	])) {
 		console.log(item);
 	}

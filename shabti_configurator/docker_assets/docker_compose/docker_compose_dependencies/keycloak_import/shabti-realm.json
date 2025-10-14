@@ -90,7 +90,7 @@
 				},
 				{
 					"id": "6e0356bb-69f9-4132-b7cc-f425701d70ba",
-					"name": "admin",
+					"name": "collection_admin",
 					"description": "",
 					"composite": true,
 					"composites": {
@@ -431,7 +431,7 @@
 			"disableableCredentialTypes": [],
 			"requiredActions": [],
 			"clientRoles": {
-				"shabti-auth": ["uma_protection", "admin"],
+				"shabti-auth": ["uma_protection", "collection_admin"],
 				"realm-management": ["realm-admin"]
 			},
 			"notBefore": 0,
@@ -844,7 +844,7 @@
 						"decisionStrategy": "UNANIMOUS",
 						"config": {
 							"fetchRoles": "false",
-							"roles": "[{\"id\":\"shabti-auth/admin\",\"required\":false}]"
+							"roles": "[{\"id\":\"shabti-auth/collection_admin\",\"required\":false}]"
 						}
 					},
 					{
@@ -855,7 +855,7 @@
 						"decisionStrategy": "UNANIMOUS",
 						"config": {
 							"fetchRoles": "false",
-							"roles": "[{\"id\":\"shabti-auth/shared_read_write\",\"required\":false},{\"id\":\"shabti-auth/admin\",\"required\":false}]"
+							"roles": "[{\"id\":\"shabti-auth/shared_read_write\",\"required\":false},{\"id\":\"shabti-auth/collection_admin\",\"required\":false}]"
 						}
 					},
 					{

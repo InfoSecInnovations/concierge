@@ -1,4 +1,4 @@
-import { ShabtiAuthorizationClient } from "shabti-api-client";
+import { ShabtiAuthorizationClient } from "@infosecinnovations/shabti-api-client";
 import * as openIdClient from "openid-client";
 import getOpenIdConfig from "./getOpenIdConfig";
 

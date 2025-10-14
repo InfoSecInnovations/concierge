@@ -1,5 +1,5 @@
 fastapi[standard]~=0.115.11
-python-keycloak~=5.3.1
+python-keycloak~=5.8.1
 isi-util==0.3a1
 shabti-util==0.3a2
 shabti-types==0.1a6

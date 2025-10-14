@@ -13,7 +13,7 @@
     },
     "shabti_api_client_node": {
       "name": "@infosecinnovations/shabti-api-client",
-      "version": "0.1.0-alpha.2",
+      "version": "0.1.0-alpha.4",
       "dependencies": {
         "openid-client": "^6.4.2",
       },
@@ -25,8 +25,9 @@
     },
     "shabti_cli": {
       "name": "shabti_cli",
-      "version": "0.1.0-alpha",
+      "version": "0.1.0-alpha.3",
       "dependencies": {
+        "@infosecinnovations/shabti-api-client": "../shabti_api_client_node",
         "@infosecinnovations/shabti-api-client": "../shabti_api_client_node/",
         "cli-progress": "^3.12.0",
         "commander": "^13.1.0",
@@ -499,8 +500,10 @@
 
     "shabti_cli/@infosecinnovations/shabti-api-client": ["@infosecinnovations/shabti-api-client@file:shabti_api_client_node", { "dependencies": { "openid-client": "^6.4.2" }, "devDependencies": { "@types/node": "^22.15.2", "esbuild": "^0.25.3", "npm-run-all": "^4.1.5" } }],
 
-    "shabti_cli/@types/bun": ["@types/bun@1.2.18", "", { "dependencies": { "bun-types": "1.2.18" } }, "sha512-Xf6RaWVheyemaThV0kUfaAUvCNokFr+bH8Jxp+tTZfx7dAPA8z9ePnP9S9+Vspzuxxx9JRAXhnyccRj3GyCMdQ=="],
+    "shabti_cli/@infosecinnovations/shabti-api-client": ["@infosecinnovations/shabti-api-client@file:shabti_api_client_node", { "dependencies": { "openid-client": "^6.4.2" }, "devDependencies": { "@types/node": "^22.15.2", "esbuild": "^0.25.3", "npm-run-all": "^4.1.5" } }],
 
-    "shabti_cli/@types/bun/bun-types": ["bun-types@1.2.18", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-04+Eha5NP7Z0A9YgDAzMk5PHR16ZuLVa83b26kH5+cp1qZW4F6FmAURngE7INf4tKOvCE69vYvDEwoNl1tGiWw=="],
+    "shabti_cli/@types/bun": ["@types/bun@1.2.23", "", { "dependencies": { "bun-types": "1.2.23" } }, "sha512-le8ueOY5b6VKYf19xT3McVbXqLqmxzPXHsQT/q9JHgikJ2X22wyTW3g3ohz2ZMnp7dod6aduIiq8A14Xyimm0A=="],
+
+    "shabti_cli/@types/bun/bun-types": ["bun-types@1.2.23", "", { "dependencies": { "@types/node": "*" }, "peerDependencies": { "@types/react": "^19" } }, "sha512-R9f0hKAZXgFU3mlrA0YpE/fiDvwV0FT9rORApt2aQVWSuJDzZOyB5QLc0N/4HF57CS8IXJ6+L5E4W1bW6NS2Aw=="],
   }
 }

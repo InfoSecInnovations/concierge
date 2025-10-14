@@ -1,4 +1,4 @@
-import { ShabtiClient } from "shabti-api-client";
+import { ShabtiClient } from "@infosecinnovations/shabti-api-client";
 
 export default () => {
 	const url =
