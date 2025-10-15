@@ -5,7 +5,6 @@ from fastapi.responses import StreamingResponse
 from shabti_types import UnsupportedFileError
 import json
 import zipfile
-from typing import BinaryIO
 from io import BytesIO
 import os
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
@@ -14,18 +13,6 @@ from keycloak import KeycloakPostError, KeycloakAuthenticationError
 async def insert_uploaded_files(
     token: None | str, collection_id, files: list[UploadFile]
 ):
-    def move_ownership(old_file: UploadFile) -> UploadFile:
-        new_file = UploadFile(
-            file=old_file.file,
-            size=old_file.size,
-            filename=old_file.filename,
-            headers=old_file.headers,
-        )
-        old_file.file = BinaryIO()
-        return new_file
-
-    new_files = [move_ownership(file) for file in files]
-
     async def response_json():
         async def handle_files(files: list[UploadFile]):
             for file in files:
@@ -64,7 +51,7 @@ async def insert_uploaded_files(
                         continue
                     yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': f'File {file.filename} could not be loaded', 'filename': file.filename})}\n"
 
-        async for x in handle_files(new_files):
+        async for x in handle_files(files):
             yield x
 
     return StreamingResponse(response_json())
