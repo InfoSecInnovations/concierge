@@ -64,9 +64,9 @@ if (npmJson.versions[shabtiApiPackageJson.version]) {
 } else {
 	await $`bun publish --access public`.cwd(nodeClientDir); // TODO: detect if prerelease
 }
-await $`docker build --target cpu -t infosecinnovations/shabti:${version} ./docker_containers/shabti_api`;
+await $`docker build --build-arg ACCELERATION_TYPE=cpu -t infosecinnovations/shabti:${version} ./docker_containers/shabti_api`;
 await $`docker image push infosecinnovations/shabti:${version}`;
-await $`docker build --target cuda -t infosecinnovations/shabti:${version}-cuda ./docker_containers/shabti_api`;
+await $`docker build --build-arg ACCELERATION_TYPE=cuda -t infosecinnovations/shabti:${version}-cuda ./docker_containers/shabti_api`;
 await $`docker image push infosecinnovations/shabti:${version}-cuda`;
 await $`docker build -t infosecinnovations/shabti-web:${version} ./docker_containers/shabti_web`;
 await $`docker image push infosecinnovations/shabti-web:${version}`;

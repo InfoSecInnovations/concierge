@@ -21,7 +21,8 @@ services:
       additional_contexts: 
         python_packages: ../python_packages
       dockerfile: Dockerfile.local
-      target: ${SHABTI_COMPUTE:-cpu}
+      args:
+        - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
     restart: unless-stopped
 
 volumes:

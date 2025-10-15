@@ -22,23 +22,44 @@ dependencies = [
 ]
 [project.optional-dependencies]
 cu126 = [
-    "torch==2.7.1+cu126; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchvision==0.22.1+cu126; sys_platform == 'linux' and platform_machine == 'x86_64'", 
-    "torchaudio==2.7.1+cu126; sys_platform == 'linux' and platform_machine == 'x86_64'"
+    "torch==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "torchvision==0.22.1; sys_platform == 'linux' and platform_machine == 'x86_64'", 
+    "torchaudio==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'"
+]
+cpu = [
+    "torch==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "torchvision==0.22.1; sys_platform == 'linux' and platform_machine == 'x86_64'", 
+    "torchaudio==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'"
 ]
 [tool.uv]
 required-environments = [
     "sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
-index-strategy = "unsafe-best-match"
+conflicts = [
+  [
+    { extra = "cpu" },
+    { extra = "cu126" },
+  ],
+]
 [tool.uv.sources]
 isi-util = { path = "/python_packages/isi_util", editable = true }
 shabti-util = { path = "/python_packages/shabti_util", editable = true }
 shabti-types = { path = "/python_packages/shabti_types", editable = true }
 shabti-keycloak = { path = "/python_packages/shabti_keycloak", editable = true }
+torch = [
+  { index = "pytorch-cu126", extra = "cu126" },
+]
+torchvision = [
+  { index = "pytorch-cu126", extra = "cu126" },
+]
+torchaudio = [
+  { index = "pytorch-cu126", extra = "cu126" },
+]
+
 [[tool.uv.index]]
-name = "torch-cu126"
+name = "pytorch-cu126"
 url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [dependency-groups]
 dev = [
