@@ -1,4 +1,4 @@
-import { describe, expect, jest, test } from "bun:test";
+import { afterAll, describe, expect, jest, test } from "bun:test";
 import { ShabtiClient } from "../client";
 import { ShabtiAuthorizationClient } from "../authClient";
 import * as openIdClient from "openid-client";
@@ -86,20 +86,32 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 	"Security enabled Shabti instance",
 	async () => {
-		const lookup = {};
-		const getClientForUser = async (username: string) => {
-			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-			const config = await openIdClient.discovery(
+		const lookup: { [key: string]: string } = {};
+		const getConfig = () =>
+			openIdClient.discovery(
 				new URL(
 					`https://localhost:8443/realms/shabti/.well-known/openid-configuration`,
 				),
 				process.env.KEYCLOAK_CLIENT_ID!,
 				process.env.KEYCLOAK_CLIENT_SECRET!,
 			);
+		const getClientForUser = async (username: string) => {
+			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+			const config = await getConfig();
 			const token = await openIdClient.genericGrantRequest(config, "password", {
 				username,
 				password: "test",
 			});
+			return new ShabtiAuthorizationClient(
+				"https://localhost:15131",
+				token,
+				config,
+			);
+		};
+		const getAdminClient = async () => {
+			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+			const config = await getConfig();
+			const token = await openIdClient.clientCredentialsGrant(config);
 			return new ShabtiAuthorizationClient(
 				"https://localhost:15131",
 				token,
@@ -219,5 +231,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				}).toThrow();
 			},
 		);
+		afterAll(async () => {
+			const adminClient = await getAdminClient();
+			for (const collectionId of Object.values(lookup)) {
+				await adminClient.deleteCollection(collectionId);
+			}
+		});
 	},
 );
