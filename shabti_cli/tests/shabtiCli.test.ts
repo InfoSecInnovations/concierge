@@ -1,6 +1,8 @@
 import { describe, expect, jest, test } from "bun:test";
 import buildProgram from "../buildProgram";
 import getClient from "../getClient";
+import { $ } from "bun";
+import path from "node:path";
 
 jest.setTimeout(-1);
 
@@ -21,6 +23,14 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 			);
 			expect(matchingCollection).toBeTruthy();
 			lookup[collectionName] = matchingCollection?.collectionId;
+		});
+		test("list collections", async () => {
+			// TODO: can we call the CLI app programatically instead of running the shell like this?
+			const output = await $`bun run index.ts collection list`
+				.cwd(path.resolve(path.join(import.meta.dir, "..")))
+				.env({ ...process.env })
+				.text();
+			expect(output).toInclude(collectionName);
 		});
 		test("delete collection", async () => {
 			const program = await buildProgram();

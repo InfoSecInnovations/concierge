@@ -27,7 +27,7 @@ export default async () => {
 				"-o, --owner <owner>",
 				"username this collection will be owned by",
 			)
-			.action((name, options) =>
+			.action((name, options, command) =>
 				(client as ShabtiAuthorizationClient)
 					.createCollection(name, options.location, options.owner)
 					.then((collectionId) =>
@@ -37,7 +37,7 @@ export default async () => {
 	} else {
 		collection
 			.command("create <name>")
-			.action((name) =>
+			.action((name, options, command) =>
 				(client as ShabtiClient)
 					.createCollection(name)
 					.then((collectionId) =>
@@ -49,7 +49,7 @@ export default async () => {
 	collection
 		.command("delete <collections...>")
 		.description("Delete collections with the specified IDs")
-		.action(async (collections) => {
+		.action(async (collections, options, command) => {
 			for (const collectionId of collections) {
 				await client
 					.deleteCollection(collectionId)
@@ -60,7 +60,7 @@ export default async () => {
 		});
 	collection
 		.command("list")
-		.action(() =>
+		.action((options, command) =>
 			client
 				.getCollections()
 				.then((collections) =>
@@ -70,6 +70,7 @@ export default async () => {
 
 	const insert = async (
 		insertStream: ReadableStream<DocumentIngestInfo | UnsupportedFileError>,
+		command: any,
 	) => {
 		let bar: cliProgress.SingleBar | undefined = undefined;
 		let currentLabel;
@@ -109,8 +110,8 @@ export default async () => {
 			"-c, --collection <collection>",
 			"collection id to ingest into",
 		)
-		.action(async (filepath, options) =>
-			insert(await client.insertFiles(options.collection, [filepath])),
+		.action(async (filepath, options, command) =>
+			insert(await client.insertFiles(options.collection, [filepath]), command),
 		);
 	ingest
 		.command("directory <directory>")
@@ -119,7 +120,7 @@ export default async () => {
 			"-c, --collection <collection>",
 			"collection id to ingest into",
 		)
-		.action(async (directory, options) => {
+		.action(async (directory, options, command) => {
 			const files = await readdir(directory, {
 				withFileTypes: true,
 				recursive: true,
@@ -130,6 +131,7 @@ export default async () => {
 					options.collection,
 					actualFiles.map((file) => path.join(file.parentPath, file.name)),
 				),
+				command,
 			);
 		});
 	ingest
@@ -139,8 +141,8 @@ export default async () => {
 			"-c, --collection <collection>",
 			"collection id to ingest into",
 		)
-		.action(async (urls, options) =>
-			insert(await client.insertUrls(options.collection, urls)),
+		.action(async (urls, options, command) =>
+			insert(await client.insertUrls(options.collection, urls), command),
 		);
 
 	program
@@ -156,7 +158,7 @@ export default async () => {
 			"-f, --file <file>",
 			"file to add information to the prompt context",
 		)
-		.action(async (userInput, options) => {
+		.action(async (userInput, options, command) => {
 			let sourceFound = false;
 			for await (const item of await client.prompt(
 				options.collection,
@@ -188,7 +190,7 @@ export default async () => {
 	const document = program.command("document");
 	document
 		.command("list <collection>")
-		.action((collection) =>
+		.action((collection, options, command) =>
 			client
 				.getDocuments(collection)
 				.then((documents) =>
@@ -201,7 +203,7 @@ export default async () => {
 			"-c, --collection <collection>",
 			"collection id containing the documents to be deleted",
 		)
-		.action(async (documents, options) => {
+		.action(async (documents, options, command) => {
 			for (const documentId of documents) {
 				await client
 					.deleteDocument(options.collection, documentId)
@@ -211,7 +213,10 @@ export default async () => {
 			}
 		});
 
-	const listPromptConfig = (items: { [key: string]: PromptConfigInfo }) =>
+	const listPromptConfig = (
+		items: { [key: string]: PromptConfigInfo },
+		command: any,
+	) =>
 		Object.entries(items).forEach(([key, value]) => {
 			console.log(key);
 			console.log("");
@@ -229,21 +234,27 @@ export default async () => {
 
 	program
 		.command("task list")
-		.action(() => client.getTasks().then((tasks) => listPromptConfig(tasks)));
+		.action((options, command) =>
+			client.getTasks().then((tasks) => listPromptConfig(tasks, command)),
+		);
 
 	program
 		.command("persona list")
-		.action(() =>
-			client.getPersonas().then((personas) => listPromptConfig(personas)),
+		.action((options, command) =>
+			client
+				.getPersonas()
+				.then((personas) => listPromptConfig(personas, command)),
 		);
 
 	program
 		.command("enhancer list")
-		.action(() =>
-			client.getEnhancers().then((enhancers) => listPromptConfig(enhancers)),
+		.action((options, command) =>
+			client
+				.getEnhancers()
+				.then((enhancers) => listPromptConfig(enhancers, command)),
 		);
 
-	program.command("status").action(async () => {
+	program.command("status").action(async (options, command) => {
 		console.log(
 			`Ollama: ${(await client.ollamaStatus()) ? "online" : "offline"}`,
 		);
