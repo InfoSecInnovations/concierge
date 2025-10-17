@@ -10,6 +10,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	"Security disabled Shabti instance",
 	() => {
 		const lookup: { [key: string]: any } = {};
+		let documentId;
 		const collectionName = "test_collection";
 		test("create collection", async () => {
 			const program = await buildProgram();
@@ -31,6 +32,56 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				.env({ ...process.env })
 				.text();
 			expect(output).toInclude(collectionName);
+		});
+		test("ingest file", async () => {
+			const filename = "test_doc.txt";
+			const filePath = path.join(import.meta.dir, filename);
+			const program = await buildProgram();
+			await program.parseAsync(
+				["ingest", "file", filePath, "--collection", lookup[collectionName]],
+				{ from: "user" },
+			);
+			const client = getClient();
+			const documents = await client.getDocuments(lookup[collectionName]);
+			const matchingDocument = documents.find(
+				(document) => document.filename == filename,
+			);
+			expect(matchingDocument).toBeTruthy();
+			documentId = matchingDocument?.documentId;
+		});
+		test("ingest urls", async () => {
+			const urls = ["https://www.example.com", "https://example.org"];
+			const program = await buildProgram();
+			await program.parseAsync(
+				["ingest", "urls", ...urls, "--collection", lookup[collectionName]],
+				{ from: "user" },
+			);
+			const client = getClient();
+			const documents = await client.getDocuments(lookup[collectionName]);
+			expect(documents.map((document) => document.source)).toContainValues(
+				urls,
+			);
+		});
+		test("ingest directory", async () => {
+			const directoryName = "test_dir";
+			const directoryFiles = ["test_doc2.txt", "test_doc3.txt"];
+			const directoryPath = path.join(import.meta.dir, directoryName);
+			const program = await buildProgram();
+			await program.parseAsync(
+				[
+					"ingest",
+					"directory",
+					directoryPath,
+					"--collection",
+					lookup[collectionName],
+				],
+				{ from: "user" },
+			);
+			const client = getClient();
+			const documents = await client.getDocuments(lookup[collectionName]);
+			expect(documents.map((document) => document.filename)).toContainValues(
+				directoryFiles,
+			);
 		});
 		test("delete collection", async () => {
 			const program = await buildProgram();
