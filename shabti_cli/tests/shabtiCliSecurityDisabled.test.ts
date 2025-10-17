@@ -10,7 +10,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	"Security disabled Shabti instance",
 	() => {
 		const lookup: { [key: string]: any } = {};
-		let documentId;
+		const documentIds: string[] = [];
 		const collectionName = "test_collection";
 		test("create collection", async () => {
 			const program = await buildProgram();
@@ -47,7 +47,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				(document) => document.filename == filename,
 			);
 			expect(matchingDocument).toBeTruthy();
-			documentId = matchingDocument?.documentId;
+			if (matchingDocument) documentIds.push(matchingDocument.documentId);
 		});
 		test("ingest urls", async () => {
 			const urls = ["https://www.example.com", "https://example.org"];
@@ -58,8 +58,12 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 			);
 			const client = getClient();
 			const documents = await client.getDocuments(lookup[collectionName]);
-			expect(documents.map((document) => document.source)).toContainValues(
-				urls,
+			const matchingDocuments = documents.filter((document) =>
+				urls.includes(document.source),
+			);
+			expect(matchingDocuments.length == urls.length).toBeTrue();
+			documentIds.push(
+				...matchingDocuments.map((document) => document.documentId),
 			);
 		});
 		test("ingest directory", async () => {
@@ -83,6 +87,34 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				directoryFiles,
 			);
 		});
+		test("list documents", async () => {
+			const output =
+				await $`bun run index.ts document list ${lookup[collectionName]}`
+					.cwd(path.resolve(path.join(import.meta.dir, "..")))
+					.env({ ...process.env })
+					.text();
+			for (const documentId of documentIds) {
+				expect(output).toInclude(documentId);
+			}
+		});
+		test("delete documents", async () => {
+			const program = await buildProgram();
+			await program.parseAsync(
+				[
+					"document",
+					"delete",
+					...documentIds,
+					"--collection",
+					lookup[collectionName],
+				],
+				{ from: "user" },
+			);
+			const client = getClient();
+			const documents = await client.getDocuments(lookup[collectionName]);
+			expect(
+				documents.map((document) => document.documentId),
+			).not.toContainAnyValues(documentIds);
+		});
 		test("delete collection", async () => {
 			const program = await buildProgram();
 			await program.parseAsync(
@@ -97,8 +129,4 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 			expect(matchingCollection).toBeFalsy();
 		});
 	},
-);
-describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
-	"Security enabled Shabti instance",
-	() => {},
 );
