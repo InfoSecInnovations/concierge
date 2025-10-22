@@ -24,6 +24,16 @@ services:
       args:
         - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
     restart: unless-stopped
+  shabti-client:
+    tty: true
+    build:
+      context: ../python_packages/shabti_api_client
+      additional_contexts: 
+        python_packages: ../python_packages
+      dockerfile: Dockerfile
+    environment:
+      - SHABTI_SECURITY_ENABLED=${SHABTI_SECURITY_ENABLED:-False}
+    restart: no
 
 volumes:
   opensearch-data1:

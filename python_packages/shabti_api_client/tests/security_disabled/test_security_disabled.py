@@ -1,12 +1,7 @@
-import pytest
-import os
 from isi_util.list_util import find
 from shabti_api_client import ShabtiClient
 
-if os.getenv("SHABTI_SECURITY_ENABLED") == "True":
-    pytest.skip(reason="security not enabled", allow_module_level=True)
-
-client = ShabtiClient("http://localhost:15131")
+client = ShabtiClient("http://shabti:15131")
 collection_name = "test_collection"
 collection_lookup = {}
 
