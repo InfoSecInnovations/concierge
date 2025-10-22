@@ -27,6 +27,10 @@ console.log(`
 ____________RUNNING PYTHON TESTS______________
 `);
 await $`docker compose --env-file security-disabled-env -f ./docker-compose-pytest.yml up --attach shabti`;
+console.log(
+	"building Docker Compose... (can take some time if there are updates to the dependencies)",
+);
+await $`docker compose --env-file security-disabled-env build`.quiet();
 await $`docker compose --env-file security-disabled-env up --attach shabti-client`;
 // launch API
 await $`docker compose --env-file security-disabled-env up -d`;
