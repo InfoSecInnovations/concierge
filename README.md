@@ -81,7 +81,7 @@ Please create an issue [here](https://github.com/InfoSecInnovations/concierge/is
 
 The ones listed at the top of this page, and:
 - **Python 3.12** the application code is in Python so unless you intend to only run inside Docker, you'll need this
-- **Bun 1.2.1** the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
+- **Bun 1.3.1** the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
 
 ### Installation
 

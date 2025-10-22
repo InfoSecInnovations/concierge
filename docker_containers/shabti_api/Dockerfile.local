@@ -29,4 +29,10 @@ FROM ${ACCELERATION_TYPE} AS final
 COPY . /shabti/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
 
+# install packages so we can run pytest on them
+WORKDIR /python_packages/isi_util/
+RUN --mount=type=cache,target=/root/.cache/uv uv sync
+
+WORKDIR /shabti/
+
 

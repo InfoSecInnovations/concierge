@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile.local
       args:
         - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
-    command: ["uv", "run", "pytest"]
+    command: ["sh", "-c", "uv run pytest && cd /python_packages/isi_util/ && uv run pytest"]
     restart: no
 
 volumes:

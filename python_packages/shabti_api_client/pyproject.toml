@@ -5,9 +5,22 @@ requires-python = ">=3.12"
 dependencies = [
   "httpx",
   "python-keycloak~=5.8.1",
-  "shabti-types"
+  "shabti-types",
+]
+
+[dependency-groups]
+dev = [
+  "pytest~=8.4.2",
+  "pytest-asyncio~=1.2.0",
+  "isi-util"
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+asyncio_mode="auto"
