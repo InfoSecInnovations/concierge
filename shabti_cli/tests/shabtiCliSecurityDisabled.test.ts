@@ -11,7 +11,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	() => {
 		const lookup: { [key: string]: any } = {};
 		const documentIds: string[] = [];
-		const collectionName = "test_collection";
+		const collectionName = "test_collection_cli";
 		test("create collection", async () => {
 			const program = await buildProgram();
 			await program.parseAsync(["collection", "create", collectionName], {

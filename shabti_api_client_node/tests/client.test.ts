@@ -12,7 +12,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	"Security disabled Shabti instance",
 	() => {
 		const getClient = () => new ShabtiClient("http://localhost:15131");
-		const collectionName = "test_collection";
+		const collectionName = "test_collection_node_client";
 		const lookup = {};
 		test("create collection", async () => {
 			const collectionId = await getClient().createCollection(collectionName);
