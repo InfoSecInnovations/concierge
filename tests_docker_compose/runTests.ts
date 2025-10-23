@@ -104,6 +104,11 @@ ____________RUNNING PYTHON TESTS______________
 `);
 await $`docker compose --env-file security-enabled-env --env-file .env -f ./docker-compose-pytest.yml up --attach shabti`;
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+console.log(
+	"building Docker Compose... (can take some time if there are updates to the dependencies)",
+);
+await $`docker compose --env-file security-enabled-env --env-file .env build`.quiet();
+await $`docker compose --env-file security-enabled-env --env-file .env up --attach shabti-client`;
 // launch API
 await $`docker compose --env-file security-enabled-env --env-file .env up -d`;
 console.log(`

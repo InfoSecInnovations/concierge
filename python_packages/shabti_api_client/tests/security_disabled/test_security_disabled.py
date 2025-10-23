@@ -62,3 +62,15 @@ async def test_delete_collection(shabti_client):
         collection.collection_id == collection_lookup[collection_name]
         for collection in collections
     )
+
+
+async def test_ollama_status(shabti_client):
+    assert await shabti_client.ollama_status()
+
+
+async def test_opensearch_status(shabti_client):
+    assert await shabti_client.opensearch_status()
+
+
+async def test_api_status(shabti_client):
+    assert await shabti_client.api_status()

@@ -9,7 +9,7 @@ ENV PYTHONPATH=/
 ENV UV_LINK_MODE=copy
 
 WORKDIR /python_packages/shabti_api_client/
-RUN --mount=type=cache,target=/root/.cache/uv uv add --editable ../shabti_types/
+RUN --mount=type=cache,target=/root/.cache/uv uv add --editable ../shabti_types/ ../shabti_keycloak
 RUN --mount=type=cache,target=/root/.cache/uv uv sync
 
 CMD ["uv", "run", "pytest"]

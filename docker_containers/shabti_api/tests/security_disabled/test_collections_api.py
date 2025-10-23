@@ -91,11 +91,22 @@ async def test_delete_collection(shabti_client):
     )
 
 
+async def test_create_collection_after_delete(shabti_client):
+    response = shabti_client.post(
+        "/collections", json={"collection_name": collection_name}
+    )
+    assert response.status_code == 201
+    collection_id = response.json()["collection_id"]
+    assert collection_id
+    collection_lookup[collection_name] = collection_id
+
+
 async def clean_up_collections():
-    for collection_id in collection_lookup.values():
+    collections = await get_collections(None)
+    for collection in collections:
         try:
-            await delete_collection(None, collection_id)
-        except Exception:  # some collections may have been deleted by tests so it doesn't matter if this fails
+            await delete_collection(None, collection.collection_id)
+        except Exception:  # we're not trying to test collection getting and deletion here so just do our best to clean up!
             pass
 
 
