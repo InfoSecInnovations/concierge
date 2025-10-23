@@ -15,7 +15,7 @@ dependencies = [
     "python-magic-bin~=0.4.14 ; sys_platform == 'win32'",
     "sentence-transformers~=5.1.0",
     "unstructured[all-docs]~=0.18.14",
-    "isi-util==0.3a1",
+    "isi-util==0.3a2",
     "shabti-util==0.3a2",
     "shabti-types==0.1a7",
     "shabti-keycloak==0.1a2"

@@ -5,7 +5,6 @@ from ...src.app.document_collections import (
     get_documents,
 )
 import asyncio
-from isi_util.list_util import find
 from ...src.app.ingesting import insert_document
 from ...src.app.loading import load_file
 from shabti_util import auth_enabled
@@ -34,9 +33,12 @@ def test_create_collection(shabti_client):
 def test_list_collections(shabti_client):
     response = shabti_client.get("/collections")
     assert response.status_code == 200
-    assert find(
-        response.json(),
-        lambda x: x["collection_id"] == collection_lookup[collection_name],
+    assert next(
+        (
+            collection_info
+            for collection_info in response.json()
+            if collection_info["collection_id"] == collection_lookup[collection_name]
+        )
     )
 
 
@@ -57,7 +59,7 @@ async def test_insert_urls(shabti_client):
     )
     assert response.status_code == 200
     docs = await get_documents(None, collection_lookup[collection_name])
-    assert find(docs, lambda x: x.source == url)
+    assert next((doc for doc in docs if doc.source == url))
 
 
 async def test_delete_document(shabti_client):
@@ -73,7 +75,7 @@ async def test_delete_document(shabti_client):
     )
     assert response.status_code == 200
     docs = await get_documents(None, collection_lookup[collection_name])
-    assert not find(docs, lambda x: x.document_id == ingest_info.document_id)
+    assert not any(doc.document_id == ingest_info.document_id for doc in docs)
 
 
 async def test_delete_collection(shabti_client):
@@ -82,8 +84,10 @@ async def test_delete_collection(shabti_client):
     )
     assert response.status_code == 200
     collections = await get_collections(None)
-    assert not find(
-        collections, lambda x: x.collection_id == response.json()["collection_id"]
+    response_json = response.json()
+    assert not any(
+        collection.collection_id == response_json["collection_id"]
+        for collection in collections
     )
 
 

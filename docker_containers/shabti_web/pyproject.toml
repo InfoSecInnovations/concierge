@@ -6,7 +6,6 @@ dependencies = [
     "humanize~=4.13.0",
     "shiny~=1.4.0",
     "shinyswatch~=0.9.0",
-    "isi-util==0.3a1",
     "shabti-util==0.3a2",
     "shabti-types==0.1a7",
     "shabti-keycloak==0.1a2",
@@ -14,7 +13,6 @@ dependencies = [
     "tqdm~=4.67.1",
 ]
 [tool.uv.sources]
-isi-util = { path = "/python_packages/isi_util", editable = true }
 shabti-util = { path = "/python_packages/shabti_util", editable = true }
 shabti-types = { path = "/python_packages/shabti_types", editable = true }
 shabti-keycloak = { path = "/python_packages/shabti_keycloak", editable = true }
