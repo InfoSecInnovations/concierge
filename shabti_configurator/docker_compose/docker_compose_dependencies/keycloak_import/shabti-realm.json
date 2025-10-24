@@ -434,6 +434,7 @@
 				"shabti-auth": ["uma_protection", "collection_admin"],
 				"realm-management": ["realm-admin"]
 			},
+			"realmRoles": ["default-roles-shabti"],
 			"notBefore": 0,
 			"groups": []
 		}

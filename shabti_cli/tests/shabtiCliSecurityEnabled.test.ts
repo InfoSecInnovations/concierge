@@ -7,7 +7,7 @@ import getAuthClient from "../getAuthClient";
 jest.setTimeout(-1);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
-	"Security enabled Shabti instance",
+	"CLI - Security enabled Shabti instance",
 	() => {
 		const lookup: { [key: string]: any } = {};
 		const documentIds: string[] = [];

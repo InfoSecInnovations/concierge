@@ -7,7 +7,7 @@ import path from "node:path";
 jest.setTimeout(-1);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
-	"Security disabled Shabti instance",
+	"CLI - Security disabled Shabti instance",
 	() => {
 		const lookup: { [key: string]: any } = {};
 		const documentIds: string[] = [];

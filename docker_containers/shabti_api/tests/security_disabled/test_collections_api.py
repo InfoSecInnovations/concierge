@@ -38,7 +38,8 @@ def test_list_collections(shabti_client):
             collection_info
             for collection_info in response.json()
             if collection_info["collection_id"] == collection_lookup[collection_name]
-        )
+        ),
+        None,
     )
 
 
@@ -59,7 +60,7 @@ async def test_insert_urls(shabti_client):
     )
     assert response.status_code == 200
     docs = await get_documents(None, collection_lookup[collection_name])
-    assert next((doc for doc in docs if doc.source == url))
+    assert next((doc for doc in docs if doc.source == url), None)
 
 
 async def test_delete_document(shabti_client):

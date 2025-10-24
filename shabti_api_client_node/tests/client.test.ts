@@ -9,7 +9,7 @@ const test_doc_path = path.join(import.meta.dir, "test_doc.txt");
 jest.setTimeout(-1);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
-	"Security disabled Shabti instance",
+	"Node Client - Security disabled Shabti instance",
 	() => {
 		const getClient = () => new ShabtiClient("http://localhost:15131");
 		const collectionName = "test_collection_node_client";
@@ -84,7 +84,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	},
 );
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
-	"Security enabled Shabti instance",
+	"Node Client - Security enabled Shabti instance",
 	async () => {
 		const lookup: { [key: string]: string } = {};
 		const getConfig = () =>
@@ -133,8 +133,8 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					collectionName,
 					location,
 				);
-				lookup[collectionName] = collectionId;
 				expect(collectionId).toBeTruthy();
+				lookup[collectionName] = collectionId;
 			},
 		);
 		const cannotCreateCollectionUsers = [

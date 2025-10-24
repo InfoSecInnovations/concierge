@@ -2,7 +2,7 @@
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
-from shabti_keycloak import get_keycloak_client, get_keycloak_admin_openid_token
+from shabti_keycloak import get_keycloak_client
 from ...src.app.authorization import UnauthorizedOperationError
 from ...src.app.document_collections import (
     delete_collection,
@@ -139,6 +139,7 @@ file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
 def ingest_document_api(user, collection_id, shabti_client):
+    document_id = None
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     response = shabti_client.post(
@@ -150,7 +151,7 @@ def ingest_document_api(user, collection_id, shabti_client):
         line = json.loads(item)
         if "document_id" in line:
             document_id = line["document_id"]
-    return document_id
+    return (document_id, response)
 
 
 @pytest.mark.parametrize(
@@ -164,8 +165,11 @@ def ingest_document_api(user, collection_id, shabti_client):
     ],
 )
 async def test_can_ingest_document(user, collection_name, shabti_client):
-    assert await ingest_document(user, collection_lookup[collection_name])
-    assert ingest_document_api(user, collection_lookup[collection_name], shabti_client)
+    result = ingest_document_api(
+        user, collection_lookup[collection_name], shabti_client
+    )
+    assert result[1].status_code == 200
+    assert result[0]
 
 
 @pytest.mark.parametrize(
@@ -181,13 +185,11 @@ async def test_can_ingest_document(user, collection_name, shabti_client):
     ],
 )
 async def test_cannot_ingest_document(user, collection_name, shabti_client):
-    with pytest.raises(
-        (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
-    ):
-        await ingest_document(user, collection_lookup[collection_name])
-        assert ingest_document_api(
-            user, collection_lookup[collection_name], shabti_client
-        )
+    result = ingest_document_api(
+        user, collection_lookup[collection_name], shabti_client
+    )
+    assert not result[0]
+    assert result[1].status_code == 403
 
 
 async def delete_document_with_user(user, collection_name):
@@ -315,17 +317,5 @@ async def test_cannot_delete_collection(user, owner, location, shabti_client):
         await delete_collection_api_with_user(user, owner, location, shabti_client)
 
 
-async def clean_up_local_collections():
-    token = get_keycloak_admin_openid_token()
-    for id in collection_ids:
-        token = get_keycloak_admin_openid_token()
-        # the tests may have deleted some of these, so we allow exceptions here
-        try:
-            await delete_collection(token["access_token"], id)
-        except Exception:
-            pass
-
-
 def teardown_module():
     asyncio.run(clean_up_collections())
-    asyncio.run(clean_up_local_collections())

@@ -30,7 +30,13 @@ from .run_prompt import run_prompt
 from .load_prompter_config import load_prompter_config
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
-from .authorization import authorize, list_permissions, has_scope, list_scopes
+from .authorization import (
+    authorize,
+    list_permissions,
+    has_scope,
+    list_scopes,
+    UnauthorizedOperationError,
+)
 from .ollama import load_model
 import asyncio
 
@@ -102,6 +108,10 @@ async def insert_files_document_route(
     files: list[UploadFile],
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> StreamingResponse:
+    # verify before starting the stream, as exceptions can't be properly thrown once streaming has started
+    authorized = await authorize(credentials, collection_id, "update")
+    if not authorized:
+        raise UnauthorizedOperationError()
     return await insert_uploaded_files(credentials, collection_id, files)
 
 
@@ -113,6 +123,10 @@ async def insert_urls_document_route(
     urls: list[str],
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> StreamingResponse:
+    # verify before starting the stream, as exceptions can't be properly thrown once streaming has started
+    authorized = await authorize(credentials, collection_id, "update")
+    if not authorized:
+        raise UnauthorizedOperationError()
     return insert_urls(credentials, collection_id, urls)
 
 

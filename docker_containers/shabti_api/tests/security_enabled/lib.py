@@ -5,6 +5,7 @@ from shabti_keycloak import (
 from ...src.app.document_collections import (
     create_collection,
     delete_collection,
+    get_collections,
 )
 from ...src.app.ingesting import insert_document
 from ...src.app.loading import load_file
@@ -46,10 +47,6 @@ async def ingest_document(user, collection_id):
 
 async def clean_up_collections():
     token = get_keycloak_admin_openid_token()
-    for id in collection_ids:
-        token = get_keycloak_admin_openid_token()
-        # the tests may have deleted some of these, so we allow exceptions here
-        try:
-            await delete_collection(token["access_token"], id)
-        except Exception:
-            pass
+    collections = await get_collections(token["access_token"])
+    for collection in collections:
+        await delete_collection(token["access_token"], collection.collection_id)
