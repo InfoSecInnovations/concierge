@@ -67,20 +67,20 @@ async def test_can_create_collection(user, location, shabti_client):
     ],
 )
 async def test_cannot_create_collection(user, location, shabti_client):
+    # test the API call itself
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    collection_name = f"{user}'s {location} API collection"
+    response = shabti_client.post(
+        "/collections",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+        json={"collection_name": collection_name, "location": location},
+    )
+    assert response.status_code == 403
     with pytest.raises((KeycloakPostError, KeycloakAuthenticationError)):
         # test function behind the API call
         await create_collection_for_user(
             user, location, f"{user}'s {location} collection"
-        )
-
-        # test the API call itself
-        keycloak_client = get_keycloak_client()
-        token = keycloak_client.token(user, "test")
-        collection_name = f"{user}'s {location} API collection"
-        shabti_client.post(
-            "/collections",
-            headers={"Authorization": f"Bearer {token['access_token']}"},
-            json={"collection_name": collection_name, "location": location},
         )
 
 
@@ -122,16 +122,17 @@ async def test_can_read_collection(user, collection_name, shabti_client):
     ],
 )
 async def test_cannot_read_collection(user, collection_name, shabti_client):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.get(
+        f"/collections/{collection_lookup[collection_name]}/documents",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    assert response.status_code == 403
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
-        keycloak_client = get_keycloak_client()
-        token = keycloak_client.token(user, "test")
         await get_documents(token["access_token"], collection_lookup[collection_name])
-        shabti_client.get(
-            f"/collections/{collection_lookup[collection_name]}/documents",
-            headers={"Authorization": f"Bearer {token['access_token']}"},
-        )
 
 
 filename = "test_doc.txt"
@@ -247,11 +248,13 @@ async def test_can_delete_document(user, collection_name, shabti_client):
     ],
 )
 async def test_cannot_delete_document(user, collection_name, shabti_client):
+    response = await delete_document_api_with_user(user, collection_name, shabti_client)
+    assert response.status_code == 403
+    assert "document_id" not in response.json()
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_document_with_user(user, collection_name)
-        await delete_document_api_with_user(user, collection_name, shabti_client)
 
 
 async def delete_collection_with_user(user, owner, location):
@@ -310,11 +313,14 @@ async def test_can_delete_collection(user, owner, location, shabti_client):
     ],
 )
 async def test_cannot_delete_collection(user, owner, location, shabti_client):
+    response = await delete_collection_api_with_user(
+        user, owner, location, shabti_client
+    )
+    assert response.status_code == 403
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_collection_with_user(user, owner, location)
-        await delete_collection_api_with_user(user, owner, location, shabti_client)
 
 
 def teardown_module():

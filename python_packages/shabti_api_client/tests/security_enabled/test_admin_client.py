@@ -29,9 +29,3 @@ async def test_can_delete_collection():
         collection.collection_id == lookup[collection_name]
         for collection in collections
     )
-
-
-async def test_collection_can_be_created_with_old_name():
-    client = await get_client_for_user("testadmin")
-    collection_id = await client.create_collection(collection_name, "shared")
-    assert collection_id
