@@ -11,3 +11,4 @@ POSTGRES_DB_PASSWORD=ThisPasswordIsNotSecure
 KEYCLOAK_INITIAL_ADMIN_PASSWORD=Th1SP4ssw0rdIsNotSecur33ither!
 KEYCLOAK_SERVICE_FILE=docker-compose-keycloak.yml
 KEYCLOAK_CLIENT_ID=shabti-auth
+JUNIT_FILENAME = security_enabled

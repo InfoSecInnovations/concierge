@@ -2,6 +2,8 @@
 .env
 shabti_log.json
 shabti_logs/
+test_results/
+shabti_all_tests.xml
 
 # generated certificates
 self_signed_certificates

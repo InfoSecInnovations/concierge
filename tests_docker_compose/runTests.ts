@@ -2,6 +2,7 @@ import { $ } from "bun";
 import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
 import runSecurityTests from "./runSecurityTests";
+import { mergeFiles } from "junit-report-merger";
 
 console.log(`
 -----------------------------------------------------
@@ -28,7 +29,7 @@ await $`docker compose --env-file security-disabled-env -f ./docker-compose-clie
 await $`docker compose --env-file security-disabled-env build`.quiet();
 await $`docker compose --env-file security-disabled-env up -d`;
 console.log(`
-__________RUNNING NODE CLIENT TESTS___________
+__________RUNNING NODE TESTS___________
 `);
 console.log("waiting for API service to launch...");
 while (true) {
@@ -39,6 +40,10 @@ while (true) {
 		continue;
 	}
 }
-await $`bun test`.cwd("..").env({ ...process.env, FORCE_COLOR: "1" });
+await $`bun test --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_disabled.xml`
+	.cwd("..")
+	.env({ ...process.env, FORCE_COLOR: "1" });
 
 await runSecurityTests();
+
+await mergeFiles("shabti_all_tests.xml", ["./test_results/*.xml"]);

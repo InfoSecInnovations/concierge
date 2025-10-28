@@ -74,7 +74,7 @@ export default async () => {
 	);
 	await $`docker compose --env-file security-enabled-env --env-file .env up -d`;
 	console.log(`
-  __________RUNNING NODE CLIENT TESTS___________
+  __________RUNNING NODE TESTS___________
   `);
 	console.log("waiting for API service to launch...");
 	while (true) {
@@ -85,5 +85,7 @@ export default async () => {
 			continue;
 		}
 	}
-	await $`bun test`.cwd("..").env({ ...process.env, FORCE_COLOR: "1" });
+	await $`bun test --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_enabled.xml`
+		.cwd("..")
+		.env({ ...process.env, FORCE_COLOR: "1" });
 };

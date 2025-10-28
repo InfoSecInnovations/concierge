@@ -1,0 +1,8 @@
+{
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"dependencies": {
+		"junit-report-merger": "^8.0.0"
+	}
+}

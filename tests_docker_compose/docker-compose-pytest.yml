@@ -24,8 +24,10 @@ services:
       dockerfile: Dockerfile.local
       args:
         - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
-    command: ["sh", "-c", "uv run pytest && cd /python_packages/isi_util/ && uv run pytest"]
+    command: ["sh", "-c", "uv run pytest --junit-xml=/test_results/shabti_api_${JUNIT_FILENAME}.xml && cd /python_packages/isi_util/ && uv run pytest --junit-xml=/test_results/isi_util_${JUNIT_FILENAME}.xml"]
     restart: no
+    volumes:
+      - ./test_results:/test_results/
 
 volumes:
   opensearch-data1:
