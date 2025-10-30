@@ -2,8 +2,11 @@ import { $ } from "bun";
 import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
 import runSecurityTests from "./runSecurityTests";
-import { mergeFiles } from "junit-report-merger";
+import { mergeFiles, mergeToString } from "junit-report-merger";
 import { rm, mkdir } from "node:fs/promises";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
+import path from "node:path";
+import xunitViewer from "xunit-viewer";
 
 await rm("./test_results", { recursive: true, force: true });
 
@@ -50,7 +53,42 @@ await $`bun test --reporter=junit --reporter-outfile=./tests_docker_compose/test
 await runSecurityTests();
 
 await mkdir("./processed_test_runs", { recursive: true });
-await mergeFiles(
-	`./processed_test_runs/shabti_test_run_${new Date().toISOString().replace(/:/g, "_")}.xml`,
-	["./test_results/*.xml"],
-);
+const filename = `shabti_test_run_${new Date().toISOString().replace(/:/g, "_")}`;
+await mergeFiles("./test_results/merged.xml", ["./test_results/*.xml"]);
+const merged = await Bun.file("./test_results/merged.xml").text();
+const parser = new XMLParser({ ignoreAttributes: false });
+const parsedObj = parser.parse(merged);
+const processNode = (node: any) => {
+	// valid test cases are either not skipped or don't match any non skipped tests (i.e. they were only skipped and not also executed in another run)
+	if (node.testcase)
+		node.testcase = node.testcase.filter(
+			(testCase: any) =>
+				typeof testCase.skipped == "undefined" ||
+				!node.testcase.some(
+					(otherCase: any) =>
+						otherCase["@_name"] == testCase["@_name"] &&
+						typeof otherCase.skipped == "undefined",
+				),
+		);
+	if (node.testsuite) {
+		if (Array.isArray(node.testsuite)) {
+			for (const childNode of node.testsuite) {
+				processNode(childNode);
+			}
+		} else {
+			processNode(node.testsuite);
+		}
+	}
+};
+processNode(parsedObj.testsuites);
+const builder = new XMLBuilder({ ignoreAttributes: false, format: true });
+const finalXml = builder.build(parsedObj);
+await Bun.write(path.join("processed_test_runs", `${filename}.xml`), finalXml);
+await xunitViewer({
+	server: false,
+	results: path.join("processed_test_runs", `${filename}.xml`),
+	title: "Shabti Aggregated Test Results",
+	console: true,
+	output: false,
+	script: true,
+});

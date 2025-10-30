@@ -3,6 +3,8 @@
 		"@types/bun": "latest"
 	},
 	"dependencies": {
-		"junit-report-merger": "^8.0.0"
+		"fast-xml-parser": "^5.3.0",
+		"junit-report-merger": "^8.0.0",
+		"xunit-viewer": "^10.6.1"
 	}
 }
