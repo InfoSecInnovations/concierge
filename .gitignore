@@ -3,7 +3,7 @@
 shabti_log.json
 shabti_logs/
 test_results/
-shabti_all_tests.xml
+processed_test_runs/
 
 # generated certificates
 self_signed_certificates

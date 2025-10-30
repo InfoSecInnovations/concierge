@@ -3,6 +3,9 @@ import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
 import runSecurityTests from "./runSecurityTests";
 import { mergeFiles } from "junit-report-merger";
+import { rm, mkdir } from "node:fs/promises";
+
+await rm("./test_results", { recursive: true, force: true });
 
 console.log(`
 -----------------------------------------------------
@@ -46,4 +49,8 @@ await $`bun test --reporter=junit --reporter-outfile=./tests_docker_compose/test
 
 await runSecurityTests();
 
-await mergeFiles("shabti_all_tests.xml", ["./test_results/*.xml"]);
+await mkdir("./processed_test_runs", { recursive: true });
+await mergeFiles(
+	`./processed_test_runs/shabti_test_run_${new Date().toISOString().replace(/:/g, "_")}.xml`,
+	["./test_results/*.xml"],
+);
