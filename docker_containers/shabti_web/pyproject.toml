@@ -9,7 +9,7 @@ dependencies = [
     "shabti-util==0.3a2",
     "shabti-types==0.1a7",
     "shabti-keycloak==0.1a2",
-    "shabti-api-client==0.1a7",
+    "shabti-api-client==0.1a8",
     "tqdm~=4.67.1",
 ]
 [tool.uv.sources]
