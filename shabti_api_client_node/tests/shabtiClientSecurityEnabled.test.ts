@@ -156,6 +156,66 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				}).toThrow();
 			},
 		);
+		const canDeleteDocumentUsers = [
+			["testadmin", "testadmin's shared collection"],
+			["testadmin", "testadmin's private collection"],
+			["testadmin", "testprivate's private collection"],
+			["testshared", "testadmin's shared collection"],
+			["testprivate", "testprivate's private collection"],
+		];
+		test.each(canDeleteDocumentUsers)(
+			"user %p can delete document from collection %p",
+			async (username, collectionName) => {
+				const adminClient = await getAdminClient();
+				let docId: string;
+				for await (const item of await adminClient.insertFiles(
+					lookup[collectionName],
+					[test_doc_path],
+				)) {
+					docId = item.documentId;
+				}
+				const userClient = await getClientForUser(username);
+				await userClient.deleteDocument(lookup[collectionName], docId);
+				const documents = await adminClient.getDocuments(
+					lookup[collectionName],
+				);
+				expect(documents.map((document) => document.documentId)).not.toContain(
+					docId,
+				);
+			},
+		);
+		const cannotDeleteDocumentUsers = [
+			["testsharedread", "testadmin's private collection"],
+			["testsharedread", "testadmin's shared collection"],
+			["testshared", "testadmin's private collection"],
+			["testprivate", "testadmin's private collection"],
+			["testprivate", "testadmin's shared collection"],
+			["testnothing", "testadmin's shared collection"],
+			["testnothing", "testadmin's private collection"],
+		];
+		test.each(cannotDeleteDocumentUsers)(
+			"user %p cannot delete document from collection %p",
+			async (username, collectionName) => {
+				const adminClient = await getAdminClient();
+				let docId: string;
+				for await (const item of await adminClient.insertFiles(
+					lookup[collectionName],
+					[test_doc_path],
+				)) {
+					docId = item.documentId;
+				}
+				const userClient = await getClientForUser(username);
+				expect(async () => {
+					await userClient.deleteDocument(lookup[collectionName], docId);
+				}).toThrow();
+				const documents = await adminClient.getDocuments(
+					lookup[collectionName],
+				);
+				expect(documents.map((document) => document.documentId)).toContain(
+					docId,
+				);
+			},
+		);
 		const canDeleteCollectionUsers = [
 			["testadmin", "testadmin", "shared"],
 			["testadmin", "testadmin", "private"],

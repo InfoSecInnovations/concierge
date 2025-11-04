@@ -89,7 +89,7 @@ await Bun.write(path.join("processed_test_runs", `${filename}.xml`), finalXml);
 await xunitViewer({
 	server: false,
 	results: path.join("processed_test_runs", `${filename}.xml`),
-	title: "Shabti Aggregated Test Results",
+	title: "Shabti Aggregated Test Results (use ctrl+C to exit)",
 	console: true,
 	output: false,
 	script: true,
