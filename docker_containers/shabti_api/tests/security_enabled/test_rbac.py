@@ -11,9 +11,7 @@ from ...src.app.document_collections import (
 )
 import pytest
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
-import asyncio
-import secrets
-from .lib import create_collection_for_user, clean_up_collections, ingest_document
+from .lib import create_collection_for_user, ingest_document
 import os
 import json
 
@@ -85,25 +83,24 @@ async def test_cannot_create_collection(user, location, shabti_client):
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "user,shabti_collection_id",
     [
-        ("testadmin", "testadmin's shared collection"),
-        ("testadmin", "testadmin's private collection"),
-        ("testadmin", "testprivate's private collection"),
-        ("testsharedread", "testadmin's shared collection"),
-        ("testshared", "testadmin's shared collection"),
-        ("testprivate", "testprivate's private collection"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_can_read_collection(user, collection_name, shabti_client):
+async def test_can_read_collection(user, shabti_collection_id, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    docs = await get_documents(
-        token["access_token"], collection_lookup[collection_name]
-    )
+    docs = await get_documents(token["access_token"], shabti_collection_id)
     assert docs is not None
     response = shabti_client.get(
-        f"/collections/{collection_lookup[collection_name]}/documents",
+        f"/collections/{shabti_collection_id}/documents",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 200
@@ -111,28 +108,29 @@ async def test_can_read_collection(user, collection_name, shabti_client):
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "user,shabti_collection_id",
     [
-        ("testsharedread", "testadmin's private collection"),
-        ("testshared", "testadmin's private collection"),
-        ("testprivate", "testadmin's private collection"),
-        ("testprivate", "testadmin's shared collection"),
-        ("testnothing", "testadmin's shared collection"),
-        ("testnothing", "testadmin's private collection"),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_cannot_read_collection(user, collection_name, shabti_client):
+async def test_cannot_read_collection(user, shabti_collection_id, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     response = shabti_client.get(
-        f"/collections/{collection_lookup[collection_name]}/documents",
+        f"/collections/{shabti_collection_id}/documents",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 403
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
-        await get_documents(token["access_token"], collection_lookup[collection_name])
+        await get_documents(token["access_token"], shabti_collection_id)
 
 
 filename = "test_doc.txt"
@@ -156,122 +154,116 @@ def ingest_document_api(user, collection_id, shabti_client):
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "user,shabti_collection_id",
     [
-        ("testadmin", "testadmin's shared collection"),
-        ("testadmin", "testadmin's private collection"),
-        ("testadmin", "testprivate's private collection"),
-        ("testshared", "testadmin's shared collection"),
-        ("testprivate", "testprivate's private collection"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_can_ingest_document(user, collection_name, shabti_client):
-    result = ingest_document_api(
-        user, collection_lookup[collection_name], shabti_client
-    )
+async def test_can_ingest_document(user, shabti_collection_id, shabti_client):
+    result = ingest_document_api(user, shabti_collection_id, shabti_client)
     assert result[1].status_code == 200
     assert result[0]
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "user,shabti_collection_id",
     [
-        ("testsharedread", "testadmin's private collection"),
-        ("testsharedread", "testadmin's shared collection"),
-        ("testshared", "testadmin's private collection"),
-        ("testprivate", "testadmin's private collection"),
-        ("testprivate", "testadmin's shared collection"),
-        ("testnothing", "testadmin's shared collection"),
-        ("testnothing", "testadmin's private collection"),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_cannot_ingest_document(user, collection_name, shabti_client):
-    result = ingest_document_api(
-        user, collection_lookup[collection_name], shabti_client
-    )
+async def test_cannot_ingest_document(user, shabti_collection_id, shabti_client):
+    result = ingest_document_api(user, shabti_collection_id, shabti_client)
     assert not result[0]
     assert result[1].status_code == 403
 
 
-async def delete_document_with_user(user, collection_name):
+async def delete_document_with_user(user, collection_id):
     # create a new entry each time to avoid accidentally trying to delete the same one multiple times
     doc_id = await ingest_document(
-        "testadmin", collection_lookup[collection_name]
+        "testadmin", collection_id
     )  # testadmin should be able to ingest documents into any collection
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    return await delete_document(
-        token["access_token"], collection_lookup[collection_name], doc_id
-    )
+    return await delete_document(token["access_token"], collection_id, doc_id)
 
 
-async def delete_document_api_with_user(user, collection_name, shabti_client):
+async def delete_document_api_with_user(user, collection_id, shabti_client):
     # create a new entry each time to avoid accidentally trying to delete the same one multiple times
     doc_id = await ingest_document(
-        "testadmin", collection_lookup[collection_name]
+        "testadmin", collection_id
     )  # testadmin should be able to ingest documents into any collection
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     return shabti_client.delete(
-        f"/collections/{collection_lookup[collection_name]}/documents/{doc_id}",
+        f"/collections/{collection_id}/documents/{doc_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "user,shabti_collection_id",
     [
-        ("testadmin", "testadmin's shared collection"),
-        ("testadmin", "testadmin's private collection"),
-        ("testadmin", "testprivate's private collection"),
-        ("testshared", "testadmin's shared collection"),
-        ("testprivate", "testprivate's private collection"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_can_delete_document(user, collection_name, shabti_client):
-    assert await delete_document_with_user(user, collection_name)
-    response = await delete_document_api_with_user(user, collection_name, shabti_client)
+async def test_can_delete_document(user, shabti_collection_id, shabti_client):
+    assert await delete_document_with_user(user, shabti_collection_id)
+    response = await delete_document_api_with_user(
+        user, shabti_collection_id, shabti_client
+    )
     assert response.status_code == 200
     assert "document_id" in response.json()
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "user,shabti_collection_id",
     [
-        ("testsharedread", "testadmin's private collection"),
-        ("testsharedread", "testadmin's shared collection"),
-        ("testshared", "testadmin's private collection"),
-        ("testprivate", "testadmin's private collection"),
-        ("testprivate", "testadmin's shared collection"),
-        ("testnothing", "testadmin's shared collection"),
-        ("testnothing", "testadmin's private collection"),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_cannot_delete_document(user, collection_name, shabti_client):
-    response = await delete_document_api_with_user(user, collection_name, shabti_client)
+async def test_cannot_delete_document(user, shabti_collection_id, shabti_client):
+    response = await delete_document_api_with_user(
+        user, shabti_collection_id, shabti_client
+    )
     assert response.status_code == 403
     assert "document_id" not in response.json()
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
-        await delete_document_with_user(user, collection_name)
+        await delete_document_with_user(user, shabti_collection_id)
 
 
-async def delete_collection_with_user(user, owner, location):
-    # we will create a collection each time to avoid trying to delete an already deleted one
-    collection_id = await create_collection_for_user(
-        owner, location, secrets.token_hex(8)
-    )  # we add a unique identifier to avoid running into name collision issues
+async def delete_collection_with_user(user, collection_id):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     return await delete_collection(token["access_token"], collection_id)
 
 
-async def delete_collection_api_with_user(user, owner, location, shabti_client):
-    # we will create a collection each time to avoid trying to delete an already deleted one
-    collection_id = await create_collection_for_user(
-        owner, location, secrets.token_hex(8)
-    )  # we add a unique identifier to avoid running into name collision issues
+async def delete_collection_api_with_user(user, collection_id, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     return shabti_client.delete(
@@ -281,47 +273,45 @@ async def delete_collection_api_with_user(user, owner, location, shabti_client):
 
 
 @pytest.mark.parametrize(
-    "user,owner,location",
+    "user,shabti_collection_id",
     [
-        ("testadmin", "testadmin", "shared"),
-        ("testadmin", "testadmin", "private"),
-        ("testadmin", "testshared", "shared"),
-        ("testadmin", "testprivate", "private"),
-        ("testshared", "testadmin", "shared"),
-        ("testprivate", "testprivate", "private"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testshared", "location": "shared"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_can_delete_collection(user, owner, location, shabti_client):
-    await delete_collection_with_user(user, owner, location)
+async def test_can_delete_collection(user, shabti_collection_id, shabti_client):
+    await delete_collection_with_user(user, shabti_collection_id)
     response = await delete_collection_api_with_user(
-        user, owner, location, shabti_client
+        user, shabti_collection_id, shabti_client
     )
     assert response.status_code == 200
     assert "collection_id" in response.json()
 
 
 @pytest.mark.parametrize(
-    "user,owner,location",
+    "user,shabti_collection_id",
     [
-        ("testsharedread", "testadmin", "shared"),
-        ("testsharedread", "testadmin", "private"),
-        ("testshared", "testadmin", "private"),
-        ("testprivate", "testadmin", "private"),
-        ("testprivate", "testadmin", "shared"),
-        ("testnothing", "testadmin", "shared"),
-        ("testnothing", "testadmin", "private"),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_cannot_delete_collection(user, owner, location, shabti_client):
+async def test_cannot_delete_collection(user, shabti_collection_id, shabti_client):
     response = await delete_collection_api_with_user(
-        user, owner, location, shabti_client
+        user, shabti_collection_id, shabti_client
     )
     assert response.status_code == 403
     with pytest.raises(
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
-        await delete_collection_with_user(user, owner, location)
-
-
-def teardown_module():
-    asyncio.run(clean_up_collections())
+        await delete_collection_with_user(user, shabti_collection_id)

@@ -1,14 +1,21 @@
-import pytest
+import pytest_asyncio
 from ...src.app.status import check_opensearch
 from ...src.load_dotenv import load_env
-from .lib import clean_up_collections
-import asyncio
 from ...src.app.app import create_app
 from fastapi.testclient import TestClient
+from ...src.app.document_collections import (
+    create_collection,
+    delete_collection,
+    get_collections,
+)
+import secrets
+from shabti_keycloak import (
+    get_keycloak_admin_openid_token,
+)
 
 
-@pytest.fixture(scope="session", autouse=True)
-def shabti_client():
+@pytest_asyncio.fixture(loop_scope="session", autouse=True, scope="session")
+async def shabti_client():
     load_env()
     while True:
         try:
@@ -18,4 +25,23 @@ def shabti_client():
         except ConnectionError:
             continue
     yield TestClient(create_app())
-    asyncio.run(clean_up_collections())
+    token = get_keycloak_admin_openid_token()
+    collections = await get_collections(token["access_token"])
+    for collection in collections:
+        await delete_collection(token["access_token"], collection.collection_id)
+
+
+@pytest_asyncio.fixture(scope="function")
+async def shabti_collection_id(request):
+    token = get_keycloak_admin_openid_token()
+    collection = await create_collection(
+        token["access_token"],
+        secrets.token_hex(8),
+        request.param["location"],
+        request.param["username"],
+    )
+    yield collection.collection_id
+    try:
+        await delete_collection(token["access_token"], collection.collection_id)
+    except Exception:  # collection may have already been deleted by the test
+        pass
