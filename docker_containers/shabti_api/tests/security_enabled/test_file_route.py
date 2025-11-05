@@ -1,39 +1,40 @@
-from .lib import create_collection_for_user, ingest_document
-import asyncio
 from shabti_keycloak import get_keycloak_client
-
-collection_id = None
-doc_id = None
+import pytest
 
 
-async def create_collection_and_doc():
-    global collection_id
-    global doc_id
-    collection_id = await create_collection_for_user(
-        "testadmin", "private", "test_docs"
-    )
-    doc_id = await ingest_document("testadmin", collection_id)
-
-
-def setup_module():
-    asyncio.run(create_collection_and_doc())
-
-
-def test_can_access_files_route(shabti_client):
+@pytest.mark.parametrize(
+    "shabti_collection_id",
+    [
+        {"username": "testadmin", "location": "private"},
+    ],
+    indirect=True,
+)
+def test_can_access_files_route(
+    shabti_client, shabti_collection_id, shabti_document_id
+):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token("testadmin", "test")
     response = shabti_client.get(
-        f"/files/{collection_id}/{doc_id}",
+        f"/files/{shabti_collection_id}/{shabti_document_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 200
 
 
-def test_other_user_cannot_access_files_route(shabti_client):
+@pytest.mark.parametrize(
+    "shabti_collection_id",
+    [
+        {"username": "testadmin", "location": "private"},
+    ],
+    indirect=True,
+)
+def test_other_user_cannot_access_files_route(
+    shabti_client, shabti_collection_id, shabti_document_id
+):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token("testshared", "test")
     response = shabti_client.get(
-        f"/files/{collection_id}/{doc_id}",
+        f"/files/{shabti_collection_id}/{shabti_document_id}",
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 403

@@ -2,15 +2,9 @@
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
-from .lib import create_collection_for_user, clean_up_collections
-import asyncio
+from .lib import create_collection_for_user
 import pytest
 from shabti_types import CollectionExistsError
-from shabti_util import auth_enabled
-
-
-def test_auth_setting():
-    assert auth_enabled()
 
 
 async def test_own_private_collection_with_same_name():
@@ -42,7 +36,3 @@ async def test_shared_collection_with_existing_name_and_different_user():
 async def test_private_collection_with_existing_name_and_different_user():
     collection_info = await create_collection_for_user("testprivate", "private", "1")
     assert collection_info
-
-
-def teardown_module():
-    asyncio.run(clean_up_collections())

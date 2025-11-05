@@ -12,6 +12,13 @@ import secrets
 from shabti_keycloak import (
     get_keycloak_admin_openid_token,
 )
+from ...src.app.ingesting import insert_document
+import os
+from ...src.app.loading import load_file
+
+
+filename = "test_doc.txt"
+file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
 @pytest_asyncio.fixture(loop_scope="session", autouse=True, scope="session")
@@ -45,3 +52,16 @@ async def shabti_collection_id(request):
         await delete_collection(token["access_token"], collection.collection_id)
     except Exception:  # collection may have already been deleted by the test
         pass
+
+
+@pytest_asyncio.fixture(scope="function")
+async def shabti_document_id(shabti_collection_id):
+    token = get_keycloak_admin_openid_token()
+    with open(file_path, "rb") as f:
+        doc = load_file(f, filename)
+        binary = f.read()
+    async for ingest_info in insert_document(
+        token["access_token"], shabti_collection_id, doc, binary
+    ):
+        pass
+    yield ingest_info.document_id
