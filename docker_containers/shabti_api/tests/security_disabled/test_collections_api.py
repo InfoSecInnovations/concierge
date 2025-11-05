@@ -3,8 +3,6 @@ from ...src.app.document_collections import (
     get_collections,
     get_documents,
 )
-from ...src.app.ingesting import insert_document
-from ...src.app.loading import load_file
 from shabti_util import auth_enabled
 
 filename = "test_doc.txt"
@@ -57,18 +55,16 @@ async def test_insert_urls(shabti_client, shabti_collection_id):
     assert next((doc for doc in docs if doc.source == url), None)
 
 
-async def test_delete_document(shabti_client, shabti_collection_id):
-    with open(file_path, "rb") as f:
-        doc = load_file(f, filename)
-        binary = f.read()
-    async for ingest_info in insert_document(None, shabti_collection_id, doc, binary):
-        pass
+async def test_delete_document(shabti_client, shabti_collection_id, shabti_document_id):
+    docs = await get_documents(None, shabti_collection_id)
+    # test the document is actually there before deleting it
+    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
     response = shabti_client.delete(
-        f"/collections/{shabti_collection_id}/documents/{ingest_info.document_id}"
+        f"/collections/{shabti_collection_id}/documents/{shabti_document_id}"
     )
     assert response.status_code == 200
     docs = await get_documents(None, shabti_collection_id)
-    assert not any(doc.document_id == ingest_info.document_id for doc in docs)
+    assert not any(doc.document_id == shabti_document_id for doc in docs)
 
 
 async def test_delete_collection(shabti_client, shabti_collection_id):
