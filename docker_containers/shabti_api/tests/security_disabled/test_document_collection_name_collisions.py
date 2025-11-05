@@ -4,34 +4,27 @@ from ...src.app.document_collections import (
     CollectionExistsError,
 )
 import pytest
-import asyncio
-
-collection_ids = []
+import secrets
 
 
 async def test_collection_with_same_name():
-    collection_info = await create_collection(None, "collection_1")
-    collection_ids.append(collection_info.collection_id)
+    collection_name = secrets.token_hex(8)
+    collection_info = await create_collection(None, collection_name)
+    assert collection_info
     with pytest.raises(CollectionExistsError):
-        collection_info = await create_collection(None, "collection_1")
-        collection_ids.append(collection_info.collection_id)
+        await create_collection(None, collection_name)
 
 
 async def test_collection_with_different_name():
-    collection_info = await create_collection(None, "collection_2")
-    collection_ids.append(collection_info.collection_id)
+    collection_name = secrets.token_hex(8)
+    collection_info = await create_collection(None, collection_name)
     assert collection_info
 
 
-async def clean_up_collections():
-    for id in collection_ids:
-        # the tests may have deleted some of these, so we allow exceptions here
-        try:
-            await delete_collection(None, id)
-        except Exception:
-            pass
-
-
-def teardown_module():
-    print("clean up")
-    asyncio.run(clean_up_collections())
+async def test_recreate_with_same_name():
+    collection_name = secrets.token_hex(8)
+    collection_info = await create_collection(None, collection_name)
+    assert collection_info
+    await delete_collection(None, collection_info.collection_id)
+    new_collection_info = await create_collection(None, collection_name)
+    assert new_collection_info
