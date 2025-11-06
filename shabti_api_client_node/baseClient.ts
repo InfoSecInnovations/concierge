@@ -2,7 +2,6 @@ import { openAsBlob } from "node:fs";
 import path = require("node:path");
 import { EXPECTED_CODES } from "./codes";
 import {
-	CollectionInfo,
 	DocumentInfo,
 	DocumentIngestInfo,
 	ModelLoadInfo,
