@@ -1,7 +1,5 @@
 import os
 import pytest
-from .lib import get_client_for_user, get_admin_client
-import asyncio
 from shabti_api_client import ShabtiAuthenticationError
 import secrets
 
@@ -12,24 +10,25 @@ file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
 @pytest.mark.parametrize(
-    "user,location",
+    "shabti_user_client,location",
     [
         ("testadmin", "private"),
         ("testadmin", "shared"),
         ("testshared", "shared"),
         ("testprivate", "private"),
     ],
+    indirect=["shabti_user_client"],
 )
-async def test_can_create_collection(user, location):
-    client = await get_client_for_user(user)
-    collection_name = f"{user}'s {location} collection"
-    collection_id = await client.create_collection(collection_name, location)
+async def test_can_create_collection(shabti_user_client, location):
+    collection_name = secrets.token_hex(8)
+    collection_id = await shabti_user_client.create_collection(
+        collection_name, location
+    )
     assert collection_id
-    collection_lookup[collection_name] = collection_id
 
 
 @pytest.mark.parametrize(
-    "user,location",
+    "shabti_user_client,location",
     [
         ("testshared", "private"),
         ("testprivate", "shared"),
@@ -38,181 +37,164 @@ async def test_can_create_collection(user, location):
         ("testnothing", "private"),
         ("testnothing", "shared"),
     ],
+    indirect=["shabti_user_client"],
 )
-async def test_cannot_create_collection(user, location):
+async def test_cannot_create_collection(shabti_user_client, location):
     with pytest.raises(ShabtiAuthenticationError):
-        client = await get_client_for_user(user)
-        collection_name = f"{user}'s {location} collection"
-        await client.create_collection(collection_name, location)
+        collection_name = secrets.token_hex(8)
+        await shabti_user_client.create_collection(collection_name, location)
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testadmin", "testadmin's shared collection"),
-        ("testadmin", "testadmin's private collection"),
-        ("testadmin", "testprivate's private collection"),
-        ("testsharedread", "testadmin's shared collection"),
-        ("testshared", "testadmin's shared collection"),
-        ("testprivate", "testprivate's private collection"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_can_read_collection(user, collection_name):
-    client = await get_client_for_user(user)
-    docs = await client.get_documents(collection_lookup[collection_name])
+async def test_can_read_collection(shabti_user_client, shabti_collection_id):
+    docs = await shabti_user_client.get_documents(shabti_collection_id)
     assert isinstance(docs, list)
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testsharedread", "testadmin's private collection"),
-        ("testshared", "testadmin's private collection"),
-        ("testprivate", "testadmin's private collection"),
-        ("testprivate", "testadmin's shared collection"),
-        ("testnothing", "testadmin's shared collection"),
-        ("testnothing", "testadmin's private collection"),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_cannot_read_collection(user, collection_name):
+async def test_cannot_read_collection(shabti_user_client, shabti_collection_id):
     with pytest.raises(ShabtiAuthenticationError):
-        client = await get_client_for_user(user)
-        await client.get_documents(collection_lookup[collection_name])
+        await shabti_user_client.get_documents(shabti_collection_id)
 
 
-async def ingest_document(user, collection_name):
-    client = await get_client_for_user(user)
+async def ingest_document(shabti_user_client, shabti_collection_id):
     document_id = None
-    async for info in client.insert_files(
-        collection_lookup[collection_name], [file_path]
+    async for info in shabti_user_client.insert_files(
+        shabti_collection_id, [file_path]
     ):
         document_id = info.document_id
     return document_id
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testadmin", "testadmin's shared collection"),
-        ("testadmin", "testadmin's private collection"),
-        ("testadmin", "testprivate's private collection"),
-        ("testshared", "testadmin's shared collection"),
-        ("testprivate", "testprivate's private collection"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_can_ingest_document(user, collection_name):
-    assert await ingest_document(user, collection_name)
+async def test_can_ingest_document(shabti_user_client, shabti_collection_id):
+    assert await ingest_document(shabti_user_client, shabti_collection_id)
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testsharedread", "testadmin's private collection"),
-        ("testsharedread", "testadmin's shared collection"),
-        ("testshared", "testadmin's private collection"),
-        ("testprivate", "testadmin's private collection"),
-        ("testprivate", "testadmin's shared collection"),
-        ("testnothing", "testadmin's shared collection"),
-        ("testnothing", "testadmin's private collection"),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_cannot_ingest_document(user, collection_name):
+async def test_cannot_ingest_document(shabti_user_client, shabti_collection_id):
     with pytest.raises(ShabtiAuthenticationError):
-        await ingest_document(user, collection_name)
+        await ingest_document(shabti_user_client, shabti_collection_id)
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testadmin", "testadmin's shared collection"),
-        ("testadmin", "testadmin's private collection"),
-        ("testadmin", "testprivate's private collection"),
-        ("testshared", "testadmin's shared collection"),
-        ("testprivate", "testprivate's private collection"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=True,
 )
-async def can_delete_document(user, collection_name):
-    document_id = await ingest_document(
-        "testadmin", collection_name
-    )  # ingest document as admin as we're only testing deletion here
-    client = await get_client_for_user(user)
-    await client.delete_document(collection_lookup[collection_name], document_id)
-    documents = await client.get_documents(collection_lookup[collection_name])
-    assert not any(doc.document_id == document_id for doc in documents)
+async def can_delete_document(
+    shabti_user_client, shabti_collection_id, shabti_document_id
+):
+    await shabti_user_client.delete_document(shabti_collection_id, shabti_document_id)
+    documents = await shabti_user_client.get_documents(shabti_collection_id)
+    assert not any(doc.document_id == shabti_document_id for doc in documents)
 
 
 @pytest.mark.parametrize(
-    "user,collection_name",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testsharedread", "testadmin's private collection"),
-        ("testsharedread", "testadmin's shared collection"),
-        ("testshared", "testadmin's private collection"),
-        ("testprivate", "testadmin's private collection"),
-        ("testprivate", "testadmin's shared collection"),
-        ("testnothing", "testadmin's shared collection"),
-        ("testnothing", "testadmin's private collection"),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_cannot_delete_document(user, collection_name):
-    document_id = await ingest_document(
-        "testadmin", collection_name
-    )  # ingest document as admin as we're only testing deletion here
+async def test_cannot_delete_document(
+    shabti_user_client, shabti_collection_id, shabti_document_id
+):
     with pytest.raises(ShabtiAuthenticationError):
-        client = await get_client_for_user(user)
-        await client.delete_document(collection_lookup[collection_name], document_id)
-
-
-async def create_collection_for_deletion(owner, location):
-    client = await get_admin_client()
-    return await client.create_collection(secrets.token_hex(8), location, owner)
+        await shabti_user_client.delete_document(
+            shabti_collection_id, shabti_document_id
+        )
 
 
 @pytest.mark.parametrize(
-    "user,owner,location",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testadmin", "testadmin", "shared"),
-        ("testadmin", "testadmin", "private"),
-        ("testadmin", "testshared", "shared"),
-        ("testadmin", "testprivate", "private"),
-        ("testshared", "testadmin", "shared"),
-        ("testprivate", "testprivate", "private"),
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testshared", "location": "shared"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_can_delete_collection(user, owner, location):
-    collection_id = await create_collection_for_deletion(owner, location)
-    client = await get_client_for_user(user)
-    await client.delete_collection(collection_id)
-    collections = await client.get_collections()
+async def test_can_delete_collection(shabti_user_client, shabti_collection_id):
+    await shabti_user_client.delete_collection(shabti_collection_id)
+    collections = await shabti_user_client.get_collections()
     assert not any(
-        collection.collection_id == collection_id for collection in collections
+        collection.collection_id == shabti_collection_id for collection in collections
     )
 
 
 @pytest.mark.parametrize(
-    "user,owner,location",
+    "shabti_user_client,shabti_collection_id",
     [
-        ("testsharedread", "testadmin", "shared"),
-        ("testsharedread", "testadmin", "private"),
-        ("testshared", "testadmin", "private"),
-        ("testprivate", "testadmin", "private"),
-        ("testprivate", "testadmin", "shared"),
-        ("testnothing", "testadmin", "shared"),
-        ("testnothing", "testadmin", "private"),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
     ],
+    indirect=True,
 )
-async def test_cannot_delete_collection(user, owner, location):
-    collection_id = await create_collection_for_deletion(owner, location)
+async def test_cannot_delete_collection(shabti_user_client, shabti_collection_id):
     with pytest.raises(ShabtiAuthenticationError):
-        client = await get_client_for_user(user)
-        await client.delete_collection(collection_id)
-
-
-async def clean_up_collections():
-    client = await get_admin_client()
-    collections = await client.get_collections()
-    for collection in collections:
-        await client.delete_collection(collection.collection_id)
-
-
-def teardown_module():
-    asyncio.run(clean_up_collections())
+        await shabti_user_client.delete_collection(shabti_collection_id)

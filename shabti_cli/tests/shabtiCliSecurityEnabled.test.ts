@@ -100,7 +100,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 		});
 		test("list documents", async () => {
 			const output =
-				await $`bun run index.ts document list "${lookup[collectionName]}"`
+				await $`bun run index.ts document list "--" ${lookup[collectionName]}`
 					.cwd(path.resolve(path.join(import.meta.dir, "..")))
 					.env({ ...process.env })
 					.text();
@@ -114,9 +114,10 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				[
 					"document",
 					"delete",
-					...documentIds,
 					"--collection",
 					lookup[collectionName],
+					"--",
+					...documentIds,
 				],
 				{ from: "user" },
 			);

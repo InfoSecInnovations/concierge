@@ -263,5 +263,10 @@ export default async () => {
 		);
 	});
 
+	program.command("slow_test").action(async () => {
+		const slow = await client.testSlow();
+		console.log(slow);
+	});
+
 	return program;
 };

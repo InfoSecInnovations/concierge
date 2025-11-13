@@ -14,7 +14,7 @@
 	"dependencies": {
 		"@infosecinnovations/shabti-api-client": "../shabti_api_client_node/",
 		"cli-progress": "^3.12.0",
-		"commander": "^13.1.0",
+		"commander": "^14.0.2",
 		"dotenv": "^16.5.0",
 		"openid-client": "^6.4.2"
 	},
