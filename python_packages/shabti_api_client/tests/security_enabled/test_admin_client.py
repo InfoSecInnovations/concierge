@@ -1,13 +1,15 @@
-from .lib import get_client_for_user, get_admin_client
-
-collection_name = "admin test testadmin's shared collection"
-lookup = {}
+from .lib import get_admin_client
+import pytest
 
 
-async def test_can_read_collection():
-    client = await get_client_for_user("testadmin")
-    collection_id = await client.create_collection(collection_name, "shared")
-    lookup[collection_name] = collection_id
+@pytest.mark.parametrize(
+    "shabti_collection_id",
+    [
+        ({"username": "testadmin", "location": "private"}),
+    ],
+    indirect=True,
+)
+async def test_can_read_collection(shabti_collection_id):
     admin_client = await get_admin_client()
     collections = await admin_client.get_collections()
     assert len(collections)
@@ -15,17 +17,23 @@ async def test_can_read_collection():
         (
             collection
             for collection in collections
-            if collection.collection_id == collection_id
+            if collection.collection_id == shabti_collection_id
         ),
         None,
     )
 
 
-async def test_can_delete_collection():
+@pytest.mark.parametrize(
+    "shabti_collection_id",
+    [
+        ({"username": "testadmin", "location": "private"}),
+    ],
+    indirect=True,
+)
+async def test_can_delete_collection(shabti_collection_id):
     admin_client = await get_admin_client()
-    await admin_client.delete_collection(lookup[collection_name])
+    await admin_client.delete_collection(shabti_collection_id)
     collections = await admin_client.get_collections()
     assert not any(
-        collection.collection_id == lookup[collection_name]
-        for collection in collections
+        collection.collection_id == shabti_collection_id for collection in collections
     )
