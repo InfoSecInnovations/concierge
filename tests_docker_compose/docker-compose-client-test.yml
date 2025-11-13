@@ -41,7 +41,7 @@ services:
       # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
       - ${ROOT_CA:-empty}:/opensearch_certs/root-ca.pem
       - ./test_results:/test_results/
-    command: ["uv", "run", "pytest", "--junit-xml=/test_results/shabti_python_client_${JUNIT_FILENAME}.xml"]
+    command: ["uv", "run", "pytest", "--junit-xml=/test_results/shabti_python_client_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest shabti_python_client_${JUNIT_FILENAME}'"]
     restart: no
 
 volumes:

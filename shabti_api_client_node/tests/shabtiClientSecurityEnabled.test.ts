@@ -3,6 +3,7 @@ import { ShabtiAuthorizationClient } from "../authClient";
 import * as openIdClient from "openid-client";
 import path = require("node:path");
 import { randomBytes } from "node:crypto";
+import { afterEach, beforeEach } from "node:test";
 
 const test_doc_path = path.join(import.meta.dir, "test_doc.txt");
 
@@ -43,6 +44,14 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				config,
 			);
 		};
+		const createCollectionForUser = (owner: string, location: string) =>
+			getAdminClient().then((client) =>
+				client.createCollection(
+					randomBytes(8).toString("hex"),
+					location,
+					owner,
+				),
+			);
 		const canCreateCollectionUsers = [
 			["testadmin", "private"],
 			["testadmin", "shared"],
@@ -80,39 +89,60 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				}).toThrow();
 			},
 		);
-		const canReadCollectionUsers = [
-			["testadmin", "testadmin's shared collection"],
-			["testadmin", "testadmin's private collection"],
-			["testadmin", "testprivate's private collection"],
-			["testsharedread", "testadmin's shared collection"],
-			["testshared", "testadmin's shared collection"],
-			["testprivate", "testprivate's private collection"],
-		];
-		test.each(canReadCollectionUsers)(
-			"user %p can read %p",
-			async (username, collectionName) => {
-				const client = await getClientForUser(username);
-				const docs = await client.getDocuments(lookup[collectionName]);
-				expect(docs).toBeArray();
-			},
-		);
-		const cannotReadCollectionUsers = [
-			["testsharedread", "testadmin's private collection"],
-			["testshared", "testadmin's private collection"],
-			["testprivate", "testadmin's private collection"],
-			["testprivate", "testadmin's shared collection"],
-			["testnothing", "testadmin's shared collection"],
-			["testnothing", "testadmin's private collection"],
-		];
-		test.each(cannotReadCollectionUsers)(
-			"user %p cannot read %p",
-			async (username, collectionName) => {
-				const client = await getClientForUser(username);
-				expect(async () => {
-					await client.getDocuments(lookup[collectionName]);
-				}).toThrow();
-			},
-		);
+		describe("tests with collection ID", () => {
+			let collectionId: string;
+			const collectionIdFixture = (owner, location) => {
+				beforeEach(async () => {
+					collectionId = await createCollectionForUser(owner, location);
+				});
+				afterEach(async () => {
+					try {
+						await getAdminClient().then((client) =>
+							client.deleteCollection(collectionId),
+						);
+					} catch {}
+				});
+			};
+			const canReadCollectionUsers = [
+				["testadmin", "testadmin", "shared"],
+				["testadmin", "testadmin", "private"],
+				["testadmin", "testprivate", "private"],
+				["testsharedread", "testadmin", "shared"],
+				["testshared", "testadmin", "shared"],
+				["testprivate", "testprivate", "private"],
+			];
+			describe.each(canReadCollectionUsers)(
+				"users can read collection",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} can read ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						const docs = await client.getDocuments(collectionId);
+						expect(docs).toBeArray();
+					});
+				},
+			);
+			const cannotReadCollectionUsers = [
+				["testsharedread", "testadmin", "private"],
+				["testshared", "testadmin", "private"],
+				["testprivate", "testadmin", "private"],
+				["testprivate", "testadmin", "shared"],
+				["testnothing", "testadmin", "shared"],
+				["testnothing", "testadmin", "private"],
+			];
+			describe.each(cannotReadCollectionUsers)(
+				"users cannot read collection",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} cannot read ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						expect(async () => {
+							await client.getDocuments(collectionId);
+						}).toThrow();
+					});
+				},
+			);
+		});
 		const canIngestDocumentUsers = [
 			["testadmin", "testadmin's shared collection"],
 			["testadmin", "testadmin's private collection"],
