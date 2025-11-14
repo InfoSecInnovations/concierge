@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, jest, test } from "bun:test";
+import { describe, expect, jest, test } from "bun:test";
 import { ShabtiAuthorizationClient } from "../authClient";
 import * as openIdClient from "openid-client";
 import path = require("node:path");
@@ -142,173 +142,163 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					});
 				},
 			);
-		});
-		const canIngestDocumentUsers = [
-			["testadmin", "testadmin's shared collection"],
-			["testadmin", "testadmin's private collection"],
-			["testadmin", "testprivate's private collection"],
-			["testshared", "testadmin's shared collection"],
-			["testprivate", "testprivate's private collection"],
-		];
-		test.each(canIngestDocumentUsers)(
-			"user %p can ingest into %p",
-			async (username, collectionName) => {
-				const client = await getClientForUser(username);
-				let docId: string;
-				for await (const item of await client.insertFiles(
-					lookup[collectionName],
-					[test_doc_path],
-				)) {
-					docId = item.documentId;
-				}
-				expect(docId).toBeTruthy();
-			},
-		);
-		const cannotIngestDocumentUsers = [
-			["testsharedread", "testadmin's private collection"],
-			["testsharedread", "testadmin's shared collection"],
-			["testshared", "testadmin's private collection"],
-			["testprivate", "testadmin's private collection"],
-			["testprivate", "testadmin's shared collection"],
-			["testnothing", "testadmin's shared collection"],
-			["testnothing", "testadmin's private collection"],
-		];
-		test.each(cannotIngestDocumentUsers)(
-			"user %p cannot ingest into %p",
-			async (username, collectionName) => {
-				const client = await getClientForUser(username);
-				expect(async () => {
-					for await (const _ of await client.insertFiles(
-						lookup[collectionName],
-						[test_doc_path],
-					)) {
-					}
-				}).toThrow();
-			},
-		);
-		const canDeleteDocumentUsers = [
-			["testadmin", "testadmin's shared collection"],
-			["testadmin", "testadmin's private collection"],
-			["testadmin", "testprivate's private collection"],
-			["testshared", "testadmin's shared collection"],
-			["testprivate", "testprivate's private collection"],
-		];
-		test.each(canDeleteDocumentUsers)(
-			"user %p can delete document from collection %p",
-			async (username, collectionName) => {
-				const adminClient = await getAdminClient();
-				let docId: string;
-				for await (const item of await adminClient.insertFiles(
-					lookup[collectionName],
-					[test_doc_path],
-				)) {
-					docId = item.documentId;
-				}
-				const userClient = await getClientForUser(username);
-				await userClient.deleteDocument(lookup[collectionName], docId);
-				const documents = await adminClient.getDocuments(
-					lookup[collectionName],
+			const canIngestDocumentUsers = [
+				["testadmin", "testadmin", "shared"],
+				["testadmin", "testadmin", "private"],
+				["testadmin", "testprivate", "private"],
+				["testshared", "testadmin", "shared"],
+				["testprivate", "testprivate", "private"],
+			];
+			describe.each(canIngestDocumentUsers)(
+				"users can ingest documents",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} can ingest into ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						let docId: string;
+						for await (const item of await client.insertFiles(collectionId, [
+							test_doc_path,
+						])) {
+							docId = item.documentId;
+						}
+						expect(docId).toBeTruthy();
+					});
+				},
+			);
+			const cannotIngestDocumentUsers = [
+				["testsharedread", "testadmin", "private"],
+				["testsharedread", "testadmin", "shared"],
+				["testshared", "testadmin", "private"],
+				["testprivate", "testadmin", "private"],
+				["testprivate", "testadmin", "shared"],
+				["testnothing", "testadmin", "shared"],
+				["testnothing", "testadmin", "private"],
+			];
+			describe.each(cannotIngestDocumentUsers)(
+				"users cannot ingest documents",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} cannot ingest into ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						expect(async () => {
+							for await (const item of await client.insertFiles(collectionId, [
+								test_doc_path,
+							])) {
+							}
+						}).toThrow();
+					});
+				},
+			);
+			describe("tests with document ID", () => {
+				let documentId: string;
+				const documentIdFixture = (owner, location) => {
+					collectionIdFixture(owner, location);
+					beforeEach(async () => {
+						for await (const item of await getAdminClient().then((client) =>
+							client.insertFiles(collectionId, [test_doc_path]),
+						)) {
+							documentId = item.documentId;
+						}
+					});
+				};
+				const canDeleteDocumentUsers = [
+					["testadmin", "testadmin", "shared"],
+					["testadmin", "testadmin", "private"],
+					["testadmin", "testprivate", "private"],
+					["testshared", "testadmin", "shared"],
+					["testprivate", "testprivate", "private"],
+				];
+				describe.each(canDeleteDocumentUsers)(
+					"users can delete documents",
+					(username, owner, location) => {
+						documentIdFixture(owner, location);
+						test(`user ${username} can delete document from ${owner}'s ${location} collection`, async () => {
+							const userClient = await getClientForUser(username);
+							await userClient.deleteDocument(collectionId, documentId);
+							const adminClient = await getAdminClient();
+							const documents = await adminClient.getDocuments(collectionId);
+							expect(
+								documents.map((document) => document.documentId),
+							).not.toContain(documentId);
+						});
+					},
 				);
-				expect(documents.map((document) => document.documentId)).not.toContain(
-					docId,
+				const cannotDeleteDocumentUsers = [
+					["testsharedread", "testadmin", "private"],
+					["testsharedread", "testadmin", "shared"],
+					["testshared", "testadmin", "private"],
+					["testprivate", "testadmin", "private"],
+					["testprivate", "testadmin", "shared"],
+					["testnothing", "testadmin", "shared"],
+					["testnothing", "testadmin", "private"],
+				];
+				describe.each(cannotDeleteDocumentUsers)(
+					"users cannot delete documents",
+					(username, owner, location) => {
+						documentIdFixture(owner, location);
+						test(`user ${username} cannot delete document from ${owner}'s ${location} collection`, async () => {
+							const userClient = await getClientForUser(username);
+							expect(async () => {
+								await userClient.deleteDocument(collectionId, documentId);
+							}).toThrow();
+							const adminClient = await getAdminClient();
+							const documents = await adminClient.getDocuments(collectionId);
+							expect(
+								documents.map((document) => document.documentId),
+							).toContain(documentId);
+						});
+					},
 				);
-			},
-		);
-		const cannotDeleteDocumentUsers = [
-			["testsharedread", "testadmin's private collection"],
-			["testsharedread", "testadmin's shared collection"],
-			["testshared", "testadmin's private collection"],
-			["testprivate", "testadmin's private collection"],
-			["testprivate", "testadmin's shared collection"],
-			["testnothing", "testadmin's shared collection"],
-			["testnothing", "testadmin's private collection"],
-		];
-		test.each(cannotDeleteDocumentUsers)(
-			"user %p cannot delete document from collection %p",
-			async (username, collectionName) => {
-				const adminClient = await getAdminClient();
-				let docId: string;
-				for await (const item of await adminClient.insertFiles(
-					lookup[collectionName],
-					[test_doc_path],
-				)) {
-					docId = item.documentId;
-				}
-				const userClient = await getClientForUser(username);
-				expect(async () => {
-					await userClient.deleteDocument(lookup[collectionName], docId);
-				}).toThrow();
-				const documents = await adminClient.getDocuments(
-					lookup[collectionName],
-				);
-				expect(documents.map((document) => document.documentId)).toContain(
-					docId,
-				);
-			},
-		);
-		const canDeleteCollectionUsers = [
-			["testadmin", "testadmin", "shared"],
-			["testadmin", "testadmin", "private"],
-			["testadmin", "testshared", "shared"],
-			["testadmin", "testprivate", "private"],
-			["testshared", "testadmin", "shared"],
-			["testprivate", "testprivate", "private"],
-		];
-		test.each(canDeleteCollectionUsers)(
-			"user %p can delete collection belonging to %p of type %p",
-			async (username, owner, location) => {
-				const adminClient = await getAdminClient();
-				const collectionName = randomBytes(8).toString("hex");
-				const collectionId = await adminClient.createCollection(
-					collectionName,
-					location,
-					owner,
-				);
-				const userClient = await getClientForUser(username);
-				await userClient.deleteCollection(collectionId);
-				const collections = await adminClient.getCollections();
-				expect(
-					collections.map((collection) => collection.collectionId),
-				).not.toContain(collectionId);
-			},
-		);
-		const cannotDeleteCollectionUsers = [
-			["testsharedread", "testadmin", "shared"],
-			["testsharedread", "testadmin", "private"],
-			["testshared", "testadmin", "private"],
-			["testprivate", "testadmin", "private"],
-			["testprivate", "testadmin", "shared"],
-			["testnothing", "testadmin", "shared"],
-			["testnothing", "testadmin", "private"],
-		];
-		test.each(cannotDeleteCollectionUsers)(
-			"user %p cannot delete collection belonging to %p of type %p",
-			async (username, owner, location) => {
-				const adminClient = await getAdminClient();
-				const collectionName = randomBytes(8).toString("hex");
-				const collectionId = await adminClient.createCollection(
-					collectionName,
-					location,
-					owner,
-				);
-				const userClient = await getClientForUser(username);
-				expect(async () => {
-					await userClient.deleteCollection(collectionId);
-				}).toThrow();
-				const collections = await adminClient.getCollections();
-				expect(
-					collections.map((collection) => collection.collectionId),
-				).toContain(collectionId);
-			},
-		);
-		afterAll(async () => {
-			const adminClient = await getAdminClient();
-			for (const collectionId of Object.values(lookup)) {
-				// collection may have already been deleted by a test
-				try {
-					await adminClient.deleteCollection(collectionId);
-				} catch {}
-			}
+			});
+			const canDeleteCollectionUsers = [
+				["testadmin", "testadmin", "shared"],
+				["testadmin", "testadmin", "private"],
+				["testadmin", "testshared", "shared"],
+				["testadmin", "testprivate", "private"],
+				["testshared", "testadmin", "shared"],
+				["testprivate", "testprivate", "private"],
+			];
+			describe.each(canDeleteCollectionUsers)(
+				"users can delete collections",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} can delete ${owner}'s ${location} collection`, async () => {
+						const adminClient = await getAdminClient();
+						const userClient = await getClientForUser(username);
+						await userClient.deleteCollection(collectionId);
+						const collections = await adminClient.getCollections();
+						expect(
+							collections.map((collection) => collection.collectionId),
+						).not.toContain(collectionId);
+					});
+				},
+			);
+			const cannotDeleteCollectionUsers = [
+				["testsharedread", "testadmin", "shared"],
+				["testsharedread", "testadmin", "private"],
+				["testshared", "testadmin", "private"],
+				["testprivate", "testadmin", "private"],
+				["testprivate", "testadmin", "shared"],
+				["testnothing", "testadmin", "shared"],
+				["testnothing", "testadmin", "private"],
+			];
+			describe.each(cannotDeleteCollectionUsers)(
+				"users cannot delete collections",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} cannot delete ${owner}'s ${location} collection`, async () => {
+						const adminClient = await getAdminClient();
+						const userClient = await getClientForUser(username);
+						expect(async () => {
+							await userClient.deleteCollection(collectionId);
+						}).toThrow();
+						const collections = await adminClient.getCollections();
+						expect(
+							collections.map((collection) => collection.collectionId),
+						).toContain(collectionId);
+					});
+				},
+			);
 		});
 	},
 );
