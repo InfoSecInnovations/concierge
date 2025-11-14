@@ -1,18 +1,19 @@
-import { describe, expect, jest, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, jest, test } from "bun:test";
 import buildProgram from "../buildProgram";
 import { $ } from "bun";
 import path from "node:path";
 import getAuthClient from "../getAuthClient";
+import { randomBytes } from "node:crypto";
 
 jest.setTimeout(-1);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 	"CLI - Security enabled Shabti instance",
 	() => {
-		const lookup: { [key: string]: any } = {};
-		const documentIds: string[] = [];
-		const collectionName = "test_collection_cli";
+		const filename = "test_doc.txt";
+		const filePath = path.join(import.meta.dir, filename);
 		test("create collection", async () => {
+			const collectionName = randomBytes(8).toString("hex");
 			const program = await buildProgram();
 			await program.parseAsync(
 				[
@@ -34,111 +35,140 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				(collection) => collection.collectionName == collectionName,
 			);
 			expect(matchingCollection).toBeTruthy();
-			lookup[collectionName] = matchingCollection?.collectionId;
 		});
-		test("list collections", async () => {
-			// TODO: can we call the CLI app programatically instead of running the shell like this?
-			const output = await $`bun run index.ts collection list`
-				.cwd(path.resolve(path.join(import.meta.dir, "..")))
-				.env({ ...process.env })
-				.text();
-			expect(output).toInclude(collectionName);
-		});
-		test("ingest file", async () => {
-			const filename = "test_doc.txt";
-			const filePath = path.join(import.meta.dir, filename);
-			const program = await buildProgram();
-			await program.parseAsync(
-				["ingest", "file", filePath, "--collection", lookup[collectionName]],
-				{ from: "user" },
-			);
-			const client = await getAuthClient();
-			const documents = await client.getDocuments(lookup[collectionName]);
-			const matchingDocument = documents.find(
-				(document) => document.filename == filename,
-			);
-			expect(matchingDocument).toBeTruthy();
-			if (matchingDocument) documentIds.push(matchingDocument.documentId);
-		});
-		test("ingest urls", async () => {
-			const urls = ["https://www.example.com", "https://example.org"];
-			const program = await buildProgram();
-			await program.parseAsync(
-				["ingest", "urls", ...urls, "--collection", lookup[collectionName]],
-				{ from: "user" },
-			);
-			const client = await getAuthClient();
-			const documents = await client.getDocuments(lookup[collectionName]);
-			const matchingDocuments = documents.filter((document) =>
-				urls.includes(document.source),
-			);
-			expect(matchingDocuments.length == urls.length).toBeTrue();
-			documentIds.push(
-				...matchingDocuments.map((document) => document.documentId),
-			);
-		});
-		test("ingest directory", async () => {
-			const directoryName = "test_dir";
-			const directoryFiles = ["test_doc2.txt", "test_doc3.txt"];
-			const directoryPath = path.join(import.meta.dir, directoryName);
-			const program = await buildProgram();
-			await program.parseAsync(
-				[
-					"ingest",
-					"directory",
-					directoryPath,
-					"--collection",
-					lookup[collectionName],
-				],
-				{ from: "user" },
-			);
-			const client = await getAuthClient();
-			const documents = await client.getDocuments(lookup[collectionName]);
-			expect(documents.map((document) => document.filename)).toContainValues(
-				directoryFiles,
-			);
-		});
-		test("list documents", async () => {
-			const output =
-				await $`bun run index.ts document list "--" ${lookup[collectionName]}`
+		describe("tests with collection ID", () => {
+			let collectionId: string;
+			beforeEach(async () => {
+				collectionId = await getAuthClient().then((client) =>
+					client.createCollection(
+						randomBytes(8).toString("hex"),
+						"shared",
+						"testadmin",
+					),
+				);
+			});
+			afterEach(async () => {
+				try {
+					await getAuthClient().then((client) =>
+						client.deleteCollection(collectionId),
+					);
+				} catch {
+					// collection may have already been deleted by a test
+				}
+			});
+			test("list collections", async () => {
+				// TODO: can we call the CLI app programatically instead of running the shell like this?
+				const output = await $`bun run index.ts collection list`
 					.cwd(path.resolve(path.join(import.meta.dir, "..")))
 					.env({ ...process.env })
 					.text();
-			for (const documentId of documentIds) {
-				expect(output).toInclude(documentId);
-			}
-		});
-		test("delete documents", async () => {
-			const program = await buildProgram();
-			await program.parseAsync(
-				[
-					"document",
-					"delete",
-					"--collection",
-					lookup[collectionName],
-					"--",
-					...documentIds,
-				],
-				{ from: "user" },
-			);
-			const client = await getAuthClient();
-			const documents = await client.getDocuments(lookup[collectionName]);
-			expect(
-				documents.map((document) => document.documentId),
-			).not.toContainAnyValues(documentIds);
-		});
-		test("delete collection", async () => {
-			const program = await buildProgram();
-			await program.parseAsync(
-				["collection", "delete", lookup[collectionName]],
-				{ from: "user" },
-			);
-			const client = await getAuthClient();
-			const collections = await client.getCollections();
-			const matchingCollection = collections.find(
-				(collection) => collection.collectionName == collectionName,
-			);
-			expect(matchingCollection).toBeFalsy();
+				expect(output).toInclude(collectionId);
+			});
+			test("ingest file", async () => {
+				const filename = "test_doc.txt";
+				const filePath = path.join(import.meta.dir, filename);
+				const program = await buildProgram();
+				await program.parseAsync(
+					["ingest", "file", filePath, "--collection", collectionId],
+					{ from: "user" },
+				);
+				const client = await getAuthClient();
+				const documents = await client.getDocuments(collectionId);
+				const matchingDocument = documents.find(
+					(document) => document.filename == filename,
+				);
+				expect(matchingDocument).toBeTruthy();
+			});
+			test("ingest urls", async () => {
+				const urls = ["https://www.example.com", "https://example.org"];
+				const program = await buildProgram();
+				await program.parseAsync(
+					["ingest", "urls", ...urls, "--collection", collectionId],
+					{ from: "user" },
+				);
+				const client = await getAuthClient();
+				const documents = await client.getDocuments(collectionId);
+				const matchingDocuments = documents.filter((document) =>
+					urls.includes(document.source),
+				);
+				expect(matchingDocuments.length == urls.length).toBeTrue();
+			});
+			test("ingest directory", async () => {
+				const directoryName = "test_dir";
+				const directoryFiles = ["test_doc2.txt", "test_doc3.txt"];
+				const directoryPath = path.join(import.meta.dir, directoryName);
+				const program = await buildProgram();
+				await program.parseAsync(
+					["ingest", "directory", directoryPath, "--collection", collectionId],
+					{ from: "user" },
+				);
+				const client = await getAuthClient();
+				const documents = await client.getDocuments(collectionId);
+				expect(documents.map((document) => document.filename)).toContainValues(
+					directoryFiles,
+				);
+			});
+			describe("tests with document IDs", () => {
+				let documentIds: string[];
+				beforeEach(async () => {
+					const client = await getAuthClient();
+					documentIds = [];
+					let documentId;
+					for await (const item of await client.insertFiles(collectionId, [
+						filePath,
+					])) {
+						documentId = item.documentId;
+					}
+					documentIds.push(documentId);
+					for await (const item of await client.insertFiles(collectionId, [
+						filePath,
+					])) {
+						documentId = item.documentId;
+					}
+					documentIds.push(documentId);
+				});
+				test("list documents", async () => {
+					const output =
+						await $`bun run index.ts document list "--" ${collectionId}`
+							.cwd(path.resolve(path.join(import.meta.dir, "..")))
+							.env({ ...process.env })
+							.text();
+					for (const documentId of documentIds) {
+						expect(output).toInclude(documentId);
+					}
+				});
+				test("delete documents", async () => {
+					const program = await buildProgram();
+					await program.parseAsync(
+						[
+							"document",
+							"delete",
+							"--collection",
+							collectionId,
+							"--",
+							...documentIds,
+						],
+						{ from: "user" },
+					);
+					const client = await getAuthClient();
+					const documents = await client.getDocuments(collectionId);
+					expect(
+						documents.map((document) => document.documentId),
+					).not.toContainAnyValues(documentIds);
+				});
+			});
+			test("delete collection", async () => {
+				const program = await buildProgram();
+				await program.parseAsync(["collection", "delete", collectionId], {
+					from: "user",
+				});
+				const client = await getAuthClient();
+				const collections = await client.getCollections();
+				const matchingCollection = collections.find(
+					(collection) => collection.collectionId == collectionId,
+				);
+				expect(matchingCollection).toBeFalsy();
+			});
 		});
 	},
 );
