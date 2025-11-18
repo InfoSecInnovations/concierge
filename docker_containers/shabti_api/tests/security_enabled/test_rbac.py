@@ -2,18 +2,20 @@
 # For best results it should be fresh installation with no collections created or tweaks made to the access controls
 # Do not use this on a production instance!
 
-from shabti_keycloak import get_keycloak_client
+from shabti_keycloak import get_keycloak_client, get_keycloak_admin_openid_token
 from ...src.app.authorization import UnauthorizedOperationError
 from ...src.app.document_collections import (
     delete_collection,
     get_documents,
     delete_document,
+    get_collections,
 )
 import pytest
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
 from .lib import create_collection_for_user
 import os
 import json
+import secrets
 
 
 @pytest.mark.parametrize(
@@ -27,14 +29,16 @@ import json
 )
 async def test_can_create_collection(user, location, shabti_client):
     # test function behind the API call
-    collection_name = f"{user}'s {location} collection"
-    collection_id = await create_collection_for_user(user, location, collection_name)
-    assert collection_id
+    backend_collection_name = secrets.token_hex(8)
+    backend_collection_id = await create_collection_for_user(
+        user, location, backend_collection_name
+    )
+    assert backend_collection_id
 
     # test the API call itself
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    collection_name = f"{user}'s {location} API collection"
+    collection_name = secrets.token_hex(8)
     response = shabti_client.post(
         "/collections",
         headers={"Authorization": f"Bearer {token['access_token']}"},
@@ -43,6 +47,20 @@ async def test_can_create_collection(user, location, shabti_client):
     assert response.status_code == 201
     response_json = response.json()
     assert response_json["collection_id"]
+    admin_token = get_keycloak_admin_openid_token()
+    collections = await get_collections(admin_token["access_token"])
+    assert next(
+        collection_info
+        for collection_info in collections
+        if collection_info.collection_id == backend_collection_id
+        and collection_info.collection_name == backend_collection_name
+    )
+    assert next(
+        collection_info
+        for collection_info in collections
+        if collection_info.collection_id == response_json["collection_id"]
+        and collection_info.collection_name == collection_name
+    )
 
 
 @pytest.mark.parametrize(
@@ -60,18 +78,24 @@ async def test_cannot_create_collection(user, location, shabti_client):
     # test the API call itself
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    collection_name = f"{user}'s {location} API collection"
+    collection_name = secrets.token_hex(8)
     response = shabti_client.post(
         "/collections",
         headers={"Authorization": f"Bearer {token['access_token']}"},
         json={"collection_name": collection_name, "location": location},
     )
     assert response.status_code == 403
+    backend_collection_name = secrets.token_hex(8)
     with pytest.raises((KeycloakPostError, KeycloakAuthenticationError)):
         # test function behind the API call
-        await create_collection_for_user(
-            user, location, f"{user}'s {location} collection"
-        )
+        await create_collection_for_user(user, location, backend_collection_name)
+    admin_token = get_keycloak_admin_openid_token()
+    collections = await get_collections(admin_token["access_token"])
+    assert not any(
+        collection_info.collection_name == collection_name
+        or collection_info.collection_name == backend_collection_name
+        for collection_info in collections
+    )
 
 
 @pytest.mark.parametrize(
