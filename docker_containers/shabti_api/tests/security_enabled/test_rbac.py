@@ -50,16 +50,22 @@ async def test_can_create_collection(user, location, shabti_client):
     admin_token = get_keycloak_admin_openid_token()
     collections = await get_collections(admin_token["access_token"])
     assert next(
-        collection_info
-        for collection_info in collections
-        if collection_info.collection_id == backend_collection_id
-        and collection_info.collection_name == backend_collection_name
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == backend_collection_id
+            and collection_info.collection_name == backend_collection_name
+        ),
+        None,
     )
     assert next(
-        collection_info
-        for collection_info in collections
-        if collection_info.collection_id == response_json["collection_id"]
-        and collection_info.collection_name == collection_name
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == response_json["collection_id"]
+            and collection_info.collection_name == collection_name
+        ),
+        None,
     )
 
 
@@ -121,6 +127,27 @@ async def test_can_read_collection(user, shabti_collection_id, shabti_client):
     )
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+    collections = await get_collections(token["access_token"])
+    assert next(
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == shabti_collection_id
+        ),
+        None,
+    )
+    response = shabti_client.get(
+        "/collections", headers={"Authorization": f"Bearer {token['access_token']}"}
+    )
+    assert response.status_code == 200
+    assert next(
+        (
+            collection_info
+            for collection_info in response.json()
+            if collection_info["collection_id"] == shabti_collection_id
+        ),
+        None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -147,6 +174,19 @@ async def test_cannot_read_collection(user, shabti_collection_id, shabti_client)
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await get_documents(token["access_token"], shabti_collection_id)
+    collections = await get_collections(token["access_token"])
+    assert not any(
+        collection_info.collection_id == shabti_collection_id
+        for collection_info in collections
+    )
+    response = shabti_client.get(
+        "/collections", headers={"Authorization": f"Bearer {token['access_token']}"}
+    )
+    assert response.status_code == 200
+    assert not any(
+        collection_info["collection_id"] == shabti_collection_id
+        for collection_info in response.json()
+    )
 
 
 filename = "test_doc.txt"
@@ -184,6 +224,9 @@ async def test_can_ingest_document(user, shabti_collection_id, shabti_client):
     result = ingest_document_api(user, shabti_collection_id, shabti_client)
     assert result[1].status_code == 200
     assert result[0]
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert next((doc for doc in docs if doc.filename == filename), None)
 
 
 @pytest.mark.parametrize(
@@ -239,6 +282,9 @@ async def test_can_delete_document(
     assert await delete_document_with_user(
         user, shabti_collection_id, shabti_document_id
     )
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert not any(doc.document_id == shabti_document_id for doc in docs)
 
 
 @pytest.mark.parametrize(
@@ -260,6 +306,9 @@ async def test_can_delete_document_api(
     )
     assert response.status_code == 200
     assert "document_id" in response.json()
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert not any(doc.document_id == shabti_document_id for doc in docs)
 
 
 @pytest.mark.parametrize(
@@ -280,6 +329,9 @@ async def test_cannot_delete_document(user, shabti_collection_id, shabti_documen
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_document_with_user(user, shabti_collection_id, shabti_document_id)
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
 
 
 @pytest.mark.parametrize(
@@ -303,6 +355,9 @@ async def test_cannot_delete_document_api(
     )
     assert response.status_code == 403
     assert "document_id" not in response.json()
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
 
 
 async def delete_collection_with_user(user, collection_id):
@@ -334,6 +389,12 @@ async def delete_collection_api_with_user(user, collection_id, shabti_client):
 )
 async def test_can_delete_collection(user, shabti_collection_id):
     await delete_collection_with_user(user, shabti_collection_id)
+    admin_token = get_keycloak_admin_openid_token()
+    collections = await get_collections(admin_token["access_token"])
+    assert not any(
+        collection_info.collection_id == shabti_collection_id
+        for collection_info in collections
+    )
 
 
 @pytest.mark.parametrize(
@@ -354,6 +415,12 @@ async def test_can_delete_collection_api(user, shabti_collection_id, shabti_clie
     )
     assert response.status_code == 200
     assert "collection_id" in response.json()
+    admin_token = get_keycloak_admin_openid_token()
+    collections = await get_collections(admin_token["access_token"])
+    assert not any(
+        collection_info.collection_id == shabti_collection_id
+        for collection_info in collections
+    )
 
 
 @pytest.mark.parametrize(
@@ -374,6 +441,16 @@ async def test_cannot_delete_collection(user, shabti_collection_id, shabti_clien
         (UnauthorizedOperationError, KeycloakPostError, KeycloakAuthenticationError)
     ):
         await delete_collection_with_user(user, shabti_collection_id)
+    admin_token = get_keycloak_admin_openid_token()
+    collections = await get_collections(admin_token["access_token"])
+    assert next(
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == shabti_collection_id
+        ),
+        None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -394,3 +471,13 @@ async def test_cannot_delete_collection_api(user, shabti_collection_id, shabti_c
         user, shabti_collection_id, shabti_client
     )
     assert response.status_code == 403
+    admin_token = get_keycloak_admin_openid_token()
+    collections = await get_collections(admin_token["access_token"])
+    assert next(
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == shabti_collection_id
+        ),
+        None,
+    )
