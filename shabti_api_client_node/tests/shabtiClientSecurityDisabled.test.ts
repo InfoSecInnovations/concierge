@@ -4,7 +4,9 @@ import path = require("node:path");
 import { randomBytes } from "node:crypto";
 import { afterEach } from "node:test";
 
-const test_doc_path = path.join(import.meta.dir, "test_doc.txt");
+const filename = "test_doc.txt";
+const testDocPath = path.join(import.meta.dir, filename);
+const url = "https://example.com/";
 
 jest.setTimeout(-1);
 
@@ -15,8 +17,17 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");
-			const collectionId = await getClient().createCollection(collectionName);
+			const client = getClient();
+			const collectionId = await client.createCollection(collectionName);
 			expect(collectionId).toBeTruthy();
+			const collections = await client.getCollections();
+			expect(
+				collections.some(
+					(collection) =>
+						collection.collectionId == collectionId &&
+						collection.collectionName == collectionName,
+				),
+			).toBeTrue();
 		});
 		describe("tests with collection ID", () => {
 			let collectionId: string;
@@ -44,28 +55,40 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				let docId: string;
 				const client = getClient();
 				for await (const item of await client.insertFiles(collectionId, [
-					test_doc_path,
+					testDocPath,
 				])) {
 					docId = item.documentId;
 				}
 				expect(docId).toBeTruthy();
+				const documents = await client.getDocuments(collectionId);
+				expect(
+					documents.some(
+						(document) =>
+							document.documentId == docId && document.filename == filename,
+					),
+				).toBeTrue();
 			});
 			test("insert URL", async () => {
 				let docId: string;
 				const client = getClient();
-				for await (const item of await client.insertUrls(collectionId, [
-					"https://example.com/",
-				])) {
+				for await (const item of await client.insertUrls(collectionId, [url])) {
 					docId = item.documentId;
 				}
 				expect(docId).toBeTruthy();
+				const documents = await client.getDocuments(collectionId);
+				expect(
+					documents.some(
+						(document) =>
+							document.source == url && document.filename == filename,
+					),
+				).toBeTrue();
 			});
 			describe("tests with document ID", () => {
 				let documentId: string;
 				beforeEach(async () => {
 					const client = getClient();
 					for await (const item of await client.insertFiles(collectionId, [
-						test_doc_path,
+						testDocPath,
 					])) {
 						documentId = item.documentId;
 					}
