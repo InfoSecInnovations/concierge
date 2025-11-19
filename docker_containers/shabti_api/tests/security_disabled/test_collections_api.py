@@ -25,10 +25,13 @@ async def test_create_collection(shabti_client):
     # after checking we got the expected type of response, also check the collection actually exists
     collections = await get_collections(None)
     assert next(
-        collection_info
-        for collection_info in collections
-        if collection_info.collection_id == collection_id
-        and collection_info.collection_name == collection_name
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == collection_id
+            and collection_info.collection_name == collection_name
+        ),
+        None,
     )
 
 
@@ -56,7 +59,7 @@ async def test_insert_documents(shabti_client, shabti_collection_id):
 
 
 async def test_insert_urls(shabti_client, shabti_collection_id):
-    url = "https://en.wikipedia.org/wiki/Generative_artificial_intelligence"
+    url = "https://example.com"
     response = shabti_client.post(
         f"/collections/{shabti_collection_id}/documents/urls", json=[url]
     )

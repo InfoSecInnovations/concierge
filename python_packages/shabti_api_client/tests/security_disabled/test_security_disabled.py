@@ -1,14 +1,24 @@
 import os
-
-collection_name = "test_collection"
+import secrets
 
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
 async def test_create_collection(shabti_client):
+    collection_name = secrets.token_hex(8)
     collection_id = await shabti_client.create_collection(collection_name)
     assert collection_id
+    collections = await shabti_client.get_collections()
+    assert next(
+        (
+            collection_info
+            for collection_info in collections
+            if collection_info.collection_id == collection_id
+            and collection_info.collection_name == collection_name
+        ),
+        None,
+    )
 
 
 async def test_list_collections(shabti_client, shabti_collection_id):
@@ -28,15 +38,28 @@ async def test_ingest_document(shabti_client, shabti_collection_id):
     async for info in shabti_client.insert_files(shabti_collection_id, [file_path]):
         document_id = info.document_id
     assert document_id
+    docs = await shabti_client.get_documents(shabti_collection_id)
+    assert next(
+        (
+            doc
+            for doc in docs
+            if doc.filename == filename and doc.document_id == document_id
+        ),
+        None,
+    )
 
 
 async def test_ingest_url(shabti_client, shabti_collection_id):
-    url_document_id = None
-    async for info in shabti_client.insert_urls(
-        shabti_collection_id, ["https://example.com/"]
-    ):
-        url_document_id = info.document_id
-    assert url_document_id
+    document_id = None
+    url = "https://example.com/"
+    async for info in shabti_client.insert_urls(shabti_collection_id, [url]):
+        document_id = info.document_id
+    assert document_id
+    docs = await shabti_client.get_documents(shabti_collection_id)
+    assert next(
+        (doc for doc in docs if doc.source == url and doc.document_id == document_id),
+        None,
+    )
 
 
 async def test_list_documents(shabti_client, shabti_collection_id, shabti_document_id):

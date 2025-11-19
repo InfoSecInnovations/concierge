@@ -226,7 +226,14 @@ async def test_can_ingest_document(user, shabti_collection_id, shabti_client):
     assert result[0]
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert next((doc for doc in docs if doc.filename == filename), None)
+    assert next(
+        (
+            doc
+            for doc in docs
+            if doc.filename == filename and doc.document_id == result[0]
+        ),
+        None,
+    )
 
 
 @pytest.mark.parametrize(
@@ -246,6 +253,70 @@ async def test_cannot_ingest_document(user, shabti_collection_id, shabti_client)
     result = ingest_document_api(user, shabti_collection_id, shabti_client)
     assert not result[0]
     assert result[1].status_code == 403
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert not any(doc.filename == filename for doc in docs)
+
+
+url = "https://example.com"
+
+
+def ingest_url_api(user, collection_id, shabti_client):
+    document_id = None
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.post(
+        f"/collections/{collection_id}/documents/urls",
+        json=[url],
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    for item in response.iter_lines():
+        line = json.loads(item)
+        if "document_id" in line:
+            document_id = line["document_id"]
+    return (document_id, response)
+
+
+@pytest.mark.parametrize(
+    "user,shabti_collection_id",
+    [
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
+    ],
+    indirect=["shabti_collection_id"],
+)
+async def test_can_ingest_url(user, shabti_collection_id, shabti_client):
+    result = ingest_url_api(user, shabti_collection_id, shabti_client)
+    assert result[1].status_code == 200
+    assert result[0]
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert next((doc for doc in docs if doc.source == url), None)
+
+
+@pytest.mark.parametrize(
+    "user,shabti_collection_id",
+    [
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
+    ],
+    indirect=["shabti_collection_id"],
+)
+async def test_cannot_ingest_url(user, shabti_collection_id, shabti_client):
+    result = ingest_url_api(user, shabti_collection_id, shabti_client)
+    assert not result[0]
+    assert result[1].status_code == 403
+    admin_token = get_keycloak_admin_openid_token()
+    docs = await get_documents(admin_token["access_token"], shabti_collection_id)
+    assert not any(doc.source == url for doc in docs)
 
 
 async def delete_document_with_user(user, collection_id, document_id):
