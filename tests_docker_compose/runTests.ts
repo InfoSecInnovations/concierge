@@ -62,7 +62,7 @@ const parser = new XMLParser({ ignoreAttributes: false });
 const parsedObj = parser.parse(merged);
 const processNode = (node: any) => {
 	// valid test cases are either not skipped or don't match any non skipped tests (i.e. they were only skipped and not also executed in another run)
-	if (node.testcase)
+	if (Array.isArray(node.testcase))
 		node.testcase = node.testcase.filter(
 			(testCase: any) =>
 				typeof testCase.skipped == "undefined" ||

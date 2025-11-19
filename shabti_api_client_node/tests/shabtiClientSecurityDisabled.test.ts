@@ -79,7 +79,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				expect(
 					documents.some(
 						(document) =>
-							document.source == url && document.filename == filename,
+							document.source == url && document.documentId == docId,
 					),
 				).toBeTrue();
 			});

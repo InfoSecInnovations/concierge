@@ -5,14 +5,14 @@ import path = require("node:path");
 import { randomBytes } from "node:crypto";
 import { afterEach, beforeEach } from "node:test";
 
-const test_doc_path = path.join(import.meta.dir, "test_doc.txt");
+const filename = "test_doc.txt";
+const testDocPath = path.join(import.meta.dir, filename);
 
 jest.setTimeout(-1);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 	"Node Client - Security enabled Shabti instance",
 	async () => {
-		const lookup: { [key: string]: string } = {};
 		const getConfig = () =>
 			openIdClient.discovery(
 				new URL(
@@ -68,7 +68,16 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					location,
 				);
 				expect(collectionId).toBeTruthy();
-				lookup[collectionName] = collectionId;
+				const collections = await getAdminClient().then((client) =>
+					client.getCollections(),
+				);
+				expect(
+					collections.some(
+						(collection) =>
+							collection.collectionId == collectionId &&
+							collection.collectionName == collectionName,
+					),
+				).toBeTrue();
 			},
 		);
 		const cannotCreateCollectionUsers = [
@@ -87,6 +96,14 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				expect(async () => {
 					await client.createCollection(collectionName, location);
 				}).toThrow();
+				const collections = await getAdminClient().then((client) =>
+					client.getCollections(),
+				);
+				expect(
+					collections.some(
+						(collection) => collection.collectionName == collectionName,
+					),
+				).toBeFalse();
 			},
 		);
 		describe("tests with collection ID", () => {
@@ -119,6 +136,12 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						const client = await getClientForUser(username);
 						const docs = await client.getDocuments(collectionId);
 						expect(docs).toBeArray();
+						const collections = await client.getCollections();
+						expect(
+							collections.some(
+								(collection) => collection.collectionId == collectionId,
+							),
+						).toBeTrue();
 					});
 				},
 			);
@@ -139,6 +162,12 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						expect(async () => {
 							await client.getDocuments(collectionId);
 						}).toThrow();
+						const collections = await client.getCollections();
+						expect(
+							collections.some(
+								(collection) => collection.collectionId == collectionId,
+							),
+						).toBeFalse();
 					});
 				},
 			);
@@ -157,11 +186,20 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						const client = await getClientForUser(username);
 						let docId: string;
 						for await (const item of await client.insertFiles(collectionId, [
-							test_doc_path,
+							testDocPath,
 						])) {
 							docId = item.documentId;
 						}
 						expect(docId).toBeTruthy();
+						const documents = await getAdminClient().then((client) =>
+							client.getDocuments(collectionId),
+						);
+						expect(
+							documents.some(
+								(document) =>
+									document.documentId == docId && document.filename == filename,
+							),
+						).toBeTrue();
 					});
 				},
 			);
@@ -182,10 +220,16 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						const client = await getClientForUser(username);
 						expect(async () => {
 							for await (const item of await client.insertFiles(collectionId, [
-								test_doc_path,
+								testDocPath,
 							])) {
 							}
 						}).toThrow();
+						const documents = await getAdminClient().then((client) =>
+							client.getDocuments(collectionId),
+						);
+						expect(
+							documents.some((document) => document.filename == filename),
+						).toBeFalse();
 					});
 				},
 			);
@@ -195,7 +239,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					collectionIdFixture(owner, location);
 					beforeEach(async () => {
 						for await (const item of await getAdminClient().then((client) =>
-							client.insertFiles(collectionId, [test_doc_path]),
+							client.insertFiles(collectionId, [testDocPath]),
 						)) {
 							documentId = item.documentId;
 						}
