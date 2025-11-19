@@ -20,10 +20,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 			});
 			const client = getClient();
 			const collections = await client.getCollections();
-			const matchingCollection = collections.find(
-				(collection) => collection.collectionName == collectionName,
-			);
-			expect(matchingCollection).toBeTruthy();
+			expect(
+				collections.some(
+					(collection) => collection.collectionName == collectionName,
+				),
+			).toBeTrue();
 		});
 		describe("tests with collection ID", () => {
 			let collectionId: string;

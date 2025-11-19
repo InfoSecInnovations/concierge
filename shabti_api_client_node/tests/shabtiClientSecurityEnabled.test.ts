@@ -7,6 +7,7 @@ import { afterEach, beforeEach } from "node:test";
 
 const filename = "test_doc.txt";
 const testDocPath = path.join(import.meta.dir, filename);
+const url = "https://example.com/";
 
 jest.setTimeout(-1);
 
@@ -229,6 +230,52 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						);
 						expect(
 							documents.some((document) => document.filename == filename),
+						).toBeFalse();
+					});
+				},
+			);
+			describe.each(canIngestDocumentUsers)(
+				"users can ingest URLs",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} can ingest URLs into ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						let docId: string;
+						for await (const item of await client.insertUrls(collectionId, [
+							url,
+						])) {
+							docId = item.documentId;
+						}
+						expect(docId).toBeTruthy();
+						const documents = await getAdminClient().then((client) =>
+							client.getDocuments(collectionId),
+						);
+						expect(
+							documents.some(
+								(document) =>
+									document.documentId == docId && document.source == url,
+							),
+						).toBeTrue();
+					});
+				},
+			);
+			describe.each(cannotIngestDocumentUsers)(
+				"users cannot ingest documents",
+				(username, owner, location) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} cannot ingest into ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						expect(async () => {
+							for await (const item of await client.insertUrls(collectionId, [
+								url,
+							])) {
+							}
+						}).toThrow();
+						const documents = await getAdminClient().then((client) =>
+							client.getDocuments(collectionId),
+						);
+						expect(
+							documents.some((document) => document.source == url),
 						).toBeFalse();
 					});
 				},
