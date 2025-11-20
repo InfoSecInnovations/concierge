@@ -56,10 +56,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				);
 				const client = getClient();
 				const documents = await client.getDocuments(collectionId);
-				const matchingDocument = documents.find(
-					(document) => document.filename == filename,
-				);
-				expect(matchingDocument).toBeTruthy();
+				expect(
+					documents.some((document) => document.filename == filename),
+				).toBeTrue();
 			});
 			test("ingest urls", async () => {
 				const urls = ["https://www.example.com", "https://example.org"];
