@@ -24,7 +24,7 @@ services:
       dockerfile: Dockerfile.local
       args:
         - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
-    command: ["sh", "-c", "uv run pytest --junit-xml=/test_results/shabti_api_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest shabti_api_${JUNIT_FILENAME}' && cd /python_packages/isi_util/ && uv run pytest --junit-xml=/test_results/isi_util_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest isi_util_${JUNIT_FILENAME}' "]
+    command: ["sh", "-c", "uv run pytest --junit-xml=/test_results/shabti_api_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest shabti_api_${JUNIT_FILENAME}' && if [ $${SHABTI_SECURITY_ENABLED} = 'False' ]; then cd /python_packages/isi_util/ && uv run pytest --junit-xml=/test_results/isi_util_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest isi_util_${JUNIT_FILENAME}'; fi"]
     restart: no
     volumes:
       - ./test_results:/test_results/
