@@ -50,8 +50,16 @@ async def delete_collection_route(collection_id: str) -> CollectionInfo:
 
 
 @router.get("/collections/{collection_id}/documents", response_model_exclude_unset=True)
-async def get_documents_route(collection_id: str) -> list[DocumentInfo]:
-    return await get_documents(None, collection_id)
+async def get_documents_route(
+    collection_id: str,
+    search: str | None = None,
+    sort: str | None = None,
+    max_results: int | None = None,
+    filter_document_type: str | None = None,
+) -> list[DocumentInfo]:
+    return await get_documents(
+        None, collection_id, search, sort, max_results, filter_document_type
+    )
 
 
 @router.post(

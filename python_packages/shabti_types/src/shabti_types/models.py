@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 
 
 class UserInfo(BaseModel):
@@ -105,3 +105,10 @@ class WebFile(BaseModel):
     bytes: bytes
     media_type: str
     content_disposition: str
+
+
+class DocumentSearchParameters(BaseModel):
+    search: Optional[str] = None
+    sort: Optional[Literal["relevance", "date_desc", "date_asc"]] = None
+    max_results: Optional[int] = None
+    filter_document_type: Optional[str] = None

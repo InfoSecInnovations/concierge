@@ -34,6 +34,7 @@ def create_collection_index(collection_id):
                 },
                 "page_id": {"type": "keyword"},
                 "doc_id": {"type": "keyword"},
+                "text": {"type": "text"},
             }
         },
     }
@@ -43,11 +44,12 @@ def create_collection_index(collection_id):
         "aliases": {collection_id: {}},
         "mappings": {
             "properties": {
-                "filename": {"type": "keyword"},
-                "source": {"type": "keyword"},
+                "filename": {"type": "wildcard"},
+                "source": {"type": "wildcard"},
                 "media_type": {"type": "keyword"},
                 "ingest_date": {"type": "unsigned_long"},
                 "languages": {"type": "keyword"},
+                "doc_id": {"type": "alias", "path": "_id"},
             }
         },
     }
@@ -72,7 +74,7 @@ def create_collection_index(collection_id):
             "properties": {
                 "doc_id": {"type": "keyword"},
                 "page_number": {"type": "integer"},
-                "source": {"type": "keyword"},
+                "source": {"type": "wildcard"},
             }
         },
     }
@@ -183,18 +185,68 @@ def get_document(collection_id: str, doc_id: str):
     return doc
 
 
-def get_opensearch_documents(collection_id: str):
+def get_opensearch_documents(
+    collection_id: str, search, sort, max_results, filter_document_type
+):
     client = get_client()
     document_index_name = f"{collection_id}.documents"
-    # get documents from all of these
-    query = {
-        "size": 10000,  # this is the maximum allowed value
-        "query": {"match_all": {}},
-    }
-    response = client.search(body=query, index=document_index_name)
-    docs = [{**hit["_source"], "id": hit["_id"]} for hit in response["hits"]["hits"]]
-    for doc in docs:
-        add_document_metadata(collection_id, doc)
+    vector_index_name = f"{collection_id}.vectors"
+    if not search:
+        body = {
+            "size": max_results or 10000,  # this is the maximum allowed value
+            "query": {"match_all": {}},
+        }
+        response = client.search(body=body, index=document_index_name)
+        docs = [
+            add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
+            for hit in response["hits"]["hits"]
+        ]
+    else:
+        body = {
+            "_source": {"excludes": ["document_vector"]},
+            "aggs": {
+                "doc_ids": {
+                    "terms": {
+                        "field": "doc_id",
+                        "size": max_results or 10000,
+                        "order": {"max_score": "desc"},
+                    },
+                    "aggs": {"max_score": {"max": {"script": "_score"}}},
+                }
+            },
+            "size": 0,
+            "query": {
+                "bool": {
+                    "should": [
+                        {
+                            "bool": {
+                                "boost": 100,
+                                "minimum_should_match": 1,
+                                "should": [
+                                    {"wildcard": {"filename": f"*{search}*"}},
+                                    {"wildcard": {"source": f"*{search}*"}},
+                                    {"term": {"_id": {"value": search}}},
+                                ],
+                                "filter": {"term": {"_index": document_index_name}},
+                            }
+                        },
+                        {
+                            "bool": {
+                                "must": [{"match": {"text": search}}],
+                                "filter": {"term": {"_index": vector_index_name}},
+                            }
+                        },
+                    ]
+                }
+            },
+        }
+        response = client.search(
+            body=body, index=f"{document_index_name},{vector_index_name}"
+        )
+        docs = [
+            get_document(collection_id, agg["key"])
+            for agg in response["aggregations"]["doc_ids"]["buckets"]
+        ]
 
     return docs
 

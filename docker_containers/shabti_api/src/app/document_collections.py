@@ -219,14 +219,28 @@ async def get_document_info(collection_id, document_id):
     )
 
 
-async def get_documents(token, collection_id):
+async def get_documents(
+    token,
+    collection_id,
+    search: str | None = None,
+    sort: str | None = None,
+    max_results: int = 0,
+    filter_document_type: str | None = None,
+):
     if auth_enabled():
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
     return [
         create_document_info(doc)
-        for doc in await asyncify(get_opensearch_documents, collection_id)
+        for doc in await asyncify(
+            get_opensearch_documents,
+            collection_id,
+            search,
+            sort,
+            max_results,
+            filter_document_type,
+        )
     ]
 
 
