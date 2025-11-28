@@ -63,6 +63,7 @@ services:
     environment:
       - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'
       - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+    restart: unless-stopped
   
 
 volumes:
