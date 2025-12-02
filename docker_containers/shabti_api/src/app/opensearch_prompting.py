@@ -22,16 +22,15 @@ def get_context_from_opensearch(
         "_source": {"includes": ["page_id", "text", "doc_id"]},
     }
 
-    response = client.search(body=query, index=f"{collection_id}.vectors")
+    response = client.search(body=query, index=collection_id)
 
     hits = [hit["_source"] for hit in response["hits"]["hits"]]
 
     page_metadata = {}
-    page_index = f"{collection_id}.pages"
 
     for hit in hits:
         if hit["page_id"] not in page_metadata:
-            response = client.get(index=page_index, id=hit["page_id"])
+            response = client.get(index=collection_id, id=hit["page_id"])
             page_metadata[hit["page_id"]] = {**response["_source"]}
 
     doc_metadata = {}

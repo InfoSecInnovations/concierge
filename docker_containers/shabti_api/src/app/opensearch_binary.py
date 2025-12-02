@@ -5,19 +5,8 @@ from urllib.parse import quote
 
 async def serve_binary(collection_id: str, doc_id: str):
     client = get_client()
-    client_response = client.search(
-        body={
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"term": {"doc_id": doc_id}},
-                    ]
-                }
-            }
-        },
-        index=f"{collection_id}.binary",
-    )
-    binary = client_response["hits"]["hits"][0]["_source"]["data"]
+    client_response = client.get(id=doc_id, index=collection_id)
+    binary = client_response["hits"]["hits"][0]["_source"]["binary_data"]
     media_type = client_response["hits"]["hits"][0]["_source"]["media_type"]
     filename = client_response["hits"]["hits"][0]["_source"]["filename"]
     content_disposition_filename = quote(filename)

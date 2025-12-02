@@ -28,9 +28,18 @@ def insert(
     client = get_client()
     entries = []
 
-    doc_index_name = f"{collection_id}.documents"
+    additional = {}
+    if binary:
+        additional["binary_data"] = binary.hex()
+
     doc_id = client.index(
-        index=doc_index_name, body=vars(document.metadata), refresh=True
+        index=collection_id,
+        body={
+            "type": "document",
+            "child_item_to_document": "document",
+            **vars(document.metadata),
+        },
+        refresh=True,
     )["_id"]
 
     total = len(document.pages)
@@ -39,29 +48,17 @@ def insert(
         return
 
     try:
-        if binary:
-            binary_index_name = f"{collection_id}.binary"
-            client.index(
-                index=binary_index_name,
-                body={
-                    "doc_id": doc_id,
-                    "data": binary.hex(),
-                    "media_type": document.metadata.media_type or "text/plain",
-                    "filename": document.metadata.filename,
-                },
-                refresh=True,
-            )
-
         page = document.pages[0]
-        page_index_name = f"{collection_id}.pages"
 
         for index, page in enumerate(document.pages):
             page_id = client.index(
-                index=page_index_name,
+                index=collection_id,
                 body={
-                    "doc_id": doc_id,
+                    "child_item_to_document": {"name": "child_item", "parent": doc_id},
+                    "type": "page",
                     **vars(page.metadata),
                 },
+                routing=doc_id,
                 refresh=True,
             )["_id"]
             chunks = splitter.split_text(page.content)
@@ -70,6 +67,12 @@ def insert(
                 [
                     {
                         "_index": collection_id,
+                        "_routing": doc_id,
+                        "child_item_to_document": {
+                            "name": "child_item",
+                            "parent": doc_id,
+                        },
+                        "type": "vector",
                         "text": chunks[index],
                         "document_vector": vect,
                         "page_id": page_id,

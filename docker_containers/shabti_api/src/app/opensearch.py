@@ -16,9 +16,8 @@ def get_client():
 
 def create_collection_index(collection_id):
     client = get_client()
-    collection_index_name = f"{collection_id}.vectors"
+    collection_index_name = collection_id
     collection_index_body = {
-        "aliases": {collection_id: {"is_write_index": True}},
         "settings": {"index": {"knn": True}},
         "mappings": {
             "properties": {
@@ -33,52 +32,23 @@ def create_collection_index(collection_id):
                     },
                 },
                 "page_id": {"type": "keyword"},
-                "doc_id": {"type": "keyword"},
-                "text": {"type": "text"},
-            }
-        },
-    }
-    client.indices.create(index=collection_index_name, body=collection_index_body)
-    documents_index_name = f"{collection_id}.documents"
-    documents_index_body = {
-        "aliases": {collection_id: {}},
-        "mappings": {
-            "properties": {
                 "filename": {"type": "wildcard"},
                 "source": {"type": "wildcard"},
                 "media_type": {"type": "keyword"},
                 "ingest_date": {"type": "unsigned_long"},
                 "languages": {"type": "keyword"},
-                "doc_id": {"type": "alias", "path": "_id"},
-            }
-        },
-    }
-    client.indices.create(index=documents_index_name, body=documents_index_body)
-    binary_index_name = f"{collection_id}.binary"
-    binary_index_body = {
-        "aliases": {collection_id: {}},
-        "mappings": {
-            "properties": {
-                "doc_id": {"type": "keyword"},
-                "data": {"type": "binary"},
-                "media_type": {"type": "keyword"},
-                "filename": {"type": "keyword"},
-            }
-        },
-    }
-    client.indices.create(index=binary_index_name, body=binary_index_body)
-    pages_index_name = f"{collection_id}.pages"
-    pages_index_body = {
-        "aliases": {collection_id: {}},
-        "mappings": {
-            "properties": {
-                "doc_id": {"type": "keyword"},
+                "text": {"type": "text"},
+                "binary_data": {"type": "binary"},
                 "page_number": {"type": "integer"},
-                "source": {"type": "wildcard"},
+                "type": {"type": "keyword"},
+                "child_item_to_document": {
+                    "type": "join",
+                    "relations": {"document": "child_item"},
+                },
             }
         },
     }
-    client.indices.create(index=pages_index_name, body=pages_index_body)
+    client.indices.create(index=collection_index_name, body=collection_index_body)
 
 
 def create_index_mapping(collection_id, collection_name):
@@ -148,10 +118,7 @@ def get_opensearch_collection_info(collection_id: str):
 
 def delete_collection_indices(collection_id: str):
     client = get_client()
-    # get all indices in alias
-    indices = client.indices.resolve_index(name=collection_id)["aliases"][0]["indices"]
-    # deleting all indices also removes the alias
-    response = client.indices.delete(index=",".join(indices))
+    response = client.indices.delete(index=collection_id)
     if not response["acknowledged"]:
         print(f"Failed to delete indices for {collection_id}")
         return False
@@ -160,26 +127,34 @@ def delete_collection_indices(collection_id: str):
 
 def add_document_metadata(collection_id, doc):
     client = get_client()
-    query = {
+    page_query = {
         "query": {
             "bool": {
-                "filter": [{"term": {"doc_id": doc["id"]}}],
+                "filter": [
+                    {"term": {"doc_id": doc["id"]}},
+                    {"exists": {"field": "page_number"}},
+                ],
             }
         }
     }
-    doc["page_count"] = client.count(body=query, index=f"{collection_id}.pages")[
-        "count"
-    ]
-    doc["vector_count"] = client.count(body=query, index=f"{collection_id}.vectors")[
-        "count"
-    ]
+    doc["page_count"] = client.count(body=page_query, index=collection_id)["count"]
+    vector_query = {
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"doc_id": doc["id"]}},
+                    {"exists": {"field": "document_vector"}},
+                ],
+            }
+        }
+    }
+    doc["vector_count"] = client.count(body=vector_query, index=collection_id)["count"]
     return doc
 
 
 def get_document(collection_id: str, doc_id: str):
     client = get_client()
-    doc_index = f"{collection_id}.documents"
-    item = client.get(index=doc_index, id=doc_id)
+    item = client.get(index=collection_id, id=doc_id)
     doc = {**item["_source"], "id": item["_id"]}
     doc = add_document_metadata(collection_id, doc)
     return doc
@@ -189,14 +164,12 @@ def get_opensearch_documents(
     collection_id: str, search, sort, max_results, filter_document_type
 ):
     client = get_client()
-    document_index_name = f"{collection_id}.documents"
-    vector_index_name = f"{collection_id}.vectors"
     if not search:
         body = {
             "size": max_results or 10000,  # this is the maximum allowed value
-            "query": {"match_all": {}},
+            "query": {"bool": {"filter": {"term": {"type": "document"}}}},
         }
-        response = client.search(body=body, index=document_index_name)
+        response = client.search(body=body, index=collection_id)
         docs = [
             add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
             for hit in response["hits"]["hits"]
@@ -204,16 +177,6 @@ def get_opensearch_documents(
     else:
         body = {
             "_source": {"excludes": ["document_vector"]},
-            "aggs": {
-                "doc_ids": {
-                    "terms": {
-                        "field": "doc_id",
-                        "size": max_results or 10000,
-                        "order": {"max_score": "desc"},
-                    },
-                    "aggs": {"max_score": {"max": {"script": "_score"}}},
-                }
-            },
             "size": 0,
             "query": {
                 "bool": {
@@ -227,25 +190,29 @@ def get_opensearch_documents(
                                     {"wildcard": {"source": f"*{search}*"}},
                                     {"term": {"_id": {"value": search}}},
                                 ],
-                                "filter": {"term": {"_index": document_index_name}},
+                                "filter": {"term": {"type": "document"}},
                             }
                         },
                         {
                             "bool": {
-                                "must": [{"match": {"text": search}}],
-                                "filter": {"term": {"_index": vector_index_name}},
+                                "must": [
+                                    {
+                                        "has_child": {
+                                            "type": "child_item",
+                                            "query": {"match": {"text": search}},
+                                        }
+                                    }
+                                ]
                             }
                         },
                     ]
                 }
             },
         }
-        response = client.search(
-            body=body, index=f"{document_index_name},{vector_index_name}"
-        )
+        response = client.search(body=body, index=collection_id)
         docs = [
-            get_document(collection_id, agg["key"])
-            for agg in response["aggregations"]["doc_ids"]["buckets"]
+            add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
+            for hit in response["hits"]["hits"]
         ]
 
     return docs
@@ -253,23 +220,22 @@ def get_opensearch_documents(
 
 def delete_opensearch_document(collection_id: str, doc_id: str):
     client = get_client()
-    query = {
+    child_query = {
         "query": {
-            "bool": {
-                "filter": [
-                    {"term": {"doc_id": doc_id}},
-                ],
+            "has_parent": {
+                "parent_type": "document",
+                "query": {
+                    "bool": {
+                        "filter": [
+                            {"term": {"_id": doc_id}},
+                        ],
+                    }
+                },
             }
         }
     }
-    vector_index_name = f"{collection_id}.vectors"
-    page_index_name = f"{collection_id}.pages"
-    binary_index_name = f"{collection_id}.binary"
-    client.delete_by_query(index=vector_index_name, body=query, refresh=True)
-    client.delete_by_query(index=page_index_name, body=query, refresh=True)
-    client.delete_by_query(index=binary_index_name, body=query, refresh=True)
-    doc_index_name = f"{collection_id}.documents"
-    client.delete(index=doc_index_name, id=doc_id, refresh=True)
+    client.delete_by_query(index=collection_id, body=child_query, refresh=True)
+    client.delete(index=collection_id, id=doc_id, refresh=True)
     return 1  # TODO: evaluate what we should actually return here
 
 
