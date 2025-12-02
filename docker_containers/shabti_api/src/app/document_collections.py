@@ -33,6 +33,7 @@ from shabti_types import (
     CollectionExistsError,
     InvalidLocationError,
     InvalidUserError,
+    DocumentList,
 )
 from .shabti_logging import log_user_action, log_action, logging_enabled
 
@@ -232,18 +233,19 @@ async def get_documents(
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
-    return [
-        create_document_info(doc)
-        for doc in await asyncify(
-            get_opensearch_documents,
-            collection_id,
-            search,
-            sort,
-            max_results,
-            filter_document_type,
-            page,
-        )
-    ]
+    result = await asyncify(
+        get_opensearch_documents,
+        collection_id,
+        search,
+        sort,
+        max_results,
+        filter_document_type,
+        page,
+    )
+    return DocumentList(
+        documents=[create_document_info(doc) for doc in result["documents"]],
+        total_hits=result["total_hits"],
+    )
 
 
 async def delete_document(token, collection_id, document_id):

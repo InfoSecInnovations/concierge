@@ -19,6 +19,7 @@ from .models import (
     PromptChunk as PromptChunk,
     PromptSource as PromptSource,
     DocumentSearchParameters as DocumentSearchParameters,
+    DocumentList as DocumentList,
 )
 from .exceptions import (
     ShabtiError as ShabtiError,

@@ -199,15 +199,6 @@ def get_opensearch_documents(
     collection_id: str, search, sort, max_results, filter_document_type, page=0
 ):
     client = get_client()
-
-    def apply_sorting(body):
-        # the default sort in OpenSearch is by score, so if there's no sort mode or the sort mode is "relevance" we don't need to do anything
-        if sort:
-            if sort == "date_asc":
-                body["sort"] = {"ingest_date": {"order": "asc"}}
-            if sort == "date_desc":
-                body["sort"] = {"ingest_date": {"order": "desc"}}
-
     if not search:
         filter = [{"term": {"type": "document"}}]
         if filter_document_type:
@@ -216,14 +207,6 @@ def get_opensearch_documents(
             "size": max_results or 10000,  # this is the maximum allowed value
             "query": {"bool": {"filter": filter}},
         }
-        if max_results and page:
-            body["from"] = max_results * page
-        apply_sorting(body)
-        response = client.search(body=body, index=collection_id)
-        docs = [
-            add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
-            for hit in response["hits"]["hits"]
-        ]
     else:
         body = {
             "_source": {"excludes": ["document_vector"]},
@@ -264,16 +247,20 @@ def get_opensearch_documents(
             body["query"]["bool"]["filter"] = [
                 {"term": {"media_type": filter_document_type}}
             ]
-        if max_results and page:
-            body["from"] = max_results * page
-        apply_sorting(body)
-        response = client.search(body=body, index=collection_id)
-        docs = [
-            add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
-            for hit in response["hits"]["hits"]
-        ]
+    if max_results and page:
+        body["from"] = max_results * page
+    if sort:
+        if sort == "date_asc":
+            body["sort"] = {"ingest_date": {"order": "asc"}}
+        if sort == "date_desc":
+            body["sort"] = {"ingest_date": {"order": "desc"}}
+    response = client.search(body=body, index=collection_id)
+    docs = [
+        add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
+        for hit in response["hits"]["hits"]
+    ]
 
-    return docs
+    return {"documents": docs, "total_hits": response["hits"]["total"]["value"]}
 
 
 def delete_opensearch_document(collection_id: str, doc_id: str):

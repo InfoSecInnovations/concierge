@@ -37,6 +37,11 @@ class DocumentInfo(BaseModel):
     languages: list[str]
 
 
+class DocumentList(BaseModel):
+    documents: list[DocumentInfo]
+    total_hits: int
+
+
 class DeletedDocumentInfo(BaseModel):
     collection_id: str
     document_id: str

@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 from shabti_types import (
     BaseCollectionCreateInfo,
     CollectionInfo,
-    DocumentInfo,
+    DocumentList,
     DeletedDocumentInfo,
     ServiceStatus,
     PromptInfo,
@@ -57,7 +57,7 @@ async def get_documents_route(
     max_results: int | None = None,
     filter_document_type: str | None = None,
     page: int = 0,
-) -> list[DocumentInfo]:
+) -> DocumentList:
     return await get_documents(
         None, collection_id, search, sort, max_results, filter_document_type, page
     )
