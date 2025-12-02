@@ -226,6 +226,7 @@ async def get_documents(
     sort: str | None = None,
     max_results: int = 0,
     filter_document_type: str | None = None,
+    page: int = 0,
 ):
     if auth_enabled():
         authorized = await authorize(token, collection_id, "read")
@@ -240,6 +241,7 @@ async def get_documents(
             sort,
             max_results,
             filter_document_type,
+            page,
         )
     ]
 

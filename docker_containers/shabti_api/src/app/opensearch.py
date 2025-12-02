@@ -196,7 +196,7 @@ def get_document(collection_id: str, doc_id: str):
 
 
 def get_opensearch_documents(
-    collection_id: str, search, sort, max_results, filter_document_type
+    collection_id: str, search, sort, max_results, filter_document_type, page=0
 ):
     client = get_client()
 
@@ -216,6 +216,8 @@ def get_opensearch_documents(
             "size": max_results or 10000,  # this is the maximum allowed value
             "query": {"bool": {"filter": filter}},
         }
+        if max_results and page:
+            body["from"] = max_results * page
         apply_sorting(body)
         response = client.search(body=body, index=collection_id)
         docs = [
@@ -262,6 +264,8 @@ def get_opensearch_documents(
             body["query"]["bool"]["filter"] = [
                 {"term": {"media_type": filter_document_type}}
             ]
+        if max_results and page:
+            body["from"] = max_results * page
         apply_sorting(body)
         response = client.search(body=body, index=collection_id)
         docs = [

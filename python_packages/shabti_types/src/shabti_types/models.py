@@ -112,3 +112,4 @@ class DocumentSearchParameters(BaseModel):
     sort: Optional[Literal["relevance", "date_desc", "date_asc"]] = None
     max_results: Optional[int] = None
     filter_document_type: Optional[str] = None
+    page: int = 0
