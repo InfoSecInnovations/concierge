@@ -212,7 +212,7 @@ def get_opensearch_documents(
     else:
         body = {
             "_source": {"excludes": ["document_vector"]},
-            "size": 0,
+            "size": max_results or 10000,  # this is the maximum allowed value
             "query": {
                 "bool": {
                     "should": [
