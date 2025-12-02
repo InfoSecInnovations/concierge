@@ -127,13 +127,31 @@ def delete_collection_indices(collection_id: str):
 
 def add_document_metadata(collection_id, doc):
     client = get_client()
+
     page_query = {
         "query": {
             "bool": {
-                "filter": [
-                    {"term": {"doc_id": doc["id"]}},
-                    {"exists": {"field": "page_number"}},
-                ],
+                "must": [
+                    {
+                        "bool": {
+                            "filter": [
+                                {"term": {"type": "page"}},
+                            ]
+                        }
+                    },
+                    {
+                        "has_parent": {
+                            "parent_type": "document",
+                            "query": {
+                                "bool": {
+                                    "filter": [
+                                        {"term": {"_id": doc["id"]}},
+                                    ],
+                                }
+                            },
+                        }
+                    },
+                ]
             }
         }
     }
@@ -141,10 +159,27 @@ def add_document_metadata(collection_id, doc):
     vector_query = {
         "query": {
             "bool": {
-                "filter": [
-                    {"term": {"doc_id": doc["id"]}},
-                    {"exists": {"field": "document_vector"}},
-                ],
+                "must": [
+                    {
+                        "bool": {
+                            "filter": [
+                                {"term": {"type": "vector"}},
+                            ]
+                        }
+                    },
+                    {
+                        "has_parent": {
+                            "parent_type": "document",
+                            "query": {
+                                "bool": {
+                                    "filter": [
+                                        {"term": {"_id": doc["id"]}},
+                                    ],
+                                }
+                            },
+                        }
+                    },
+                ]
             }
         }
     }
