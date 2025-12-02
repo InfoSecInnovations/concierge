@@ -233,6 +233,7 @@ def get_opensearch_documents(
                                 "must": [
                                     {
                                         "has_child": {
+                                            "score_mode": "max",
                                             "type": "child_item",
                                             "query": {"match": {"text": search}},
                                         }
