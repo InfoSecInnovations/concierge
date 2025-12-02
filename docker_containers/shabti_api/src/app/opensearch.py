@@ -199,11 +199,24 @@ def get_opensearch_documents(
     collection_id: str, search, sort, max_results, filter_document_type
 ):
     client = get_client()
+
+    def apply_sorting(body):
+        # the default sort in OpenSearch is by score, so if there's no sort mode or the sort mode is "relevance" we don't need to do anything
+        if sort:
+            if sort == "date_asc":
+                body["sort"] = {"ingest_date": {"order": "asc"}}
+            if sort == "date_desc":
+                body["sort"] = {"ingest_date": {"order": "desc"}}
+
     if not search:
+        filter = [{"term": {"type": "document"}}]
+        if filter_document_type:
+            filter.append({"term": {"media_type": filter_document_type}})
         body = {
             "size": max_results or 10000,  # this is the maximum allowed value
-            "query": {"bool": {"filter": {"term": {"type": "document"}}}},
+            "query": {"bool": {"filter": filter}},
         }
+        apply_sorting(body)
         response = client.search(body=body, index=collection_id)
         docs = [
             add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
@@ -245,6 +258,11 @@ def get_opensearch_documents(
                 }
             },
         }
+        if filter_document_type:
+            body["query"]["bool"]["filter"] = [
+                {"term": {"media_type": filter_document_type}}
+            ]
+        apply_sorting(body)
         response = client.search(body=body, index=collection_id)
         docs = [
             add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
