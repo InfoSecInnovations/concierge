@@ -1,12 +1,10 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from ..common.ingester import ingester_ui, ingester_server
-from shiny._utils import rand_hex
 from ..common.collections_data import CollectionsData
 from shabti_api_client import ShabtiClient
 from .collection_create import collection_create_ui, collection_create_server
 from ..common.collection_selector_ui import collection_selector_ui
 from .collection_selector_server import collection_selector_server
-from ..common.document_item import DocumentItem
 from ..common.document_list import document_list_ui, document_list_server
 from shabti_types import CollectionInfo
 
@@ -27,14 +25,7 @@ def collection_management_server(
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server("ingester", client, selected_collection)
-
-    document_delete_trigger = reactive.value(0)
-    current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])
-    total_docs_count: reactive.Value[int] = reactive.value(0)
     fetching_docs = reactive.value(False)
-
-    def on_delete_document():
-        document_delete_trigger.set(document_delete_trigger.get() + 1)
 
     @render.ui
     def collection_management_content():
@@ -88,10 +79,7 @@ def collection_management_server(
     def documents_title():
         if fetching_docs.get():
             return ui.markdown("#### Loading collection...")
-        return ui.div(
-            ui.markdown("#### Manage Documents"),
-            ui.markdown(f"({len(current_docs.get())} documents in collection)"),
-        )
+        return ui.div(ui.markdown("#### Manage Documents"))
 
     @render.ui
     def collection_documents():
@@ -123,45 +111,12 @@ def collection_management_server(
             selected_collection.set(None)
 
     @reactive.effect
-    @reactive.event(input.delete, ignore_init=True)
-    def on_delete():
-        get_documents_task.cancel()
-        fetching_docs.set(True)
-        delete(selected_collection.get())
-
-    @reactive.extended_task
-    async def get_documents_task(collection_id: str):
-        return await client.get_documents(collection_id)
-
-    @reactive.effect
-    def get_documents_effect():
-        docs = get_documents_task.result()
-        fetching_docs.set(False)
-        current_docs.set(
-            [
-                DocumentItem(**doc.model_dump(), element_id=rand_hex(4))
-                for doc in docs.documents
-            ]
-        )
-        total_docs_count.set(docs.total_hits)
-
-    @reactive.effect
     @reactive.event(
         selected_collection,
         ingestion_done_trigger,
-        document_delete_trigger,
         ignore_none=False,
     )
     def on_collection_change():
-        req(selected_collection.get())
-        fetching_docs.set(True)
-        get_documents_task.cancel()
-        get_documents_task(selected_collection.get())
-
-    document_list_server(
-        "document_list",
-        selected_collection,
-        current_docs,
-        client.delete_document,
-        on_delete_document,
-    )
+        collection_id = selected_collection.get()
+        req(collection_id)
+        document_list_server("document_list", client, collection_id, True)
