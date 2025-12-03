@@ -35,6 +35,7 @@ def collection_management_server(
 
     document_delete_trigger = reactive.value(0)
     current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])
+    total_docs_count: reactive.Value[int] = reactive.value(0)
     current_scopes = reactive.value(set())
     fetching_docs = reactive.value(False)
 
@@ -171,8 +172,12 @@ def collection_management_server(
         current_scopes.set(scopes)
         fetching_docs.set(False)
         current_docs.set(
-            [DocumentItem(**doc.model_dump(), element_id=rand_hex(4)) for doc in docs]
+            [
+                DocumentItem(**doc.model_dump(), element_id=rand_hex(4))
+                for doc in docs.documents
+            ]
         )
+        total_docs_count.set(docs.total_hits)
 
     @reactive.effect
     @reactive.event(

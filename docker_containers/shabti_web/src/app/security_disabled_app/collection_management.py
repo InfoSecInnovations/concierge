@@ -6,8 +6,8 @@ from shabti_api_client import ShabtiClient
 from .collection_create import collection_create_ui, collection_create_server
 from ..common.collection_selector_ui import collection_selector_ui
 from .collection_selector_server import collection_selector_server
-from ..common.collection_document import document_ui, document_server
 from ..common.document_item import DocumentItem
+from ..common.document_list import document_list_ui, document_list_server
 from shabti_types import CollectionInfo
 
 
@@ -97,12 +97,7 @@ def collection_management_server(
     def collection_documents():
         if fetching_docs.get():
             return ui.markdown("#### Loading collection...")
-        return ui.TagList(
-            *[
-                document_ui(doc.element_id, selected_collection.get(), doc, True)
-                for doc in current_docs.get()
-            ],
-        )
+        return document_list_ui("document_list")
 
     @ui.bind_task_button(button_id="delete")
     @reactive.extended_task
@@ -163,13 +158,10 @@ def collection_management_server(
         get_documents_task.cancel()
         get_documents_task(selected_collection.get())
 
-    @reactive.effect
-    def document_servers():
-        for doc in current_docs.get():
-            document_server(
-                doc.element_id,
-                client.delete_document,
-                selected_collection.get(),
-                doc,
-                on_delete_document,
-            )
+    document_list_server(
+        "document_list",
+        selected_collection,
+        current_docs,
+        client.delete_document,
+        on_delete_document,
+    )
