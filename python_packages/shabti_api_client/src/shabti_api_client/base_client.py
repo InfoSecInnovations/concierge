@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from shabti_types import (
-    DocumentInfo,
     TaskInfo,
     PromptConfigInfo,
     ModelLoadInfo,
@@ -8,6 +7,7 @@ from shabti_types import (
     PromptChunk,
     UnsupportedFileError,
     DocumentIngestInfo,
+    DocumentList,
 )
 import httpx
 import json
@@ -61,7 +61,7 @@ class BaseShabtiClient(ABC):
         response = await self._make_request(
             "GET", f"collections/{collection_id}/documents"
         )
-        return [DocumentInfo(**item) for item in response.json()]
+        return DocumentList(**response.json())
 
     async def delete_document(self, collection_id, document_id) -> str:
         response = await self._make_request(
