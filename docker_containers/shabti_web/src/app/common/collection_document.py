@@ -17,7 +17,7 @@ def document_ui(collection_id: str, doc: DocumentInfo, can_delete: bool):
             f"""
 {doc_link(collection_id, doc)}
 
-ID: {doc.document_id}, Vector Count: {doc.vector_count}, Ingested: {datetime.datetime.fromtimestamp(doc.ingest_date / 1000).strftime('%Y-%m-%d %H:%M:%S')}
+ID: {doc.document_id}, Vector Count: {doc.vector_count}, Ingested: {datetime.datetime.fromtimestamp(doc.ingest_date / 1000).strftime("%Y-%m-%d %H:%M:%S")}
 """,
             render_func=md.render,
         )
