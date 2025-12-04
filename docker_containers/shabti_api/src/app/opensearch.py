@@ -259,8 +259,27 @@ def get_opensearch_documents(
         add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
         for hit in response["hits"]["hits"]
     ]
+    body = {"query": {"bool": {"filter": [{"term": {"type": "document"}}]}}}
+    count_response = client.count(body=body, index=collection_id)
 
-    return {"documents": docs, "total_hits": response["hits"]["total"]["value"]}
+    return {
+        "documents": docs,
+        "total_hits": response["hits"]["total"]["value"],
+        "total_documents": count_response["count"],
+    }
+
+
+def get_opensearch_document_types(collection_id: str):
+    client = get_client()
+    body = {
+        "size": 0,
+        "aggs": {"document_type": {"terms": {"field": "media_type", "size": 10000}}},
+        "query": {"bool": {"filter": {"term": {"type": "document"}}}},
+    }
+    response = client.search(body=body, index=collection_id)
+    return [
+        bucket["key"] for bucket in response["aggregations"]["document_type"]["buckets"]
+    ]
 
 
 def delete_opensearch_document(collection_id: str, doc_id: str):

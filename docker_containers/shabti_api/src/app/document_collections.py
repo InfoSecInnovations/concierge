@@ -21,6 +21,7 @@ from .opensearch import (
     delete_opensearch_document,
     get_opensearch_collection_info,
     get_document,
+    get_opensearch_document_types,
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
@@ -226,7 +227,7 @@ async def get_documents(
     search: str | None = None,
     sort: str | None = None,
     max_results: int = 0,
-    filter_document_type: str | None = None,
+    filter_document_type: list[str] | None = None,
     page: int = 0,
 ):
     if auth_enabled():
@@ -245,7 +246,17 @@ async def get_documents(
     return DocumentList(
         documents=[create_document_info(doc) for doc in result["documents"]],
         total_hits=result["total_hits"],
+        total_documents=result["total_documents"],
     )
+
+
+async def get_document_types(token, collection_id):
+    if auth_enabled():
+        authorized = await authorize(token, collection_id, "read")
+        if not authorized:
+            raise UnauthorizedOperationError()
+    result = await asyncify(get_opensearch_document_types, collection_id)
+    return result
 
 
 async def delete_document(token, collection_id, document_id):

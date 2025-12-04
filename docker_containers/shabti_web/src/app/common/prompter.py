@@ -145,7 +145,7 @@ def prompter_server(
                     label="Persona",
                     choices=["None", *personas.get().keys()],
                 ),
-                ui.input_select(
+                ui.input_selectize(
                     id="enhancers_select",
                     label="Enhancers",
                     choices=list(enhancers.get()),

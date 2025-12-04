@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Optional
 
 
 class UserInfo(BaseModel):
@@ -40,6 +40,7 @@ class DocumentInfo(BaseModel):
 class DocumentList(BaseModel):
     documents: list[DocumentInfo]
     total_hits: int
+    total_documents: int
 
 
 class DeletedDocumentInfo(BaseModel):
@@ -110,11 +111,3 @@ class WebFile(BaseModel):
     bytes: bytes
     media_type: str
     content_disposition: str
-
-
-class DocumentSearchParameters(BaseModel):
-    search: Optional[str] = None
-    sort: Optional[Literal["relevance", "date_desc", "date_asc"]] = None
-    max_results: Optional[int] = None
-    filter_document_type: Optional[str] = None
-    page: int = 0

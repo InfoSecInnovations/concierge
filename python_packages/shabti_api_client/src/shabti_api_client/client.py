@@ -14,20 +14,38 @@ class ShabtiClient(BaseShabtiClient):
         self.httpx_client = httpx.AsyncClient(timeout=None)
 
     async def _make_request(
-        self, method, url, json=None, files: httpx._types.RequestFiles = None
+        self,
+        method,
+        url,
+        json=None,
+        files: httpx._types.RequestFiles = None,
+        params: dict = None,
     ):
         response = await self.httpx_client.request(
-            method=method, url=urljoin(self.server_url, url), json=json, files=files
+            method=method,
+            url=urljoin(self.server_url, url),
+            json=json,
+            files=files,
+            params=params,
         )
         if response.status_code not in EXPECTED_CODES:
             raise_error(response)
         return response
 
     async def _stream_request(
-        self, method, url, json=None, files: httpx._types.RequestFiles = None
+        self,
+        method,
+        url,
+        json=None,
+        files: httpx._types.RequestFiles = None,
+        params: dict = None,
     ):
         async with self.httpx_client.stream(
-            method=method, url=urljoin(self.server_url, url), json=json, files=files
+            method=method,
+            url=urljoin(self.server_url, url),
+            json=json,
+            files=files,
+            params=params,
         ) as response:
             if response.status_code not in EXPECTED_CODES:
                 await response.aread()

@@ -6,6 +6,7 @@ from .document_collections import (
     delete_collection,
     get_documents,
     delete_document,
+    get_document_types,
 )
 from fastapi.responses import StreamingResponse
 from shabti_types import (
@@ -55,12 +56,19 @@ async def get_documents_route(
     search: str | None = None,
     sort: str | None = None,
     max_results: int | None = None,
-    filter_document_type: str | None = None,
+    filter_document_type: list[str] | None = None,
     page: int = 0,
 ) -> DocumentList:
     return await get_documents(
         None, collection_id, search, sort, max_results, filter_document_type, page
     )
+
+
+@router.get(
+    "/collections/{collection_id}/document_types", response_model_exclude_unset=True
+)
+async def get_document_types_route(collection_id: str) -> list[str]:
+    return await get_document_types(None, collection_id)
 
 
 @router.post(

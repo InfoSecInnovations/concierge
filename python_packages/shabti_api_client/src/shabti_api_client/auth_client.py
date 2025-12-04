@@ -36,7 +36,7 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
         self.refresh_task: Task | None = None
 
     async def _make_request(
-        self, method, url, json=None, files=None, stream=False
+        self, method, url, json=None, files=None, stream=False, params: dict = None
     ) -> httpx.Response:
         async def make_request(token):
             headers = (
@@ -48,6 +48,7 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
                 headers=headers,
                 json=json,
                 files=files,
+                params=params,
             )
             response = await self.httpx_client.send(request, stream=stream)
             if response.status_code == 401:
@@ -93,9 +94,11 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
                 method=method, url=url, json=json, files=files, stream=stream
             )
 
-    async def _stream_request(self, method, url, json=None, files=None):
+    async def _stream_request(
+        self, method, url, json=None, files=None, params: dict = None
+    ):
         response = await self._make_request(
-            method=method, url=url, json=json, files=files, stream=True
+            method=method, url=url, json=json, files=files, stream=True, params=params
         )
         async for line in response.aiter_lines():
             yield line

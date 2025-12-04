@@ -16,13 +16,23 @@ import json
 class BaseShabtiClient(ABC):
     @abstractmethod
     async def _make_request(
-        self, method, url, json=None, files: httpx._types.RequestFiles = None
+        self,
+        method,
+        url,
+        json=None,
+        files: httpx._types.RequestFiles = None,
+        params: dict = None,
     ):
         pass
 
     @abstractmethod
     async def _stream_request(
-        self, method, url, json=None, files: httpx._types.RequestFiles = None
+        self,
+        method,
+        url,
+        json=None,
+        files: httpx._types.RequestFiles = None,
+        params: dict = None,
     ):
         pass
 
@@ -57,11 +67,36 @@ class BaseShabtiClient(ABC):
         ):
             yield DocumentIngestInfo(**json.loads(line))
 
-    async def get_documents(self, collection_id: str):
+    async def get_documents(
+        self,
+        collection_id: str,
+        search: str | None = None,
+        sort: str | None = None,
+        max_results: int | None = None,
+        filter_document_type: list[str] | None = None,
+        page: int = 0,
+    ):
+        params = {}
+        if search:
+            params["search"] = search
+        if sort:
+            params["sort"] = sort
+        if max_results:
+            params["max_results"] = max_results
+        if filter_document_type:
+            params["filter_document_type"] = filter_document_type
+        if page:
+            params["page"] = page
         response = await self._make_request(
-            "GET", f"collections/{collection_id}/documents"
+            "GET", f"collections/{collection_id}/documents", params=params
         )
         return DocumentList(**response.json())
+
+    async def get_document_types(self, collection_id: str) -> list[str]:
+        response = await self._make_request(
+            "GET", f"collections/{collection_id}/document_types"
+        )
+        return response.json()
 
     async def delete_document(self, collection_id, document_id) -> str:
         response = await self._make_request(

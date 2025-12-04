@@ -18,7 +18,6 @@ from .models import (
     WebFile as WebFile,
     PromptChunk as PromptChunk,
     PromptSource as PromptSource,
-    DocumentSearchParameters as DocumentSearchParameters,
     DocumentList as DocumentList,
 )
 from .exceptions import (
