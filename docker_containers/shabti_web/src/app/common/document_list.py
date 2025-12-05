@@ -3,14 +3,97 @@ from .collection_document import document_ui, document_server
 from .document_item import DocumentItem
 from shabti_api_client import BaseShabtiClient
 from shiny._utils import rand_hex
-
+import math
 
 RESULTS_PER_PAGE = 10
+PAGES_IN_LIST = 10
+
+
+@module.ui
+def page_link_ui(label, is_current=False):
+    return ui.input_action_link(
+        "select_page",
+        label,
+        class_=f"px-1 {'link-underline link-underline-opacity-0' if is_current else ''}",
+    )
+
+
+@module.server
+def page_link_server(
+    input: Inputs,
+    output: Outputs,
+    session: Session,
+    page_number: int,
+    current_page: reactive.Value[int],
+):
+    @reactive.effect
+    @reactive.event(input.select_page, ignore_init=True)
+    def on_click():
+        current_page.set(page_number)
+
+
+@module.ui
+def page_list_ui():
+    return ui.output_ui("page_list_view")
+
+
+@module.server
+def page_list_server(
+    input: Inputs,
+    output: Outputs,
+    session: Session,
+    current_page: reactive.Value[int],
+    total_result_count: reactive.Value[int],
+):
+    first_page = reactive.value(0)
+    total_pages = reactive.value(0)
+
+    @reactive.effect
+    def set_page_counts():
+        current_index = current_page.get()
+        total_page_count = math.ceil(total_result_count.get() / RESULTS_PER_PAGE)
+        first_page_index = current_index - PAGES_IN_LIST / 2
+        if first_page_index < 0:
+            first_page_index = 0
+        first_page_index = max(
+            0, min(total_page_count - PAGES_IN_LIST, first_page_index)
+        )
+        first_page.set(first_page_index)
+        total_pages.set(total_page_count)
+        page_link_server("select_page_first", 0, current_page)
+        for i in range(min(total_page_count, PAGES_IN_LIST)):
+            page_link_server(
+                f"select_page_{first_page_index + i}",
+                first_page_index + i,
+                current_page,
+            )
+        page_link_server("select_page_last", total_page_count - 1, current_page)
+
+    @render.ui
+    def page_list_view():
+        first_page_index = first_page.get()
+        current_index = current_page.get()
+        return [
+            page_link_ui("select_page_first", "First"),
+            *[
+                page_link_ui(
+                    f"select_page_{first_page_index + i}",
+                    first_page_index + i + 1,
+                    first_page_index + i == current_index,
+                )
+                for i in range(min(total_pages.get(), PAGES_IN_LIST))
+            ],
+            page_link_ui("select_page_last", "Last"),
+        ]
 
 
 @module.ui
 def document_list_ui():
-    return [ui.output_ui("search_view"), ui.output_ui("document_list_view")]
+    return [
+        ui.output_ui("search_view"),
+        ui.output_ui("document_list_view"),
+        page_list_ui("bottom_page_nav"),
+    ]
 
 
 @module.server
@@ -78,7 +161,7 @@ def document_list_server(
     def search_view():
         return [
             ui.output_ui("query_info"),
-            ui.input_text("search", "Search"),
+            ui.input_text("search", "Search", width="100%"),
             ui.layout_columns(
                 ui.input_select(
                     "sort",
@@ -96,6 +179,7 @@ def document_list_server(
                     multiple=True,
                 ),
             ),
+            page_list_ui("top_page_nav"),
         ]
 
     @render.ui
@@ -112,6 +196,9 @@ def document_list_server(
                 )
             )
         return elements
+
+    page_list_server("top_page_nav", current_page, total_results_count)
+    page_list_server("bottom_page_nav", current_page, total_results_count)
 
     @reactive.effect
     def document_servers():

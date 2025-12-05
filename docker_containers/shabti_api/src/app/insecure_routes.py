@@ -1,5 +1,4 @@
-from fastapi import APIRouter
-from fastapi import UploadFile
+from fastapi import APIRouter, UploadFile, Query
 from .document_collections import (
     create_collection,
     get_collections,
@@ -29,6 +28,7 @@ from .run_prompt import run_prompt
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
 from .ollama import load_model
+from typing import Annotated
 
 router = APIRouter()
 
@@ -56,7 +56,7 @@ async def get_documents_route(
     search: str | None = None,
     sort: str | None = None,
     max_results: int | None = None,
-    filter_document_type: list[str] | None = None,
+    filter_document_type: Annotated[list[str] | None, Query()] = None,
     page: int = 0,
 ) -> DocumentList:
     return await get_documents(
