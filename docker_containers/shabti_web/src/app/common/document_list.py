@@ -111,12 +111,8 @@ def document_list_server(
     current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])
     total_results_count: reactive.Value[int] = reactive.value(0)
     total_documents_count: reactive.Value[int] = reactive.value(0)
-    document_delete_trigger = reactive.value(0)
     current_page: reactive.Value[int] = reactive.value(0)
     document_types: reactive.Value[list[str]] = reactive.value([])
-
-    def on_delete_document():
-        document_delete_trigger.set(document_delete_trigger.get() + 1)
 
     @reactive.extended_task
     async def get_document_types_task(collection_id: str):
@@ -129,7 +125,11 @@ def document_list_server(
 
     @reactive.extended_task
     async def get_documents_task(
-        collection_id: str, page: int, search: str, sort: str, filter_document_type: str
+        collection_id: str,
+        page: int,
+        search: str,
+        sort: str,
+        filter_document_type: list[str],
     ):
         return await client.get_documents(
             collection_id,
@@ -138,6 +138,15 @@ def document_list_server(
             search=search,
             sort=sort,
             filter_document_type=filter_document_type,
+        )
+
+    def on_delete_document():
+        get_documents_task(
+            selected_collection,
+            current_page.get(),
+            input.search(),
+            input.sort(),
+            input.filter_document_type(),
         )
 
     @reactive.effect
@@ -239,3 +248,14 @@ def document_list_server(
     )
     def reset_current_page():
         current_page.set(0)
+
+    @reactive.effect
+    @reactive.event(
+        total_results_count,
+        ignore_init=True,
+        ignore_none=False,
+    )
+    def reset_current_page_if_out_of_range():
+        total_pages = math.ceil(total_results_count.get() / RESULTS_PER_PAGE)
+        if total_pages and current_page.get() >= total_pages:
+            current_page.set(total_pages - 1)
