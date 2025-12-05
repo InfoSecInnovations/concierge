@@ -202,7 +202,7 @@ def get_opensearch_documents(
     if not search:
         filter = [{"term": {"type": "document"}}]
         if filter_document_type:
-            filter.append({"term": {"media_type": filter_document_type}})
+            filter.append({"terms": {"media_type": filter_document_type}})
         body = {
             "size": max_results or 10000,  # this is the maximum allowed value
             "query": {"bool": {"filter": filter}},
@@ -245,7 +245,7 @@ def get_opensearch_documents(
         }
         if filter_document_type:
             body["query"]["bool"]["filter"] = [
-                {"term": {"media_type": filter_document_type}}
+                {"terms": {"media_type": filter_document_type}}
             ]
     if max_results and page:
         body["from"] = max_results * page

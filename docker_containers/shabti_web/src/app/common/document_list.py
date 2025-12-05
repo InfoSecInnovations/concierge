@@ -71,19 +71,22 @@ def page_list_server(
 
     @render.ui
     def page_list_view():
+        total_page_count = total_pages.get()
+        if not total_page_count:
+            return []
         first_page_index = first_page.get()
         current_index = current_page.get()
         return [
-            page_link_ui("select_page_first", "First"),
+            page_link_ui("select_page_first", "First", current_index == 0),
             *[
                 page_link_ui(
                     f"select_page_{first_page_index + i}",
                     first_page_index + i + 1,
                     first_page_index + i == current_index,
                 )
-                for i in range(min(total_pages.get(), PAGES_IN_LIST))
+                for i in range(min(total_page_count, PAGES_IN_LIST))
             ],
-            page_link_ui("select_page_last", "Last"),
+            page_link_ui("select_page_last", "Last", current_index == total_page_count),
         ]
 
 
@@ -110,7 +113,6 @@ def document_list_server(
     total_documents_count: reactive.Value[int] = reactive.value(0)
     document_delete_trigger = reactive.value(0)
     current_page: reactive.Value[int] = reactive.value(0)
-    filter_document_type: reactive.Value[str] = reactive.value("")
     document_types: reactive.Value[list[str]] = reactive.value([])
 
     def on_delete_document():
@@ -211,7 +213,7 @@ def document_list_server(
                 on_delete_document,
             )
 
-    @reactive.effect()
+    @reactive.effect
     def get_documents():
         req(selected_collection)
         get_documents_task(
@@ -219,10 +221,21 @@ def document_list_server(
             page=current_page.get(),
             search=input.search(),
             sort=input.sort(),
-            filter_document_type=filter_document_type.get(),
+            filter_document_type=input.filter_document_type(),
         )
 
-    @reactive.effect()
+    @reactive.effect
     def get_document_types():
         req(selected_collection)
         get_document_types_task(selected_collection)
+
+    @reactive.effect
+    @reactive.event(
+        input.search,
+        input.sort,
+        input.filter_document_type,
+        ignore_init=True,
+        ignore_none=False,
+    )
+    def reset_current_page():
+        current_page.set(0)
