@@ -4,6 +4,7 @@ import { EXPECTED_CODES } from "./codes";
 import {
 	DocumentInfo,
 	DocumentIngestInfo,
+	DocumentList,
 	ModelLoadInfo,
 	PromptConfigInfo,
 	TaskInfo,
@@ -31,6 +32,7 @@ export class BaseShabtiClient {
 		url: string,
 		json?: any,
 		files?: FormData,
+		params?: {},
 	) {
 		const body = (() => {
 			if (json) return JSON.stringify(json);
@@ -41,7 +43,11 @@ export class BaseShabtiClient {
 			if (json) return { "Content-Type": "application/json" };
 			return undefined;
 		})();
-		const response = await fetch(new URL(url, this.serverUrl), {
+		const fullUrl = new URL(url, this.serverUrl);
+		if (params) {
+			fullUrl.search = new URLSearchParams(params).toString();
+		}
+		const response = await fetch(fullUrl, {
 			method,
 			body,
 			headers,
@@ -59,8 +65,9 @@ export class BaseShabtiClient {
 		resultFunction?: (json: any) => T,
 		json?: any,
 		files?: FormData,
+		params?: {},
 	): Promise<ReadableStream<T>> {
-		const res = await this.makeRequest(method, url, json, files);
+		const res = await this.makeRequest(method, url, json, files, params);
 		const reader = res.body.getReader();
 		const decoder = new TextDecoder();
 		let current = "";
@@ -100,24 +107,53 @@ export class BaseShabtiClient {
 		return json.collection_id;
 	}
 
-	async getDocuments(collectionId: string): Promise<DocumentInfo[]> {
+	async getDocuments(
+		collectionId: string,
+		search?: string,
+		sort?: string,
+		max_results?: number,
+		filter_document_type?: string[],
+		page: number = 0,
+	): Promise<DocumentList> {
+		const params: any = {};
+		if (search) params.search = search;
+		if (sort) params.sort = sort;
+		if (max_results) params.max_results = max_results;
+		if (filter_document_type)
+			params.filter_document_type = filter_document_type;
+		params.page = page;
 		const res = await this.makeRequest(
 			"GET",
 			`collections/${collectionId}/documents`,
+			null,
+			null,
+			params,
 		);
 		const json = await res.json();
-		return json.map(
-			(item) =>
-				new DocumentInfo(
-					item.document_id,
-					item.source,
-					item.ingest_date,
-					item.page_count,
-					item.vector_count,
-					item.media_type,
-					item.filename,
-				),
+		return new DocumentList(
+			json.documents.map(
+				(item) =>
+					new DocumentInfo(
+						item.document_id,
+						item.source,
+						item.ingest_date,
+						item.page_count,
+						item.vector_count,
+						item.media_type,
+						item.filename,
+					),
+			),
+			json.total_hits,
+			json.total_documents,
 		);
+	}
+
+	async getDocumentTypes(collectionId: string): Promise<string[]> {
+		const res = await this.makeRequest(
+			"GET",
+			`collections/${collectionId}/document_types`,
+		);
+		return await res.json();
 	}
 
 	async insertFiles(collectionId: string, filePaths: string[]) {

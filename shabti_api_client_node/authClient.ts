@@ -37,6 +37,7 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 		url: string,
 		json?: any,
 		files?: FormData,
+		params?: {},
 	) {
 		const doRequest = async (token: client.TokenEndpointResponse) => {
 			const body = (() => {
@@ -52,7 +53,11 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 					};
 				return { Authorization: `Bearer ${token.access_token}` };
 			})();
-			const response = await fetch(new URL(url, this.serverUrl), {
+			const fullUrl = new URL(url, this.serverUrl);
+			if (params && Object.keys(params).length) {
+				fullUrl.search = new URLSearchParams(params).toString();
+			}
+			const response = await fetch(fullUrl, {
 				method,
 				body,
 				headers,
@@ -91,7 +96,7 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 					this.token = await this.refreshTask;
 					this.refreshTask = null;
 				} // if we're using a different token from the stored one, it's likely we already did a refresh and we can just rerun
-				return await this.makeRequest(method, url, json, files);
+				return await this.makeRequest(method, url, json, files, params);
 			} else {
 				throw error;
 			}

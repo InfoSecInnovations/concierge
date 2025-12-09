@@ -61,6 +61,21 @@ export class DocumentInfo {
 	}
 }
 
+export class DocumentList {
+	documents: DocumentInfo[];
+	totalHits: number;
+	totalDocuments: number;
+	constructor(
+		documents: DocumentInfo[],
+		totalHits: number,
+		totalDocuments: number,
+	) {
+		this.documents = documents;
+		this.totalHits = totalHits;
+		this.totalDocuments = totalDocuments;
+	}
+}
+
 export class DocumentIngestInfo {
 	progress: number;
 	total: number;
