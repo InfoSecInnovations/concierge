@@ -60,9 +60,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 					docId = item.documentId;
 				}
 				expect(docId).toBeTruthy();
-				const documents = await client.getDocuments(collectionId);
+				const docs = await client.getDocuments(collectionId);
 				expect(
-					documents.some(
+					docs.documents.some(
 						(document) =>
 							document.documentId == docId && document.filename == filename,
 					),
@@ -75,9 +75,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 					docId = item.documentId;
 				}
 				expect(docId).toBeTruthy();
-				const documents = await client.getDocuments(collectionId);
+				const docs = await client.getDocuments(collectionId);
 				expect(
-					documents.some(
+					docs.documents.some(
 						(document) =>
 							document.source == url && document.documentId == docId,
 					),
@@ -95,13 +95,17 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				});
 				test("list documents", async () => {
 					const docs = await getClient().getDocuments(collectionId);
-					expect(docs.map((doc) => doc.documentId)).toContain(documentId);
+					expect(docs.documents.map((doc) => doc.documentId)).toContain(
+						documentId,
+					);
 				});
 				test("delete document", async () => {
 					const client = getClient();
 					await client.deleteDocument(collectionId, documentId);
 					const docs = await getClient().getDocuments(collectionId);
-					expect(docs.map((doc) => doc.documentId)).not.toContain(documentId);
+					expect(docs.documents.map((doc) => doc.documentId)).not.toContain(
+						documentId,
+					);
 				});
 			});
 			test("delete collection", async () => {

@@ -77,7 +77,7 @@ async def test_cannot_create_collection(shabti_user_client, location):
 )
 async def test_can_read_collection(shabti_user_client, shabti_collection_id):
     docs = await shabti_user_client.get_documents(shabti_collection_id)
-    assert isinstance(docs, list)
+    assert docs
     collections = await shabti_user_client.get_collections()
     assert next(
         (
@@ -135,11 +135,11 @@ async def test_can_ingest_document(shabti_user_client, shabti_collection_id):
     document_id = await ingest_document(shabti_user_client, shabti_collection_id)
     assert document_id
     admin_client = await get_admin_client()
-    documents = await admin_client.get_documents(shabti_collection_id)
+    docs = await admin_client.get_documents(shabti_collection_id)
     assert next(
         (
             doc
-            for doc in documents
+            for doc in docs.documents
             if doc.filename == filename and doc.document_id == document_id
         ),
         None,
@@ -163,8 +163,8 @@ async def test_cannot_ingest_document(shabti_user_client, shabti_collection_id):
     with pytest.raises(ShabtiAuthenticationError):
         await ingest_document(shabti_user_client, shabti_collection_id)
     admin_client = await get_admin_client()
-    documents = await admin_client.get_documents(shabti_collection_id)
-    assert not any(doc.filename == filename for doc in documents)
+    docs = await admin_client.get_documents(shabti_collection_id)
+    assert not any(doc.filename == filename for doc in docs.documents)
 
 
 url = "https://example.com"
@@ -192,11 +192,11 @@ async def test_can_ingest_url(shabti_user_client, shabti_collection_id):
     document_id = await ingest_url(shabti_user_client, shabti_collection_id)
     assert document_id
     admin_client = await get_admin_client()
-    documents = await admin_client.get_documents(shabti_collection_id)
+    docs = await admin_client.get_documents(shabti_collection_id)
     assert next(
         (
             doc
-            for doc in documents
+            for doc in docs.documents
             if doc.source == url and doc.document_id == document_id
         ),
         None,
@@ -220,8 +220,8 @@ async def test_cannot_ingest_url(shabti_user_client, shabti_collection_id):
     with pytest.raises(ShabtiAuthenticationError):
         await ingest_url(shabti_user_client, shabti_collection_id)
     admin_client = await get_admin_client()
-    documents = await admin_client.get_documents(shabti_collection_id)
-    assert not any(doc.source == url for doc in documents)
+    docs = await admin_client.get_documents(shabti_collection_id)
+    assert not any(doc.source == url for doc in docs.documents)
 
 
 @pytest.mark.parametrize(
@@ -240,8 +240,8 @@ async def can_delete_document(
 ):
     await shabti_user_client.delete_document(shabti_collection_id, shabti_document_id)
     admin_client = await get_admin_client()
-    documents = await admin_client.get_documents(shabti_collection_id)
-    assert not any(doc.document_id == shabti_document_id for doc in documents)
+    docs = await admin_client.get_documents(shabti_collection_id)
+    assert not any(doc.document_id == shabti_document_id for doc in docs.documents)
 
 
 @pytest.mark.parametrize(
@@ -265,9 +265,9 @@ async def test_cannot_delete_document(
             shabti_collection_id, shabti_document_id
         )
     admin_client = await get_admin_client()
-    documents = await admin_client.get_documents(shabti_collection_id)
+    docs = await admin_client.get_documents(shabti_collection_id)
     assert next(
-        (doc for doc in documents if doc.document_id == shabti_document_id), None
+        (doc for doc in docs.documents if doc.document_id == shabti_document_id), None
     )
 
 

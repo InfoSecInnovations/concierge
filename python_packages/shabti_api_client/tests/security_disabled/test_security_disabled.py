@@ -42,7 +42,7 @@ async def test_ingest_document(shabti_client, shabti_collection_id):
     assert next(
         (
             doc
-            for doc in docs
+            for doc in docs.documents
             if doc.filename == filename and doc.document_id == document_id
         ),
         None,
@@ -57,20 +57,26 @@ async def test_ingest_url(shabti_client, shabti_collection_id):
     assert document_id
     docs = await shabti_client.get_documents(shabti_collection_id)
     assert next(
-        (doc for doc in docs if doc.source == url and doc.document_id == document_id),
+        (
+            doc
+            for doc in docs.documents
+            if doc.source == url and doc.document_id == document_id
+        ),
         None,
     )
 
 
 async def test_list_documents(shabti_client, shabti_collection_id, shabti_document_id):
     docs = await shabti_client.get_documents(shabti_collection_id)
-    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
+    assert next(
+        (doc for doc in docs.documents if doc.document_id == shabti_document_id), None
+    )
 
 
 async def test_delete_document(shabti_client, shabti_collection_id, shabti_document_id):
     await shabti_client.delete_document(shabti_collection_id, shabti_document_id)
     docs = await shabti_client.get_documents(shabti_collection_id)
-    assert not any(doc.document_id == shabti_document_id for doc in docs)
+    assert not any(doc.document_id == shabti_document_id for doc in docs.documents)
 
 
 async def test_delete_collection(shabti_client, shabti_collection_id):

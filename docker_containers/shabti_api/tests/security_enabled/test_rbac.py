@@ -126,7 +126,7 @@ async def test_can_read_collection(user, shabti_collection_id, shabti_client):
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 200
-    assert isinstance(response.json(), list)
+    assert response.json() is not None
     collections = await get_collections(token["access_token"])
     assert next(
         (
@@ -229,7 +229,7 @@ async def test_can_ingest_document(user, shabti_collection_id, shabti_client):
     assert next(
         (
             doc
-            for doc in docs
+            for doc in docs.documents
             if doc.filename == filename and doc.document_id == result[0]
         ),
         None,
@@ -255,7 +255,7 @@ async def test_cannot_ingest_document(user, shabti_collection_id, shabti_client)
     assert result[1].status_code == 403
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert not any(doc.filename == filename for doc in docs)
+    assert not any(doc.filename == filename for doc in docs.documents)
 
 
 url = "https://example.com"
@@ -294,7 +294,7 @@ async def test_can_ingest_url(user, shabti_collection_id, shabti_client):
     assert result[0]
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert next((doc for doc in docs if doc.source == url), None)
+    assert next((doc for doc in docs.documents if doc.source == url), None)
 
 
 @pytest.mark.parametrize(
@@ -316,7 +316,7 @@ async def test_cannot_ingest_url(user, shabti_collection_id, shabti_client):
     assert result[1].status_code == 403
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert not any(doc.source == url for doc in docs)
+    assert not any(doc.source == url for doc in docs.documents)
 
 
 async def delete_document_with_user(user, collection_id, document_id):
@@ -355,7 +355,7 @@ async def test_can_delete_document(
     )
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert not any(doc.document_id == shabti_document_id for doc in docs)
+    assert not any(doc.document_id == shabti_document_id for doc in docs.documents)
 
 
 @pytest.mark.parametrize(
@@ -379,7 +379,7 @@ async def test_can_delete_document_api(
     assert "document_id" in response.json()
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert not any(doc.document_id == shabti_document_id for doc in docs)
+    assert not any(doc.document_id == shabti_document_id for doc in docs.documents)
 
 
 @pytest.mark.parametrize(
@@ -402,7 +402,9 @@ async def test_cannot_delete_document(user, shabti_collection_id, shabti_documen
         await delete_document_with_user(user, shabti_collection_id, shabti_document_id)
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
+    assert next(
+        (doc for doc in docs.documents if doc.document_id == shabti_document_id), None
+    )
 
 
 @pytest.mark.parametrize(
@@ -428,7 +430,9 @@ async def test_cannot_delete_document_api(
     assert "document_id" not in response.json()
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
-    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
+    assert next(
+        (doc for doc in docs.documents if doc.document_id == shabti_document_id), None
+    )
 
 
 async def delete_collection_with_user(user, collection_id):

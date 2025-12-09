@@ -136,7 +136,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					test(`user ${username} can read ${owner}'s ${location} collection`, async () => {
 						const client = await getClientForUser(username);
 						const docs = await client.getDocuments(collectionId);
-						expect(docs).toBeArray();
+						expect(docs).toBeTruthy();
 						const collections = await client.getCollections();
 						expect(
 							collections.some(
@@ -192,11 +192,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 							docId = item.documentId;
 						}
 						expect(docId).toBeTruthy();
-						const documents = await getAdminClient().then((client) =>
+						const docs = await getAdminClient().then((client) =>
 							client.getDocuments(collectionId),
 						);
 						expect(
-							documents.some(
+							docs.documents.some(
 								(document) =>
 									document.documentId == docId && document.filename == filename,
 							),
@@ -225,11 +225,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 							])) {
 							}
 						}).toThrow();
-						const documents = await getAdminClient().then((client) =>
+						const docs = await getAdminClient().then((client) =>
 							client.getDocuments(collectionId),
 						);
 						expect(
-							documents.some((document) => document.filename == filename),
+							docs.documents.some((document) => document.filename == filename),
 						).toBeFalse();
 					});
 				},
@@ -247,11 +247,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 							docId = item.documentId;
 						}
 						expect(docId).toBeTruthy();
-						const documents = await getAdminClient().then((client) =>
+						const docs = await getAdminClient().then((client) =>
 							client.getDocuments(collectionId),
 						);
 						expect(
-							documents.some(
+							docs.documents.some(
 								(document) =>
 									document.documentId == docId && document.source == url,
 							),
@@ -307,9 +307,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 							const userClient = await getClientForUser(username);
 							await userClient.deleteDocument(collectionId, documentId);
 							const adminClient = await getAdminClient();
-							const documents = await adminClient.getDocuments(collectionId);
+							const docs = await adminClient.getDocuments(collectionId);
 							expect(
-								documents.map((document) => document.documentId),
+								docs.documents.map((document) => document.documentId),
 							).not.toContain(documentId);
 						});
 					},
@@ -333,9 +333,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 								await userClient.deleteDocument(collectionId, documentId);
 							}).toThrow();
 							const adminClient = await getAdminClient();
-							const documents = await adminClient.getDocuments(collectionId);
+							const docs = await adminClient.getDocuments(collectionId);
 							expect(
-								documents.map((document) => document.documentId),
+								docs.documents.map((document) => document.documentId),
 							).toContain(documentId);
 						});
 					},

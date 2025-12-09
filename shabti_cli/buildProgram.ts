@@ -190,12 +190,46 @@ export default async () => {
 	const document = program.command("document");
 	document
 		.command("list <collection>")
+		.option(
+			"-s, --search [search]",
+			"search for documents using this term. matches ID, filename, URL or document contents",
+		)
+		.option(
+			"-o, --order [order]",
+			'sort the results, the options are "relevance", "date_desc" and "date_asc"',
+			"relevance",
+		)
+		.option(
+			"-m, --max-results [max_results]",
+			"number of results returned at a time",
+			"10",
+		)
+		.option(
+			"-f, --filter [filter_by_document_type...]",
+			"filter by document type",
+		)
+		.option(
+			"-p, --page [page]",
+			"page number, use this if you need to browse through the results",
+			"0",
+		)
 		.action((collection, options, command) =>
 			client
-				.getDocuments(collection)
-				.then((documents) =>
-					documents.forEach((document) => console.log(document)),
-				),
+				.getDocuments(
+					collection,
+					options.search,
+					options.order,
+					parseInt(options.max_results),
+					options.filter_by_document_type,
+					parseInt(options.page),
+				)
+				.then((documentList) => {
+					console.log(
+						`Total documents in collection: ${documentList.totalDocuments}`,
+					);
+					console.log(``);
+					documentList.documents.forEach((document) => console.log(document));
+				}),
 		);
 	document
 		.command("delete <documents...>")
@@ -261,11 +295,6 @@ export default async () => {
 		console.log(
 			`OpenSearch: ${(await client.opensearchStatus()) ? "online" : "offline"}`,
 		);
-	});
-
-	program.command("slow_test").action(async () => {
-		const slow = await client.testSlow();
-		console.log(slow);
 	});
 
 	return program;

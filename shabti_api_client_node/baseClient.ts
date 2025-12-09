@@ -111,16 +111,15 @@ export class BaseShabtiClient {
 		collectionId: string,
 		search?: string,
 		sort?: string,
-		max_results?: number,
-		filter_document_type?: string[],
+		maxResults?: number,
+		filterDocumentType?: string[],
 		page: number = 0,
 	): Promise<DocumentList> {
 		const params: any = {};
 		if (search) params.search = search;
 		if (sort) params.sort = sort;
-		if (max_results) params.max_results = max_results;
-		if (filter_document_type)
-			params.filter_document_type = filter_document_type;
+		if (maxResults) params.max_results = maxResults;
+		if (filterDocumentType) params.filter_document_type = filterDocumentType;
 		params.page = page;
 		const res = await this.makeRequest(
 			"GET",

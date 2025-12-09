@@ -55,7 +55,7 @@ async def test_insert_documents(shabti_client, shabti_collection_id):
     )
     assert response.status_code == 200
     docs = await get_documents(None, shabti_collection_id)
-    assert next((doc for doc in docs if doc.filename == filename), None)
+    assert next((doc for doc in docs.documents if doc.filename == filename), None)
 
 
 async def test_insert_urls(shabti_client, shabti_collection_id):
@@ -65,19 +65,21 @@ async def test_insert_urls(shabti_client, shabti_collection_id):
     )
     assert response.status_code == 200
     docs = await get_documents(None, shabti_collection_id)
-    assert next((doc for doc in docs if doc.source == url), None)
+    assert next((doc for doc in docs.documents if doc.source == url), None)
 
 
 async def test_delete_document(shabti_client, shabti_collection_id, shabti_document_id):
     docs = await get_documents(None, shabti_collection_id)
     # test the document is actually there before deleting it
-    assert next((doc for doc in docs if doc.document_id == shabti_document_id), None)
+    assert next(
+        (doc for doc in docs.documents if doc.document_id == shabti_document_id), None
+    )
     response = shabti_client.delete(
         f"/collections/{shabti_collection_id}/documents/{shabti_document_id}"
     )
     assert response.status_code == 200
     docs = await get_documents(None, shabti_collection_id)
-    assert not any(doc.document_id == shabti_document_id for doc in docs)
+    assert not any(doc.document_id == shabti_document_id for doc in docs.documents)
 
 
 async def test_delete_collection(shabti_client, shabti_collection_id):

@@ -73,8 +73,8 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					{ from: "user" },
 				);
 				const client = await getAuthClient();
-				const documents = await client.getDocuments(collectionId);
-				const matchingDocument = documents.find(
+				const docs = await client.getDocuments(collectionId);
+				const matchingDocument = docs.documents.find(
 					(document) => document.filename == filename,
 				);
 				expect(matchingDocument).toBeTruthy();
@@ -87,8 +87,8 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					{ from: "user" },
 				);
 				const client = await getAuthClient();
-				const documents = await client.getDocuments(collectionId);
-				const matchingDocuments = documents.filter((document) =>
+				const docs = await client.getDocuments(collectionId);
+				const matchingDocuments = docs.documents.filter((document) =>
 					urls.includes(document.source),
 				);
 				expect(matchingDocuments.length == urls.length).toBeTrue();
@@ -103,10 +103,10 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					{ from: "user" },
 				);
 				const client = await getAuthClient();
-				const documents = await client.getDocuments(collectionId);
-				expect(documents.map((document) => document.filename)).toContainValues(
-					directoryFiles,
-				);
+				const docs = await client.getDocuments(collectionId);
+				expect(
+					docs.documents.map((document) => document.filename),
+				).toContainValues(directoryFiles);
 			});
 			describe("tests with document IDs", () => {
 				let documentIds: string[];
@@ -151,9 +151,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						{ from: "user" },
 					);
 					const client = await getAuthClient();
-					const documents = await client.getDocuments(collectionId);
+					const docs = await client.getDocuments(collectionId);
 					expect(
-						documents.map((document) => document.documentId),
+						docs.documents.map((document) => document.documentId),
 					).not.toContainAnyValues(documentIds);
 				});
 			});
