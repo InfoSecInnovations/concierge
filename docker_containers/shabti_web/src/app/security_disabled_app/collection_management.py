@@ -25,7 +25,6 @@ def collection_management_server(
     )
     collection_selector_server("collection_select", selected_collection, collections)
     ingestion_done_trigger = ingester_server("ingester", client, selected_collection)
-    fetching_docs = reactive.value(False)
 
     @render.ui
     def collection_management_content():
@@ -40,31 +39,18 @@ def collection_management_server(
     @render.ui
     def collection_view():
         if selected_collection.get():
-            accordion_elements = []
-            fetching = fetching_docs.get()
-            if fetching:
-                accordion_elements.append(
-                    ui.accordion_panel(
-                        ui.markdown("#### Loading collection..."),
-                        value="ingest_documents",
-                    )
-                )
-            else:
-                accordion_elements.append(ingester_ui("ingester"))
-            accordion_elements.append(
-                ui.accordion_panel(
-                    ui.output_ui("documents_title"),
-                    ui.output_ui("collection_documents"),
-                    value="manage_documents",
-                )
-            )
             return ui.TagList(
                 [
                     ui.markdown(
                         f"### Selected collection: {collections.get().collections[selected_collection.get()].collection_name}"
                     ),
                     ui.accordion(
-                        *accordion_elements,
+                        ingester_ui("ingester"),
+                        ui.accordion_panel(
+                            ui.markdown("#### Manage Documents"),
+                            ui.output_ui("collection_documents"),
+                            value="manage_documents",
+                        ),
                         id="collection_management_accordion",
                         class_="mb-3",
                     ),
@@ -76,15 +62,7 @@ def collection_management_server(
         return ui.markdown("Please create a collection first!")
 
     @render.ui
-    def documents_title():
-        if fetching_docs.get():
-            return ui.markdown("#### Loading collection...")
-        return ui.div(ui.markdown("#### Manage Documents"))
-
-    @render.ui
     def collection_documents():
-        if fetching_docs.get():
-            return ui.markdown("#### Loading collection...")
         return document_list_ui("document_list")
 
     @ui.bind_task_button(button_id="delete")

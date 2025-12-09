@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, HTTPException, Query
 from .document_collections import (
     get_collections,
     create_collection,
     delete_collection,
     get_documents,
     delete_document,
+    get_document_types,
 )
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fastapi.responses import StreamingResponse
@@ -13,7 +14,6 @@ from shabti_keycloak import server_url, get_token_info, get_keycloak_client
 from shabti_types import (
     AuthzCollectionCreateInfo,
     AuthzCollectionInfo,
-    DocumentInfo,
     DeletedDocumentInfo,
     ServiceStatus,
     PromptInfo,
@@ -21,6 +21,7 @@ from shabti_types import (
     PromptConfigInfo,
     TempFileInfo,
     ModelInfo,
+    DocumentList,
 )
 from .insert_uploaded_files import insert_uploaded_files
 from .insert_urls import insert_urls
@@ -88,16 +89,34 @@ async def delete_collection_route(
     return await delete_collection(credentials, collection_id)
 
 
-@router.get(
-    "/collections/{collection_id}/documents",
-    response_model_exclude_unset=True,
-    response_model=list[DocumentInfo],
-)
+@router.get("/collections/{collection_id}/documents", response_model_exclude_unset=True)
 async def get_documents_route(
     collection_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> list[DocumentInfo]:
-    return await get_documents(credentials, collection_id)
+    search: str | None = None,
+    sort: str | None = None,
+    max_results: int | None = None,
+    filter_document_type: Annotated[list[str] | None, Query()] = None,
+    page: int = 0,
+) -> DocumentList:
+    return await get_documents(
+        credentials,
+        collection_id,
+        search,
+        sort,
+        max_results,
+        filter_document_type,
+        page,
+    )
+
+
+@router.get(
+    "/collections/{collection_id}/document_types", response_model_exclude_unset=True
+)
+async def get_document_types_route(
+    collection_id: str, credentials: Annotated[str, Depends(valid_access_token)]
+) -> list[str]:
+    return await get_document_types(credentials, collection_id)
 
 
 @router.post(

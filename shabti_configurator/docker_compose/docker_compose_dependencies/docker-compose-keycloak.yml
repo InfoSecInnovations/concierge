@@ -1,7 +1,7 @@
 services:
   postgres:
     container_name: postgres
-    image: postgres:latest
+    image: postgres:17
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped

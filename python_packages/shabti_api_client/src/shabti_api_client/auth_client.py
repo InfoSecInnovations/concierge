@@ -121,3 +121,15 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
     async def get_collections(self):
         response = await self._make_request("GET", "collections")
         return [AuthzCollectionInfo(**item) for item in response.json()]
+
+    async def get_user_info(self):
+        response = await self._make_request("GET", "/user_info")
+        return response.json()
+
+    async def get_permissions(self):
+        response = await self._make_request("GET", "/permissions")
+        return set(response.json())
+
+    async def get_collection_scopes(self, collection_id: str):
+        response = await self._make_request("GET", f"/{collection_id}/scopes")
+        return set(response.json())

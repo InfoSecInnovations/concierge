@@ -3,13 +3,11 @@ from .collection_create import collection_create_ui, collection_create_server
 from .collection_selector_server import collection_selector_server
 from ..common.collection_selector_ui import collection_selector_ui
 from ..common.ingester import ingester_ui, ingester_server
-from shiny._utils import rand_hex
 from .format_collection_name import format_collection_name
 from ..common.collections_data import CollectionsData
-from ..common.collection_document import document_ui, document_server
 from shabti_api_client import ShabtiAuthorizationClient
-from ..common.document_item import DocumentItem
 from shabti_types import AuthzCollectionInfo
+from ..common.document_list import document_list_ui, document_list_server
 
 
 @module.server
@@ -32,15 +30,8 @@ def collection_management_server(
         "collection_select", selected_collection, collections, user_info
     )
     ingestion_done_trigger = ingester_server("ingester", client, selected_collection)
-
-    document_delete_trigger = reactive.value(0)
-    current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])
-    total_docs_count: reactive.Value[int] = reactive.value(0)
     current_scopes = reactive.value(set())
-    fetching_docs = reactive.value(False)
-
-    def on_delete_document():
-        document_delete_trigger.set(document_delete_trigger.get() + 1)
+    fetching_scopes = reactive.value(False)
 
     @render.ui
     def collection_management_content():
@@ -60,11 +51,11 @@ def collection_management_server(
     def collection_view():
         if selected_collection.get():
             accordion_elements = []
-            fetching = fetching_docs.get()
+            fetching = fetching_scopes.get()
             if fetching:
                 accordion_elements.append(
                     ui.accordion_panel(
-                        ui.markdown("#### Loading collection..."),
+                        ui.markdown("#### Loading permissions..."),
                         value="ingest_documents",
                     )
                 )
@@ -107,28 +98,25 @@ def collection_management_server(
 
     @render.ui
     def documents_title():
-        if fetching_docs.get():
-            return ui.markdown("#### Loading collection...")
-        return ui.div(
-            ui.markdown("#### Manage Documents"),
-            ui.markdown(f"({len(current_docs.get())} documents in collection)"),
-        )
+        if fetching_scopes.get():
+            return ui.markdown("#### Loading permissions...")
+        return ui.markdown("#### Manage Documents")
 
     @render.ui
     def collection_documents():
-        if fetching_docs.get():
-            return ui.markdown("#### Loading collection...")
-        return ui.TagList(
-            *[
-                document_ui(
-                    doc.element_id,
-                    selected_collection.get(),
-                    doc,
-                    "update" in current_scopes.get(),
-                )
-                for doc in current_docs.get()
-            ],
-        )
+        if fetching_scopes.get():
+            return ui.markdown("#### Loading permissions...")
+        return document_list_ui("document_list")
+
+    @reactive.extended_task
+    async def fetch_scopes(collection_id):
+        return await client.get_collection_scopes(collection_id)
+
+    @reactive.effect
+    def fetch_scopes_effect():
+        scopes = fetch_scopes.result()
+        current_scopes.set(scopes)
+        fetching_scopes.set(False)
 
     @ui.bind_task_button(button_id="delete")
     @reactive.extended_task
@@ -153,52 +141,32 @@ def collection_management_server(
         else:
             selected_collection.set(None)
 
-    @reactive.extended_task
-    async def get_documents_task(collection_id):
-        scopes = await client.get_collection_scopes(collection_id)
-        docs = await client.get_documents(collection_id)
-        return (scopes, docs)
-
     @reactive.effect
     @reactive.event(input.delete, ignore_init=True)
     def on_delete():
-        get_documents_task.cancel()
-        fetching_docs.set(True)
+        fetching_scopes.set(True)
         delete(selected_collection.get())
-
-    @reactive.effect
-    def get_documents_effect():
-        scopes, docs = get_documents_task.result()
-        current_scopes.set(scopes)
-        fetching_docs.set(False)
-        current_docs.set(
-            [
-                DocumentItem(**doc.model_dump(), element_id=rand_hex(4))
-                for doc in docs.documents
-            ]
-        )
-        total_docs_count.set(docs.total_hits)
 
     @reactive.effect
     @reactive.event(
         selected_collection,
-        ingestion_done_trigger,
-        document_delete_trigger,
         ignore_none=False,
     )
     def on_collection_change():
-        req(selected_collection.get())
-        fetching_docs.set(True)
-        get_documents_task.cancel()
-        get_documents_task(selected_collection.get())
+        collection_id = selected_collection.get()
+        if not collection_id:
+            current_scopes.set(set())
+            return
+        fetching_scopes.set(True)
+        fetch_scopes(collection_id)
 
     @reactive.effect
-    def document_servers():
-        for doc in current_docs.get():
-            document_server(
-                doc.element_id,
-                client.delete_document,
-                selected_collection.get(),
-                doc,
-                on_delete_document,
-            )
+    @reactive.event(
+        current_scopes, ingestion_done_trigger, selected_collection, ignore_none=True
+    )
+    def on_fetch_scopes():
+        scopes = current_scopes.get()
+        req(scopes)
+        collection_id = selected_collection.get()
+        req(collection_id)
+        document_list_server("document_list", client, collection_id, "update" in scopes)
