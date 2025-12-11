@@ -38,6 +38,7 @@ def insert(
             "type": "document",
             "child_item_to_document": "document",
             **vars(document.metadata),
+            **additional,
         },
         refresh=True,
     )["_id"]

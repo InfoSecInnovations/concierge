@@ -271,11 +271,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 							])) {
 							}
 						}).toThrow();
-						const documents = await getAdminClient().then((client) =>
+						const docs = await getAdminClient().then((client) =>
 							client.getDocuments(collectionId),
 						);
 						expect(
-							documents.some((document) => document.source == url),
+							docs.documents.some((document) => document.source == url),
 						).toBeFalse();
 					});
 				},
