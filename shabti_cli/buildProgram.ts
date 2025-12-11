@@ -200,16 +200,13 @@ export default async () => {
 			"relevance",
 		)
 		.option(
-			"-m, --max-results [max_results]",
+			"-m, --max-results [number]",
 			"number of results returned at a time",
 			"10",
 		)
+		.option("-f, --filter [types...]", "filter by document type")
 		.option(
-			"-f, --filter [filter_by_document_type...]",
-			"filter by document type",
-		)
-		.option(
-			"-p, --page [page]",
+			"-p, --page [number]",
 			"page number, use this if you need to browse through the results",
 			"0",
 		)
@@ -219,15 +216,18 @@ export default async () => {
 					collection,
 					options.search,
 					options.order,
-					parseInt(options.max_results),
-					options.filter_by_document_type,
+					parseInt(options.maxResults),
+					options.filter,
 					parseInt(options.page),
 				)
 				.then((documentList) => {
 					console.log(
 						`Total documents in collection: ${documentList.totalDocuments}`,
 					);
-					console.log(``);
+					if (options.search || options.filter)
+						console.log(
+							`Number of results from current query: ${documentList.totalHits}`,
+						);
 					documentList.documents.forEach((document) => console.log(document));
 				}),
 		);
