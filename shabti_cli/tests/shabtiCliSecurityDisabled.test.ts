@@ -26,7 +26,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				),
 			).toBeTrue();
 		});
-		describe("tests with collection ID", () => {
+		describe("CLI - Security disabled Shabti instance - tests with collection ID", () => {
 			let collectionId: string;
 			beforeEach(async () => {
 				collectionId = await getClient().createCollection(
@@ -89,7 +89,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 					docs.documents.map((document) => document.filename),
 				).toContainValues(directoryFiles);
 			});
-			describe("tests with document IDs", () => {
+			describe("CLI - Security disabled Shabti instance - tests with document IDs", () => {
 				let documentIds: string[];
 				beforeEach(async () => {
 					const client = getClient();

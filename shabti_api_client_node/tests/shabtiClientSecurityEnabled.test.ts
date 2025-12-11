@@ -63,7 +63,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 			"user %p can create %p collection",
 			async (username, location) => {
 				const client = await getClientForUser(username);
-				const collectionName = `${username}'s ${location} collection`;
+				const collectionName = randomBytes(8).toString("hex");
 				const collectionId = await client.createCollection(
 					collectionName,
 					location,
@@ -93,7 +93,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 			"user %p can create %p collection",
 			async (username, location) => {
 				const client = await getClientForUser(username);
-				const collectionName = `${username}'s ${location} collection`;
+				const collectionName = randomBytes(8).toString("hex");
 				expect(async () => {
 					await client.createCollection(collectionName, location);
 				}).toThrow();
@@ -107,7 +107,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				).toBeFalse();
 			},
 		);
-		describe("tests with collection ID", () => {
+		describe("Node Client - Security enabled Shabti instance - tests with collection ID", () => {
 			let collectionId: string;
 			const collectionIdFixture = (owner, location) => {
 				beforeEach(async () => {
@@ -130,7 +130,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				["testprivate", "testprivate", "private"],
 			];
 			describe.each(canReadCollectionUsers)(
-				"users can read collection",
+				"Node Client - Security enabled Shabti instance - users can read collection",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} can read ${owner}'s ${location} collection`, async () => {
@@ -155,7 +155,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				["testnothing", "testadmin", "private"],
 			];
 			describe.each(cannotReadCollectionUsers)(
-				"users cannot read collection",
+				"Node Client - Security enabled Shabti instance - users cannot read collection",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} cannot read ${owner}'s ${location} collection`, async () => {
@@ -180,7 +180,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				["testprivate", "testprivate", "private"],
 			];
 			describe.each(canIngestDocumentUsers)(
-				"users can ingest documents",
+				"Node Client - Security enabled Shabti instance - users can ingest documents",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} can ingest into ${owner}'s ${location} collection`, async () => {
@@ -214,7 +214,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				["testnothing", "testadmin", "private"],
 			];
 			describe.each(cannotIngestDocumentUsers)(
-				"users cannot ingest documents",
+				"Node Client - Security enabled Shabti instance - users cannot ingest documents",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} cannot ingest into ${owner}'s ${location} collection`, async () => {
@@ -235,7 +235,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				},
 			);
 			describe.each(canIngestDocumentUsers)(
-				"users can ingest URLs",
+				"Node Client - Security enabled Shabti instance - users can ingest URLs",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} can ingest URLs into ${owner}'s ${location} collection`, async () => {
@@ -260,7 +260,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				},
 			);
 			describe.each(cannotIngestDocumentUsers)(
-				"users cannot ingest documents",
+				"Node Client - Security enabled Shabti instance - users cannot ingest URLs",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} cannot ingest into ${owner}'s ${location} collection`, async () => {
@@ -280,7 +280,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					});
 				},
 			);
-			describe("tests with document ID", () => {
+			describe("Node Client - Security enabled Shabti instance - tests with document ID", () => {
 				let documentId: string;
 				const documentIdFixture = (owner, location) => {
 					collectionIdFixture(owner, location);
@@ -300,7 +300,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					["testprivate", "testprivate", "private"],
 				];
 				describe.each(canDeleteDocumentUsers)(
-					"users can delete documents",
+					"Node Client - Security enabled Shabti instance - users can delete documents",
 					(username, owner, location) => {
 						documentIdFixture(owner, location);
 						test(`user ${username} can delete document from ${owner}'s ${location} collection`, async () => {
@@ -324,7 +324,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					["testnothing", "testadmin", "private"],
 				];
 				describe.each(cannotDeleteDocumentUsers)(
-					"users cannot delete documents",
+					"Node Client - Security enabled Shabti instance - users cannot delete documents",
 					(username, owner, location) => {
 						documentIdFixture(owner, location);
 						test(`user ${username} cannot delete document from ${owner}'s ${location} collection`, async () => {
@@ -350,7 +350,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				["testprivate", "testprivate", "private"],
 			];
 			describe.each(canDeleteCollectionUsers)(
-				"users can delete collections",
+				"Node Client - Security enabled Shabti instance - users can delete collections",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} can delete ${owner}'s ${location} collection`, async () => {
@@ -374,7 +374,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				["testnothing", "testadmin", "private"],
 			];
 			describe.each(cannotDeleteCollectionUsers)(
-				"users cannot delete collections",
+				"Node Client - Security enabled Shabti instance - users cannot delete collections",
 				(username, owner, location) => {
 					collectionIdFixture(owner, location);
 					test(`user ${username} cannot delete ${owner}'s ${location} collection`, async () => {
