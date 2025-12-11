@@ -19,6 +19,78 @@ import secrets
 
 
 @pytest.mark.parametrize(
+    "user,role",
+    [
+        ("testadmin", "collection_admin"),
+        ("testshared", "shared_read_write"),
+        ("testprivate", "private_collection"),
+        ("testsharedread", "shared_read"),
+        ("testnothing", None),
+    ],
+)
+async def test_user_info(user, role, shabti_client):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.get(
+        "/user_info",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    assert response.status_code == 200
+    json_response = response.json()
+    assert json_response["preferred_username"] == user
+    if not role:
+        assert "resource_access" not in json_response
+    else:
+        assert role in json_response["resource_access"]["shabti-auth"]["roles"]
+
+
+all_permissions = [
+    "collection:shared:create",
+    "collection:private:assign",
+    "delete",
+    "collection:private:create",
+    "update",
+    "read",
+]
+
+
+@pytest.mark.parametrize(
+    "user,permissions",
+    [
+        (
+            "testadmin",
+            [
+                "collection:shared:create",
+                "collection:private:assign",
+                "delete",
+                "collection:private:create",
+                "update",
+                "read",
+            ],
+        ),
+        ("testshared", ["collection:shared:create", "delete", "update", "read"]),
+        ("testprivate", ["collection:private:create", "delete", "update", "read"]),
+        ("testsharedread", ["read"]),
+        ("testnothing", []),
+    ],
+)
+async def test_user_permissions(user, permissions, shabti_client):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.get(
+        "/permissions",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    assert response.status_code == 200
+    response_json = response.json()
+    for permission in all_permissions:
+        if permission in permissions:
+            assert permission in response_json
+        else:
+            assert permission not in response_json
+
+
+@pytest.mark.parametrize(
     "user,location",
     [
         ("testadmin", "private"),
