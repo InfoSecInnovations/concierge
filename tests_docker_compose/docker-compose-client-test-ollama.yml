@@ -1,0 +1,54 @@
+name: shabti
+
+include:
+  - ../shabti_configurator/docker_compose/docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
+services:
+  ollama:
+    extends:
+      file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-ollama.yml
+      service: ollama-${SHABTI_COMPUTE:-cpu}
+  opensearch-node1:
+    extends:
+      file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
+      service: opensearch-node-base
+  shabti:
+    extends:
+      file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti-cpu}
+    build:
+      context: ../docker_containers/shabti_api
+      additional_contexts: 
+        python_packages: ../python_packages
+      dockerfile: Dockerfile.local
+      args:
+        - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
+    restart: unless-stopped
+  shabti-client:
+    tty: true
+    build:
+      context: ../python_packages/shabti_api_client
+      additional_contexts: 
+        python_packages: ../python_packages
+      dockerfile: Dockerfile
+    environment:
+      - SHABTI_SECURITY_ENABLED=${SHABTI_SECURITY_ENABLED:-False}
+      - KEYCLOAK_HOST=keycloak
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET}
+      - ROOT_CA=/opensearch_certs/root-ca.pem
+    volumes:
+      # even if this config isn't used, Docker complains about empty strings so we add a placeholder here
+      - ${ROOT_CA:-empty}:/opensearch_certs/root-ca.pem
+      - ./test_results:/test_results/
+    command: ["uv", "run", "pytest", "./tests/security_disabled/test_security_disabled.py::test_delete_collection", "./tests/security_disabled/test_security_disabled.py::test_ollama_status"]
+    restart: no
+
+volumes:
+  opensearch-data1:
+  ollama:
+  shabti-models:
+
+networks:
+  default:
+    name: shabti

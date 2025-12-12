@@ -13,6 +13,8 @@ async def shabti_client():
     while True:
         try:
             requests.get("http://shabti:15131")
+            requests.get("http://opensearch-node1:9200")
+            requests.get("http://ollama:11434")
             break
         except Exception:
             continue
@@ -23,10 +25,10 @@ async def shabti_client():
 async def shabti_collection_id(shabti_client):
     collection_id = await shabti_client.create_collection(secrets.token_hex(8))
     yield collection_id
-    try:
-        await shabti_client.delete_collection(collection_id)
-    except Exception:  # collection may have been deleted by a test
-        pass
+    # try:
+    #     await shabti_client.delete_collection(collection_id)
+    # except Exception:  # collection may have been deleted by a test
+    #     pass
 
 
 @pytest_asyncio.fixture(scope="function")
