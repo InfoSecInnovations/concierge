@@ -161,7 +161,7 @@ async def delete_document_route(
     return await delete_document(credentials, collection_id, document_id)
 
 
-@router.get("/{collection_id}/scopes")
+@router.get("/collections/{collection_id}/scopes")
 async def get_collection_scopes(
     collection_id: str, credentials: Annotated[str, Depends(valid_access_token)]
 ):

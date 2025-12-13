@@ -261,6 +261,62 @@ async def test_cannot_read_collection(user, shabti_collection_id, shabti_client)
     )
 
 
+all_scopes = ["read", "update", "delete"]
+
+
+@pytest.mark.parametrize(
+    "user,shabti_collection_id, scopes",
+    [
+        (
+            "testadmin",
+            {"username": "testadmin", "location": "shared"},
+            ["read", "update", "delete"],
+        ),
+        (
+            "testadmin",
+            {"username": "testadmin", "location": "private"},
+            ["read", "update", "delete"],
+        ),
+        (
+            "testadmin",
+            {"username": "testprivate", "location": "private"},
+            ["read", "update", "delete"],
+        ),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}, ["read"]),
+        (
+            "testshared",
+            {"username": "testadmin", "location": "shared"},
+            ["read", "update", "delete"],
+        ),
+        (
+            "testprivate",
+            {"username": "testprivate", "location": "private"},
+            ["read", "update", "delete"],
+        ),
+        ("testsharedread", {"username": "testadmin", "location": "private"}, []),
+        ("testshared", {"username": "testadmin", "location": "private"}, []),
+        ("testprivate", {"username": "testadmin", "location": "private"}, []),
+        ("testprivate", {"username": "testadmin", "location": "shared"}, []),
+        ("testnothing", {"username": "testadmin", "location": "shared"}, []),
+        ("testnothing", {"username": "testadmin", "location": "private"}, []),
+    ],
+    indirect=["shabti_collection_id"],
+)
+async def test_collection_scopes(user, shabti_collection_id, scopes, shabti_client):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.get(
+        f"/collections/{shabti_collection_id}/scopes",
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    response_json = response.json()
+    for scope in all_scopes:
+        if scope in scopes:
+            assert scope in response_json
+        else:
+            assert scope not in response_json
+
+
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 

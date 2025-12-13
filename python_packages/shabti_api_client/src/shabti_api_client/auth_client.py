@@ -131,5 +131,7 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
         return set(response.json())
 
     async def get_collection_scopes(self, collection_id: str):
-        response = await self._make_request("GET", f"/{collection_id}/scopes")
+        response = await self._make_request(
+            "GET", f"/collections/{collection_id}/scopes"
+        )
         return set(response.json())

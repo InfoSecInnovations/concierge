@@ -142,4 +142,13 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 		const json = await res.json();
 		return new Set(json);
 	}
+
+	async getCollectionScopes(collectionId: string) {
+		const res = await this.makeRequest(
+			"GET",
+			`collections/${collectionId}/scopes`,
+		);
+		const json = await res.json();
+		return new Set(json);
+	}
 }
