@@ -79,6 +79,9 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 							collection.collectionName == collectionName,
 					),
 				).toBeTrue();
+				await getAdminClient().then((client) =>
+					client.deleteCollection(collectionId),
+				); // clean up the collection
 			},
 		);
 		const cannotCreateCollectionUsers = [

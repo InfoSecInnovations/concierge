@@ -183,6 +183,56 @@ async def test_cannot_read_collection(shabti_user_client, shabti_collection_id):
     )
 
 
+all_scopes = ["read", "update", "delete"]
+
+
+@pytest.mark.parametrize(
+    "shabti_user_client,shabti_collection_id,scopes",
+    [
+        (
+            "testadmin",
+            {"username": "testadmin", "location": "shared"},
+            ["read", "update", "delete"],
+        ),
+        (
+            "testadmin",
+            {"username": "testadmin", "location": "private"},
+            ["read", "update", "delete"],
+        ),
+        (
+            "testadmin",
+            {"username": "testprivate", "location": "private"},
+            ["read", "update", "delete"],
+        ),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}, ["read"]),
+        (
+            "testshared",
+            {"username": "testadmin", "location": "shared"},
+            ["read", "update", "delete"],
+        ),
+        (
+            "testprivate",
+            {"username": "testprivate", "location": "private"},
+            ["read", "update", "delete"],
+        ),
+        ("testsharedread", {"username": "testadmin", "location": "private"}, []),
+        ("testshared", {"username": "testadmin", "location": "private"}, []),
+        ("testprivate", {"username": "testadmin", "location": "private"}, []),
+        ("testprivate", {"username": "testadmin", "location": "shared"}, []),
+        ("testnothing", {"username": "testadmin", "location": "shared"}, []),
+        ("testnothing", {"username": "testadmin", "location": "private"}, []),
+    ],
+    indirect=["shabti_user_client", "shabti_collection_id"],
+)
+async def test_collection_scopes(shabti_user_client, shabti_collection_id, scopes):
+    user_scopes = await shabti_user_client.get_collection_scopes(shabti_collection_id)
+    for scope in all_scopes:
+        if scope in scopes:
+            assert scope in user_scopes
+        else:
+            assert scope not in user_scopes
+
+
 async def ingest_document(shabti_user_client, shabti_collection_id):
     document_id = None
     async for info in shabti_user_client.insert_files(

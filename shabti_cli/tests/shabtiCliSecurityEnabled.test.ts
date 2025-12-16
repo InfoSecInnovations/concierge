@@ -35,6 +35,10 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				(collection) => collection.collectionName == collectionName,
 			);
 			expect(matchingCollection).toBeTruthy();
+			if (matchingCollection)
+				await getAuthClient().then((client) =>
+					client.deleteCollection(matchingCollection.collectionId),
+				); // clean up the collection
 		});
 		describe("CLI - Security enabled Shabti instance - tests with collection ID", () => {
 			let collectionId: string;
