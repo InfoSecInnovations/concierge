@@ -11,6 +11,77 @@ file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
 @pytest.mark.parametrize(
+    "shabti_user_client,role,username",
+    [
+        ("testadmin", "collection_admin", "testadmin"),
+        ("testshared", "shared_read_write", "testshared"),
+        ("testprivate", "private_collection", "testprivate"),
+        ("testsharedread", "shared_read", "testsharedread"),
+        ("testnothing", None, "testnothing"),
+    ],
+    indirect=["shabti_user_client"],
+)
+async def test_user_info(shabti_user_client, role, username):
+    info = await shabti_user_client.get_user_info()
+    assert info["preferred_username"] == username
+    if not role:
+        assert "resource_access" not in info
+    else:
+        assert role in info["resource_access"]["shabti-auth"]["roles"]
+
+
+all_permissions = [
+    "collection:shared:create",
+    "collection:private:assign",
+    "delete",
+    "collection:private:create",
+    "update",
+    "read",
+]
+
+
+@pytest.mark.parametrize(
+    "shabti_user_client,permissions,shabti_collection_id",
+    [
+        (
+            "testadmin",
+            [
+                "collection:shared:create",
+                "collection:private:assign",
+                "delete",
+                "collection:private:create",
+                "update",
+                "read",
+            ],
+            {"username": "testadmin", "location": "shared"},
+        ),
+        (
+            "testshared",
+            ["collection:shared:create", "delete", "update", "read"],
+            {"username": "testshared", "location": "shared"},
+        ),
+        (
+            "testprivate",
+            ["collection:private:create", "delete", "update", "read"],
+            {"username": "testprivate", "location": "private"},
+        ),
+        ("testsharedread", ["read"], {"username": "testadmin", "location": "shared"}),
+        ("testnothing", [], {"username": "testadmin", "location": "shared"}),
+    ],
+    indirect=["shabti_user_client", "shabti_collection_id"],
+)
+async def test_user_permissions(
+    shabti_user_client, permissions, shabti_collection_id
+):  # we need a collection to exist otherwise we don't find all the permissions
+    user_permissions = await shabti_user_client.get_permissions()
+    for permission in all_permissions:
+        if permission in permissions:
+            assert permission in user_permissions
+        else:
+            assert permission not in user_permissions
+
+
+@pytest.mark.parametrize(
     "shabti_user_client,location",
     [
         ("testadmin", "private"),
@@ -37,6 +108,7 @@ async def test_can_create_collection(shabti_user_client, location):
         ),
         None,
     )
+    await admin_client.delete_collection(collection_id)  # clean up collection after use
 
 
 @pytest.mark.parametrize(

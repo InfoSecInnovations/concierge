@@ -7,7 +7,7 @@ import { randomBytes } from "node:crypto";
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const config = await getOpenIdConfig();
 const token = await openIdClient.genericGrantRequest(config, "password", {
-	username: "testadmin",
+	username: "testprivate",
 	password: "test",
 });
 const url =

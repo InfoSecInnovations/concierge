@@ -12,7 +12,7 @@ from ...src.app.document_collections import (
 )
 import pytest
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
-from .lib import create_collection_for_user
+from .lib import create_collection_for_user, delete_collection_as_admin
 import os
 import json
 import secrets
@@ -55,7 +55,7 @@ all_permissions = [
 
 
 @pytest.mark.parametrize(
-    "user,permissions",
+    "user,permissions,shabti_collection_id",
     [
         (
             "testadmin",
@@ -67,14 +67,27 @@ all_permissions = [
                 "update",
                 "read",
             ],
+            {"username": "testadmin", "location": "shared"},
         ),
-        ("testshared", ["collection:shared:create", "delete", "update", "read"]),
-        ("testprivate", ["collection:private:create", "delete", "update", "read"]),
-        ("testsharedread", ["read"]),
-        ("testnothing", []),
+        (
+            "testshared",
+            ["collection:shared:create", "delete", "update", "read"],
+            {"username": "testshared", "location": "shared"},
+        ),
+        (
+            "testprivate",
+            ["collection:private:create", "delete", "update", "read"],
+            {"username": "testprivate", "location": "private"},
+        ),
+        ("testsharedread", ["read"], {"username": "testadmin", "location": "shared"}),
+        ("testnothing", [], {"username": "testadmin", "location": "shared"}),
+        ("testnothing", [], {"username": "testadmin", "location": "private"}),
     ],
+    indirect=["shabti_collection_id"],
 )
-async def test_user_permissions(user, permissions, shabti_client):
+async def test_user_permissions(
+    user, permissions, shabti_collection_id, shabti_client
+):  # we need a collection to exist to be able to detect all the permissions
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
     response = shabti_client.get(
@@ -139,6 +152,9 @@ async def test_can_create_collection(user, location, shabti_client):
         ),
         None,
     )
+    # clean up created collections
+    await delete_collection_as_admin(backend_collection_id)
+    await delete_collection_as_admin(response_json["collection_id"])
 
 
 @pytest.mark.parametrize(
