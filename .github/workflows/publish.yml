@@ -11,6 +11,8 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v4
+      - name: Install Project
+        run: bun install
       - name: Run Build Script
         env:
           SHABTI_NEW_VERSION: inputs.shabtiVersion
