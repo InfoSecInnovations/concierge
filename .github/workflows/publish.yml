@@ -2,6 +2,10 @@ name: Publish
 
 on:
   workflow_dispatch:
+    inputs:
+      releaseName:
+        description: "GitHub name for release"
+
 
 jobs:
   publish:
@@ -25,3 +29,8 @@ jobs:
           zip ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
           zip ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./shabti_cli/dist/linux/shabti_cli
           zip ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*.zip
+          name: ${{inputs.releaseName}}
