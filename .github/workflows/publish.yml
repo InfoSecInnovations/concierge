@@ -21,6 +21,7 @@ jobs:
       # TODO: insert code signing here
       - name: Zip executables
         run: | 
+          mkdir -p dist
           zip ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
           zip ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./shabti_cli/dist/linux/shabti_cli
           zip ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./shabti_cli/dist/mac/shabti_cli
