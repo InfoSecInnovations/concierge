@@ -33,5 +33,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./dist/*.zip
-          name: ${{inputs.releaseName}}
+          tag_name: ${{inputs.releaseName}}
           target_commitish: ${{github.sha}}
