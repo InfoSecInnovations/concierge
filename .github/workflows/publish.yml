@@ -1,0 +1,22 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      shabtiVersion:
+        description: "Version to increment Shabti to. Must not be an existing version."
+
+jobs:
+  publish:
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Build Script
+        env:
+          SHABTI_NEW_VERSION: inputs.shabtiVersion
+          TWINE_PASSWORD: secrets.TWINE_PASSWORD
+          NPM_CONFIG_TOKEN: secrets.NPM_CONFIG_TOKEN
+          DOCKER_USERNAME: secrets.DOCKER_USERNAME
+          DOCKER_PASSWORD: secrets.DOCKER_PASSWORD
+        shell: bash
+        run: bun run ./buildReleaseArtifacts.ts
