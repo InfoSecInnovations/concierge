@@ -1,6 +1,5 @@
 /*
 Required environment variables:
-SHABTI_NEW_VERSION - must be different from any currently released version
 TWINE_PASSWORD - PyPI API key with permissions to publish the Shabti related packages
 NPM_CONFIG_TOKEN - NPM token for automated workflows (doesn't appear in the script but will be used by bun publish)
 DOCKER_USERNAME - Docker Hub username
@@ -35,12 +34,9 @@ const runPython = (command: string, directoryPath: string[] = []) => {
 };
 
 Bun.env.TWINE_USER = "__token__"; // this username tells twine we'll be using a token to interact with PyPI
-const version = Bun.env.SHABTI_NEW_VERSION!;
-console.log(
-	`Current Shabti version: ${packageJson.version}, bumping to ${version}`,
-);
+const version = packageJson.version;
+console.log(`Publishing release for Shabti ${version}`);
 packageJson.version = version;
-await Bun.write("./package.json", JSON.stringify(packageJson, undefined, "\t"));
 const handlePyPi = async (
 	packageUrlName: string,
 	packageName: string,
@@ -103,4 +99,3 @@ await $`rm -rf ./dist`.cwd(cliDir); // clean dist directory in case we've been r
 await $`bun run build_win`.cwd(cliDir);
 await $`bun run build_linux`.cwd(cliDir);
 await $`bun run build_mac`.cwd(cliDir);
-// the artifacts will be present in ./dist
