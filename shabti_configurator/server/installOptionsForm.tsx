@@ -3,8 +3,13 @@ import * as envfile from "envfile";
 import { keycloakExists } from "./dockerItemsExist";
 import getDefaultDirectory from "./getDefaultDirectory";
 import getEnvPath from "./getEnvPath";
+import { VersionSelector } from "./versionSelector";
+import currentIsLocal from "./currentIsLocal";
 
-export const InstallOptionsForm = async (props: { devMode: boolean }) => {
+export const InstallOptionsForm = async (props: {
+	devMode: boolean;
+	currentVersion?: string;
+}) => {
 	const envFile = Bun.file(getEnvPath());
 	const envs =
 		(await envFile.exists()) &&
@@ -19,6 +24,20 @@ export const InstallOptionsForm = async (props: { devMode: boolean }) => {
 	const keycloakEnabled = await keycloakExists();
 	return (
 		<form action="/install" method="post" id="install_form">
+			<fieldset>
+				<legend>Version</legend>
+				<p>
+					<VersionSelector
+						id="install_version"
+						devMode={props.devMode}
+						currentVersion={
+							props.devMode && (await currentIsLocal())
+								? "local"
+								: props.currentVersion
+						}
+					></VersionSelector>
+				</p>
+			</fieldset>
 			<fieldset>
 				<legend>LLM Configuration</legend>
 				<p>

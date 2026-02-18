@@ -17,6 +17,7 @@ services:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml
       service: ${SHABTI_SERVICE:-shabti-cpu}
+    image: null
     environment:
       - WATCHFILES_FORCE_POLLING=true
     build:

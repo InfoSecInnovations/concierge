@@ -7,12 +7,17 @@ import configurePreCommit from "./configurePreCommit";
 import createCertificates from "./createCertificates";
 import { keycloakExists } from "./dockerItemsExist";
 import getEnvPath from "./getEnvPath";
-import getVersion from "./getVersion";
 import logMessage from "./logMessage";
 import createVenv from "./createVenv";
 import getKeycloakClientSecret from "./getKeycloakClientSecret";
+import getCurrentVersion from "./getCurrentVersion";
 
-export default async function* (options: FormData, installVenv = true) {
+export default async function* (
+	options: FormData,
+	selectedVersion: string,
+	defaultVersion: string,
+	installVenv = true,
+) {
 	const environment =
 		options.get("dev_mode")?.toString() == "True"
 			? "development"
@@ -78,7 +83,11 @@ export default async function* (options: FormData, installVenv = true) {
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml";
 	}
 	envs.ENVIRONMENT = environment;
-	envs.SHABTI_VERSION = getVersion();
+	envs.SHABTI_VERSION =
+		selectedVersion == "local"
+			? (await getCurrentVersion()) || defaultVersion
+			: selectedVersion;
+	envs.SHABTI_LOCAL_VERSION = selectedVersion == "local" ? "True" : "False";
 	envs.SHABTI_COMPUTE = options.has("use_gpu") ? "cuda" : "cpu";
 	if (securityLevel == "demo") envs.IS_SECURITY_DEMO = "True";
 	if (options.has("activity_logging")) {

@@ -4,6 +4,7 @@
 
 import { parseArgs } from "node:util";
 import doInstall from "./server/doInstall";
+import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -44,6 +45,13 @@ if (values["keycloak-password"])
 	options.set("keycloak_password", values["keycloak-password"]);
 if (values["use-gpu"]) options.set("use_gpu", "True");
 
-for await (const _ of doInstall(options, false)) {
+const defaultVersion = (await listCompatibleDockerTags())[0];
+
+for await (const _ of doInstall(
+	options,
+	options.get("dev_mode")!.toString(),
+	defaultVersion,
+	false,
+)) {
 	// we don't configure the venv because we assume it already exists and we don't want to break it
 }

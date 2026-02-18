@@ -14,14 +14,11 @@ export default async () => {
 			tags.push(tag.name);
 		}
 	}
-	tags.push("0.7.0");
-	tags.push("0.8.0");
-	tags.push("0.7.0-alpha.2");
-	tags.push("0.8.0-alpha.2");
-	tags.push("0.8.0-alpha.2-cuda");
-	const filteredTags = [
-		...new Set(tags.map((tag) => tag.replace("-cuda", ""))),
-	]; // filter out the suffixes as we will apply those using the GPU enabled option
+	// filter out the suffixes as we will apply those using the GPU enabled option
+	// filter out "latest" tag
+	const filteredTags = tags.filter(
+		(tag) => !tag.endsWith("-cuda") && tag != "latest",
+	);
 	return filteredTags
 		.filter(
 			(tag) =>

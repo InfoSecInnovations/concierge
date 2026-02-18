@@ -10,13 +10,16 @@ import doInstall from "./server/doInstall";
 import doLaunch from "./server/doLaunch";
 import dockerIsRunning from "./server/dockerIsRunning";
 import { ExistingRemover } from "./server/existingRemover";
-import getVersion from "./server/getVersion.js";
 import { InstallOptionsForm } from "./server/installOptionsForm";
 import { RelaunchForm } from "./server/relaunchForm";
 import streamHtml from "./server/streamHtml.js";
 import validateInstallForm from "./server/validateInstallForm.js";
 import { WebUILink } from "./server/webUiLink.js";
 import { VersionSelector } from "./server/versionSelector.js";
+import packageJson from "./package.json";
+import * as envfile from "envfile";
+import getCurrentVersion from "./server/getCurrentVersion.js";
+import listCompatibleDockerTags from "./server/listCompatibleDockerTags.js";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -35,6 +38,7 @@ const app = new Hono();
 const state: { watchProcess?: Bun.Subprocess } = {
 	watchProcess: undefined,
 };
+const defaultVersion = (await listCompatibleDockerTags())[0];
 
 app.get("/style.css", async (c) =>
 	c.body(await file(css).text(), 201, {
@@ -48,7 +52,7 @@ app.get("/index.js", async (c) =>
 );
 app.get("/", async (c) => {
 	const dockerStatus = await dockerIsRunning();
-	const shabtiIsInstalled = await shabtiIsConfigured();
+	const currentVersion = await getCurrentVersion();
 	return await c.html(
 		<html>
 			<head>
@@ -81,8 +85,7 @@ app.get("/", async (c) => {
 				</p>
 				{dockerStatus ? (
 					<>
-						<VersionSelector devMode={devMode}></VersionSelector>
-						{shabtiIsInstalled ? (
+						{currentVersion ? (
 							<section>
 								<h3>Launch Shabti</h3>
 								<p>Shabti appears to be configured on this system</p>
@@ -104,7 +107,10 @@ app.get("/", async (c) => {
 						<ExistingRemover></ExistingRemover>
 						<section>
 							<h3>Install Shabti</h3>
-							<InstallOptionsForm devMode={devMode}></InstallOptionsForm>
+							<InstallOptionsForm
+								devMode={devMode}
+								currentVersion={currentVersion}
+							></InstallOptionsForm>
 						</section>
 					</>
 				) : (
@@ -143,7 +149,11 @@ app.post("/install", (c) =>
 			c,
 			"Installing Shabti",
 			async (stream) => {
-				for await (const message of doInstall(data)) {
+				for await (const message of doInstall(
+					data,
+					data.get("version")!.toString(),
+					defaultVersion,
+				)) {
 					await stream.writeln(await (<p>{message}</p>));
 				}
 			},
@@ -191,7 +201,7 @@ app.post("/launch", (c) =>
 );
 
 console.log("Shabti Configurator");
-console.log(`${getVersion()}\n`);
+console.log(`${packageJson.version}\n`);
 
 if (!devMode) {
 	const dockerComposeZip = await import("./assets/docker_compose.zip", {
