@@ -16,6 +16,7 @@ import { RelaunchForm } from "./server/relaunchForm";
 import streamHtml from "./server/streamHtml.js";
 import validateInstallForm from "./server/validateInstallForm.js";
 import { WebUILink } from "./server/webUiLink.js";
+import { VersionSelector } from "./server/versionSelector.js";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -80,6 +81,7 @@ app.get("/", async (c) => {
 				</p>
 				{dockerStatus ? (
 					<>
+						<VersionSelector devMode={devMode}></VersionSelector>
 						{shabtiIsInstalled ? (
 							<section>
 								<h3>Launch Shabti</h3>
