@@ -19,7 +19,10 @@ export default async () => {
 	tags.push("0.7.0-alpha.2");
 	tags.push("0.8.0-alpha.2");
 	tags.push("0.8.0-alpha.2-cuda");
-	return tags
+	const filteredTags = [
+		...new Set(tags.map((tag) => tag.replace("-cuda", ""))),
+	]; // filter out the suffixes as we will apply those using the GPU enabled option
+	return filteredTags
 		.filter(
 			(tag) =>
 				semver.compare(
