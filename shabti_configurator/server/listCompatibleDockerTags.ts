@@ -1,5 +1,5 @@
 import minimumVersion from "../minimumVersion";
-import { semver } from "bun";
+import semver from "semver";
 
 export default async () => {
 	let next =
@@ -14,7 +14,41 @@ export default async () => {
 			tags.push(tag.name);
 		}
 	}
+	tags.push("0.7.0");
+	tags.push("0.8.0");
+	tags.push("0.7.0-alpha.2");
+	tags.push("0.8.0-alpha.2");
+	tags.push("0.8.0-alpha.2-cuda");
 	return tags
-		.filter((tag) => semver.order(tag, minimumVersion) >= 0)
-		.sort((a, b) => semver.order(b, a)); // sort by highest first
+		.filter(
+			(tag) =>
+				semver.compare(
+					semver.coerce(tag, { loose: true }) || "",
+					minimumVersion,
+					true,
+				) >= 0,
+		)
+		.sort((a, b) => {
+			// put "invalid" versions the lowest, these are probably using the old Python versioning
+			if (semver.valid(a, true) && !semver.valid(b, true)) return -1;
+			if (semver.valid(b, true) && !semver.valid(a, true)) return 1;
+			// sort prerelease versions after "stable"
+			try {
+				if (
+					semver.prerelease(a, true)?.length &&
+					!semver.prerelease(b, true)?.length
+				)
+					return 1;
+				if (
+					semver.prerelease(b, true)?.length &&
+					!semver.prerelease(a, true)?.length
+				)
+					return -1;
+			} catch {}
+			return semver.rcompare(
+				semver.coerce(a, { loose: true }) || "",
+				semver.coerce(b, { loose: true }) || "",
+				true,
+			);
+		}); // sort by highest first
 };
