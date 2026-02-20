@@ -1,6 +1,6 @@
 /*
 Required environment variables:
-TWINE_PASSWORD - PyPI API key with permissions to publish the Shabti related packages
+UV_PUBLISH_TOKEN - PyPI API key with permissions to publish the Shabti related packages
 NPM_CONFIG_TOKEN - NPM token for automated workflows (doesn't appear in the script but will be used by bun publish)
 DOCKER_USERNAME - Docker Hub username
 DOCKER_PASSWORD - Docker Hub password
