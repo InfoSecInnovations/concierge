@@ -7,7 +7,6 @@ DOCKER_PASSWORD - Docker Hub password
 */
 
 import path from "node:path";
-import util from "node:util";
 import { $ } from "bun";
 import shabtiApiPackageJson from "./shabti_api_client_node/package.json";
 import shabtiApiPyProject from "./python_packages/shabti_api_client/pyproject.toml";
@@ -16,22 +15,6 @@ import shabtiTypesPyProject from "./python_packages/shabti_types/pyproject.toml"
 import shabtiUtilPyProject from "./python_packages/shabti_util/pyproject.toml";
 import isiUtilPyProject from "./python_packages/isi_util/pyproject.toml";
 import packageJson from "./package.json";
-import { platform } from "node:os";
-const exec = util.promisify(
-	await import("node:child_process").then(
-		(child_process) => child_process.exec,
-	),
-);
-
-const runPython = (command: string, directoryPath: string[] = []) => {
-	if (platform() == "win32")
-		return $`Scripts\\python -m ${{ raw: command }}`.cwd(
-			path.resolve(path.join(...directoryPath)),
-		);
-	return $`./bin/python -m ${{ raw: command }}`.cwd(
-		path.resolve(path.join(...directoryPath)),
-	);
-};
 
 Bun.env.TWINE_USER = "__token__"; // this username tells twine we'll be using a token to interact with PyPI
 const version = packageJson.version;
@@ -78,6 +61,7 @@ if (npmJson.versions[shabtiApiPackageJson.version]) {
 	await $`bun publish --access public`.cwd(nodeClientDir); // TODO: detect if prerelease
 }
 await $`echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin`;
+await $`docker system prune -a -f`; // if we don't clean everything up we end up eating all the disk space
 await $`docker build --target cpu -t infosecinnovations/shabti:${version} ./docker_containers/shabti_api`;
 await $`docker image push infosecinnovations/shabti:${version}`;
 await $`docker build --target cuda -t infosecinnovations/shabti:${version}-cuda ./docker_containers/shabti_api`;
