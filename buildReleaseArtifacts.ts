@@ -57,11 +57,8 @@ const handlePyPi = async (
 		path.join(import.meta.dir, "python_packages", packageName),
 	);
 	await $`rm -rf ${path.join(packageDir, "dist")}`;
-	await exec("python3 -m build", { cwd: packageDir });
-	// single backslashes get stripped out by the command line so we need to double them
-	await runPython(
-		`twine upload ${path.join(packageDir, "dist").replaceAll("\\", "\\\\")}`,
-	);
+	await $`uv build`.cwd(packageDir);
+	await $`uv publish`.cwd(packageDir);
 };
 await handlePyPi("shabti-util", "shabti_util", shabtiUtilPyProject);
 await handlePyPi("isi-util", "isi_util", isiUtilPyProject);
