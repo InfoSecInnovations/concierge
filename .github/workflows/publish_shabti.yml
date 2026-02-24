@@ -2,9 +2,6 @@ name: Publish
 
 on:
   workflow_dispatch:
-    inputs:
-      releaseName:
-        description: "GitHub name for release"
 
 permissions:
   id-token: write  # Required for OIDC
@@ -14,6 +11,7 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
+      
       - name: Install uv
         uses: astral-sh/setup-uv@v7
       - name: Install Python 3.12
@@ -48,6 +46,7 @@ jobs:
         run: |
           uv build
           uv publish
+
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
       - name: Install project
@@ -58,20 +57,13 @@ jobs:
         run: |
           bun run build
           bunx publish-if-not-exists --access public
-      # TODO: only do this if the launcher was updated
-      - name: Build Launcher Executable
-        working-directory: ./shabti_configurator
-        run: |
-          bun run build_win
-          bun run build_linux
-          bun run build_mac
-      # TODO: Code signing would go here (also only do if launcher was updated)
       - name: Build CLI Executable
         working-directory: ./shabti_cli
         run: |
           bun run build_win
           bun run build_linux
           bun run build_mac
+
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -96,6 +88,9 @@ jobs:
           context: ./docker_containers/shabti_api
           build-args: ACCELERATION_TYPE=cuda
           tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}-cuda
+
+      # TODO: grab launcher from previous release
+
       - name: Install zip
         uses: montudor/action-zip@v1
       - name: Zip executables
@@ -108,5 +103,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./dist/*.zip
-          tag_name: ${{inputs.releaseName}}
+          tag_name: shabti:${{steps.package-version.outputs.current-version}}
           target_commitish: ${{github.sha}}

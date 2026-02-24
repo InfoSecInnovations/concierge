@@ -1,0 +1,47 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseName:
+        description: "GitHub name for release"
+
+jobs:
+  publish:
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v6
+      
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install project
+        run: bun install
+      - name: Build Launcher Executable
+        working-directory: ./shabti_configurator
+        run: |
+          bun run build_win
+          bun run build_linux
+          bun run build_mac
+      # TODO: Code signing would go here
+
+      # TODO: grab CLI from previous release
+      - name: Get Launcher version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+        with:
+          path: ./shabti_configurator
+
+      - name: Install zip
+        uses: montudor/action-zip@v1
+      - name: Zip executables
+        run: | 
+          mkdir -p dist
+          zip -j ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./shabti_cli/dist/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*.zip
+          tag_name: shabti_launcher:${{steps.package-version.outputs.current-version}}
+          target_commitish: ${{github.sha}}
