@@ -22,23 +22,36 @@ jobs:
           bun run build_win
           bun run build_linux
           bun run build_mac
+
       # TODO: Code signing would go here
 
-      # TODO: grab CLI from previous release
       - name: Get Launcher version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.3.1
         with:
           path: ./shabti_configurator
 
+      - name: Get Current Release Files  
+        uses: dsaltares/fetch-gh-release-asset@master
+        with:
+          file: ".+\\.zip"
+          regex: true
       - name: Install zip
         uses: montudor/action-zip@v1
+      - name: Unzip previous files
+        run: |
+          mkdir -p ./unzipped/win
+          mkdir -p ./unzipped/linux
+          mkdir -p ./unzipped/mac
+          unzip -qq shabti_win.zip -d ./unzipped/win
+          unzip -qq shabti_mac.zip -d ./unzipped/mac
+          unzip -qq shabti_linux.zip -d ./unzipped/linux
       - name: Zip executables
         run: | 
           mkdir -p dist
-          zip -j ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
-          zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./shabti_cli/dist/linux/shabti_cli
-          zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+          zip -j ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./unzipped/win/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./unzipped/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./unzipped/mac/shabti_cli
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
