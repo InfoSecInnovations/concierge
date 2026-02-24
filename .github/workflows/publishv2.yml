@@ -1,0 +1,112 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseName:
+        description: "GitHub name for release"
+
+permissions:
+  id-token: write  # Required for OIDC
+
+jobs:
+  publish:
+    runs-on: [self-hosted, linux]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+      - name: Install Python 3.12
+        run: uv python install 3.12
+      - name: Publish shabti_util
+        working-directory: ./python_packages/shabti_util
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_util
+        working-directory: ./python_packages/shabti_util
+        run: |
+          uv build
+          uv publish
+      - name: Publish isi_util
+        working-directory: ./python_packages/isi_util
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_api_client
+        working-directory: ./python_packages/shabti_api_client
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_keycloak
+        working-directory: ./python_packages/shabti_keycloak
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_types
+        working-directory: ./python_packages/shabti_types
+        run: |
+          uv build
+          uv publish
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+      - name: Install project
+        run: bun install
+      - name: Publish API Client
+        working-directory: ./shabti_api_client_node
+        # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
+        run: |
+          bun run build
+          bunx publish-if-not-exists --access public
+      # TODO: only do this if the launcher was updated
+      - name: Build Launcher Executable
+        working-directory: ./shabti_configurator
+        run: |
+          bun run build_win
+          bun run build_linux
+          bun run build_mac
+      # TODO: Code signing would go here (also only do if launcher was updated)
+      - name: Build CLI Executable
+        working-directory: ./shabti_cli
+        run: |
+          bun run build_win
+          bun run build_linux
+          bun run build_mac
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Get Shabti version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+      - name: Build and push CPU Docker image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: ./docker_containers/shabti_api
+          build-args: ACCELERATION_TYPE=cpu
+          tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}
+      - name: Build and push Cuda Docker image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: ./docker_containers/shabti_api
+          build-args: ACCELERATION_TYPE=cuda
+          tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}-cuda
+      - name: Install zip
+        uses: montudor/action-zip@v1
+      - name: Zip executables
+        run: | 
+          mkdir -p dist
+          zip -j ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./shabti_cli/dist/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*.zip
+          tag_name: ${{inputs.releaseName}}
+          target_commitish: ${{github.sha}}
