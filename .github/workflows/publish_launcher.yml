@@ -8,8 +8,6 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
-      - name: Install zip
-        uses: montudor/action-zip@v1
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
       - name: Install project
@@ -25,9 +23,9 @@ jobs:
 
       - name: Get Launcher version
         id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
-        with:
-          path: ./shabti_configurator
+        run: |
+          PACKAGE_VERSION=$(cat ./shabti_configurator/package.json | jq '.version' | tr -d '"')
+          echo "{current-version}={PACKAGE_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Get Current Release Files  
         uses: dsaltares/fetch-gh-release-asset@master
