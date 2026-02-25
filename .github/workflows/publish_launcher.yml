@@ -2,9 +2,6 @@ name: Publish
 
 on:
   workflow_dispatch:
-    inputs:
-      releaseName:
-        description: "GitHub name for release"
 
 jobs:
   publish:
