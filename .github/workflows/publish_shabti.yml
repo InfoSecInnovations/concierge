@@ -88,6 +88,12 @@ jobs:
           context: ./docker_containers/shabti_api
           build-args: ACCELERATION_TYPE=cuda
           tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}-cuda
+      - name: Build and push web client Docker image
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: ./docker_containers/shabti_web
+          tags: infosecinnovations/shabti-web:${{steps.package-version.outputs.current-version}}
 
       - name: Get Current Release Files  
         uses: dsaltares/fetch-gh-release-asset@master
