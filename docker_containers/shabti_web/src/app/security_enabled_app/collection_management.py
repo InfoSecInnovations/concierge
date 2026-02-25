@@ -1,4 +1,4 @@
-from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
+from shiny import module, reactive, ui, render, Inputs, Outputs, Session
 from .collection_create import collection_create_ui, collection_create_server
 from .collection_selector_server import collection_selector_server
 from ..common.collection_selector_ui import collection_selector_ui
@@ -160,13 +160,10 @@ def collection_management_server(
         fetching_scopes.set(True)
         fetch_scopes(collection_id)
 
-    @reactive.effect
-    @reactive.event(
-        current_scopes, ingestion_done_trigger, selected_collection, ignore_none=True
+    document_list_server(
+        "document_list",
+        client,
+        selected_collection,
+        current_scopes,
+        ingestion_done_trigger,
     )
-    def on_fetch_scopes():
-        scopes = current_scopes.get()
-        req(scopes)
-        collection_id = selected_collection.get()
-        req(collection_id)
-        document_list_server("document_list", client, collection_id, "update" in scopes)

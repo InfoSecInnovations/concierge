@@ -105,25 +105,26 @@ def document_list_server(
     output: Outputs,
     session: Session,
     client: BaseShabtiClient,
-    selected_collection: str,
-    can_delete: bool,
+    selected_collection: reactive.Value[str],
+    current_scopes: reactive.Value[set[str]],
+    ingestion_done_trigger: reactive.Value[int],
 ):
     current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])
     total_results_count: reactive.Value[int] = reactive.value(0)
     total_documents_count: reactive.Value[int] = reactive.value(0)
     current_page: reactive.Value[int] = reactive.value(0)
     document_types: reactive.Value[list[str]] = reactive.value([])
-    print("document list server")
-    print(selected_collection)
 
     @reactive.extended_task
     async def get_document_types_task(collection_id: str):
+        if not collection_id:
+            return None
         return await client.get_document_types(collection_id)
 
     @reactive.effect
     def get_document_types_effect():
         doc_types = get_document_types_task.result()
-        document_types.set(doc_types)
+        document_types.set(doc_types or [])
 
     @reactive.extended_task
     async def get_documents_task(
@@ -133,8 +134,8 @@ def document_list_server(
         sort: str,
         filter_document_type: list[str],
     ):
-        print("get_documents_task")
-        print(collection_id)
+        if not collection_id:
+            return None
         return await client.get_documents(
             collection_id,
             max_results=RESULTS_PER_PAGE,
@@ -146,7 +147,7 @@ def document_list_server(
 
     def on_delete_document():
         get_documents_task(
-            selected_collection,
+            selected_collection.get(),
             current_page.get(),
             input.search(),
             input.sort(),
@@ -156,6 +157,11 @@ def document_list_server(
     @reactive.effect
     def get_documents_effect():
         docs = get_documents_task.result()
+        if not docs:
+            current_docs.set([])
+            total_results_count.set(0)
+            total_documents_count.set(0)
+            return
         current_docs.set(
             [
                 DocumentItem(**doc.model_dump(), element_id=rand_hex(4))
@@ -168,7 +174,12 @@ def document_list_server(
     @render.ui
     def document_list_view():
         return [
-            document_ui(doc.element_id, selected_collection, doc, can_delete)
+            document_ui(
+                doc.element_id,
+                selected_collection.get(),
+                doc,
+                "update" in current_scopes.get(),
+            )
             for doc in current_docs.get()
         ]
 
@@ -221,7 +232,7 @@ def document_list_server(
             document_server(
                 doc.element_id,
                 client.delete_document,
-                selected_collection,
+                selected_collection.get(),
                 doc,
                 on_delete_document,
             )
@@ -229,7 +240,7 @@ def document_list_server(
     @reactive.effect
     def get_documents():
         get_documents_task(
-            selected_collection,
+            selected_collection.get(),
             page=current_page.get(),
             search=input.search(),
             sort=input.sort(),
@@ -238,7 +249,7 @@ def document_list_server(
 
     @reactive.effect
     def get_document_types():
-        get_document_types_task(selected_collection)
+        get_document_types_task(selected_collection.get())
 
     @reactive.effect
     @reactive.event(
