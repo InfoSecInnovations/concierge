@@ -1,4 +1,4 @@
-from shiny import module, reactive, render, ui, Inputs, Outputs, Session, req
+from shiny import module, reactive, render, ui, Inputs, Outputs, Session
 from .collection_document import document_ui, document_server
 from .document_item import DocumentItem
 from shabti_api_client import BaseShabtiClient
@@ -113,6 +113,8 @@ def document_list_server(
     total_documents_count: reactive.Value[int] = reactive.value(0)
     current_page: reactive.Value[int] = reactive.value(0)
     document_types: reactive.Value[list[str]] = reactive.value([])
+    print("document list server")
+    print(selected_collection)
 
     @reactive.extended_task
     async def get_document_types_task(collection_id: str):
@@ -131,6 +133,8 @@ def document_list_server(
         sort: str,
         filter_document_type: list[str],
     ):
+        print("get_documents_task")
+        print(collection_id)
         return await client.get_documents(
             collection_id,
             max_results=RESULTS_PER_PAGE,
@@ -224,7 +228,6 @@ def document_list_server(
 
     @reactive.effect
     def get_documents():
-        req(selected_collection)
         get_documents_task(
             selected_collection,
             page=current_page.get(),
@@ -235,7 +238,6 @@ def document_list_server(
 
     @reactive.effect
     def get_document_types():
-        req(selected_collection)
         get_document_types_task(selected_collection)
 
     @reactive.effect

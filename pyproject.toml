@@ -11,3 +11,8 @@ dependencies = [
     "pytest-asyncio~=1.1.0",
     "ruff~=0.12.11",
 ]
+
+[tool.uv.workspace]
+members = [
+    "shiny_demo_projects",
+]

@@ -1,5 +1,6 @@
 FROM astral/uv:python3.12-trixie-slim
 
+ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/
 WORKDIR /shabti_web/
 ENV UV_LINK_MODE=copy
