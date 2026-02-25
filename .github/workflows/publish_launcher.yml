@@ -8,8 +8,6 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
       - name: Install project
         run: bun install
       - name: Build Launcher Executable

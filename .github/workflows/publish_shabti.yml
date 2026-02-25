@@ -47,8 +47,6 @@ jobs:
           uv build
           uv publish
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
       - name: Install project
         run: bun install
       - name: Publish API Client
