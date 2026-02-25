@@ -22,11 +22,11 @@ jobs:
 
       # TODO: Code signing would go here
 
-      # - name: Get Launcher version
-      #   id: package-version
-      #   uses: martinbeentjes/npm-get-version-action@v1.3.1
-      #   with:
-      #     path: ./shabti_configurator
+      - name: Get Launcher version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@v1.3.1
+        with:
+          path: ./shabti_configurator
 
       - name: Get Current Release Files  
         uses: dsaltares/fetch-gh-release-asset@master
@@ -49,9 +49,9 @@ jobs:
           zip -j ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./unzipped/win/shabti_cli.exe
           zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./unzipped/linux/shabti_cli
           zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./unzipped/mac/shabti_cli
-      # - name: Release
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     files: ./dist/*.zip
-      #     tag_name: shabti_launcher:${{steps.package-version.outputs.current-version}}
-      #     target_commitish: ${{github.sha}}
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./dist/*.zip
+          tag_name: shabti_launcher:${{steps.package-version.outputs.current-version}}
+          target_commitish: ${{github.sha}}
