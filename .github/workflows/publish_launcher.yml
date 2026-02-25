@@ -8,7 +8,8 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
-      
+      - name: Install zip
+        uses: montudor/action-zip@v1
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
       - name: Install project
@@ -33,8 +34,7 @@ jobs:
         with:
           file: ".+\\.zip"
           regex: true
-      - name: Install zip
-        uses: montudor/action-zip@v1
+
       - name: Unzip previous files
         run: |
           mkdir -p ./unzipped/win
