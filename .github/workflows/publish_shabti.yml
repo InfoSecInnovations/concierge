@@ -12,8 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
       - name: Install Python 3.12
         run: uv python install 3.12
       - name: Publish shabti_util
@@ -107,5 +105,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./dist/*.zip
-          tag_name: shabti:${{steps.package-version.outputs.current-version}}
+          tag_name: shabti-v${{steps.package-version.outputs.current-version}}
           target_commitish: ${{github.sha}}
