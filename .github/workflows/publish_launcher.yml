@@ -32,7 +32,7 @@ jobs:
         with:
           file: "shabti_win.zip"
           regex: false
-          target: ./release_assets
+          target: ./release_assets/shabti_win.zip
       - name: Debug release files
         working-directory: ./release_assets
         run: ls -a
