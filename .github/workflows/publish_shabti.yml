@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  UV_PUBLISH_CHECK_URL: "https://pypi.org/pypi"
+  UV_PUBLISH_INDEX: pypi
 
 permissions:
   id-token: write  # Required for OIDC
@@ -20,6 +20,7 @@ jobs:
       - name: Publish shabti_util
         working-directory: ./python_packages/shabti_util
         run: |
+          echo "${UV_PUBLISH_INDEX}"
           uv build
           uv publish
       - name: Publish isi_util
