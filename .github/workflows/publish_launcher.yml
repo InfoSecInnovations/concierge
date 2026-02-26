@@ -25,11 +25,17 @@ jobs:
           PACKAGE_VERSION=$(cat ./shabti_configurator/package.json | jq '.version' | tr -d '"')
           echo "{current-version}={PACKAGE_VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Get Current Release Files  
+      - name: Create directory for release files
+        run: mkdir -p ./release_assets
+      - name: Get current release files  
         uses: dsaltares/fetch-gh-release-asset@master
         with:
           file: ".+\\.zip"
           regex: true
+          target: ./release_assets
+      - name: Debug release files
+        working-directory: ./release_assets
+        run: ls -a
 
       - name: Unzip previous files
         run: |
