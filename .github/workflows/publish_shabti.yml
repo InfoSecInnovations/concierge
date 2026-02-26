@@ -50,7 +50,7 @@ jobs:
         # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
         run: |
           bun run build
-          bunx publish-if-not-exists --access public
+          bun x publish-if-not-exists --access public
       - name: Build CLI Executable
         working-directory: ./shabti_cli
         run: |
