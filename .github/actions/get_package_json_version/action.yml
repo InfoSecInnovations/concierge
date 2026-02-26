@@ -1,0 +1,16 @@
+name: Get package.json version
+description: Get the version from a package.json file
+inputs:
+  path:
+    required: false
+    default: "."
+runs:
+  using: "composite"
+  steps:
+    - name: "Get version"
+      shell: "bash"
+      run: |
+        PACKAGE_VERSION=$(cat ${{inputs.path}}/shabti_configurator/package.json | jq '.version' | tr -d '"')
+        echo "package_version: ${PACKAGE_VERSION}"
+        echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+  

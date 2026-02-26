@@ -69,9 +69,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Get Shabti version
         id: package-version
-        run: |
-          PACKAGE_VERSION=$(cat ./package.json | jq '.version' | tr -d '"')
-          echo "{current-version}={PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/get_package_json_version
       - name: Build and push CPU Docker image
         uses: docker/build-push-action@v6
         with:

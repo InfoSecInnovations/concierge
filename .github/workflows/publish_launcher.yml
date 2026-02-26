@@ -21,10 +21,9 @@ jobs:
 
       - name: Get Launcher version
         id: package-version
-        run: |
-          PACKAGE_VERSION=$(cat ./shabti_configurator/package.json | jq '.version' | tr -d '"')
-          echo "package_version: ${PACKAGE_VERSION}"
-          echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
+        uses: ./.github/actions/get_package_json_version
+        with:
+          path: ./shabti_configurator
 
       - uses: ./.github/actions/get_previous_release_assets
 
