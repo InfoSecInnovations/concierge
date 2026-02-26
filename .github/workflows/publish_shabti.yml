@@ -95,9 +95,9 @@ jobs:
       - name: Zip executables
         run: | 
           mkdir -p dist
-          zip -j ./dist/shabti_win.zip .unzipped/win/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
-          zip -j ./dist/shabti_linux.zip .unzipped/linux/shabti ./shabti_cli/dist/linux/shabti_cli
-          zip -j ./dist/shabti_mac.zip .unzipped/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+          zip -j ./dist/shabti_win.zip ./unzipped/win/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./unzipped/linux/shabti ./shabti_cli/dist/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./unzipped/mac/shabti ./shabti_cli/dist/mac/shabti_cli
       - name: Release
         uses: softprops/action-gh-release@v2
         with:

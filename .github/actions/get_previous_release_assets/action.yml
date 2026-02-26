@@ -31,3 +31,4 @@ runs:
         unzip -qq ./release_assets/shabti_win.zip -d ./unzipped/win
         unzip -qq ./release_assets/shabti_mac.zip -d ./unzipped/mac
         unzip -qq ./release_assets/shabti_linux.zip -d ./unzipped/linux
+    
