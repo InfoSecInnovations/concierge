@@ -10,7 +10,7 @@ runs:
     - name: "Get version"
       shell: "bash"
       run: |
-        PACKAGE_VERSION=$(cat ${{inputs.path}}/shabti_configurator/package.json | jq '.version' | tr -d '"')
+        PACKAGE_VERSION=$(cat ${{inputs.path}}/package.json | jq '.version' | tr -d '"')
         echo "package_version: ${PACKAGE_VERSION}"
         echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
   
