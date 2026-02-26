@@ -4,10 +4,14 @@ inputs:
   path:
     required: false
     default: "."
+outputs:
+  current-version:
+    value: ${{steps.package-version.outputs.current-version}}
 runs:
   using: "composite"
   steps:
     - name: "Get version"
+      id: package-version
       shell: "bash"
       run: |
         PACKAGE_VERSION=$(cat ${{inputs.path}}/package.json | jq '.version' | tr -d '"')
