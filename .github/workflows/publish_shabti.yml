@@ -1,4 +1,4 @@
-name: Publish
+name: Publish Shabti
 
 on:
   workflow_dispatch:
@@ -95,19 +95,8 @@ jobs:
           context: ./docker_containers/shabti_web
           tags: infosecinnovations/shabti-web:${{steps.package-version.outputs.current-version}}
 
-      - name: Get Current Release Files  
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          file: ".+\\.zip"
-          regex: true
-      - name: Unzip previous files
-        run: |
-          mkdir -p ./unzipped/win
-          mkdir -p ./unzipped/linux
-          mkdir -p ./unzipped/mac
-          unzip -qq shabti_win.zip -d ./unzipped/win
-          unzip -qq shabti_mac.zip -d ./unzipped/mac
-          unzip -qq shabti_linux.zip -d ./unzipped/linux
+      - uses: ./.github/workflows/get_previous_release_assets.yml
+      
       - name: Zip executables
         run: | 
           mkdir -p dist
