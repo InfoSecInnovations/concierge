@@ -6,10 +6,10 @@ dependencies = [
     "humanize~=4.13.0",
     "shiny~=1.4.0",
     "shinyswatch~=0.9.0",
-    "shabti-util==0.3a2",
-    "shabti-types==0.1a7",
-    "shabti-keycloak==0.1a2",
-    "shabti-api-client==0.1a8",
+    "shabti-util==0.3a3",
+    "shabti-types==0.1a8",
+    "shabti-keycloak==0.1a3",
+    "shabti-api-client==0.1a9",
     "tqdm~=4.67.1",
 ]
 [tool.uv.sources]
