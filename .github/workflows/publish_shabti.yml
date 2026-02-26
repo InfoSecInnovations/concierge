@@ -3,6 +3,9 @@ name: Publish Shabti
 on:
   workflow_dispatch:
 
+env:
+  UV_PUBLISH_CHECK_URL: "https://pypi.org/pypi"
+
 permissions:
   id-token: write  # Required for OIDC
 
@@ -18,27 +21,27 @@ jobs:
         working-directory: ./python_packages/shabti_util
         run: |
           uv build
-          uv publish --check-url
+          uv publish
       - name: Publish isi_util
         working-directory: ./python_packages/isi_util
         run: |
           uv build
-          uv publish --check-url
+          uv publish
       - name: Publish shabti_api_client
         working-directory: ./python_packages/shabti_api_client
         run: |
           uv build
-          uv publish --check-url
+          uv publish
       - name: Publish shabti_keycloak
         working-directory: ./python_packages/shabti_keycloak
         run: |
           uv build
-          uv publish --check-url
+          uv publish
       - name: Publish shabti_types
         working-directory: ./python_packages/shabti_types
         run: |
           uv build
-          uv publish --check-url
+          uv publish
 
       - name: Install project
         run: bun install
