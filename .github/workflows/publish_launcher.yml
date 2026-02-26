@@ -42,9 +42,9 @@ jobs:
           mkdir -p ./unzipped/win
           mkdir -p ./unzipped/linux
           mkdir -p ./unzipped/mac
-          unzip -qq shabti_win.zip -d ./unzipped/win
-          unzip -qq shabti_mac.zip -d ./unzipped/mac
-          unzip -qq shabti_linux.zip -d ./unzipped/linux
+          unzip -qq ./release_assets/shabti_win.zip -d ./unzipped/win
+          unzip -qq ./release_assets/shabti_mac.zip -d ./unzipped/mac
+          unzip -qq ./release_assets/shabti_linux.zip -d ./unzipped/linux
       - name: Zip executables
         run: | 
           mkdir -p dist
