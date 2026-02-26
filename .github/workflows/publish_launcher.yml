@@ -25,7 +25,7 @@ jobs:
           PACKAGE_VERSION=$(cat ./shabti_configurator/package.json | jq '.version' | tr -d '"')
           echo "{current-version}={PACKAGE_VERSION}" >> $GITHUB_OUTPUT
 
-      - uses: ./.github/workflows/get_previous_release_assets.yml
+      - uses: ./.github/actions/get_previous_release_assets
 
       - name: Zip executables
         run: | 

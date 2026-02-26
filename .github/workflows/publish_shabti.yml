@@ -95,8 +95,8 @@ jobs:
           context: ./docker_containers/shabti_web
           tags: infosecinnovations/shabti-web:${{steps.package-version.outputs.current-version}}
 
-      - uses: ./.github/workflows/get_previous_release_assets.yml
-      
+      - uses: ./.github/actions/get_previous_release_assets
+
       - name: Zip executables
         run: | 
           mkdir -p dist
