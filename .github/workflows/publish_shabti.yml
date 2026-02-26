@@ -18,32 +18,27 @@ jobs:
         working-directory: ./python_packages/shabti_util
         run: |
           uv build
-          uv publish
-      - name: Publish shabti_util
-        working-directory: ./python_packages/shabti_util
-        run: |
-          uv build
-          uv publish
+          uv publish --check-url
       - name: Publish isi_util
         working-directory: ./python_packages/isi_util
         run: |
           uv build
-          uv publish
+          uv publish --check-url
       - name: Publish shabti_api_client
         working-directory: ./python_packages/shabti_api_client
         run: |
           uv build
-          uv publish
+          uv publish --check-url
       - name: Publish shabti_keycloak
         working-directory: ./python_packages/shabti_keycloak
         run: |
           uv build
-          uv publish
+          uv publish --check-url
       - name: Publish shabti_types
         working-directory: ./python_packages/shabti_types
         run: |
           uv build
-          uv publish
+          uv publish --check-url
 
       - name: Install project
         run: bun install
