@@ -1,10 +1,14 @@
-name: Publish
+name: Publish Shabti
 
 on:
   workflow_dispatch:
 
+env:
+  UV_PUBLISH_CHECK_URL: "https://pypi.org/simple"
+
 permissions:
   id-token: write  # Required for OIDC
+  contents: write
 
 jobs:
   publish:
@@ -12,15 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
       - name: Install Python 3.12
         run: uv python install 3.12
-      - name: Publish shabti_util
-        working-directory: ./python_packages/shabti_util
-        run: |
-          uv build
-          uv publish
       - name: Publish shabti_util
         working-directory: ./python_packages/shabti_util
         run: |
@@ -47,8 +44,6 @@ jobs:
           uv build
           uv publish
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
       - name: Install project
         run: bun install
       - name: Publish API Client
@@ -56,7 +51,7 @@ jobs:
         # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
         run: |
           bun run build
-          bunx publish-if-not-exists --access public
+          bun x publish-if-not-exists --access public
       - name: Build CLI Executable
         working-directory: ./shabti_cli
         run: |
@@ -73,7 +68,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
       - name: Get Shabti version
         id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
+        uses: ./.github/actions/get_package_json_version
       - name: Build and push CPU Docker image
         uses: docker/build-push-action@v6
         with:
@@ -95,30 +90,17 @@ jobs:
           context: ./docker_containers/shabti_web
           tags: infosecinnovations/shabti-web:${{steps.package-version.outputs.current-version}}
 
-      - name: Get Current Release Files  
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          file: ".+\\.zip"
-          regex: true
-      - name: Install zip
-        uses: montudor/action-zip@v1
-      - name: Unzip previous files
-        run: |
-          mkdir -p ./unzipped/win
-          mkdir -p ./unzipped/linux
-          mkdir -p ./unzipped/mac
-          unzip -qq shabti_win.zip -d ./unzipped/win
-          unzip -qq shabti_mac.zip -d ./unzipped/mac
-          unzip -qq shabti_linux.zip -d ./unzipped/linux
+      - uses: ./.github/actions/get_previous_release_assets
+
       - name: Zip executables
         run: | 
           mkdir -p dist
-          zip -j ./dist/shabti_win.zip .unzipped/windows/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
-          zip -j ./dist/shabti_linux.zip .unzipped/linux/shabti ./shabti_cli/dist/linux/shabti_cli
-          zip -j ./dist/shabti_mac.zip .unzipped/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+          zip -j ./dist/shabti_win.zip ./unzipped/win/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./unzipped/linux/shabti ./shabti_cli/dist/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./unzipped/mac/shabti ./shabti_cli/dist/mac/shabti_cli
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: ./dist/*.zip
-          tag_name: shabti:${{steps.package-version.outputs.current-version}}
+          tag_name: shabti-v${{steps.package-version.outputs.current-version}}
           target_commitish: ${{github.sha}}

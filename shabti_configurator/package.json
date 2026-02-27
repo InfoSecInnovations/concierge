@@ -33,5 +33,5 @@
 		"build_linux": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-linux-x64 --outfile dist/linux/shabti",
 		"build_mac": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-darwin-arm64 --outfile dist/mac/shabti"
 	},
-	"version": "0.1.0-alpha.0"
+	"version": "0.1.0-alpha.1"
 }

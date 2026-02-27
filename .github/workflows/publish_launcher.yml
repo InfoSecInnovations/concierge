@@ -1,19 +1,13 @@
-name: Publish
+name: Publish Launcher
 
 on:
   workflow_dispatch:
-    inputs:
-      releaseName:
-        description: "GitHub name for release"
 
 jobs:
   publish:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
-      
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
       - name: Install project
         run: bun install
       - name: Build Launcher Executable
@@ -27,25 +21,12 @@ jobs:
 
       - name: Get Launcher version
         id: package-version
-        uses: martinbeentjes/npm-get-version-action@v1.3.1
+        uses: ./.github/actions/get_package_json_version
         with:
           path: ./shabti_configurator
 
-      - name: Get Current Release Files  
-        uses: dsaltares/fetch-gh-release-asset@master
-        with:
-          file: ".+\\.zip"
-          regex: true
-      - name: Install zip
-        uses: montudor/action-zip@v1
-      - name: Unzip previous files
-        run: |
-          mkdir -p ./unzipped/win
-          mkdir -p ./unzipped/linux
-          mkdir -p ./unzipped/mac
-          unzip -qq shabti_win.zip -d ./unzipped/win
-          unzip -qq shabti_mac.zip -d ./unzipped/mac
-          unzip -qq shabti_linux.zip -d ./unzipped/linux
+      - uses: ./.github/actions/get_previous_release_assets
+
       - name: Zip executables
         run: | 
           mkdir -p dist
@@ -56,5 +37,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: ./dist/*.zip
-          tag_name: shabti_launcher:${{steps.package-version.outputs.current-version}}
+          tag_name: shabti_launcher-v${{steps.package-version.outputs.current-version}}
           target_commitish: ${{github.sha}}

@@ -206,7 +206,7 @@ console.log(`${packageJson.version}\n`);
 if (!devMode) {
 	const dockerComposeZip = await import("./assets/docker_compose.zip", {
 		with: { type: "file" },
-	});
+	}).then((file) => file.default);
 	// we need the compose files to be available outside of the executable bundle so the shell can use them
 	const buf = await file(dockerComposeZip).arrayBuffer();
 	const zip = new AdmZip(Buffer.from(buf));
