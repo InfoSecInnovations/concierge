@@ -25,4 +25,4 @@ RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject
 FROM ${ACCELERATION_TYPE} AS final
 COPY . /shabti/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked  --no-sources --no-dev
-RUN uv pip install -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache uv pip install -r requirements.txt
