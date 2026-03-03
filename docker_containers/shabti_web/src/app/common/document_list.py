@@ -106,7 +106,7 @@ def document_list_server(
     session: Session,
     client: BaseShabtiClient,
     selected_collection: reactive.Value[str],
-    current_scopes: reactive.Value[set[str]],
+    current_scopes: reactive.Value[set[str]] | None,
     ingestion_done_trigger: reactive.Value[int],
 ):
     current_docs: reactive.Value[list[DocumentItem]] = reactive.value([])
@@ -178,7 +178,7 @@ def document_list_server(
                 doc.element_id,
                 selected_collection.get(),
                 doc,
-                "update" in current_scopes.get(),
+                current_scopes is None or "update" in current_scopes.get(),
             )
             for doc in current_docs.get()
         ]
@@ -256,11 +256,31 @@ def document_list_server(
         input.search,
         input.sort,
         input.filter_document_type,
+        selected_collection,
         ignore_init=True,
         ignore_none=False,
     )
     def reset_current_page():
         current_page.set(0)
+
+    @reactive.effect
+    @reactive.event(selected_collection)
+    def refresh_module():
+        current_docs.set([])
+        total_results_count.set(0)
+        total_documents_count.set(0)
+
+    @reactive.effect
+    @reactive.event(ingestion_done_trigger)
+    def refresh_results():
+        get_document_types_task(selected_collection.get())
+        get_documents_task(
+            selected_collection.get(),
+            current_page.get(),
+            input.search(),
+            input.sort(),
+            input.filter_document_type(),
+        )
 
     @reactive.effect
     @reactive.event(

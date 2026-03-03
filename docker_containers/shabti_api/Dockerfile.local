@@ -30,6 +30,7 @@ RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject
 FROM ${ACCELERATION_TYPE} AS final
 COPY . /shabti/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
+RUN uv pip install -r local_requirements.txt
 
 # install packages so we can run pytest on them
 WORKDIR /python_packages/isi_util/

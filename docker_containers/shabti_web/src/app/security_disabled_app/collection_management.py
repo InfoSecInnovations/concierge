@@ -1,4 +1,4 @@
-from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
+from shiny import module, reactive, ui, render, Inputs, Outputs, Session
 from ..common.ingester import ingester_ui, ingester_server
 from ..common.collections_data import CollectionsData
 from shabti_api_client import ShabtiClient
@@ -88,13 +88,6 @@ def collection_management_server(
         else:
             selected_collection.set(None)
 
-    @reactive.effect
-    @reactive.event(
-        selected_collection,
-        ingestion_done_trigger,
-        ignore_none=False,
+    document_list_server(
+        "document_list", client, selected_collection, None, ingestion_done_trigger
     )
-    def on_collection_change():
-        collection_id = selected_collection.get()
-        req(collection_id)
-        document_list_server("document_list", client, collection_id, True)

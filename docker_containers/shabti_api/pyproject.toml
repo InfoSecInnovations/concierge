@@ -14,11 +14,7 @@ dependencies = [
     "python-json-logger~=3.3.0",
     "python-magic-bin~=0.4.14 ; sys_platform == 'win32'",
     "sentence-transformers~=5.1.0",
-    "unstructured[all-docs]~=0.18.14",
-    "isi-util==0.3a3",
-    "shabti-util==0.3a3",
-    "shabti-types==0.1a8",
-    "shabti-keycloak==0.1a3"
+    "unstructured[all-docs]~=0.18.14"
 ]
 [project.optional-dependencies]
 cu126 = [
@@ -42,10 +38,10 @@ conflicts = [
   ],
 ]
 [tool.uv.sources]
-isi-util = { path = "/python_packages/isi_util", editable = true }
-shabti-util = { path = "/python_packages/shabti_util", editable = true }
-shabti-types = { path = "/python_packages/shabti_types", editable = true }
-shabti-keycloak = { path = "/python_packages/shabti_keycloak", editable = true }
+# isi-util = { path = "/python_packages/isi_util", editable = true }
+# shabti-util = { path = "/python_packages/shabti_util", editable = true }
+# shabti-types = { path = "/python_packages/shabti_types", editable = true }
+# shabti-keycloak = { path = "/python_packages/shabti_keycloak", editable = true }
 torch = [
   { index = "pytorch-cu126", extra = "cu126" },
 ]
