@@ -19,7 +19,7 @@ def get_context_from_opensearch(
                 }
             }
         },
-        "_source": {"includes": ["page_id", "text", "doc_id"]},
+        "_source": {"includes": ["page_id", "text", "child_item_to_document"]},
     }
 
     response = client.search(body=query, index=collection_id)
@@ -36,14 +36,16 @@ def get_context_from_opensearch(
     doc_metadata = {}
 
     for value in page_metadata.values():
-        if value["doc_id"] not in doc_metadata:
-            doc_metadata[value["doc_id"]] = get_document(collection_id, value["doc_id"])
+        if value["child_item_to_document"]["parent"] not in doc_metadata:
+            doc_metadata[value["child_item_to_document"]["parent"]] = get_document(
+                collection_id, value["child_item_to_document"]["parent"]
+            )
 
     sources = []
 
     for hit in hits:
         page = page_metadata[hit["page_id"]]
-        doc = doc_metadata[page["doc_id"]]
+        doc = doc_metadata[page["child_item_to_document"]["parent"]]
         sources.append(
             {"page_metadata": page, "doc_metadata": {**doc, "document_id": doc["id"]}}
         )
