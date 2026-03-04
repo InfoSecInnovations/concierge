@@ -160,6 +160,13 @@ def collection_management_server(
         fetching_scopes.set(True)
         fetch_scopes(collection_id)
 
+    @reactive.effect
+    @reactive.event(ingestion_done_trigger)
+    def on_ingestion_done():
+        ui.update_accordion_panel(
+            "collection_management_accordion", "manage_documents", show=True
+        )
+
     document_list_server(
         "document_list",
         client,

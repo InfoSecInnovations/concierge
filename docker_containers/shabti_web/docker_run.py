@@ -20,6 +20,5 @@ if __name__ == "__main__":
         launch_browser=False,
         host="0.0.0.0",
         reload=is_dev,
-        log_level="debug",
         **args,
     )
