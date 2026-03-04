@@ -89,6 +89,11 @@ def collection_management_server(
             selected_collection.set(None)
 
     @reactive.effect
+    @reactive.event(input.delete, ignore_init=True)
+    def on_delete():
+        delete(selected_collection.get())
+
+    @reactive.effect
     @reactive.event(ingestion_done_trigger)
     def on_ingestion_done():
         ui.update_accordion_panel(
