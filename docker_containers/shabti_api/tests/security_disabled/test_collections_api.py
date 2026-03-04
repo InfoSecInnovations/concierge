@@ -59,7 +59,7 @@ async def test_insert_documents(shabti_client, shabti_collection_id):
 
 
 async def test_insert_urls(shabti_client, shabti_collection_id):
-    url = "https://example.com"
+    url = "https://example.org"
     response = shabti_client.post(
         f"/collections/{shabti_collection_id}/documents/urls", json=[url]
     )

@@ -14,7 +14,8 @@
 		"shabti_configurator/",
 		"shabti_configurator/client/",
 		"shabti_cli/",
-		"shabti_api_client_node/"
+		"shabti_api_client_node/",
+		"tests_docker_compose/"
 	],
 	"dependencies": {
 		"dotenv": "^17.2.2"

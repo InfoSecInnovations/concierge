@@ -289,7 +289,7 @@ async def test_cannot_ingest_document(shabti_user_client, shabti_collection_id):
     assert not any(doc.filename == filename for doc in docs.documents)
 
 
-url = "https://example.com"
+url = "https://example.org"
 
 
 async def ingest_url(shabti_user_client, shabti_collection_id):
