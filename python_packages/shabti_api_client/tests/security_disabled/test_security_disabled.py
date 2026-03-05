@@ -51,7 +51,7 @@ async def test_ingest_document(shabti_client, shabti_collection_id):
 
 async def test_ingest_url(shabti_client, shabti_collection_id):
     document_id = None
-    url = "https://example.org/"
+    url = "https://www.scrapethissite.com/pages/simple//"
     async for info in shabti_client.insert_urls(shabti_collection_id, [url]):
         document_id = info.document_id
     assert document_id

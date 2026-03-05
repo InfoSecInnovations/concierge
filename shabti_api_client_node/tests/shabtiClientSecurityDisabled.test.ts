@@ -6,7 +6,7 @@ import { afterEach } from "node:test";
 
 const filename = "test_doc.txt";
 const testDocPath = path.join(import.meta.dir, filename);
-const url = "https://example.org/";
+const url = "https://www.scrapethissite.com/pages/simple//";
 
 jest.setTimeout(-1);
 

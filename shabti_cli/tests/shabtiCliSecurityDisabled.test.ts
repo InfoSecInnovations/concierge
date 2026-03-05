@@ -61,7 +61,10 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				).toBeTrue();
 			});
 			test("ingest urls", async () => {
-				const urls = ["https://www.example.com", "https://example.org"];
+				const urls = [
+					"https://www.scrapethissite.com/pages/forms/",
+					"https://www.scrapethissite.com/pages/simple/",
+				];
 				const program = await buildProgram();
 				await program.parseAsync(
 					["ingest", "urls", ...urls, "--collection", collectionId],

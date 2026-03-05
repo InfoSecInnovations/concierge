@@ -402,7 +402,7 @@ async def test_cannot_ingest_document(user, shabti_collection_id, shabti_client)
     assert not any(doc.filename == filename for doc in docs.documents)
 
 
-url = "https://example.org"
+url = "https://www.scrapethissite.com/pages/simple/"
 
 
 def ingest_url_api(user, collection_id, shabti_client):

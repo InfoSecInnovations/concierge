@@ -52,7 +52,9 @@ try {
 		.env({ ...process.env, FORCE_COLOR: "1" });
 
 	await runSecurityTests();
-} catch {}
+} catch (e) {
+	console.error(e);
+}
 
 await mkdir("./processed_test_runs", { recursive: true });
 const filename = `shabti_test_run_${new Date().toISOString().replace(/:/g, "_")}`;
