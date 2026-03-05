@@ -7,7 +7,9 @@ import { afterEach, beforeEach } from "node:test";
 
 const filename = "test_doc.txt";
 const testDocPath = path.join(import.meta.dir, filename);
-const url = "https://www.scrapethissite.com/pages/simple//";
+const promptFilename = "test_doc.txt";
+const promptDocPath = path.join(import.meta.dir, promptFilename);
+const url = "https://www.scrapethissite.com/pages/simple/";
 
 jest.setTimeout(-1);
 

@@ -700,3 +700,62 @@ async def test_cannot_delete_collection_api(user, shabti_collection_id, shabti_c
         ),
         None,
     )
+
+
+# we can't really test the output of the prompter but we can check whether the user is able to use a specific collection to prompt or not
+@pytest.mark.parametrize(
+    "user,shabti_collection_id",
+    [
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
+    ],
+    indirect=["shabti_collection_id"],
+)
+async def test_can_prompt(
+    user, shabti_collection_id, shabti_client, shabti_prompt_document_id
+):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.post(
+        "/prompt",
+        json={
+            "collection_id": shabti_collection_id,
+            "task": "question",
+            "user_input": "What does the word prompting mean?",
+        },
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    "user,shabti_collection_id",
+    [
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
+    ],
+    indirect=["shabti_collection_id"],
+)
+async def test_cannot_prompt(
+    user, shabti_collection_id, shabti_client, shabti_prompt_document_id
+):
+    keycloak_client = get_keycloak_client()
+    token = keycloak_client.token(user, "test")
+    response = shabti_client.post(
+        "/prompt",
+        json={
+            "collection_id": shabti_collection_id,
+            "task": "question",
+            "user_input": "What does the word prompting mean?",
+        },
+        headers={"Authorization": f"Bearer {token['access_token']}"},
+    )
+    assert response.status_code == 403

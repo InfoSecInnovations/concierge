@@ -97,3 +97,15 @@ async def test_opensearch_status(shabti_client):
 
 async def test_api_status(shabti_client):
     assert await shabti_client.api_status()
+
+
+# if nothing errors the test will pass
+async def test_prompting(shabti_client, shabti_collection_id):
+    filename = "prompt_test.md"
+    file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
+    async for info in shabti_client.insert_files(shabti_collection_id, [file_path]):
+        pass
+    async for response in shabti_client.prompt(
+        shabti_collection_id, "What does the word prompting mean?", "question"
+    ):
+        pass

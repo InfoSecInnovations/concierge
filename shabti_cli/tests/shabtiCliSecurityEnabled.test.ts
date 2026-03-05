@@ -115,6 +115,27 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					docs.documents.map((document) => document.filename),
 				).toContainValues(directoryFiles);
 			});
+			test("prompt", async () => {
+				const filename = "prompt_test.md";
+				const filePath = path.join(import.meta.dir, filename);
+				const client = await getAuthClient();
+				for await (const item of await client.insertFiles(collectionId, [
+					filePath,
+				])) {
+				}
+				const program = await buildProgram();
+				await program.parseAsync(
+					[
+						"prompt",
+						"What does the word prompting mean?",
+						"--collection",
+						collectionId,
+						"--task",
+						"question",
+					],
+					{ from: "user" },
+				);
+			});
 			describe("CLI - Security enabled Shabti instance - tests with document IDs", () => {
 				let documentIds: string[];
 				beforeEach(async () => {

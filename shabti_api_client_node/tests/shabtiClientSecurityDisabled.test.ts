@@ -6,7 +6,9 @@ import { afterEach } from "node:test";
 
 const filename = "test_doc.txt";
 const testDocPath = path.join(import.meta.dir, filename);
-const url = "https://www.scrapethissite.com/pages/simple//";
+const promptFilename = "test_doc.txt";
+const promptDocPath = path.join(import.meta.dir, promptFilename);
+const url = "https://www.scrapethissite.com/pages/simple/";
 
 jest.setTimeout(-1);
 
@@ -82,6 +84,19 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 							document.source == url && document.documentId == docId,
 					),
 				).toBeTrue();
+			});
+			test("prompt", async () => {
+				const client = getClient();
+				for await (const item of await client.insertFiles(collectionId, [
+					promptDocPath,
+				])) {
+				}
+				for await (const item of await client.prompt(
+					collectionId,
+					"What does the word prompting mean?",
+					"question",
+				)) {
+				}
 			});
 			describe("Node Client - Security disabled Shabti instance - tests with document ID", () => {
 				let documentId: string;

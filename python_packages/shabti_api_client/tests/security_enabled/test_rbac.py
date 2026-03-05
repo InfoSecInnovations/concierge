@@ -440,3 +440,47 @@ async def test_cannot_delete_collection(shabti_user_client, shabti_collection_id
         ),
         None,
     )
+
+
+# we can only really check that prompting doesn't error
+@pytest.mark.parametrize(
+    "shabti_user_client,shabti_collection_id",
+    [
+        ("testadmin", {"username": "testadmin", "location": "shared"}),
+        ("testadmin", {"username": "testadmin", "location": "private"}),
+        ("testadmin", {"username": "testprivate", "location": "private"}),
+        ("testsharedread", {"username": "testadmin", "location": "shared"}),
+        ("testshared", {"username": "testadmin", "location": "shared"}),
+        ("testprivate", {"username": "testprivate", "location": "private"}),
+    ],
+    indirect=True,
+)
+async def test_can_prompt(
+    shabti_user_client, shabti_collection_id, shabti_prompt_document_id
+):
+    async for response in shabti_user_client.prompt(
+        shabti_collection_id, "What does the word prompting mean?", "question"
+    ):
+        pass
+
+
+@pytest.mark.parametrize(
+    "shabti_user_client,shabti_collection_id",
+    [
+        ("testsharedread", {"username": "testadmin", "location": "private"}),
+        ("testshared", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "private"}),
+        ("testprivate", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "shared"}),
+        ("testnothing", {"username": "testadmin", "location": "private"}),
+    ],
+    indirect=True,
+)
+async def test_cannot_prompt(
+    shabti_user_client, shabti_collection_id, shabti_prompt_document_id
+):
+    with pytest.raises(ShabtiAuthenticationError):
+        async for response in shabti_user_client.prompt(
+            shabti_collection_id, "What does the word prompting mean?", "question"
+        ):
+            pass

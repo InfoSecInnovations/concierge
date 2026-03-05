@@ -8,6 +8,10 @@ from .lib import get_admin_client
 
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
+prompt_filename = "test_doc.txt"
+prompt_file_path = os.path.join(
+    os.path.dirname(__file__), "..", "assets", prompt_filename
+)
 
 
 @pytest_asyncio.fixture(scope="session", loop_scope="session", autouse=True)
@@ -57,5 +61,14 @@ async def shabti_document_id(shabti_collection_id):
     client = await get_admin_client()
     document_id = None
     async for info in client.insert_files(shabti_collection_id, [file_path]):
+        document_id = info.document_id
+    yield document_id
+
+
+@pytest_asyncio.fixture(scope="function")
+async def shabti_prompt_document_id(shabti_collection_id):
+    client = await get_admin_client()
+    document_id = None
+    async for info in client.insert_files(shabti_collection_id, [prompt_file_path]):
         document_id = info.document_id
     yield document_id
