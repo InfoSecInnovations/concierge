@@ -346,6 +346,68 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					},
 				);
 			});
+			describe("Node Client - Security enabled Shabti instance - tests with prompting document ID", () => {
+				let documentId: string;
+				const promptDocumentIdFixture = (owner, location) => {
+					collectionIdFixture(owner, location);
+					beforeEach(async () => {
+						for await (const item of await getAdminClient().then((client) =>
+							client.insertFiles(collectionId, [promptDocPath]),
+						)) {
+							documentId = item.documentId;
+						}
+					});
+				};
+				const canPromptUsers = [
+					["testadmin", "testadmin", "shared"],
+					["testadmin", "testadmin", "private"],
+					["testadmin", "testprivate", "private"],
+					["testsharedread", "testadmin", "shared"],
+					["testshared", "testadmin", "shared"],
+					["testprivate", "testprivate", "private"],
+				];
+				describe.each(canPromptUsers)(
+					"Node Client - Security enabled Shabti instance - users can prompt",
+					(username, owner, location) => {
+						promptDocumentIdFixture(owner, location);
+						test(`user ${username} cannot delete document from ${owner}'s ${location} collection`, async () => {
+							const userClient = await getClientForUser(username);
+							for await (const item of await userClient.prompt(
+								collectionId,
+								"What does the word prompting mean?",
+								"question",
+							)) {
+							}
+						});
+					},
+				);
+				const cannotPromptUsers = [
+					["testsharedread", "testadmin", "private"],
+					["testshared", "testadmin", "private"],
+					["testprivate", "testadmin", "private"],
+					["testprivate", "testadmin", "shared"],
+					["testnothing", "testadmin", "shared"],
+					["testnothing", "testadmin", "private"],
+				];
+				describe.each(cannotPromptUsers)(
+					"Node Client - Security enabled Shabti instance - users cannot prompt",
+					(username, owner, location) => {
+						promptDocumentIdFixture(owner, location);
+						test(`user ${username} cannot delete document from ${owner}'s ${location} collection`, async () => {
+							const userClient = await getClientForUser(username);
+							expect(async () => {
+								for await (const item of await userClient.prompt(
+									collectionId,
+									"What does the word prompting mean?",
+									"question",
+								)) {
+								}
+							}).toThrow();
+						});
+					},
+				);
+			});
+
 			const canDeleteCollectionUsers = [
 				["testadmin", "testadmin", "shared"],
 				["testadmin", "testadmin", "private"],
