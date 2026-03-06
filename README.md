@@ -57,6 +57,16 @@ As we are a cybersecurity company, security considerations are driving the devel
 
 See the [dedicated guide](Security_and_RBAC_Features.md) about using Shabti with security enabled.
 
+## Known Issues
+
+### MacOS executable will not run
+
+We do not yet have code signing configured for MacOS so it will not recognize Shabti as a legitimate application. It is possible to bypass Gatekeeper if you wish to run Shabti anyway, but we have found that certain MacOS versions don't appear to "officially" support doing this.
+
+### Ingesting documents appears to hang for a while
+
+While the Unstructured backend provides a huge improvement to the variety of files Shabti can ingest, it does have a rather slow startup time during which the ingesting progress appears to be stuck. Please be patient, once it has initialized it will start loading documents, and subsequent runs appear to happen faster once it is "warmed up".
+
 ## Troubleshooting
 
 ### Shabti API is down
