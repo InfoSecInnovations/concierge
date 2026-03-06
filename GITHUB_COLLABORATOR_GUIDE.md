@@ -17,4 +17,4 @@ Keycloak requires policies and other JavaScript providers to be zipped to a `.ja
 
 ## Versioning
 
-See [Versioning](VERSIONING.md)
+See [Versioning](docs/developer/VERSIONING.md)

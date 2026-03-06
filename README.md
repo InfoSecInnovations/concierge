@@ -55,7 +55,7 @@ Once you have completed the installation process, Shabti will be running on loca
 
 As we are a cybersecurity company, security considerations are driving the development of Shabti. You can just run on a local machine without any security features if that suits your needs, but if you need an enterprise solution that can run LLM tools while having full control of the data being fed into them, Shabti's security features may well be a good fit for you! We have built our Identity and Access Management solution on top of Keycloak, which is a very flexible tool allowing you to connect to existing user accounts from the vast majority of providers. We provide an extensible Role-Based Access Control configuration so you can manage how your users are able to access the data ingested into Shabti.
 
-See the [dedicated guide](docs/Security_and_RBAC_Features.md) about using Shabti with security enabled.
+See the [dedicated guide](docs/user/Security_and_RBAC_Features.md) about using Shabti with security enabled.
 
 ## Known Issues
 
