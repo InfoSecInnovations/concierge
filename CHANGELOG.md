@@ -11,7 +11,12 @@
 - Documents can be ingested from a zip file.
 - Much more extensive automated tests
 
-## 0.7.0 - TBD
+### Known Issues
+
+- Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work.
+- Unstructured has quite a slow startup time, ingesting documents can appear to be stuck for a while before the progress bar starts.
+
+## 0.7.0
 
 We skipped a couple of versions because we ended up working concurrently on some features from our planned 0.5, 0.6 and 0.7 releases. We hope you enjoy this big release that brings some of the most important features to Shabti/Concierge!
 

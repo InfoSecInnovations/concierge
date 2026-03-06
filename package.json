@@ -20,5 +20,5 @@
 	"dependencies": {
 		"dotenv": "^17.2.2"
 	},
-	"version": "0.8.0-alpha.0"
+	"version": "0.8.0-alpha.1"
 }

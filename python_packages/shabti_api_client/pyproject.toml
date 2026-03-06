@@ -1,6 +1,6 @@
 [project]
 name = "shabti-api-client"
-version = "0.1a9"
+version = "0.1a10"
 requires-python = ">=3.12"
 dependencies = [
   "httpx",
