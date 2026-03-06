@@ -1,6 +1,6 @@
 services:
   opensearch-node-base:
-    image: opensearchproject/opensearch:latest # Specifying the latest available image - modify if you want a specific version
+    image: opensearchproject/opensearch:3.5.0
     container_name: opensearch-node1
     environment:
       - cluster.name=opensearch-cluster # Name the cluster

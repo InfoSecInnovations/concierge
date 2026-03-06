@@ -1,7 +1,7 @@
 services:
   ollama-cpu:
     container_name: ollama
-    image: ollama/ollama:latest
+    image: ollama/ollama:0.17.7
     environment:
       - OLLAMA_KEEP_ALIVE=-1
     ports:
