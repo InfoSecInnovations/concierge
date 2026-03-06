@@ -55,6 +55,27 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 					owner,
 				),
 			);
+		const userInfoUsers = [
+			["testadmin", "collection_admin"],
+			["testshared", "shared_read_write"],
+			["testprivate", "private_collection"],
+			["testsharedread", "shared_read"],
+			["testnothing", null],
+		];
+		test.each(userInfoUsers)(
+			"user %p has correct info",
+			async (username, role) => {
+				const client = await getClientForUser(username);
+				const info = await client.getUserInfo();
+				expect(info.preferred_username).toEqual(username);
+				if (!role) expect(info).not.toContainKey("resource_access");
+				else
+					expect(info.resource_access["shabti-auth"]["roles"]).toContainValue(
+						role,
+					);
+			},
+		);
+
 		const canCreateCollectionUsers = [
 			["testadmin", "private"],
 			["testadmin", "shared"],
@@ -174,6 +195,102 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 								(collection) => collection.collectionId == collectionId,
 							),
 						).toBeFalse();
+					});
+				},
+			);
+			const allPermissions = [
+				"collection:shared:create",
+				"collection:private:assign",
+				"delete",
+				"collection:private:create",
+				"update",
+				"read",
+			];
+			const userPermissionMappings = [
+				[
+					"testadmin",
+					[
+						"collection:shared:create",
+						"collection:private:assign",
+						"delete",
+						"collection:private:create",
+						"update",
+						"read",
+					],
+					"testadmin",
+					"shared",
+				],
+				[
+					"testshared",
+					["collection:shared:create", "delete", "update", "read"],
+					"testshared",
+					"shared",
+				],
+				[
+					"testprivate",
+					["collection:private:create", "delete", "update", "read"],
+					"testprivate",
+					"private",
+				],
+				["testsharedread", ["read"], "testadmin", "shared"],
+				["testnothing", [], "testadmin", "shared"],
+			];
+			describe.each(userPermissionMappings)(
+				"Node Client - Security enabled Shabti instance - get user permissions",
+				async (
+					username: string,
+					permissions: string[],
+					owner: string,
+					location: string,
+				) => {
+					collectionIdFixture(owner, location); // we need a collection to exist for all the permissions to appear
+					test(`user ${username} has correct permissions`, async () => {
+						const client = await getClientForUser(username);
+						const userPermissions = await client.getPermissions();
+						for (const permission of allPermissions) {
+							if (permissions.includes(permission)) {
+								expect(userPermissions).toContain(permission);
+							} else {
+								expect(userPermissions).not.toContain(permission);
+							}
+						}
+					});
+				},
+			);
+			const allScopes = ["read", "update", "delete"];
+			const userCollectionScopeMappings = [
+				["testadmin", "testadmin", "shared", ["read", "update", "delete"]],
+				["testadmin", "testadmin", "private", ["read", "update", "delete"]],
+				["testadmin", "testprivate", "private", ["read", "update", "delete"]],
+				["testsharedread", "testadmin", "shared", ["read"]],
+				["testshared", "testadmin", "shared", ["read", "update", "delete"]],
+				["testprivate", "testprivate", "private", ["read", "update", "delete"]],
+				["testsharedread", "testadmin", "private", []],
+				["testshared", "testadmin", "private", []],
+				["testprivate", "testadmin", "private", []],
+				["testprivate", "testadmin", "shared", []],
+				["testnothing", "testadmin", "shared", []],
+				["testnothing", "testadmin", "private", []],
+			];
+			describe.each(userCollectionScopeMappings)(
+				"Node Client - Security enabled Shabti instance - test collection scopes",
+				(
+					username: string,
+					owner: string,
+					location: string,
+					scopes: string[],
+				) => {
+					collectionIdFixture(owner, location);
+					test(`user ${username} has correct scopes for ${owner}'s ${location} collection`, async () => {
+						const client = await getClientForUser(username);
+						const userScopes = await client.getCollectionScopes(collectionId);
+						for (const scope of allScopes) {
+							if (scopes.includes(scope)) {
+								expect(userScopes).toContain(scope);
+							} else {
+								expect(userScopes).not.toContain(scope);
+							}
+						}
 					});
 				},
 			);
