@@ -1,4 +1,5 @@
 {
+	"name": "tests-docker-compose",
 	"devDependencies": {
 		"@types/bun": "latest"
 	},
