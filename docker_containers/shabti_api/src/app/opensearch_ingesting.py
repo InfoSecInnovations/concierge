@@ -1,5 +1,5 @@
 from opensearchpy import helpers
-from langchain.text_splitter import SentenceTransformersTokenTextSplitter
+from langchain_text_splitters import SentenceTransformersTokenTextSplitter
 from .embeddings import create_embeddings
 from ..loaders.base_loader import ShabtiDocument
 from .opensearch import get_client, delete_opensearch_document

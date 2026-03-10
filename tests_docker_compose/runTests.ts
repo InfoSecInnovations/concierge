@@ -47,7 +47,7 @@ try {
 			continue;
 		}
 	}
-	await $`bun test --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_disabled.xml`
+	await $`bun test --bail --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_disabled.xml`
 		.cwd("..")
 		.env({ ...process.env, FORCE_COLOR: "1" });
 

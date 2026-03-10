@@ -1,20 +1,21 @@
 [project]
 name = "shabti-api"
 version = "0.1.0"
-requires-python = ">=3.12, <3.13"
+requires-python = ">=3.13, <3.14"
 dependencies = [
-    "beautifulsoup4~=4.13.5",
+    "beautifulsoup4~=4.14.3",
     "configobj~=5.0.9",
     "fastapi[standard]~=0.119.0",
-    "langchain~=0.3.27",
-    "langchain-community~=0.3.29",
-    "langchain-unstructured~=0.1.6",
+    "langchain~=1.2.10",
+    "langchain-community~=0.4.1",
+    "langchain-unstructured~=1.0.1",
+    "langchain-text-splitters~=1.1.1",
     "lxml~=6.0.1",
     "opensearch-py~=3.0.0",
     "python-json-logger~=3.3.0",
     "python-magic-bin~=0.4.14 ; sys_platform == 'win32'",
-    "sentence-transformers~=5.1.0",
-    "unstructured[all-docs]~=0.18.14"
+    "sentence-transformers~=5.2.3",
+    "unstructured[all-docs]~=0.21.5"
 ]
 [project.optional-dependencies]
 cu126 = [
