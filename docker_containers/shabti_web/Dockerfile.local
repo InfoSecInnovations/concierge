@@ -1,4 +1,4 @@
-FROM astral/uv:python3.12-trixie-slim
+FROM astral/uv:0.10-python3.13-trixie-slim
 
 COPY --from=python_packages ./shabti_util /python_packages/shabti_util/
 COPY --from=python_packages ./shabti_types /python_packages/shabti_types/

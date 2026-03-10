@@ -17,21 +17,16 @@ export const RelaunchForm = async (props: {
 				></input>
 				<label for="launch_with_gpu">Enable GPU Acceleration</label>
 			</p>
-			<button type="submit">Launch Shabti</button>
-			{props.devMode &&
-				(props.localIsRunning ? (
-					<>
-						<button type="submit" name="environment" value="stop_local">
-							Stop Docker Configuration for Local Development
-						</button>
-					</>
-				) : (
-					<>
-						<button type="submit" name="environment" value="local">
-							Launch Docker Configuration for Local Development
-						</button>
-					</>
-				))}
+			{(!props.devMode || !props.localIsRunning) && (
+				<button type="submit">Launch Shabti</button>
+			)}
+			{props.devMode && props.localIsRunning && (
+				<>
+					<button type="submit" name="environment" value="stop_local">
+						Stop Docker Configuration for Local Development
+					</button>
+				</>
+			)}
 		</form>
 	);
 };

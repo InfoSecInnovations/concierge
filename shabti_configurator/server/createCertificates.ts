@@ -112,7 +112,7 @@ export default async (certDir: string) => {
 			},
 			{
 				name: "keyUsage",
-				keyCertSign: true,
+				keyCertSign: false,
 				digitalSignature: true,
 				nonRepudiation: true,
 				keyEncipherment: true,

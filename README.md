@@ -91,7 +91,7 @@ Please create an issue [here](https://github.com/InfoSecInnovations/concierge/is
 
 The ones listed at the top of this page, and:
 - **Bun >= 1.3.1** - the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
-- **uv >= 0.8.15** - most of the Python code runs in Docker containers now, however we also use Python to configure the pre-commit hooks for formatting. We're using Python through uv as it makes it easier to manage the Python executables and virtual environments in our experience.
+- **uv >= 0.10.0, Python 3.13** - most of the Python code runs in Docker containers now, however we also use Python to configure the pre-commit hooks for formatting. We're using Python through uv as it makes it easier to manage the Python executables and virtual environments in our experience.
 
 ### Installation
 

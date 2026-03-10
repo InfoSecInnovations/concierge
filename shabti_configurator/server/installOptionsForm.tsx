@@ -196,17 +196,6 @@ export const InstallOptionsForm = async (props: {
 			<button type="submit" id="install_submit" class="install_button">
 				Start Installation!
 			</button>
-			{props.devMode && (
-				<button
-					type="submit"
-					id="install_submit_dev"
-					class="install_button"
-					name="dev_mode"
-					value="True"
-				>
-					Install Development Configuration
-				</button>
-			)}
 		</form>
 	);
 };

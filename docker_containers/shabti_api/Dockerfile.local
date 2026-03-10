@@ -1,6 +1,6 @@
 ARG ACCELERATION_TYPE=cpu
 
-FROM astral/uv:python3.12-trixie-slim AS base
+FROM astral/uv:0.10-python3.13-trixie-slim AS base
 
 COPY --from=python_packages ./isi_util /python_packages/isi_util/
 COPY --from=python_packages ./shabti_util /python_packages/shabti_util/

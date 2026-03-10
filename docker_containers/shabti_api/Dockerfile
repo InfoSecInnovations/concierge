@@ -1,6 +1,6 @@
 ARG ACCELERATION_TYPE=cpu
 
-FROM astral/uv:python3.12-trixie-slim AS base
+FROM astral/uv:0.10-python3.13-trixie-slim AS base
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \

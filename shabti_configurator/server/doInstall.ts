@@ -18,10 +18,6 @@ export default async function* (
 	defaultVersion: string,
 	installVenv = true,
 ) {
-	const environment =
-		options.get("dev_mode")?.toString() == "True"
-			? "development"
-			: "production";
 	// we keep track of the environment variables so we can write to the .env file and the process environment as needed
 	const envs: { [key: string]: string } = {};
 	const updateEnv = () => {
@@ -32,6 +28,7 @@ export default async function* (
 	envs.WEB_PORT = options.get("web-port")?.toString() || "15130";
 	envs.API_HOST = options.get("api-host")?.toString() || "localhost";
 	envs.API_PORT = options.get("api-port")?.toString() || "15131";
+	yield logMessage(`installing Shabti version: ${selectedVersion}`);
 	const securityLevel = options.get("security_level")?.toString();
 	if (securityLevel && securityLevel != "none") {
 		yield logMessage("configuring security...");
@@ -82,7 +79,7 @@ export default async function* (
 		envs.SHABTI_SECURITY_ENABLED = "False";
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-blank.yml";
 	}
-	envs.ENVIRONMENT = environment;
+	envs.ENVIRONMENT = selectedVersion == "local" ? "development" : "production";
 	envs.SHABTI_VERSION =
 		selectedVersion == "local"
 			? (await getCurrentVersion()) || defaultVersion
@@ -101,8 +98,8 @@ export default async function* (
 	yield logMessage(
 		"launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",
 	);
-	if (environment == "development") {
-		await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull`;
+	if (selectedVersion == "local") {
+		await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull --ignore-buildable`;
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml build`;
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`;
 		if (installVenv) {
@@ -134,7 +131,7 @@ export default async function* (
 	);
 	// TODO use options.get("language_model")
 	await $`docker exec ollama ollama pull mistral`;
-	if (environment == "development") {
+	if (selectedVersion == "local") {
 		// in the development environment we stop the containers as the expectation is that they will be run in watch mode
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml stop`;
 	}

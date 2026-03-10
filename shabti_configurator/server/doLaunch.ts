@@ -22,11 +22,12 @@ export default async function* (
 	}
 	const envs = envfile.parse(await Bun.file(getEnvPath()).text());
 	envs.SHABTI_COMPUTE = options.has("use_gpu") ? "cuda" : "cpu";
+	const isLocal = envs.SHABTI_LOCAL_VERSION == "True";
 	yield logMessage(
 		`Launching Shabti ${envs.SHABTI_COMPUTE == "cuda" ? "with" : "without"} GPU acceleration.`,
 	);
 	await Bun.write(getEnvPath(), envfile.stringify(envs));
-	if (environment == "local") {
+	if (isLocal) {
 		if (state.watchProcess) {
 			yield logMessage(
 				"Local Docker development configuration already running!",
