@@ -1,9 +1,12 @@
 # Changelog
 
-## 0.8.0
+## 0.8.0 - TBD
+
+Due to having several tasks ongoing simultaneously we've been unable to release the previous versions, but you can finally get your hands on a greatly upgraded version of Shabti (previously known as Concierge)! See also 0.7.0 changes below for the full list since the last official release.
 
 ### Changes
 
+- The project is now called Shabti
 - Added Unstructured.IO document processing solution to Shabti's dependencies. This allows you to load many types of document out of the box including Microsoft Office and open document formats, but also images of text using its built-in OCR capabilities! Unfortunately this does make the Docker image quite a bit larger again, but we think it's worth it for the extra functionality.
 - The development environment has been reworked to only support running the code within Docker. It was already tricky to support running the project on the user's local system, but the addition of Unstructured has increased the dependencies which need to be installed. On top of that there were still issues relating to the Python version available on the user's machine. Running in Docker ensures that the code runs exactly as it will in production. The development environment uses Docker Compose's watch feature to sync changes between the directory containing the code and the Docker containers.
 - Document metadata has been streamlined into a single format, this greatly simplifies the schema and queries in OpenSearch and makes it much simpler to handle multiple types of document.
@@ -16,13 +19,10 @@
 - Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work.
 - Unstructured has quite a slow startup time, ingesting documents can appear to be stuck for a while before the progress bar starts.
 
-## 0.7.0
-
-We skipped a couple of versions because we ended up working concurrently on some features from our planned 0.5, 0.6 and 0.7 releases. We hope you enjoy this big release that brings some of the most important features to Shabti/Concierge!
+## 0.7.0 - rolled into 0.8.0 release
 
 ### Changes
 
-- The project is now called Shabti,
 - RBAC is here. Shabti can optionally be configured to use Keycloak to handle user accounts and permissions. You can keep using it without user accounts if you're just using it for personal use on a local machine. We imagine RBAC to be useful in an enterprise setting with multiple users being able to access the instance. Please let us know if you like this feature, and what additional controls we could ship with it.
 - The installer script has been replaced by an executable file available for Windows, Linux and MacOS. This executable serves up a web UI to enable you to configure Shabti locally or remotely. This should make it a lot easier to get Shabti up and running, we felt that the text based installer was no longer practical and it was running into issues with different OSes and Python versions.
 - The backend code has been moved to a REST API so you can integrate Shabti into your own stack or build your own front end if you wish. We have provided Python and Node.js client packages to provide a more streamlined experience calling the API.

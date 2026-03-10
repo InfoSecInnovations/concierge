@@ -11,7 +11,7 @@ Shabti is a local and modular RAG framework still in alpha.
 
 Built with simplicy and security in mind, it has some features we love -- and hope you do too!
 * The quick install method is so easy.
-* Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use.
+* Loading data: Upload documents or point to a URL, click the ingest button... and the data is there for your use.
 * Tasks: you can change what the AI can do for you via dropdowns.
 
 ## Dependencies ##  
@@ -49,7 +49,7 @@ Note that the installer launches all the requirements for you, you generally won
 
 ## Usage
 
-Once you have completed the installation process, Shabti will be running on localhost:15130 or the host and port you selected during setup. It can take a little while for the containers to be ready after install or relaunch, especially on the first launch as the API needs to pull the embeddings model.
+Once you have completed the installation process, Shabti will be running on `localhost:15130` or the host and port you selected during setup. It can take a little while for the containers to be ready after install or relaunch, especially on the first launch as the API needs to pull the embeddings model. If you chose to enable security you will need to access it using `https://` at the start of the address.
 
 ## Using Security Features
 
@@ -90,8 +90,8 @@ Please create an issue [here](https://github.com/InfoSecInnovations/concierge/is
 ### Dependencies
 
 The ones listed at the top of this page, and:
-- **Python 3.12** the application code is in Python so unless you intend to only run inside Docker, you'll need this
-- **Bun 1.3.1** the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
+- **Bun >= 1.3.1** - the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
+- **uv >= 0.8.15** - most of the Python code runs in Docker containers now, however we also use Python to configure the pre-commit hooks for formatting. We're using Python through uv as it makes it easier to manage the Python executables and virtual environments in our experience.
 
 ### Installation
 
@@ -103,40 +103,23 @@ do `bun install` in the repository root. This will set up all the JavaScript pro
 
 `cd shabti_configurator` to go to the configurator directory.
 
-`bun run dev_install` will launch the web server in dev mode which provides additional install and launch options compared to the distributed executable. Once the server is running go to http://localhost:3000 to see the configuration options. Click the "Install Development Configuration" button to install the dependencies in a way which will allow you to run local code with your changes.
+`bun run dev_install` will launch the web server in dev mode which provides additional install and launch options compared to the distributed executable. Once the server is running go to http://localhost:3000 to see the configuration options. If you select the `local` version in the version dropdown the development environment will be configured to use the files on your machine to run Shabti, if you select another version it will pull the images from Docker Hub, essentially functioning like the compiled executable we provide with releases.
 
 ## Usage: development environment
 
-Install using the instructions above.
+Install using the instructions above. When launching a `local` version install, changes to the local files will automatically be picked up in the Docker containers and they will reload with the updated files.
 
 Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more about coding style enforcement and commit etiquette!
 
-### Launch from Configurator
-
-As well as installing, the web-based Configurator gives you some options to launch Shabti.
-
-The "Launch Shabti" button shouldn't be used to test local changes to the Python scripts as this uses the image from the Docker Hub and not your local files.
-
-"Launch X Locally (Docker)" will build the local files into a Docker image and put it up in a container mimicking the production environment. You should always try your code here before submitting a PR as there are some minor differences with how the components communicate with each other within Docker compared to running the code locally. The first build can be slow, but the Python dependencies will be cached making subsequent builds much faster.
-
-"Launch X Locally (Python)" is a straightforward way to run the Python code directly from your local files.
-
-### Launch API in dev mode with reloading
-
-- Navigate to `docker_containers/shabti_api`
-- Enable the virtual environment
-- Navigate to the `app` subdirectory
-- `fastapi dev app.py`
-
-You will see in the command line that the Swagger UI is available, this is really useful for testing out the REST API functions.
-
 ## CLI ##
 
-Shabti now ships with a standalone executable for the Command Line Interface and the syntax has been completely revamped. We will add proper documentation for this, but you can call the executable with the `-h` flag to see which commands exist and how to use them. The CLI executable must be in the same directory as the main executable and will only work after you've installed Shabti.
+Shabti now ships with a standalone executable for the Command Line Interface and the syntax has been completely revamped. We will add proper documentation for this, but you can call the executable with the `-h` flag to see which commands exist and how to use them. The CLI executable must be in the same directory as the main executable and will only work after you've installed Shabti. The CLI currently uses an admin account if you're using security features, so use it wisely!
 
 ## Known Issues
 
-- Startup of the Shabti API service can be quite slow, this appears to be especially so when running in Docker for some reason. We believe it's due to one of the AI related dependencies, we will review this problem at some point as there may be alternative frameworks we could use.
+- Startup of the Shabti API service can be quite slow because it has to download models on the first run. It should generally start up faster subsequent times as it will cache the model downloads.
+- Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work. Look up bypassing Gatekeeper on your MacOS version or use the development version of the configurator.
+- Unstructured has quite a slow startup time, ingesting documents can appear to be stuck for a while before the progress bar starts, just be patient and you should see the documents start to load!
 
 ## Want to get involved? ##
 
