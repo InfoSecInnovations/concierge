@@ -16,8 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       
-      - name: Install Python 3.12
-        run: uv python install 3.12
+      - name: Install Python 3.13
+        run: uv python install 3.13
       - name: Publish shabti_util
         working-directory: ./python_packages/shabti_util
         run: |
