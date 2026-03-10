@@ -46,6 +46,7 @@ export default async (certDir: string) => {
 		{
 			name: "basicConstraints",
 			cA: true,
+			critical: true,
 		},
 		{
 			name: "keyUsage",
@@ -54,6 +55,7 @@ export default async (certDir: string) => {
 			nonRepudiation: true,
 			keyEncipherment: true,
 			dataEncipherment: true,
+			critical: true,
 		},
 		{
 			name: "subjectKeyIdentifier",
