@@ -15,6 +15,13 @@ jobs:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
+
+      - name: Debug PATH
+        run: |
+          echo "PATH: $PATH"
+          which uv || echo "uv not in PATH"
+          ls -la /home/gh-runner/.local/bin/uv || echo "binary not found"
+          /home/gh-runner/.local/bin/uv --version || echo "direct exec failed"
       
       - name: Install Python 3.13
         run: uv python install 3.13
