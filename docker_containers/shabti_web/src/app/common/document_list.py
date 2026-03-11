@@ -52,6 +52,8 @@ def page_list_server(
     def set_page_counts():
         current_index = current_page.get()
         total_page_count = math.ceil(total_result_count.get() / RESULTS_PER_PAGE)
+        if total_page_count <= 1:
+            return
         first_page_index = current_index - PAGES_IN_LIST / 2
         if first_page_index < 0:
             first_page_index = 0
@@ -72,7 +74,7 @@ def page_list_server(
     @render.ui
     def page_list_view():
         total_page_count = total_pages.get()
-        if not total_page_count:
+        if total_page_count <= 1:
             return []
         first_page_index = first_page.get()
         current_index = current_page.get()
