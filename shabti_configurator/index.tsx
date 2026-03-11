@@ -5,7 +5,6 @@ import { $ } from "bun";
 import { Hono } from "hono";
 import js from "./assets/index.js" with { type: "file" };
 import css from "./assets/style.css" with { type: "file" };
-import shabtiIsConfigured from "./server/shabtiIsConfigured";
 import doInstall from "./server/doInstall";
 import doLaunch from "./server/doLaunch";
 import dockerIsRunning from "./server/dockerIsRunning";
@@ -15,11 +14,10 @@ import { RelaunchForm } from "./server/relaunchForm";
 import streamHtml from "./server/streamHtml.js";
 import validateInstallForm from "./server/validateInstallForm.js";
 import { WebUILink } from "./server/webUiLink.js";
-import { VersionSelector } from "./server/versionSelector.js";
 import packageJson from "./package.json";
-import * as envfile from "envfile";
 import getCurrentVersion from "./server/getCurrentVersion.js";
 import listCompatibleDockerTags from "./server/listCompatibleDockerTags.js";
+import currentIsLocal from "./server/currentIsLocal.js";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -53,6 +51,7 @@ app.get("/index.js", async (c) =>
 app.get("/", async (c) => {
 	const dockerStatus = await dockerIsRunning();
 	const currentVersion = await getCurrentVersion();
+	const isLocal = await currentIsLocal();
 	return await c.html(
 		<html>
 			<head>
@@ -89,6 +88,13 @@ app.get("/", async (c) => {
 							<section>
 								<h3>Launch Shabti</h3>
 								<p>Shabti appears to be configured on this system</p>
+								{isLocal ? (
+									<p>
+										You are running the development version from local files
+									</p>
+								) : (
+									<p>You are using version {currentVersion}</p>
+								)}
 								<WebUILink></WebUILink>
 								<p>
 									If the link above isn't working, try (re)launching using the
