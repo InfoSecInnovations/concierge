@@ -282,7 +282,7 @@ async def delete_document(token, collection_id, document_id):
         ),
     )
     if binary_path:
-        os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR", binary_path)))
+        os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), binary_path))
     if logging_enabled():
         if auth_enabled():
             await log_user_action(
