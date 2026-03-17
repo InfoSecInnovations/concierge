@@ -8,6 +8,8 @@ import zipfile
 from io import BytesIO
 import os
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
+from uuid import uuid4
+import aiofiles
 
 
 async def insert_uploaded_files(
@@ -23,10 +25,16 @@ async def insert_uploaded_files(
                             message="No content was able to be loaded from the file",
                             filename=file.filename,
                         )
+                    file_unique_name = uuid4().hex
                     async for result in insert_document(
-                        token, collection_id, doc, await file.read()
+                        token, collection_id, doc, file_unique_name
                     ):
                         yield f"{result.model_dump_json(exclude_unset=True)}\n"
+                    async with aiofiles.open(
+                        os.path.join(os.getenv("SHABTI_FILES_DIR"), file_unique_name),
+                        "wb",
+                    ) as f:
+                        await f.write(await file.read())
                 except (KeycloakPostError, KeycloakAuthenticationError) as e:
                     raise e
                 except UnsupportedFileError as e:

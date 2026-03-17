@@ -4,6 +4,7 @@ from opensearchpy import OpenSearch
 
 MAPPING_INDEX_NAME = "collection_mappings"
 FILES_INDEX_NAME = "file_mappings"
+OPENSEARCH_MAX_RESULTS = 10000
 
 
 def get_client():
@@ -38,7 +39,7 @@ def create_collection_index(collection_id):
                 "ingest_date": {"type": "unsigned_long"},
                 "languages": {"type": "keyword"},
                 "text": {"type": "text"},
-                "binary_data": {"type": "binary"},
+                "binary_path": {"type": "keyword"},
                 "page_number": {"type": "integer"},
                 "type": {"type": "keyword"},
                 "child_item_to_document": {
@@ -76,7 +77,7 @@ def get_collection_mappings():
     if not client.indices.exists(index=MAPPING_INDEX_NAME):
         return []
     query = {
-        "size": 10000,  # this is the maximum allowed value
+        "size": OPENSEARCH_MAX_RESULTS,
         "query": {"match_all": {}},
     }
     response = client.search(body=query, index=MAPPING_INDEX_NAME)
@@ -114,6 +115,38 @@ def get_opensearch_collection_info(collection_id: str):
         "collection_id": item["_id"],
         "collection_name": item["_source"]["collection_name"],
     }
+
+
+def freeze_collection_and_get_file_paths(collection_id: str):
+    client = get_client()
+    paths = []
+    client.indices.add_block(
+        index=collection_id, block="read_only"
+    )  # avoid additional writes to the index while we retrieve the list of file paths
+    pit_id = client.create_pit(index=collection_id, keep_alive="100m")["pit_id"]
+    body = {
+        "_source": {"includes": ["binary_path"]},
+        "size": OPENSEARCH_MAX_RESULTS,
+        "query": {
+            "bool": {
+                "filter": [
+                    {"term": {"type": "document"}},
+                    {"exists": {"field": "binary_path"}},
+                ]
+            }
+        },
+        "pit": {"id": pit_id, "keep_alive": "100m"},
+        "sort": [{"ingest_date": {"order": "asc"}}],
+    }
+    response = client.search(body=body)
+    while len(response["hits"]["hits"]):
+        paths = [
+            *paths,
+            *[hit["_source"]["binary_path"] for hit in response["hits"]["hits"]],
+        ]
+        body["search_after"] = response["hits"]["hits"][-1]["sort"]
+        response = client.search(body=body)
+    return paths
 
 
 def delete_collection_indices(collection_id: str):
@@ -195,6 +228,14 @@ def get_document(collection_id: str, doc_id: str):
     return doc
 
 
+def get_document_file_path(collection_id: str, doc_id: str):
+    client = get_client()
+    item = client.get(index=collection_id, id=doc_id)
+    if "binary_path" in item["_source"]:
+        return item["_source"]["binary_path"]
+    return None
+
+
 def get_opensearch_documents(
     collection_id: str, search, sort, max_results, filter_document_type, page=0
 ):
@@ -204,13 +245,13 @@ def get_opensearch_documents(
         if filter_document_type:
             filter.append({"terms": {"media_type": filter_document_type}})
         body = {
-            "size": max_results or 10000,  # this is the maximum allowed value
+            "size": max_results or OPENSEARCH_MAX_RESULTS,
             "query": {"bool": {"filter": filter}},
         }
     else:
         body = {
             "_source": {"excludes": ["document_vector"]},
-            "size": max_results or 10000,  # this is the maximum allowed value
+            "size": max_results or OPENSEARCH_MAX_RESULTS,
             "query": {
                 "bool": {
                     "should": [
@@ -273,7 +314,11 @@ def get_opensearch_document_types(collection_id: str):
     client = get_client()
     body = {
         "size": 0,
-        "aggs": {"document_type": {"terms": {"field": "media_type", "size": 10000}}},
+        "aggs": {
+            "document_type": {
+                "terms": {"field": "media_type", "size": OPENSEARCH_MAX_RESULTS}
+            }
+        },
         "query": {"bool": {"filter": {"term": {"type": "document"}}}},
     }
     response = client.search(body=body, index=collection_id)

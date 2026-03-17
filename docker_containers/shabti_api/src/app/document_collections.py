@@ -22,6 +22,8 @@ from .opensearch import (
     get_opensearch_collection_info,
     get_document,
     get_opensearch_document_types,
+    get_document_file_path,
+    freeze_collection_and_get_file_paths,
 )
 from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
@@ -37,6 +39,7 @@ from shabti_types import (
     DocumentList,
 )
 from .shabti_logging import log_user_action, log_action, logging_enabled
+import os
 
 type Location = Literal["private", "shared"]
 
@@ -184,7 +187,10 @@ async def delete_collection(token, collection_id):
         await delete_resource(collection_id)
     else:
         await asyncify(delete_index_mapping, collection_id)
+    file_paths = await asyncify(freeze_collection_and_get_file_paths, collection_id)
     await asyncify(delete_collection_indices, collection_id)
+    for file_path in file_paths:
+        os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), file_path))
     print(f"deleted collection with ID {collection_id}")
     if auth_enabled():
         await log_user_action(
@@ -264,6 +270,7 @@ async def delete_document(token, collection_id, document_id):
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
             raise UnauthorizedOperationError()
+    binary_path = await asyncify(get_document_file_path, collection_id, document_id)
     doc_info = None
     if logging_enabled():
         doc_info = await get_document_info(collection_id, document_id)
@@ -274,6 +281,8 @@ async def delete_document(token, collection_id, document_id):
             delete_opensearch_document, collection_id, document_id
         ),
     )
+    if binary_path:
+        os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR", binary_path)))
     if logging_enabled():
         if auth_enabled():
             await log_user_action(

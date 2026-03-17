@@ -23,14 +23,14 @@ def get_field_type(python_type):
 def insert(
     collection_id: str,
     document: ShabtiDocument,
-    binary: bytes | None = None,
+    binary_path: str | None = None,
 ):
     client = get_client()
     entries = []
 
     additional = {}
-    if binary:
-        additional["binary_data"] = binary.hex()
+    if binary_path:
+        additional["binary_path"] = binary_path
 
     doc_id = client.index(
         index=collection_id,

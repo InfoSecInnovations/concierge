@@ -71,6 +71,7 @@ volumes:
   opensearch-data1:
   ollama:
   shabti-models:
+  shabti-files:
 
 networks:
   default:

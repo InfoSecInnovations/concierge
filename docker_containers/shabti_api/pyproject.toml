@@ -15,7 +15,8 @@ dependencies = [
     "python-json-logger~=3.3.0",
     "python-magic-bin~=0.4.14 ; sys_platform == 'win32'",
     "sentence-transformers~=5.2.3",
-    "unstructured[all-docs]~=0.21.5"
+    "unstructured[all-docs]~=0.21.5",
+    "aiofiles~=25.1.0"
 ]
 [project.optional-dependencies]
 cu126 = [

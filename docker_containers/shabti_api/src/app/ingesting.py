@@ -9,9 +9,9 @@ from .opensearch import get_document
 
 
 async def insert_document(
-    token, collection_id, document, binary=None
+    token, collection_id, document, binary_path=None
 ) -> AsyncGenerator[DocumentIngestInfo, Any]:
-    async for x in asyncify_generator(insert(collection_id, document, binary)):
+    async for x in asyncify_generator(insert(collection_id, document, binary_path)):
         yield x
     if logging_enabled():
         collection_info = await get_collection_info(collection_id)
