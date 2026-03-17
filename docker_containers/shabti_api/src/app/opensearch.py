@@ -121,7 +121,7 @@ def freeze_collection_and_get_file_paths(collection_id: str):
     client = get_client()
     paths = []
     client.indices.add_block(
-        index=collection_id, block="read_only"
+        index=collection_id, block="write"
     )  # avoid additional writes to the index while we retrieve the list of file paths
     pit_id = client.create_pit(index=collection_id, keep_alive="100m")["pit_id"]
     body = {
