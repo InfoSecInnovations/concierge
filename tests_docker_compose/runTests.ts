@@ -8,6 +8,7 @@ import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import path from "node:path";
 import xunitViewer from "xunit-viewer";
 
+console.clear();
 await rm("./test_results", { recursive: true, force: true });
 
 try {

@@ -12,6 +12,8 @@ import secrets
 import pytest_asyncio
 import os
 from ...src.app.loading import load_file
+from uuid import uuid4
+import aiofiles
 
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
@@ -47,9 +49,18 @@ async def shabti_collection_id():
 
 @pytest_asyncio.fixture(scope="function")
 async def shabti_document_id(shabti_collection_id):
+    unique_filename = uuid4().hex
     with open(file_path, "rb") as f:
         doc = load_file(f, filename)
         binary = f.read()
-    async for ingest_info in insert_document(None, shabti_collection_id, doc, binary):
+    async with aiofiles.open(
+        os.path.join(os.getenv("SHABTI_FILES_DIR"), unique_filename),
+        "wb",
+    ) as f:
+        await f.write(binary)
+    async for ingest_info in insert_document(
+        None, shabti_collection_id, doc, unique_filename
+    ):
         pass
+
     yield ingest_info.document_id

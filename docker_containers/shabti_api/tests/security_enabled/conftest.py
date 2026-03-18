@@ -15,6 +15,8 @@ from shabti_keycloak import (
 from ...src.app.ingesting import insert_document
 import os
 from ...src.app.loading import load_file
+from uuid import uuid4
+import aiofiles
 
 
 filename = "test_doc.txt"
@@ -61,24 +63,38 @@ async def shabti_collection_id(request):
 @pytest_asyncio.fixture(scope="function")
 async def shabti_document_id(shabti_collection_id):
     token = get_keycloak_admin_openid_token()
+    unique_filename = uuid4().hex
     with open(file_path, "rb") as f:
         doc = load_file(f, filename)
         binary = f.read()
+    async with aiofiles.open(
+        os.path.join(os.getenv("SHABTI_FILES_DIR"), unique_filename),
+        "wb",
+    ) as f:
+        await f.write(binary)
     async for ingest_info in insert_document(
-        token["access_token"], shabti_collection_id, doc, binary
+        token["access_token"], shabti_collection_id, doc, unique_filename
     ):
         pass
+
     yield ingest_info.document_id
 
 
 @pytest_asyncio.fixture(scope="function")
 async def shabti_prompt_document_id(shabti_collection_id):
     token = get_keycloak_admin_openid_token()
+    unique_filename = uuid4().hex
     with open(prompt_file_path, "rb") as f:
         doc = load_file(f, prompt_filename)
         binary = f.read()
+    async with aiofiles.open(
+        os.path.join(os.getenv("SHABTI_FILES_DIR"), unique_filename),
+        "wb",
+    ) as f:
+        await f.write(binary)
     async for ingest_info in insert_document(
-        token["access_token"], shabti_collection_id, doc, binary
+        token["access_token"], shabti_collection_id, doc, unique_filename
     ):
         pass
+
     yield ingest_info.document_id
