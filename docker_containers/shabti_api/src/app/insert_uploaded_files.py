@@ -10,6 +10,7 @@ import os
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
 from uuid import uuid4
 import aiofiles
+import aiofiles.os
 
 
 async def insert_uploaded_files(
