@@ -217,7 +217,7 @@ def create_document_info(doc):
         page_count=doc["page_count"],
         media_type=doc["media_type"],
         filename=doc["filename"] if "filename" in doc else None,
-        languages=doc["languages"],
+        languages=[lang for lang in doc["languages"] if isinstance(lang, str)],
     )
 
 
