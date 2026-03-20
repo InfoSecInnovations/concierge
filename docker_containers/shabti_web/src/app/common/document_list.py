@@ -88,7 +88,9 @@ def page_list_server(
                 )
                 for i in range(min(total_page_count, PAGES_IN_LIST))
             ],
-            page_link_ui("select_page_last", "Last", current_index == total_page_count),
+            page_link_ui(
+                "select_page_last", "Last", current_index == total_page_count - 1
+            ),
         ]
 
 
