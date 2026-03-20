@@ -52,6 +52,7 @@ app.get("/", async (c) => {
 	const dockerStatus = await dockerIsRunning();
 	const currentVersion = await getCurrentVersion();
 	const isLocal = await currentIsLocal();
+	const localIsRunning = !!state.watchProcess;
 	return await c.html(
 		<html>
 			<head>
@@ -95,18 +96,24 @@ app.get("/", async (c) => {
 								) : (
 									<p>You are using version {currentVersion}</p>
 								)}
-								<WebUILink></WebUILink>
-								<p>
-									If the link above isn't working, try (re)launching using the
-									button below.
-								</p>
-								<p>
-									Bear in mind that if you just installed Shabti it can take a
-									few minutes before it's up and running.
-								</p>
+								{!isLocal || localIsRunning ? (
+									<>
+										<WebUILink></WebUILink>
+										<p>
+											If the link above isn't working, try (re)launching using
+											the button below.
+										</p>
+										<p>
+											Bear in mind that if you just installed Shabti it can take
+											a few minutes before it's up and running.
+										</p>
+									</>
+								) : (
+									<p>Use the button to launch Shabti in development mode</p>
+								)}
 								<RelaunchForm
 									devMode={devMode}
-									localIsRunning={!!state.watchProcess}
+									localIsRunning={localIsRunning}
 								></RelaunchForm>
 							</section>
 						) : null}

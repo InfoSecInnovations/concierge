@@ -23,7 +23,7 @@ export const RelaunchForm = async (props: {
 			{props.devMode && props.localIsRunning && (
 				<>
 					<button type="submit" name="environment" value="stop_local">
-						Stop Docker Configuration for Local Development
+						Stop Shabti
 					</button>
 				</>
 			)}
