@@ -27,6 +27,7 @@ def ingester_server(
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
     files_are_ingesting = reactive.value(False)
+    urls_are_ingesting = reactive.value(False)
 
     @render.ui
     def ingester_content():
@@ -48,8 +49,10 @@ def ingester_server(
         return ui.input_file(id="ingester_files", label=None, multiple=True)
 
     @render.ui
-    @reactive.event(ingesting_done)
+    @reactive.event(urls_are_ingesting, ignore_none=False, ignore_init=False)
     def url_input():
+        if urls_are_ingesting.get():
+            return ui.markdown("Currently ingesting URLs...")
         return text_input_list("url_input_list")
 
     async def load_doc(stream: AsyncGenerator[DocumentIngestInfo, Any]):
@@ -95,6 +98,7 @@ def ingester_server(
     def ingest_urls_effect():
         ingest_urls.result()
         with reactive.isolate():
+            urls_are_ingesting.set(False)
             ingesting_done.set(ingesting_done.get() + 1)
 
     @reactive.effect
@@ -124,6 +128,7 @@ def ingester_server(
             return
         collection_id = selected_collection.get()
         print(f"ingesting documents into collection {collection_id}")
+        urls_are_ingesting.set(True)
         ingest_urls(urls, collection_id)
 
     return ingesting_done
