@@ -16,13 +16,14 @@ If you just installed Shabti, please wait, it can take a while to download the e
 QUICKSTART = """
 ### Getting started:  
 1. Create a collection with Collection Management.  
-2. Load documents (currently PDF and text files are supported) and/or web data into the collection. 
+2. Load documents (most major file types are supported) and/or web data into the collection. 
 3. Use Prompter to work with Shabti.
 """
 
 TIPS = """
 ### Tips for getting the most out of Shabti:
 - You can have as many collections as you want. Organize your data how you'd like!
+- You can load directories of files by passing them in as a zip file or using the directory loader from the CLI.
 - Experiment with the selection options in Prompter. You can have Shabti help you with lots of tasks.
 - If you have any problems, reach out to us via github issues or the contact page on <https://shabti.ai>{target="_blank"}
 """
@@ -31,6 +32,5 @@ CONTRIBUTING = """
 ### Are you a dev? Want to get even more involved?
 - Create a task file to extend Shabti's capabilities
 - Add enhancer files to have parting thoughts
-- Build a loader to allow new data in Shabti
 - Review our github issues, we would love your input
 """

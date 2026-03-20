@@ -34,7 +34,7 @@ def ingester_server(
             ui.markdown("#### Files"),
             ui.output_ui("file_input"),
             ui.markdown("#### URLs"),
-            text_input_list("url_input_list"),
+            ui.output_ui("url_input"),
             ui.input_task_button(id="ingest", label="Ingest"),
         )
 
@@ -46,6 +46,11 @@ def ingester_server(
         if files_are_ingesting.get():
             return ui.markdown("Currently ingesting files...")
         return ui.input_file(id="ingester_files", label=None, multiple=True)
+
+    @render.ui
+    @reactive.event(ingesting_done)
+    def url_input():
+        return text_input_list("url_input_list")
 
     async def load_doc(stream: AsyncGenerator[DocumentIngestInfo, Any]):
         page_progress = tqdm()
@@ -115,7 +120,6 @@ def ingester_server(
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
     def handle_url_ingest_click():
         urls = input.url_input_list()
-        print(urls)
         if not urls or not len(urls):
             return
         collection_id = selected_collection.get()
