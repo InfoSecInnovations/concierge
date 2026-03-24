@@ -3,10 +3,11 @@ name = "shabti-web"
 version = "0.1.0"
 requires-python = ">=3.13, <3.14"
 dependencies = [
-    "humanize~=4.13.0",
-    "shiny~=1.4.0",
-    "shinyswatch~=0.9.0",
-    "tqdm~=4.67.1",
+    "htmltools==0.6.0",
+    "humanize==4.15.0",
+    "shiny==1.6.0",
+    "shinyswatch==0.10.0",
+    "tqdm==4.67.3",
 ]
 # [tool.uv.sources]
 # shabti-util = [
