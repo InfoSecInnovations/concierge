@@ -3,12 +3,6 @@
 .env.example
 ruff.toml
 
-# we don't use the lock file as there may be conflicts between the way things are installed in the local environment and the Docker environment
-uv.lock
-
-# generated certificates
-self_signed_certificates
-
 # files that appear to be due to installing dependencies, try un-ignoring these if needed
 share
 etc
@@ -37,10 +31,8 @@ pip-selfcheck.json
 .vscode
 contribution_guides
 *.md
-install_dev.py
-dev_installer.py
-launch_dev.py
-dev_launcher.py
 
-# compose files
+# docker files
 **/docker-compose*
+Dockerfile
+Dockerfile.local

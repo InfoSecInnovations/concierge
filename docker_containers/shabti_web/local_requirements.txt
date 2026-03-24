@@ -1,4 +1,4 @@
--e /python_packages/shabti_util
--e /python_packages/shabti_types
--e /python_packages/shabti_keycloak
--e /python_packages/shabti_api_client
+-e /app/python_packages/shabti_util
+-e /app/python_packages/shabti_types
+-e /app/python_packages/shabti_keycloak
+-e /app/python_packages/shabti_api_client
