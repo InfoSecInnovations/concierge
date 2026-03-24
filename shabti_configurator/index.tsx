@@ -109,7 +109,17 @@ app.get("/", async (c) => {
 										</p>
 									</>
 								) : (
-									<p>Use the button to launch Shabti in development mode</p>
+									<>
+										<p>
+											Use the button below to launch Shabti in development mode
+											with reloading.
+										</p>
+										<p>
+											We recommend using Visual Studio Code with the provided
+											devcontainer configuration instead of launching Shabti
+											from here.
+										</p>
+									</>
 								)}
 								<RelaunchForm
 									devMode={devMode}

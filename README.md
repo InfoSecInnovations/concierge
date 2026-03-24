@@ -107,7 +107,13 @@ do `bun install` in the repository root. This will set up all the JavaScript pro
 
 ## Usage: development environment
 
-Install using the instructions above. When launching a `local` version install, changes to the local files will automatically be picked up in the Docker containers and they will reload with the updated files.
+Install using the instructions above making sure to install the `local` version.
+
+The recommended way to edit the code that runs in Docker is to open each subdirectory of `docker_containers` in Visual Studio Code using the provided devcontainer configuration.
+
+If you don't wish to use the VSCode and devcontainer setup you can use the Launch button from the configurator which will launch the code in Docker, mounting the appropriate directories so changes are reflected both on the host system and inside the container.
+
+Both of these methods will reload the program when changes are made to the code files.
 
 Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more about coding style enforcement and commit etiquette!
 
