@@ -27,16 +27,10 @@ services:
       dockerfile: Dockerfile.local
       args:
         - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
-    develop:
-      watch:
-        - action: sync
-          x-initialSync: true
-          path: ../../docker_containers/shabti_api
-          target: /shabti
-        - action: sync
-          x-initialSync: true
-          path: ../../python_packages
-          target: /
+    volumes:
+      - ../../docker_containers/shabti_api:/app/shabti
+      - /app/shabti/.venv
+      - ../../python_packages:/app/python_packages
   shabti-web:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml

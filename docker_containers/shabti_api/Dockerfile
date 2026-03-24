@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/
-WORKDIR /shabti/
+WORKDIR /app/shabti/
 ENV UV_LINK_MODE=copy
 ENV UV_HTTP_TIMEOUT=500
 CMD [ "uv", "run", "docker_run.py" ]
@@ -23,6 +23,6 @@ FROM base AS cuda
 RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --no-sources --no-dev --extra cu126
 
 FROM ${ACCELERATION_TYPE} AS final
-COPY . /shabti/
+COPY . /app/shabti/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked  --no-sources --no-dev
 RUN --mount=type=cache,target=/root/.cache uv pip install -r requirements.txt

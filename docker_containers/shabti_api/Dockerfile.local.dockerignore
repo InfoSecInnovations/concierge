@@ -3,9 +3,6 @@
 .env.example
 ruff.toml
 
-# we don't use the lock file as there may be conflicts between the way things are installed in the local environment and the Docker environment
-uv.lock
-
 # generated certificates
 self_signed_certificates
 
@@ -49,9 +46,3 @@ shabti_configurator
 
 # compose files
 **/docker-compose*
-
-# unignore these directories for local build
-!python_packages/shabti_util
-!python_packages/shabti_types
-!python_packages/shabti_keycloak
-!python_packages/isi_util
