@@ -111,6 +111,8 @@ Install using the instructions above making sure to install the `local` version.
 
 The recommended way to edit the code that runs in Docker is to open each subdirectory of `docker_containers` in Visual Studio Code using the provided devcontainer configuration.
 
+With the subdirectory open in VSCode, press F1 and search for `Dev Container: Rebuild and Reopen in Container`. Using the rebuild command ensures the correct configuration of Shabti is launched, if you have run Shabti anywhere outside of the devcontainer environment you can end up with a mismatch between the development configuration and whatever you were running before if you don't rebuild.
+
 If you don't wish to use the VSCode and devcontainer setup you can use the Launch button from the configurator which will launch the code in Docker, mounting the appropriate directories so changes are reflected both on the host system and inside the container.
 
 Both of these methods will reload the program when changes are made to the code files.
