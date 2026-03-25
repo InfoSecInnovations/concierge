@@ -1,6 +1,6 @@
 ARG ACCELERATION_TYPE=cpu
 
-FROM astral/uv:0.10-python3.13-trixie-slim AS base
+FROM astral/uv:0.11.1-python3.14-trixie-slim AS base
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -17,10 +17,10 @@ CMD [ "uv", "run", "docker_run.py" ]
 EXPOSE 15131
 
 FROM base AS cpu
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --no-sources --no-dev --extra cpu
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --no-install-project --no-sources --no-dev --extra cpu
 
 FROM base AS cuda
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --no-sources --no-dev --extra cu126
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --no-install-project --no-sources --no-dev --extra cu126
 
 FROM ${ACCELERATION_TYPE} AS final
 COPY . /app/shabti/

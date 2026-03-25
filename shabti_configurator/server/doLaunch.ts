@@ -47,7 +47,6 @@ export default async function* (
 			"-f",
 			"./docker_compose/docker-compose-dev.yml",
 			"up",
-			"--watch",
 		]);
 	} else {
 		yield logMessage("Launching Shabti Docker Compose configuration...");

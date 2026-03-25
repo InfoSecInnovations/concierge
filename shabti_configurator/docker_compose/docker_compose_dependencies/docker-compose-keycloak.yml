@@ -1,9 +1,9 @@
 services:
   postgres:
     container_name: postgres
-    image: postgres:17
+    image: postgres:18.3
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     restart: unless-stopped
     environment:
       POSTGRES_DB: keycloak
@@ -13,7 +13,7 @@ services:
       - "5432:5432"
   keycloak:
     container_name: keycloak
-    image: quay.io/keycloak/keycloak:26.4
+    image: quay.io/keycloak/keycloak:26.5.6
     depends_on:
       - postgres
     ports:

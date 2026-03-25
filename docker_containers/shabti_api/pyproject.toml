@@ -1,7 +1,7 @@
 [project]
 name = "shabti-api"
 version = "0.1.0"
-requires-python = ">=3.13, <3.14"
+requires-python = ">=3.14, <3.15"
 dependencies = [
     "beautifulsoup4~=4.14.3",
     "configobj~=5.0.9",
@@ -20,14 +20,12 @@ dependencies = [
 ]
 [project.optional-dependencies]
 cu126 = [
-    "torch==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchvision==0.22.1; sys_platform == 'linux' and platform_machine == 'x86_64'", 
-    "torchaudio==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'"
+    "torch==2.11.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "torchvision==0.26.0; sys_platform == 'linux' and platform_machine == 'x86_64'"
 ]
 cpu = [
-    "torch==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchvision==0.22.1; sys_platform == 'linux' and platform_machine == 'x86_64'", 
-    "torchaudio==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'"
+    "torch==2.11.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "torchvision==0.26.0; sys_platform == 'linux' and platform_machine == 'x86_64'"
 ]
 [tool.uv]
 required-environments = [
@@ -48,9 +46,6 @@ torch = [
   { index = "pytorch-cu126", extra = "cu126" },
 ]
 torchvision = [
-  { index = "pytorch-cu126", extra = "cu126" },
-]
-torchaudio = [
   { index = "pytorch-cu126", extra = "cu126" },
 ]
 

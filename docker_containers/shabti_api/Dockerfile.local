@@ -1,6 +1,6 @@
 ARG ACCELERATION_TYPE=cpu
 
-FROM astral/uv:0.10-python3.13-trixie-slim AS base
+FROM astral/uv:0.11.1-python3.14-trixie-slim AS base
 
 COPY --from=python_packages ./isi_util /app/python_packages/isi_util/
 COPY --from=python_packages ./shabti_util /app/python_packages/shabti_util/
@@ -22,10 +22,10 @@ ENV UV_HTTP_TIMEOUT=500
 CMD [ "uv", "run", "docker_run.py", "--development" ]
 
 FROM base AS cpu
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --extra cpu
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --no-install-project --extra cpu
 
 FROM base AS cuda
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project --extra cu126
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --no-install-project --extra cu126
 
 FROM ${ACCELERATION_TYPE} AS final
 COPY . /app/shabti/
