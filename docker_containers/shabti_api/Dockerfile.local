@@ -11,7 +11,7 @@ COPY --from=python_packages ./shabti_api_client /app/python_packages/shabti_api_
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
   --mount=type=cache,target=/var/lib/apt,sharing=locked \
-/bin/sh -c set -eux; apt-get update; apt-get install -y --no-install-recommends poppler-utils pandoc tesseract-ocr libreoffice libgl1 libglib2.0-0
+/bin/sh -c set -eux; apt-get update; apt-get install -y --no-install-recommends poppler-utils pandoc tesseract-ocr libreoffice libgl1 libglib2.0-0 build-essential
 
 EXPOSE 15131
 ENV PYTHONUNBUFFERED=1
@@ -21,15 +21,25 @@ ENV UV_LINK_MODE=copy
 ENV UV_HTTP_TIMEOUT=500
 CMD [ "uv", "run", "docker_run.py", "--development" ]
 
-FROM base AS cpu
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --no-install-project --extra cpu
+RUN echo "yo"
 
-FROM base AS cuda
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --no-install-project --extra cu126
+FROM base AS cpu-1
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock,rw uv sync --no-install-project --extra cpu
 
-FROM ${ACCELERATION_TYPE} AS final
+FROM base AS cuda-1
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock,rw uv sync --no-install-project --extra cu126
+
+FROM ${ACCELERATION_TYPE}-1 AS intermediate
 COPY . /app/shabti/
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
+RUN uv lock
+
+FROM intermediate AS cpu-2
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --extra cpu
+
+FROM intermediate AS cuda-2
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --extra cu126
+
+FROM ${ACCELERATION_TYPE}-2 AS final
 RUN --mount=type=cache,target=/root/.cache uv pip install -r local_requirements.txt
 
 # install packages so we can run pytest on them

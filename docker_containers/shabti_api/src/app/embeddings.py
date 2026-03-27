@@ -1,19 +1,31 @@
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 
-print(
-    "initializing embeddings model (if this is the first run, it can take some time)..."
-)
+# print(
+#     "initializing embeddings model (if this is the first run, it can take some time)..."
+# )
 
-stransform = SentenceTransformer(
-    "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-)
+# stransform = SentenceTransformer(
+#     "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+# )
 
 
-def create_embeddings(text):
-    return stransform.encode(text)
+# def create_embeddings(text):
+#     return stransform.encode(text)
 
 
 # from .ollama import create_embeddings_ollama
 
 # def create_embeddings(text):
 #     return create_embeddings_ollama(text)
+
+from fastembed import TextEmbedding
+import os
+
+model = TextEmbedding(
+    model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2",
+    cache_dir=os.getenv("SHABTI_MODELS_DIR"),
+)
+
+
+def create_embeddings(text):
+    return list(model.embed(text))

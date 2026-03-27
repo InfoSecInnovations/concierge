@@ -20,12 +20,10 @@ dependencies = [
 ]
 [project.optional-dependencies]
 cu126 = [
-    "torch==2.11.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchvision==0.26.0; sys_platform == 'linux' and platform_machine == 'x86_64'"
+    "fastembed-gpu"
 ]
 cpu = [
-    "torch==2.11.0; sys_platform == 'linux' and platform_machine == 'x86_64'",
-    "torchvision==0.26.0; sys_platform == 'linux' and platform_machine == 'x86_64'"
+    "fastembed"
 ]
 [tool.uv]
 required-environments = [
@@ -37,22 +35,6 @@ conflicts = [
     { extra = "cu126" },
   ],
 ]
-[tool.uv.sources]
-# isi-util = { path = "/python_packages/isi_util", editable = true }
-# shabti-util = { path = "/python_packages/shabti_util", editable = true }
-# shabti-types = { path = "/python_packages/shabti_types", editable = true }
-# shabti-keycloak = { path = "/python_packages/shabti_keycloak", editable = true }
-torch = [
-  { index = "pytorch-cu126", extra = "cu126" },
-]
-torchvision = [
-  { index = "pytorch-cu126", extra = "cu126" },
-]
-
-[[tool.uv.index]]
-name = "pytorch-cu126"
-url = "https://download.pytorch.org/whl/cu126"
-explicit = true
 
 [dependency-groups]
 dev = [

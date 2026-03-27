@@ -9,10 +9,11 @@ services:
       - SHABTI_LOGGING_ENABLED=False
       - OMP_THREAD_LIMIT=1 # This makes OCR much faster, see https://stackoverflow.com/a/78657711 , it's unclear why this works.
       - SHABTI_FILES_DIR=/opt/shabti_files
+      - SHABTI_MODELS_DIR=/root/.cache/fastembed
     ports:
       - ${API_PORT:-15131}:15131
     volumes:
-      - shabti-models:/root/.cache/huggingface
+      - shabti-models:/root/.cache/fastembed
       - shabti-files:/opt/shabti_files
     restart: unless-stopped
   shabti-cuda:
