@@ -1,7 +1,7 @@
 [project]
 name = "shabti-api"
 version = "0.1.0"
-requires-python = ">=3.14, <3.15"
+requires-python = ">=3.13, <3.14"
 dependencies = [
     "beautifulsoup4~=4.14.3",
     "configobj~=5.0.9",
@@ -16,14 +16,15 @@ dependencies = [
     "python-magic-bin~=0.4.14 ; sys_platform == 'win32'",
     "sentence-transformers~=5.2.3",
     "unstructured[all-docs]~=0.21.5",
-    "aiofiles~=25.1.0"
+    "aiofiles~=25.1.0",
+    "requests",    
 ]
 [project.optional-dependencies]
 cu126 = [
-    "fastembed-gpu"
+    "torch==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 cpu = [
-    "fastembed"
+    "torch==2.7.1; sys_platform == 'linux' and platform_machine == 'x86_64'",
 ]
 [tool.uv]
 required-environments = [
@@ -35,12 +36,23 @@ conflicts = [
     { extra = "cu126" },
   ],
 ]
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cu126", extra = "cu126" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
 
 [dependency-groups]
 dev = [
     "pytest~=8.4.2",
     "pytest-asyncio~=1.2.0",
 ]
+
+
 
 [tool.pytest.ini_options]
 asyncio_mode="auto"

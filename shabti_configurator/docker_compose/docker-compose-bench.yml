@@ -1,0 +1,43 @@
+name: shabti
+
+# this is a bit of a hack to conditionally include keycloak if we're running security, the blank compose stops Docker from complaining when doing an unsecured instance.
+include:
+  - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
+services:
+  ollama:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-ollama.yml
+      service: ollama-${SHABTI_COMPUTE:-cpu}
+  shabti:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti-cpu}
+    image: null
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    build:
+      context: ../../docker_containers/shabti_api
+      additional_contexts: 
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile.local
+      args:
+        - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
+    volumes:
+      - ../../docker_containers/shabti_api:/app/shabti
+      - /app/shabti/.venv
+      - ../../python_packages:/app/python_packages
+    command: ["uv", "run", "--frozen", "bench.py"]
+    restart: no
+  
+
+volumes:
+  opensearch-data1:
+  ollama:
+  shabti-models:
+  shabti-files:
+  shabti-hf:
+
+networks:
+  default:
+    name: shabti

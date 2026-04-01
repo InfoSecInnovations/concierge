@@ -64,6 +64,7 @@ volumes:
   ollama:
   shabti-models:
   shabti-files:
+  shabti-hf:
 
 networks:
   default:
