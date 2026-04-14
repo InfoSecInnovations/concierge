@@ -1,4 +1,3 @@
-import json
 import os
 from .opensearch_prompting import get_context_from_opensearch
 from .authorization import authorize, UnauthorizedOperationError
@@ -63,17 +62,15 @@ async def get_response(
         source_file_contents,
     )
 
-    data = {"model": "mistral", "prompt": prompt, "stream": False}
-    # Ollama doesn't like the data in JSON, we have to dump it to string
+    data = {"model": "mistral7b", "prompt": prompt, "stream": False}
     async with httpx.AsyncClient(timeout=None) as httpx_client:
         response = await httpx_client.post(
-            f"http://{host()}:11434/api/generate", data=json.dumps(data)
+            f"http://{os.getenv("LLM_HOST")}:11434/v1/completions", json=data
         )
     if response.status_code != 200:
         print(response.content)
-        return f"ollama status: {response.status_code}"
-
-    return json.loads(response.text)["response"]
+        return f"LLM status: {response.status_code}"
+    return response.json()["choices"][0]["text"]
 
 
 async def stream_response(
@@ -94,10 +91,9 @@ async def stream_response(
     )
 
     data = {"model": "mistral", "prompt": prompt, "stream": True}
-    # Ollama doesn't like the data in JSON, we have to dump it to string
     async with httpx.AsyncClient(timeout=None) as httpx_client:
         async with httpx_client.stream(
-            "POST", f"http://{host()}:11434/api/generate", data=json.dumps(data)
+            "POST", f"http://{os.getenv("LLM_HOST")}:11434/v1/completions", json=data
         ) as response:
             async for line in response.aiter_lines():
                 yield f"{line}\n"

@@ -20,7 +20,7 @@ services:
   shabti:
     extends:
       file: docker_compose_dependencies/docker-compose-shabti.yml
-      service: ${SHABTI_SERVICE:-shabti-cpu}
+      service: ${SHABTI_SERVICE:-shabti}
   shabti-web:
     extends:
       file: docker_compose_dependencies/docker-compose-shabti.yml

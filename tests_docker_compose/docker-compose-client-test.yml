@@ -19,14 +19,12 @@ services:
   shabti:
     extends:
       file: ../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-shabti.yml
-      service: ${SHABTI_SERVICE:-shabti-cpu}
+      service: ${SHABTI_SERVICE:-shabti}
     build:
       context: ../docker_containers/shabti_api
       additional_contexts: 
         python_packages: ../python_packages
       dockerfile: Dockerfile.local
-      args:
-        - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
     restart: unless-stopped
   shabti-client:
     tty: true
