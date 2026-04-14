@@ -1,12 +1,16 @@
 from opensearchpy import helpers
-from langchain_text_splitters import SentenceTransformersTokenTextSplitter
 from .embeddings import create_embeddings
 from ..loaders.base_loader import ShabtiDocument
 from .opensearch import get_client, delete_opensearch_document
 from shabti_types import DocumentIngestInfo
+from semantic_text_splitter import TextSplitter
+from tokenizers import Tokenizer
 
-splitter = SentenceTransformersTokenTextSplitter(
-    model_name="sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+tokenizer = Tokenizer.from_pretrained(
+    "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+)
+splitter = TextSplitter.from_huggingface_tokenizer(
+    tokenizer, tokenizer.truncation["max_length"], overlap=50
 )
 
 
@@ -62,7 +66,7 @@ def insert(
                 routing=doc_id,
                 refresh=True,
             )["_id"]
-            chunks = splitter.split_text(page.content)
+            chunks = splitter.chunks(page.content)
             vects = create_embeddings(chunks)
             entries.extend(
                 [

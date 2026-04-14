@@ -1,7 +1,7 @@
 [project]
 name = "shabti-api"
 version = "0.1.0"
-requires-python = ">=3.13, <3.14"
+requires-python = ">=3.14, <3.15"
 dependencies = [
     "beautifulsoup4~=4.14.3",
     "configobj~=5.0.9",
@@ -12,7 +12,10 @@ dependencies = [
     "opensearch-py~=3.0.0",
     "python-json-logger~=3.3.0",
     "aiofiles~=25.1.0",
-    "requests",    
+    "requests",  
+    "semantic-text-splitter",
+    "tokenizers",
+    "tika"
 ]
 
 [dependency-groups]
@@ -20,8 +23,6 @@ dev = [
     "pytest~=8.4.2",
     "pytest-asyncio~=1.2.0",
 ]
-
-
 
 [tool.pytest.ini_options]
 asyncio_mode="auto"
