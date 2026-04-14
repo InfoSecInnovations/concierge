@@ -135,8 +135,8 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 			});
 		});
 
-		test("get ollama status", async () => {
-			const status = await getClient().ollamaStatus();
+		test("get llm status", async () => {
+			const status = await getClient().llmStatus();
 			expect(status).toBeTrue();
 		});
 		test("get OpenSearch status", async () => {

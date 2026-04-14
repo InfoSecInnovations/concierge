@@ -267,8 +267,8 @@ export class BaseShabtiClient {
 		}
 	}
 
-	async ollamaStatus(): Promise<boolean> {
-		const res = await this.makeRequest("GET", "status/ollama");
+	async llmStatus(): Promise<boolean> {
+		const res = await this.makeRequest("GET", "status/llm");
 		const json = await res.json();
 		return json.running;
 	}

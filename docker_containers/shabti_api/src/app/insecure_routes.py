@@ -20,14 +20,14 @@ from shabti_types import (
     TempFileInfo,
     ModelInfo,
 )
-from .status import check_ollama, check_opensearch
+from .status import check_llm, check_opensearch
 from .load_prompter_config import load_prompter_config
 from .insert_uploaded_files import insert_uploaded_files
 from .insert_urls import insert_urls
 from .run_prompt import run_prompt
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
-from .ollama import load_model
+from .models import load_model
 from typing import Annotated
 
 router = APIRouter()
@@ -127,9 +127,9 @@ async def prompt_route(prompt_info: PromptInfo) -> StreamingResponse:
     return await run_prompt(None, prompt_info)
 
 
-@router.get("/status/ollama")
-def ollama_status():
-    return ServiceStatus(running=check_ollama())
+@router.get("/status/llm")
+def llm_status():
+    return ServiceStatus(running=check_llm())
 
 
 @router.get("/status/opensearch")
@@ -144,4 +144,4 @@ async def get_files_route(collection_id: str, doc_id: str):
 
 @router.post("/models/pull")
 async def load_model_route(model_info: ModelInfo):
-    return load_model(model_info.model_name)
+    await load_model(model_info.model_name)

@@ -150,8 +150,8 @@ class BaseShabtiClient(ABC):
         ):
             yield PromptChunk(**json.loads(line))
 
-    async def ollama_status(self) -> bool:
-        response = await self._make_request("GET", "status/ollama")
+    async def llm_status(self) -> bool:
+        response = await self._make_request("GET", "status/llm")
         return response.json()["running"]
 
     async def opensearch_status(self) -> bool:

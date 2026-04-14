@@ -26,7 +26,7 @@ from shabti_types import (
 from .insert_uploaded_files import insert_uploaded_files
 from .insert_urls import insert_urls
 from jwcrypto.jwt import JWTExpired
-from .status import check_ollama, check_opensearch
+from .status import check_llm, check_opensearch
 from .run_prompt import run_prompt
 from .load_prompter_config import load_prompter_config
 from .upload_prompt_file import upload_prompt_file
@@ -38,7 +38,7 @@ from .authorization import (
     list_scopes,
     UnauthorizedOperationError,
 )
-from .ollama import load_model
+from .models import load_model
 import asyncio
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
@@ -198,9 +198,9 @@ async def prompt_route(
     return await run_prompt(credentials, prompt_info)
 
 
-@router.get("/status/ollama")
-def ollama_status():
-    return ServiceStatus(running=check_ollama())
+@router.get("/status/llm")
+def llm_status():
+    return ServiceStatus(running=check_llm())
 
 
 @router.get("/status/opensearch")
@@ -242,5 +242,5 @@ async def get_files_route(
 
 @router.post("/models/pull")
 async def load_model_route(model_info: ModelInfo):
-    # TODO: should this be locked behind a higher permission level?
-    return load_model(model_info.model_name)
+    # TODO: should this be locked behind higher permissions levels?
+    await load_model(model_info.model_name)

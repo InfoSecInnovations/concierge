@@ -195,10 +195,10 @@ app.post("/remove", (c) =>
 			return streamHtml(c, "Removing Shabti Web UI service", async (_) => {
 				await $`docker container rm --force shabti-web`;
 			});
-		if (service == "ollama")
-			return streamHtml(c, "Removing Ollama service", async (_) => {
-				await $`docker container rm --force ollama`;
-				await $`docker volume rm --force shabti_ollama`;
+		if (service == "llama_cpp")
+			return streamHtml(c, "Removing Llama.cpp service", async (_) => {
+				await $`docker container rm --force llama_cpp`;
+				await $`docker volume rm --force shabti_llama_cpp`;
 			});
 		if (service == "opensearch")
 			return streamHtml(c, "Removing OpenSearch service", async (_) => {

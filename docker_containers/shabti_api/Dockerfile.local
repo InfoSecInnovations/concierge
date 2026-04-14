@@ -1,5 +1,3 @@
-ARG ACCELERATION_TYPE=cpu
-
 FROM astral/uv:0.11.1-python3.14-trixie-slim AS base
 
 COPY --from=python_packages ./isi_util /app/python_packages/isi_util/
@@ -7,19 +5,6 @@ COPY --from=python_packages ./shabti_util /app/python_packages/shabti_util/
 COPY --from=python_packages ./shabti_types /app/python_packages/shabti_types/
 COPY --from=python_packages ./shabti_keycloak /app/python_packages/shabti_keycloak/
 COPY --from=python_packages ./shabti_api_client /app/python_packages/shabti_api_client/
-
-RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
-
-# ADD https://developer.download.nvidia.com/compute/cuda/repos/debian13/x86_64/cuda-keyring_1.1-1_all.deb cuda-keyring_1.1-1_all.deb
-# RUN dpkg -i cuda-keyring_1.1-1_all.deb
-
-# RUN sed -i -e's/ main/ main contrib non-free/g' /etc/apt/sources.list.d/debian.sources
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-  --mount=type=cache,target=/var/lib/apt,sharing=locked \
-/bin/sh -c set -eux; \ 
-apt-get update; \
-apt-get install -y --no-install-recommends poppler-utils pandoc tesseract-ocr libreoffice libgl1 libglib2.0-0 build-essential
 
 EXPOSE 15131
 ENV PYTHONUNBUFFERED=1
@@ -29,23 +14,12 @@ ENV UV_LINK_MODE=copy
 ENV UV_HTTP_TIMEOUT=500
 CMD [ "uv", "run", "docker_run.py", "--development" ]
 
-FROM base AS cpu-1
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml  uv sync --no-install-project --extra cpu
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project
 
-FROM base AS cuda-1
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml  uv sync --no-install-project --extra cu126
-
-FROM ${ACCELERATION_TYPE}-1 AS intermediate
 COPY . /app/shabti/
 
-FROM intermediate AS cpu-2
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --extra cpu
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
 
-FROM intermediate AS cuda-2
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --extra cu126
-RUN uv pip install onnxruntime-gpu
-
-FROM ${ACCELERATION_TYPE}-2 AS final
 RUN --mount=type=cache,target=/root/.cache uv pip install -r local_requirements.txt
 
 # install packages so we can run pytest on them

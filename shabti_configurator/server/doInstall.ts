@@ -118,19 +118,7 @@ export default async function* (
 		yield logMessage("adding demo users");
 		await $`docker exec shabti uv run -m add_keycloak_demo_users`;
 	}
-	yield logMessage("waiting for Ollama to come online...");
-	// while ollama is failing to fetch or returning a non 200 status code, we keep looping
-	while (
-		await fetch("http://localhost:11434/").then(
-			(res) => res.status != 200,
-			() => true,
-		)
-	) {}
-	yield logMessage(
-		"pulling language model. This can take quite a long time if you haven't downloaded the model before.",
-	);
-	// TODO use options.get("language_model")
-	await $`docker exec ollama ollama pull mistral`;
+	// TODO: wait for Llama.cpp to come online and preload the models
 	if (selectedVersion == "local") {
 		// in the development environment we stop the containers as the expectation is that they will be run in watch mode
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml stop`;

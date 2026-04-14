@@ -289,9 +289,7 @@ export default async () => {
 		);
 
 	program.command("status").action(async (options, command) => {
-		console.log(
-			`Ollama: ${(await client.ollamaStatus()) ? "online" : "offline"}`,
-		);
+		console.log(`LLM: ${(await client.llmStatus()) ? "online" : "offline"}`);
 		console.log(
 			`OpenSearch: ${(await client.opensearchStatus()) ? "online" : "offline"}`,
 		);

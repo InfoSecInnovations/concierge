@@ -3,15 +3,15 @@ import { dockerItemExists } from "./dockerItemsExist";
 export const ExistingRemover = async () => {
 	const [
 		shabtiExists,
-		ollamaExists,
+		llamaCppExists,
 		keycloakExists,
 		opensearchExists,
 		shabtiWebExists,
 	] = await Promise.all([
 		dockerItemExists("shabti", "container"),
 		Promise.all([
-			dockerItemExists("ollama", "container"),
-			dockerItemExists("shabti_ollama", "volume"),
+			dockerItemExists("llama_cpp", "container"),
+			dockerItemExists("shabti_llama_cpp", "volume"),
 		]).then((res) => res.some((exists) => exists)),
 		Promise.all([
 			dockerItemExists("keycloak", "container"),
@@ -26,7 +26,7 @@ export const ExistingRemover = async () => {
 	]);
 	if (
 		!shabtiExists &&
-		!ollamaExists &&
+		!llamaCppExists &&
 		!keycloakExists &&
 		!opensearchExists &&
 		!shabtiWebExists
@@ -42,11 +42,11 @@ export const ExistingRemover = async () => {
 			<p>
 				If you're switching between having security enabled and disabled or
 				vice-versa, it's strongly recommended that you remove all existing
-				containers except for Ollama.
+				containers except for Llama.cpp.
 			</p>
 			<p>
-				Be aware that if you remove Ollama you will have to redownload the LLM
-				models which are quite large.
+				Be aware that if you remove Llama.cpp you will have to redownload the
+				LLM models which are quite large.
 			</p>
 			<form action="/remove" method="post">
 				{shabtiExists && (
@@ -59,9 +59,9 @@ export const ExistingRemover = async () => {
 						Remove Shabti Web UI service
 					</button>
 				)}
-				{ollamaExists && (
-					<button type="submit" name="service" value="ollama">
-						Remove Ollama service
+				{llamaCppExists && (
+					<button type="submit" name="service" value="llama_cpp">
+						Remove Llama.cpp service
 					</button>
 				)}
 				{keycloakExists && (

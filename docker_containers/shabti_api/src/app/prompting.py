@@ -8,7 +8,7 @@ from shabti_util import auth_enabled
 
 
 def host():
-    return os.getenv("OLLAMA_HOST") or "localhost"
+    return os.getenv("LLM_HOST") or "localhost"
 
 
 async def get_context(token, collection_id: str, reference_limit: int, user_input: str):

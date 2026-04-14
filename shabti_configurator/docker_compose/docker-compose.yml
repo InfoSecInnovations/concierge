@@ -5,14 +5,18 @@ include:
   - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
 
 services:
-  ollama:
+  llama-cpp:
     extends:
-      file: docker_compose_dependencies/docker-compose-ollama.yml
-      service: ollama-${SHABTI_COMPUTE:-cpu}
+      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
+      service: llama-cpp-${SHABTI_COMPUTE:-cpu}
   opensearch-node1:
     extends:
-      file: docker_compose_dependencies/docker-compose-opensearch.yml
+      file: ./docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node-base
+  tika:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-tika.yml
+      service: tika
   shabti:
     extends:
       file: docker_compose_dependencies/docker-compose-shabti.yml
@@ -28,8 +32,8 @@ services:
 
 volumes:
   opensearch-data1:
-  ollama:
-  shabti-models:
+  llama-cpp-models:
+  llama-cpp-cache:
   shabti-files:
 
 networks:

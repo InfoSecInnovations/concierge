@@ -13,13 +13,13 @@ def status_server(
     input: Inputs, output: Outputs, session: Session, client: BaseShabtiClient
 ):
     opensearch_status = reactive.value("loading")
-    ollama_status = reactive.value("loading")
+    llm_status = reactive.value("loading")
     api_status = reactive.value("loading")
 
     @reactive.extended_task
-    async def get_ollama_status():
+    async def get_llm_status():
         try:
-            return "online" if await client.ollama_status() else "offline"
+            return "online" if await client.llm_status() else "offline"
         except ConnectError:
             return "loading"
 
@@ -35,8 +35,8 @@ def status_server(
         return "online" if await client.api_status() else "offline"
 
     @reactive.effect
-    def set_ollama_status():
-        ollama_status.set(get_ollama_status.result())
+    def set_llm_status():
+        llm_status.set(get_llm_status.result())
 
     @reactive.effect
     def set_opensearch_status():
@@ -51,15 +51,15 @@ def status_server(
         reactive.invalidate_later(10)
         get_api_status()
 
-    # the Ollama and OpenSearch statuses are obtained through the API, so the API needs to be online before we can verify the others
+    # the LLM and OpenSearch statuses are obtained through the API, so the API needs to be online before we can verify the others
     @reactive.effect
     def on_api_status():
         reactive.invalidate_later(10)
         if api_status.get() == "online":
-            get_ollama_status()
+            get_llm_status()
             get_opensearch_status()
         else:
-            ollama_status.set("loading")
+            llm_status.set("loading")
             opensearch_status.set("loading")
 
     @render.ui
@@ -77,11 +77,9 @@ def status_server(
                     f"{'🟢' if opensearch_status.get() == 'online' else '🔴'} OpenSearch"
                 )
             )
-        if ollama_status.get() != "loading":
+        if llm_status.get() != "loading":
             items.append(
-                ui.markdown(
-                    f"{'🟢' if ollama_status.get() == 'online' else '🔴'} Ollama"
-                )
+                ui.markdown(f"{'🟢' if llm_status.get() == 'online' else '🔴'} LLM")
             )
         req(items)
         return ui.card(*items)
@@ -91,7 +89,7 @@ def status_server(
         return {
             "api": api_status.get() == "online",
             "opensearch": opensearch_status.get() == "online",
-            "ollama": ollama_status.get() == "online",
+            "llm": llm_status.get() == "online",
         }
 
     return result

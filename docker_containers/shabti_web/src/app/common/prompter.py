@@ -30,7 +30,7 @@ def prompter_server(
     collections: reactive.Value[CollectionsData[TCollectionInfo]],
     api_status: reactive.Value,
     opensearch_status: reactive.Value,
-    ollama_status: reactive.Value,
+    llm_status: reactive.Value,
     collection_selector_server,
 ):
     llm_loaded = reactive.value(False)
@@ -96,14 +96,14 @@ def prompter_server(
 
     @reactive.effect
     def init():
-        if ollama_status.get() and not llm_loaded.get():
+        if llm_status.get() and not llm_loaded.get():
             load_prompting_llm_model("mistral")
 
     @render.ui
     def prompter_ui():
         loaded = (
             llm_loaded.get()
-            and ollama_status.get()
+            and llm_status.get()
             and opensearch_status.get()
             and tasks.get()
         )
@@ -113,11 +113,7 @@ def prompter_server(
                     "Please create a collection and ingest some documents into it first!"
                 )
             return ui.output_ui("chat_area")
-        if (
-            not api_status.get()
-            or not ollama_status.get()
-            or not opensearch_status.get()
-        ):
+        if not api_status.get() or not llm_status.get() or not opensearch_status.get():
             return ui.markdown("Requirements are not online, see sidebar!")
         if not tasks.get():
             return ui.markdown("Loading prompter config, please wait...")

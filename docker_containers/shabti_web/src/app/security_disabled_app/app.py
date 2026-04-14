@@ -25,7 +25,7 @@ def server(input: Inputs, output: Outputs, session: Session):
     client = ShabtiClient(get_api_url())
     api_status = reactive.value(False)
     opensearch_status = reactive.value(False)
-    ollama_status = reactive.value(False)
+    llm_status = reactive.value(False)
     selected_collection = reactive.value("")
     collections: reactive.Value[CollectionsData[CollectionInfo]] = reactive.value(
         CollectionsData(loading=True)
@@ -57,7 +57,7 @@ def server(input: Inputs, output: Outputs, session: Session):
 
     @reactive.effect
     def update_status():
-        update_status_reactives(status, api_status, opensearch_status, ollama_status)
+        update_status_reactives(status, api_status, opensearch_status, llm_status)
 
     @reactive.extended_task
     async def fetch_collections():
@@ -94,7 +94,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         collections,
         api_status,
         opensearch_status,
-        ollama_status,
+        llm_status,
         collection_selector_server,
     )
 

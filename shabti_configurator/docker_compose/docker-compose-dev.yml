@@ -5,18 +5,22 @@ include:
   - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
 
 services:
-  ollama:
+  llama-cpp:
     extends:
-      file: ./docker_compose_dependencies/docker-compose-ollama.yml
-      service: ollama-${SHABTI_COMPUTE:-cpu}
+      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
+      service: llama-cpp-${SHABTI_COMPUTE:-cpu}
   opensearch-node1:
     extends:
       file: ./docker_compose_dependencies/docker-compose-opensearch.yml
       service: opensearch-node-base
+  tika:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-tika.yml
+      service: tika
   shabti:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml
-      service: ${SHABTI_SERVICE:-shabti-cpu}
+      service: ${SHABTI_SERVICE:-shabti}
     image: null
     environment:
       - WATCHFILES_FORCE_POLLING=true
@@ -25,8 +29,6 @@ services:
       additional_contexts: 
         python_packages: ../../python_packages
       dockerfile: Dockerfile.local
-      args:
-        - ACCELERATION_TYPE=${SHABTI_COMPUTE:-cpu}
     volumes:
       - ../../docker_containers/shabti_api:/app/shabti
       - /app/shabti/.venv
@@ -61,10 +63,9 @@ services:
 
 volumes:
   opensearch-data1:
-  ollama:
-  shabti-models:
+  llama-cpp-models:
+  llama-cpp-cache:
   shabti-files:
-  shabti-hf:
 
 networks:
   default:

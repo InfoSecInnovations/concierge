@@ -14,7 +14,7 @@ async def shabti_client():
         try:
             requests.get("http://shabti:15131")
             requests.get("http://opensearch-node1:9200")
-            requests.get("http://ollama:11434")
+            requests.get("http://llama_cpp:11434")
             break
         except Exception:
             continue
