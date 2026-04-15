@@ -9,7 +9,7 @@ def load_model(model_name: str):
     print(f"loading model {model_name}")
 
     def model_status():
-        status = requests.get(f"http://{os.getenv("LLM_HOST")}:11434/models").json()
+        status = requests.get(f"http://{os.getenv('LLM_HOST')}:11434/models").json()
         model_status = next(x for x in status["data"] if x["id"] == model_name)
         if not model_status:
             raise Exception("Model is not in list")
@@ -22,7 +22,7 @@ def load_model(model_name: str):
 
     if current_status == "unloaded":
         requests.post(
-            f"http://{os.getenv("LLM_HOST")}:11434/models/load",
+            f"http://{os.getenv('LLM_HOST')}:11434/models/load",
             json={"model": model_name},
         )
 

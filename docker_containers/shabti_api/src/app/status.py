@@ -6,7 +6,7 @@ from .opensearch import get_client
 def check_llm():
     try:
         return (
-            requests.get(f"http://{os.getenv("LLM_HOST")}:11434/health").status_code
+            requests.get(f"http://{os.getenv('LLM_HOST')}:11434/health").status_code
             == 200
         )
     except Exception:

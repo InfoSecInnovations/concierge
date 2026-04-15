@@ -66,7 +66,7 @@ async def get_response(
     data = {"model": "mistral7b", "prompt": prompt, "stream": False}
     async with httpx.AsyncClient(timeout=None) as httpx_client:
         response = await httpx_client.post(
-            f"http://{os.getenv("LLM_HOST")}:11434/v1/completions", json=data
+            f"http://{os.getenv('LLM_HOST')}:11434/v1/completions", json=data
         )
     if response.status_code != 200:
         print(response.content)
@@ -96,7 +96,7 @@ async def stream_response(
         async with aconnect_sse(
             httpx_client,
             "POST",
-            f"http://{os.getenv("LLM_HOST")}:11434/v1/completions",
+            f"http://{os.getenv('LLM_HOST')}:11434/v1/completions",
             json=data,
         ) as event_source:
             async for sse in event_source.aiter_sse():

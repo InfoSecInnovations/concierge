@@ -28,7 +28,7 @@ if __name__ == "__main__":
     while True:
         try:
             if (
-                requests.get(f"http://{os.getenv("LLM_HOST")}:11434/health").status_code
+                requests.get(f"http://{os.getenv('LLM_HOST')}:11434/health").status_code
                 == 200
             ):
                 break
