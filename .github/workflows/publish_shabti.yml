@@ -23,8 +23,8 @@ jobs:
           ls -la /home/gh-runner/.local/bin/uv || echo "binary not found"
           /home/gh-runner/.local/bin/uv --version || echo "direct exec failed"
       
-      - name: Install Python 3.13
-        run: uv python install 3.13
+      - name: Install Python 3.14
+        run: uv python install 3.14
       - name: Publish shabti_util
         working-directory: ./python_packages/shabti_util
         run: |
@@ -81,15 +81,7 @@ jobs:
         with:
           push: true
           context: ./docker_containers/shabti_api
-          build-args: ACCELERATION_TYPE=cpu
           tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}
-      - name: Build and push Cuda Docker image
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          context: ./docker_containers/shabti_api
-          build-args: ACCELERATION_TYPE=cuda
-          tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}-cuda
       - name: Build and push web client Docker image
         uses: docker/build-push-action@v6
         with:
