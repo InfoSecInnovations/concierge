@@ -13,7 +13,7 @@ def test_tika_loader():
         assert len(doc.pages)
 
 
-def test_with_upload_file():
+def test_tika_loader_with_upload_file():
     with open(file_path, "rb") as f:
         uf = UploadFile(file=BytesIO(f.read()), filename=filename)
     with uf.file as f:
