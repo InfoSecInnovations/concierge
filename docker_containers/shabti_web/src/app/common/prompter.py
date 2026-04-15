@@ -97,7 +97,7 @@ def prompter_server(
     @reactive.effect
     def init():
         if llm_status.get() and not llm_loaded.get():
-            load_prompting_llm_model("mistral")
+            load_prompting_llm_model("mistral7b")
 
     @render.ui
     def prompter_ui():

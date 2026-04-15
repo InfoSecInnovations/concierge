@@ -4,6 +4,10 @@ from logging_config import logging_config
 import os
 import argparse
 from multiprocessing import freeze_support
+from src.app.models import load_model
+import requests
+
+INSTALLED_MODELS = ["mistral7b", "paraphrase-multilingual"]
 
 if __name__ == "__main__":
     freeze_support()
@@ -20,6 +24,21 @@ if __name__ == "__main__":
     if auth_enabled():
         args["ssl_keyfile"] = "/api_certs/key.pem"
         args["ssl_certfile"] = "/api_certs/cert.pem"
+
+    while True:
+        try:
+            if (
+                requests.get(f"http://{os.getenv("LLM_HOST")}:11434/health").status_code
+                == 200
+            ):
+                break
+        except Exception:
+            pass
+
+    for model_name in INSTALLED_MODELS:
+        print(f"Loading model {model_name}")
+        for x in load_model(model_name):
+            print(f"model: {model_name}, progress: {x.progress}")
 
     uvicorn.run(
         app="src.app.app:app",

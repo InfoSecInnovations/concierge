@@ -52,10 +52,10 @@ export const InstallOptionsForm = async (props: {
 				<p>
 					<label for="language_model">Select Language Model</label>
 					<select name="language_model" id="language_model">
-						<option value="mistral">mistral</option>
+						<option value="mistral7b">mistral7b</option>
 					</select>
 					Note that this option doesn't do anything yet, for now the model is
-					hardcoded to mistral.
+					hardcoded to mistral7b.
 				</p>
 			</fieldset>
 			<fieldset>

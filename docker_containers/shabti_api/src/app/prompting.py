@@ -90,7 +90,7 @@ async def stream_response(
         source_file_contents,
     )
 
-    data = {"model": "mistral", "prompt": prompt, "stream": True}
+    data = {"model": "mistral7b", "prompt": prompt, "stream": True}
     async with httpx.AsyncClient(timeout=None) as httpx_client:
         async with httpx_client.stream(
             "POST", f"http://{os.getenv("LLM_HOST")}:11434/v1/completions", json=data

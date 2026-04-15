@@ -27,7 +27,7 @@ from .insert_urls import insert_urls
 from .run_prompt import run_prompt
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
-from .models import load_model
+from .models import load_model_stream
 from typing import Annotated
 
 router = APIRouter()
@@ -144,4 +144,4 @@ async def get_files_route(collection_id: str, doc_id: str):
 
 @router.post("/models/pull")
 async def load_model_route(model_info: ModelInfo):
-    await load_model(model_info.model_name)
+    return load_model_stream(model_info.model_name)

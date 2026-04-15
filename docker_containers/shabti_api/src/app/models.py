@@ -1,10 +1,11 @@
 import requests
 import os
 import time
-from isi_util.async_single import asyncify
+from shabti_types import ModelLoadInfo
+from fastapi.responses import StreamingResponse
 
 
-def load_model_sync(model_name: str):
+def load_model(model_name: str):
     print(f"loading model {model_name}")
 
     def model_status():
@@ -25,11 +26,19 @@ def load_model_sync(model_name: str):
             json={"model": model_name},
         )
 
+    # TODO: real progress
+    current = 0
     while model_status() != "loaded":
+        yield ModelLoadInfo(
+            progress=current,
+            total=current + 1,
+            model_name=model_name,
+        )
         time.sleep(5)
+        current += 1
 
     print(f"Loaded model {model_name}")
 
 
-async def load_model(model_name: str):
-    return asyncify(load_model_sync, model_name)
+def load_model_stream(model_name: str):
+    return StreamingResponse(load_model(model_name))

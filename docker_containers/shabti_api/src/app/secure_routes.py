@@ -38,7 +38,7 @@ from .authorization import (
     list_scopes,
     UnauthorizedOperationError,
 )
-from .models import load_model
+from .models import load_model_stream
 import asyncio
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
@@ -243,4 +243,4 @@ async def get_files_route(
 @router.post("/models/pull")
 async def load_model_route(model_info: ModelInfo):
     # TODO: should this be locked behind higher permissions levels?
-    await load_model(model_info.model_name)
+    return load_model_stream(model_info.model_name)
