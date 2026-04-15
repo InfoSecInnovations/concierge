@@ -14,14 +14,10 @@ export default async () => {
 			tags.push(tag.name);
 		}
 	}
-	// filter out tags which don't have a matching cuda tag (likely an incomplete publish)
-	// filter out the suffixes as we will apply those using the GPU enabled option
+	// filter out cuda tagged versions (we don't do that anymore)
 	// filter out "latest" tag
 	const filteredTags = tags.filter(
-		(tag) =>
-			tags.some((otherTag) => otherTag == `${tag}-cuda`) &&
-			!tag.endsWith("-cuda") &&
-			tag != "latest",
+		(tag) => !tag.endsWith("-cuda") && tag != "latest",
 	);
 	return filteredTags
 		.filter(
