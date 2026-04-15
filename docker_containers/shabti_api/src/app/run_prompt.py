@@ -76,11 +76,16 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
             persona_prompt=persona_prompt,
             source_file_contents=source_file_contents,
         ):
-            obj = json.loads(x)
-            if "choices" in obj:
-                yield x
-                if logging_enabled():
-                    response += obj["choices"][0]["text"]
+            try:
+                obj = json.loads(x)
+                if "choices" in obj:
+                    yield x
+                    if logging_enabled():
+                        response += obj["choices"][0]["text"]
+            except json.decoder.JSONDecodeError as e:
+                if x.startswith("[DONE]"):
+                    return
+                raise e
 
         if logging_enabled():
             prompt = {

@@ -31,6 +31,7 @@ async def insert_uploaded_files(
                         os.path.join(os.getenv("SHABTI_FILES_DIR"), file_unique_name),
                         "wb",
                     ) as f:
+                        await file.seek(0)
                         await f.write(await file.read())
                     try:
                         async for result in insert_document(

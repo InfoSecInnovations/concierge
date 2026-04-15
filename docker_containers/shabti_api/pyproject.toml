@@ -12,10 +12,11 @@ dependencies = [
     "opensearch-py~=3.0.0",
     "python-json-logger~=3.3.0",
     "aiofiles~=25.1.0",
-    "requests",  
+    "requests",
     "semantic-text-splitter",
     "tokenizers",
-    "tika"
+    "tika",
+    "httpx-sse~=0.4.3",
 ]
 
 [dependency-groups]

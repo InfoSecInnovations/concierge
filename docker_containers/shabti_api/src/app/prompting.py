@@ -4,6 +4,7 @@ from .authorization import authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
 import httpx
 from shabti_util import auth_enabled
+from httpx_sse import aconnect_sse
 
 
 def host():
@@ -92,8 +93,11 @@ async def stream_response(
 
     data = {"model": "mistral7b", "prompt": prompt, "stream": True}
     async with httpx.AsyncClient(timeout=None) as httpx_client:
-        async with httpx_client.stream(
-            "POST", f"http://{os.getenv("LLM_HOST")}:11434/v1/completions", json=data
-        ) as response:
-            async for line in response.aiter_lines():
-                yield f"{line}\n"
+        async with aconnect_sse(
+            httpx_client,
+            "POST",
+            f"http://{os.getenv("LLM_HOST")}:11434/v1/completions",
+            json=data,
+        ) as event_source:
+            async for sse in event_source.aiter_sse():
+                yield f"{sse.data}\n"
