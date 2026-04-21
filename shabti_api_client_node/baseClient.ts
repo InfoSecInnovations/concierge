@@ -248,7 +248,7 @@ export class BaseShabtiClient {
 			return undefined;
 		})();
 
-		return this.streamRequest("POST", "prompt", null, {
+		return this.streamRequest("POST", "prompt", undefined, {
 			collection_id: collectionId,
 			user_input: prompt,
 			task,
