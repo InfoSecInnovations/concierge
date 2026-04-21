@@ -66,7 +66,9 @@ def insert(
                 routing=doc_id,
                 refresh=True,
             )["_id"]
-            chunks = splitter.chunks(page.content)
+            chunks = [
+                chunk for chunk in splitter.chunks(page.content) if chunk.strip()
+            ]  # don't allow empty or whitespace chunks
             vects = create_embeddings(chunks)
             entries.extend(
                 [

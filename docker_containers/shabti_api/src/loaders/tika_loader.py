@@ -7,7 +7,9 @@ class TikaFileLoader:
     @staticmethod
     def load(file, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
-        parsed = parser.from_buffer(file.read(), xmlContent=True)
+        parsed = parser.from_buffer(
+            file.read(), xmlContent=True, requestOptions={"timeout": None}
+        )
         soup = BeautifulSoup(parsed["content"], "html.parser")
         pages = [
             {"content": page.text, "page_number": index + 1}

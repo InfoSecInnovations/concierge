@@ -12,6 +12,9 @@ from uuid import uuid4
 import aiofiles
 import aiofiles.os
 
+# for debugging purposes we can set this to True and try to get more information about why an upload is failing
+RAISE_EXCEPTIONS = True
+
 
 async def insert_uploaded_files(
     token: None | str, collection_id, files: list[UploadFile]
@@ -49,7 +52,7 @@ async def insert_uploaded_files(
                     raise e
                 except UnsupportedFileError as e:
                     yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': e.message, 'filename': e.filename})}\n"
-                except Exception:
+                except Exception as e:
                     if zipfile.is_zipfile(file.file):
                         print("Zip file detected, ingesting zip file contents...")
                         with zipfile.ZipFile(file.file) as my_zip:
@@ -67,6 +70,8 @@ async def insert_uploaded_files(
                             ):
                                 yield x
                         continue
+                    if RAISE_EXCEPTIONS:
+                        raise e
                     yield f"{json.dumps({'error': 'UnsupportedFileError', 'message': f'File {file.filename} could not be loaded', 'filename': file.filename})}\n"
 
         async for x in handle_files(files):

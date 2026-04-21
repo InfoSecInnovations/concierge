@@ -3,6 +3,11 @@ import os
 
 
 def create_embeddings(text):
+    # don't try to do embeddings on empty values
+    if not isinstance(text, list) and not text.strip():
+        return None
+    if not text:
+        return []
     data = {
         "model": "paraphrase-multilingual",
         "input": text,
