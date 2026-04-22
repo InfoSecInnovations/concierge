@@ -22,7 +22,7 @@ These versions are currently being used to develop Shabti, lower versions may wo
 - **Docker Compose >= 2.24.6** (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup). Check with `docker compose version`.  
    
 Optional:  
-If you want to use GPU acceleration (Shabti does NOT require this, but it will make responses dramatically faster), you must have the 
+If you want to use GPU acceleration (Shabti does NOT require this, but it will make responses and ingesting dramatically faster), you must have the 
 NVIDIA drivers correctly setup and running. Shabti will not install or make any adjustments to your driver configuration.  
 
 Note: if you want to use GPU acceleration on a Windows host, you must use WSL2.  
@@ -65,21 +65,17 @@ We do not yet have code signing configured for MacOS so it will not recognize Sh
 
 ### Ingesting documents appears to hang for a while
 
-While the Unstructured backend provides a huge improvement to the variety of files Shabti can ingest, it does have a rather slow startup time during which the ingesting progress appears to be stuck. Please be patient, once it has initialized it will start loading documents, and subsequent runs appear to happen faster once it is "warmed up".
+We do not yet have a way to display progress when a document is being processed into text, only once the text is being fed into the database. For smaller documents you probably won't notice this delay much, but processing a document with a very large amount of text can take a long time, please be patient!
 
 ## Troubleshooting
 
 ### Shabti API is down
 
-Check the Docker logs for the container called `shabti`. If you don't see a log that says "Application startup complete", keep waiting, it may still be loading the embeddings model.
+Check the Docker logs for the container called `shabti`. If you don't see a log that says "Application startup complete", keep waiting, it may still be loading the LLM models.
 
 ### Shabti Web UI is broken or blank
 
 Perform an "Empty Cache and Hard Reload" on the page. Depending on your browser you may need to open the dev tools to do this.
-
-### Blank response when using the prompter
-
-Check the Docker logs for the container called `ollama`. If you see a warning about Ollama not having enough memory allocated, you must increase the amount of RAM available to Docker.
 
 ### Other issues
 

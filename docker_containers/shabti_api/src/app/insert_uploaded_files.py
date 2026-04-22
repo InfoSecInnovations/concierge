@@ -56,7 +56,7 @@ async def insert_uploaded_files(
                     if zipfile.is_zipfile(file.file):
                         print("Zip file detected, ingesting zip file contents...")
                         with zipfile.ZipFile(file.file) as my_zip:
-                            # for some reason the Unstructured loader can't directly process text files from the ZipExtFile type but is fine with BytesIO
+                            # for some reason some loaders can't directly process text files from the ZipExtFile type but are fine with BytesIO
                             # zip info includes directories, but we don't want to try to read those!
                             async for x in handle_files(
                                 [

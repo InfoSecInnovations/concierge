@@ -7,17 +7,18 @@ Due to having several tasks ongoing simultaneously we've been unable to release 
 ### Changes
 
 - The project is now called Shabti
-- Added Unstructured.IO document processing solution to Shabti's dependencies. This allows you to load many types of document out of the box including Microsoft Office and open document formats, but also images of text using its built-in OCR capabilities! Unfortunately this does make the Docker image quite a bit larger again, but we think it's worth it for the extra functionality.
-- The development environment has been reworked to only support running the code within Docker. It was already tricky to support running the project on the user's local system, but the addition of Unstructured has increased the dependencies which need to be installed. On top of that there were still issues relating to the Python version available on the user's machine. Running in Docker ensures that the code runs exactly as it will in production. The development environment uses Docker Compose's watch feature to sync changes between the directory containing the code and the Docker containers.
+- Added Apache Tika document processing solution to Shabti's dependencies. This allows you to load many types of document out of the box including Microsoft Office and open document formats, but also images of text using its built-in OCR capabilities!
+- Switched from Ollama to Llama.cpp model runner. This offers a small increase in performance for prompting and allows us to generate embeddings much faster than Ollama could.
+- The above changes have allowed us to remove various dependencies from the Shabti API project including PyTorch, this makes for a much much smaller Docker image and removes the need for separate CPU and cuda versions of Shabti. Note that the GPU accleration setting still exists but now only applies to the model runner container and not the Shabti API container.
+- The development environment has been reworked to only support running the code within Docker in order to replicate the production environment more precisely. We have provided VSCode devcontainer configurations to enable developing directly inside the containers.
 - Document metadata has been streamlined into a single format, this greatly simplifies the schema and queries in OpenSearch and makes it much simpler to handle multiple types of document.
 - We've switched Python tooling from pip to uv which offers some additional features and hopefully more robustness in resolving dependencies and publishing packages.
 - Documents can be ingested from a zip file.
-- Much more extensive automated tests
+- Much more extensive automated tests.
 
 ### Known Issues
 
 - Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work.
-- Unstructured has quite a slow startup time, ingesting documents can appear to be stuck for a while before the progress bar starts.
 
 ## 0.7.0 - rolled into 0.8.0 release
 

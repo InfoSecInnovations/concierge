@@ -12,7 +12,21 @@ Project founder
 ## The open source community:
 Shabti is built on 100% open source software (OSS). While the license models of various components do have differences, the goal is the same. The highest quality software freely available for experimentation, exploration, and collaboration. Shabti (just as most other software in this space) would not be able to exist without this foundational work. To honor this spirit of freedom, Shabti will always have a 100% free and OSS version. Always.
 
-Special recognition to the [Huggingface](https://huggingface.co/), [Langchain](https://www.langchain.com/), [Milvus](https://milvus.io/), [Ollama](https://ollama.com/), and [Python](https://www.python.org/) communities. Your tech stacks are great, but it’s the ecosystem of boisterous support that makes it a joy to be working in this space.
+Non-exhaustive list of shoutouts to projects, organizations and their communities:
+
+- [Huggingface](https://huggingface.co/)
+- [Llama.cpp](https://llama-cpp.com/)
+- [Langchain](https://www.langchain.com/)
+- [Apache Tika](https://tika.apache.org/)
+- [OpenSearch](https://opensearch.org/)
+- [Bun](https://bun.com/)
+- [Python](https://www.python.org/)
+- [Shiny for Python](https://shiny.posit.co/py/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Astral](https://astral.sh/)
+- [Keycloak](https://www.keycloak.org/)
+
+Your tech stacks are great, but it’s the ecosystem of boisterous support that makes it a joy to be working in this space.
 
 ## Dave Hoelzer:
 Your talk at SANS CDI 2023 hit me at the right time. Several ideas I had brewing clicked. I also appreciate how freely you assisted me in getting a version of your script running. You’re a class act, and I always appreciate how you challenge others to reach just a little further.
