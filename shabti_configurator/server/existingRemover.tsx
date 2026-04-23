@@ -7,6 +7,7 @@ export const ExistingRemover = async () => {
 		keycloakExists,
 		opensearchExists,
 		shabtiWebExists,
+		tikaExists,
 	] = await Promise.all([
 		dockerItemExists("shabti", "container"),
 		Promise.all([
@@ -23,13 +24,15 @@ export const ExistingRemover = async () => {
 			dockerItemExists("shabti_opensearch-data1", "volume"),
 		]).then((res) => res.some((exists) => exists)),
 		dockerItemExists("shabti-web", "container"),
+		dockerItemExists("tika", "container"),
 	]);
 	if (
 		!shabtiExists &&
 		!llamaCppExists &&
 		!keycloakExists &&
 		!opensearchExists &&
-		!shabtiWebExists
+		!shabtiWebExists &&
+		!tikaExists
 	)
 		return <></>;
 	return (
@@ -72,6 +75,11 @@ export const ExistingRemover = async () => {
 				{opensearchExists && (
 					<button type="submit" name="service" value="opensearch">
 						Remove OpenSearch service
+					</button>
+				)}
+				{tikaExists && (
+					<button type="submit" name="service" value="tika">
+						Remove Apache Tika service
 					</button>
 				)}
 			</form>

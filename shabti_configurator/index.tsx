@@ -198,7 +198,7 @@ app.post("/remove", (c) =>
 		if (service == "llama_cpp")
 			return streamHtml(c, "Removing Llama.cpp service", async (_) => {
 				await $`docker container rm --force llama_cpp`;
-				await $`docker volume rm --force shabti_llama_cpp`;
+				await $`docker volume rm --force shabti_llama-cpp-models shabti_llama-cpp-cache`;
 			});
 		if (service == "opensearch")
 			return streamHtml(c, "Removing OpenSearch service", async (_) => {
@@ -209,6 +209,10 @@ app.post("/remove", (c) =>
 			return streamHtml(c, "Removing Keycloak service", async (_) => {
 				await $`docker container rm --force keycloak postgres`;
 				await $`docker volume rm --force shabti_postgres_data`;
+			});
+		if (service == "tika")
+			return streamHtml(c, "Removing Apache Tika service", async (_) => {
+				await $`docker container rm --force tika`;
 			});
 		return c.html(<p>Invalid service name was provided!</p>);
 	}),
