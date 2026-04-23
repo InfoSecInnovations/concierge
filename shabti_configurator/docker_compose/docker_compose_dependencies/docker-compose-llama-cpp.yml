@@ -1,7 +1,7 @@
 services:
   llama-cpp-cpu:
     container_name: llama_cpp
-    image: ghcr.io/ggml-org/llama.cpp:server-cuda
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b8895
     restart: unless-stopped
     ports:
       - "11434:11434"
