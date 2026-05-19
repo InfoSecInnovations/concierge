@@ -16,7 +16,10 @@ jobs:
           bun run build_win
           bun run build_linux
           bun run build_mac
-
+          
+      - name: signing path creation
+        run: mkdir -p ./signed/windows
+        
       # WORKING: Code signing attempt 
       # Windows only for now
       # created exe is here:
