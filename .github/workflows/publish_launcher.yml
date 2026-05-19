@@ -17,8 +17,21 @@ jobs:
           bun run build_linux
           bun run build_mac
 
-      # TODO: Code signing would go here
-
+      # WORKING: Code signing attempt 
+      # Windows only for now
+      # created exe is here:
+      #./shabti_configurator/dist/windows/shabti.exe
+      - name: Sign Artifact with CodeSignTool
+        uses: sslcom/esigner-codesign@develop
+        with:
+          command: sign
+          username: ${{secrets.ES_USERNAME}}
+          password: ${{secrets.ES_PASSWORD}}
+          credential_id: ${{secrets.CREDENTIAL_ID}}
+          totp_secret: ${{secrets.ES_TOTP_SECRET}}
+          file_path: ${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe
+          output_path: ${GITHUB_WORKSPACE}/signed/windows
+      
       - name: Get Launcher version
         id: package-version
         uses: ./.github/actions/get_package_json_version
@@ -30,7 +43,7 @@ jobs:
       - name: Zip executables
         run: | 
           mkdir -p dist
-          zip -j ./dist/shabti_win.zip ./shabti_configurator/dist/windows/shabti.exe ./unzipped/win/shabti_cli.exe
+          zip -j ./dist/shabti_win.zip ./signed/windows/shabti.exe ./unzipped/win/shabti_cli.exe
           zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./unzipped/linux/shabti_cli
           zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./unzipped/mac/shabti_cli
       - name: Release
