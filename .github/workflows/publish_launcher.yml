@@ -25,15 +25,21 @@ jobs:
       # created exe is here:
       #./shabti_configurator/dist/windows/shabti.exe
       - name: Sign Artifact with CodeSignTool
-        uses: sslcom/esigner-codesign@develop
-        with:
-          command: sign
-          username: ${{secrets.ES_USERNAME}}
-          password: ${{secrets.ES_PASSWORD}}
-          credential_id: ${{secrets.CREDENTIAL_ID}}
-          totp_secret: ${{secrets.ES_TOTP_SECRET}}
-          file_path: ${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe
-          output_path: ${GITHUB_WORKSPACE}/signed/windows
+      #  uses: sslcom/esigner-codesign@develop
+      #  with:
+      #    command: sign
+      #    username: ${{secrets.ES_USERNAME}}
+      #    password: ${{secrets.ES_PASSWORD}}
+      #    credential_id: ${{secrets.CREDENTIAL_ID}}
+      #    totp_secret: ${{secrets.ES_TOTP_SECRET}}
+      #    file_path: ${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe
+      #    output_path: ${GITHUB_WORKSPACE}/signed/windows 
+        run: | 
+          wget https://github.com/SSLcom/CodeSignTool/releases/download/v1.3.0/CodeSignTool-v1.3.0.zip
+          unzip ./CodeSignTool-v1.3.0.zip -d codesign
+          chmod +x ./codesign/CodeSignTool.sh
+          ./codesign/CodeSignTool.sh -credential_id=${{secrets.CREDENTIAL_ID}} -username=${{secrets.ES_USERNAME}} -password=${{secrets.ES_PASSWORD}} -totp_secret=${{secrets.ES_TOTP_SECRET}} -output_dir_path=${GITHUB_WORKSPACE}/signed/windows -input_file_path=${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe  
+
       
       - name: Get Launcher version
         id: package-version
