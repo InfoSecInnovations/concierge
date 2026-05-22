@@ -55,7 +55,7 @@ jobs:
       - name: Zip executables
         run: | 
           mkdir -p dist
-          zip -j ./dist/shabti_win.zip ./signed/windows/shabti.exe ./unzipped/win/shabti_cli.exe
+          zip -j ./dist/shabti_win.zip ${GITHUB_WORKSPACE}/signed/windows/shabti.exe ./unzipped/win/shabti_cli.exe
           zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./unzipped/linux/shabti_cli
           zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./unzipped/mac/shabti_cli
       - name: Release
