@@ -8,7 +8,12 @@ class TikaFileLoader:
     def load(file, filename: str | None) -> ShabtiDocument:
         date_time = get_current_time()
         parsed = parser.from_buffer(
-            file.read(), xmlContent=True, requestOptions={"timeout": None}
+            file.read(),
+            xmlContent=True,
+            requestOptions={"timeout": None},
+            headers={
+                "X-Tika-PDFOcrStrategy": "no_ocr"
+            },  # at the moment we're not using OCR at all as it can be very slow
         )
         soup = BeautifulSoup(parsed["content"], "html.parser")
         pages = [
