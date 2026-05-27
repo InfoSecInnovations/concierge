@@ -12,7 +12,7 @@ services:
       - llama-cpp-models:/models
       - llama-cpp-cache:/hf_cache
       - ./llama_models/my-models.ini:/my-models.ini
-    command: ["--models-preset", "/my-models.ini", "--embeddings", "--port", "11434"]
+    command: ["--models-preset", "/my-models.ini", "--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
   llama-cpp-cuda:
     extends: llama-cpp-cpu
     deploy:
