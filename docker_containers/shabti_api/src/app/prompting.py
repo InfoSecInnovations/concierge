@@ -46,34 +46,6 @@ def prepare_prompt(
     return prompt
 
 
-async def get_response(
-    context,
-    task_prompt,
-    user_input,
-    persona_prompt=None,
-    enhancer_prompts=None,
-    source_file_contents=None,
-):
-    prompt = prepare_prompt(
-        context,
-        task_prompt,
-        user_input,
-        persona_prompt,
-        enhancer_prompts,
-        source_file_contents,
-    )
-
-    data = {"model": "mistral7b", "prompt": prompt, "stream": False}
-    async with httpx.AsyncClient(timeout=None) as httpx_client:
-        response = await httpx_client.post(
-            f"http://{os.getenv('LLM_HOST')}:11434/v1/completions", json=data
-        )
-    if response.status_code != 200:
-        print(response.content)
-        return f"LLM status: {response.status_code}"
-    return response.json()["choices"][0]["text"]
-
-
 async def stream_response(
     context,
     task_prompt,
@@ -91,12 +63,16 @@ async def stream_response(
         source_file_contents,
     )
 
-    data = {"model": "mistral7b", "prompt": prompt, "stream": True}
+    data = {
+        "model": "mistral7b",
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": True,
+    }
     async with httpx.AsyncClient(timeout=None) as httpx_client:
         async with aconnect_sse(
             httpx_client,
             "POST",
-            f"http://{os.getenv('LLM_HOST')}:11434/v1/completions",
+            f"http://{os.getenv('LLM_HOST')}:11434/v1/chat/completions",
             json=data,
         ) as event_source:
             async for sse in event_source.aiter_sse():
