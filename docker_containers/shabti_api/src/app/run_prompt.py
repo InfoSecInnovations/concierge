@@ -79,7 +79,7 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
             try:
                 obj = json.loads(x)
                 if "choices" in obj:
-                    yield f"{json.dumps({"response": obj["choices"][0]["text"]})}\n"
+                    yield f"{json.dumps({'response': obj['choices'][0]['text']})}\n"
                     if logging_enabled():
                         response += obj["choices"][0]["text"]
             except json.decoder.JSONDecodeError as e:
