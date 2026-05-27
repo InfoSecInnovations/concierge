@@ -10,6 +10,7 @@ services:
       - SHABTI_FILES_DIR=/opt/shabti_files
       - TIKA_CLIENT_ONLY=True
       - 'TIKA_SERVER_ENDPOINT=http://tika:9998'
+      - ENVIRONMENT=${ENVIRONMENT:-production}
     ports:
       - ${API_PORT:-15131}:15131
     volumes:

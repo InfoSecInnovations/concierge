@@ -282,7 +282,10 @@ async def delete_document(token, collection_id, document_id):
         ),
     )
     if binary_path:
-        os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), binary_path))
+        try:  # if ingesting was cut short by a crash or stopping Shabti manually, the file may not actually be saved
+            os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), binary_path))
+        except FileNotFoundError:
+            pass
     if logging_enabled():
         if auth_enabled():
             await log_user_action(

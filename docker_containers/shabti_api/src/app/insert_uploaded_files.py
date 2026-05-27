@@ -13,7 +13,8 @@ import aiofiles
 import aiofiles.os
 
 # for debugging purposes we can set this to True and try to get more information about why an upload is failing
-RAISE_EXCEPTIONS = True
+# we make sure this doesn't accidentally get enabled in production
+RAISE_EXCEPTIONS = os.getenv("ENVIRONMENT") == "development" and False
 
 
 async def insert_uploaded_files(
