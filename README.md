@@ -123,7 +123,6 @@ Shabti now ships with a standalone executable for the Command Line Interface and
 
 - Startup of the Shabti API service can be quite slow because it has to download models on the first run. It should generally start up faster subsequent times as it will cache the model downloads.
 - Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work. Look up bypassing Gatekeeper on your MacOS version or use the development version of the configurator.
-- Unstructured has quite a slow startup time, ingesting documents can appear to be stuck for a while before the progress bar starts, just be patient and you should see the documents start to load!
 
 ## Want to get involved? ##
 
