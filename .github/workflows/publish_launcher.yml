@@ -20,12 +20,6 @@ jobs:
       - name: signing path creation
         run: mkdir -p ./signed/windows
 
-      - run: |
-          printf '%s' "$ES_TOTP_SECRET" | wc -c
-          printf '%s' "$ES_TOTP_SECRET" | sha256sum
-        env:
-          ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
-
       - name: Install codesigner tool
         run: |
           wget https://github.com/SSLcom/CodeSignTool/releases/download/v1.3.0/CodeSignTool-v1.3.0.zip
