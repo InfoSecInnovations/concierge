@@ -42,13 +42,16 @@ jobs:
       #    output_path: ${GITHUB_WORKSPACE}/signed/windows 
         working-directory: ./codesign
         run: ./CodeSignTool.sh sign \
-          -credential_id=${{secrets.CREDENTIAL_ID}} \
-          -username=${{secrets.ES_USERNAME}} \
-          -password=${{secrets.ES_PASSWORD}} \ 
-          -totp_secret=$ES_TOTP_SECRET \ 
+          -credential_id="$ES_CREDENTIAL_ID" \
+          -username="$ES_USERNAME" \
+          -password="$ES_PASSWORD" \ 
+          -totp_secret="$ES_TOTP_SECRET" \ 
           -output_dir_path=${GITHUB_WORKSPACE}/signed/windows \ 
           -input_file_path=${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe  
         env:
+          ES_CREDENTIAL_ID: ${{ secrets.CREDENTIAL_ID }}
+          ES_USERNAME: ${{ secrets.ES_USERNAME }}
+          ES_PASSWORD: ${{ secrets.ES_PASSWORD }}       
           ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
       
       - name: Get Launcher version
