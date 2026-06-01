@@ -1,4 +1,12 @@
 services:
+  volume-ownership-changer:
+    container_name: volume-ownership-changer
+    image: alpine
+    restart: "no"
+    entrypoint: |
+        /bin/sh -c "chown -R 1000:1000 /models_dir"
+    volumes:
+        - llama-cpp-models:/models_dir
   llama-cpp-cpu:
     container_name: llama_cpp
     image: ghcr.io/ggml-org/llama.cpp:server-cuda-b8895
@@ -6,13 +14,12 @@ services:
     ports:
       - "11434:11434"
     environment:
-      - "LLAMA_CACHE=/models/"  
-      - "HF_HUB_CACHE=/hf_cache/"
+      - "LLAMA_CACHE=/models/hub"  
     volumes:
       - llama-cpp-models:/models
-      - llama-cpp-cache:/hf_cache
-      - ./llama_models/my-models.ini:/my-models.ini
-    command: ["--models-preset", "/my-models.ini", "--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
+    depends_on:
+      - volume-ownership-changer
+    command: ["--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
   llama-cpp-cuda:
     extends: llama-cpp-cpu
     deploy:
@@ -22,3 +29,14 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
+  huggingface-downloader:
+    container_name: huggingface-downloader
+    image: ghcr.io/bodaay/huggingfacemodeldownloader:3.1.0
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    volumes: 
+      - llama-cpp-models:/home/hfdownloader/.cache/huggingface
+    depends_on:
+      - volume-ownership-changer
+    command: ["serve", "--port", "8090"]
