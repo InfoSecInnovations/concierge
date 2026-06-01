@@ -38,7 +38,10 @@ if __name__ == "__main__":
     for model_name in INSTALLED_MODELS:
         print(f"Loading model {model_name}")
         for x in load_model(model_name):
-            print(f"model: {model_name}, progress: {x.progress}")
+            progress_text = f"model: {model_name}, progress: {x.progress}"
+            if x.info:
+                progress_text += f", info: {x.info}"
+            print(progress_text)
 
     uvicorn.run(
         app="src.app.app:app",

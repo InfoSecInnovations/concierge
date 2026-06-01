@@ -61,6 +61,7 @@ class ModelLoadInfo(BaseModel):
     progress: int
     total: int
     model_name: str
+    info: Optional[str] = None
 
 
 class ModelInfo(BaseModel):

@@ -5,6 +5,7 @@ services:
     environment:
       - OPENSEARCH_HOST=opensearch-node1
       - LLM_HOST=llama_cpp
+      - MODEL_LOADER_HOST=huggingface-downloader
       - SHABTI_SECURITY_ENABLED=False
       - SHABTI_LOGGING_ENABLED=False
       - SHABTI_FILES_DIR=/opt/shabti_files
@@ -15,6 +16,7 @@ services:
       - ${API_PORT:-15131}:15131
     volumes:
       - shabti-files:/opt/shabti_files
+      - ./shabti_config:/opt/shabti_config
     restart: unless-stopped
   shabti-logging:
     extends: shabti
