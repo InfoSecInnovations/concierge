@@ -5,6 +5,7 @@ import getDefaultDirectory from "./getDefaultDirectory";
 import getEnvPath from "./getEnvPath";
 import { VersionSelector } from "./versionSelector";
 import currentIsLocal from "./currentIsLocal";
+import shabtiModels from "../docker_compose/docker_compose_dependencies/shabti_config/shabti_models.toml";
 
 export const InstallOptionsForm = async (props: {
 	devMode: boolean;
@@ -50,12 +51,24 @@ export const InstallOptionsForm = async (props: {
 					<label for="use_gpu">Enable GPU Acceleration</label>
 				</p>
 				<p>
-					<label for="language_model">Select Language Model</label>
-					<select name="language_model" id="language_model">
-						<option value="mistral7b">mistral7b</option>
+					<label for="language_model">Select Chat Models</label>
+					<select name="language_model" id="language_model" multiple>
+						{shabtiModels.chat.map((model: any) => (
+							<option value={model.name}>{model.name}</option>
+						))}
 					</select>
-					Note that this option doesn't do anything yet, for now the model is
-					hardcoded to mistral7b.
+					The language models which will be available to users when querying
+					Shabti.
+				</p>
+				<p>
+					<label for="embeddings_model">Select Embeddings Model</label>
+					<select name="embeddings_model" id="embeddings_model">
+						{shabtiModels.embeddings.map((model: any) => (
+							<option value={model.name}>{model.name}</option>
+						))}
+					</select>
+					The language model which will be used to vectorize documents. If you
+					change this, it will invalidate all existing ingested documents!
 				</p>
 			</fieldset>
 			<fieldset>

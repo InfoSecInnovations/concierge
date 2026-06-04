@@ -17,8 +17,6 @@ services:
       - "LLAMA_CACHE=/models/hub"  
     volumes:
       - llama-cpp-models:/models
-    depends_on:
-      - volume-ownership-changer
     command: ["--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
   llama-cpp-cuda:
     extends: llama-cpp-cpu
