@@ -7,7 +7,7 @@ from multiprocessing import freeze_support
 from src.app.models import load_model
 import requests
 
-INSTALLED_MODELS = ["mistral7b", "paraphrase-multilingual"]
+INSTALLED_MODELS = ["mistral7b", "qwen3-06b", "paraphrase-multilingual"]
 
 if __name__ == "__main__":
     freeze_support()
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     for model_name in INSTALLED_MODELS:
         print(f"Loading model {model_name}")
         for x in load_model(model_name):
-            progress_text = f"model: {model_name}, progress: {x.progress}"
+            progress_text = f"model: {model_name}, progress: {x.progress} of {x.total}"
             if x.info:
                 progress_text += f", info: {x.info}"
             print(progress_text)

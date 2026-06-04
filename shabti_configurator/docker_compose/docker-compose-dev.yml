@@ -5,18 +5,10 @@ include:
   - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
 
 services:
-  volume-ownership-changer:
-    extends:
-      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
-      service: volume-ownership-changer
   llama-cpp:
     extends:
       file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
       service: llama-cpp-${SHABTI_COMPUTE:-cpu}
-  huggingface-downloader:
-    extends:
-      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
-      service: huggingface-downloader
   opensearch-node1:
     extends:
       file: ./docker_compose_dependencies/docker-compose-opensearch.yml

@@ -18,6 +18,8 @@ import packageJson from "./package.json";
 import getCurrentVersion from "./server/getCurrentVersion.js";
 import listCompatibleDockerTags from "./server/listCompatibleDockerTags.js";
 import currentIsLocal from "./server/currentIsLocal.js";
+import { streamSSE } from "hono/streaming";
+import downloadModel from "./server/downloadModel.js";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -222,6 +224,21 @@ app.post("/launch", (c) =>
 		streamHtml(c, "Launching Shabti", async (stream) => {
 			for await (const message of doLaunch(data, state)) {
 				await stream.writeln(await (<p>{message}</p>));
+			}
+		}),
+	),
+);
+app.post("/model_download", (c) =>
+	c.req.formData().then((data) =>
+		streamSSE(c, async (stream) => {
+			const modelName = data.get("model")?.toString();
+			if (!modelName) {
+				return;
+			}
+			for await (const json of downloadModel(modelName)) {
+				await stream.writeSSE({
+					data: JSON.stringify(json),
+				});
 			}
 		}),
 	),
