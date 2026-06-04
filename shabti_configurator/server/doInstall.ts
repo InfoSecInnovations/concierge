@@ -11,6 +11,10 @@ import logMessage from "./logMessage";
 import createVenv from "./createVenv";
 import getKeycloakClientSecret from "./getKeycloakClientSecret";
 import getCurrentVersion from "./getCurrentVersion";
+import downloadModel from "./downloadModel";
+import * as TOML from "@iarna/toml";
+import shabtiModels from "../shabti_models.toml";
+import * as humanize from "ts-humanize";
 
 export default async function* (
 	options: FormData,
@@ -93,8 +97,41 @@ export default async function* (
 	} else {
 		envs.SHABTI_BASE_SERVICE = "shabti";
 	}
-
 	await updateEnv();
+	yield logMessage("loading selected models...");
+	const loaderComposeFile = path.join(
+		"docker_compose",
+		"docker-compose-download-model.yml",
+	);
+	await $`docker compose -f ${loaderComposeFile} up -d`;
+	const chatModels = options.getAll("language_model");
+	const embeddingsModel = options.get("embeddings_model")!;
+	for (const modelName of [...chatModels, embeddingsModel]) {
+		for await (const json of downloadModel(modelName!.toString())) {
+			yield logMessage(
+				`loaded ${humanize.bytes(json.progress)} / ${humanize.bytes(json.total)} of model ${json.modelName}`,
+			);
+		}
+	}
+	Bun.write(
+		path.resolve(
+			"docker_compose",
+			"docker_compose_dependencies",
+			"shabti_config",
+			"shabti_models.toml",
+		),
+		TOML.stringify({
+			chat: chatModels.map((model) =>
+				shabtiModels.chat.find(
+					(chatModel: any) => chatModel.name == model.toString(),
+				),
+			),
+			embeddings: shabtiModels.chat.find(
+				(chatModel: any) => chatModel.name == embeddingsModel.toString(),
+			),
+		}),
+	);
+	await $`docker compose -f ${loaderComposeFile} down`;
 	yield logMessage(
 		"launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",
 	);

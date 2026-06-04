@@ -1,18 +1,12 @@
 import { HTTPException } from "hono/http-exception";
-import shabtiModels from "../docker_compose/docker_compose_dependencies/shabti_config/shabti_models.toml";
-import { $, sleep } from "bun";
-import path from "node:path";
+import shabtiModels from "../shabti_models.toml";
+import { sleep } from "bun";
 
 export default async function* (modelName: string) {
 	const modelData = [...shabtiModels.chat, ...shabtiModels.embeddings].find(
 		(model) => model.name == modelName,
 	);
 	if (!modelData) throw new HTTPException(404, { message: "model not found" });
-	const loaderComposeFile = path.join(
-		"docker_compose",
-		"docker-compose-download-model.yml",
-	);
-	await $`docker compose -f ${loaderComposeFile} up -d`;
 	const res = (await fetch("http://localhost:8090/api/download", {
 		body: JSON.stringify({ repo: modelData.hf }),
 		method: "POST",
@@ -41,5 +35,4 @@ export default async function* (modelName: string) {
 		};
 		await sleep(1000);
 	} while (!["completed", "failed"].includes(status.status));
-	await $`docker compose -f ${loaderComposeFile} down`;
 }

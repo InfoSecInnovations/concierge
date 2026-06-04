@@ -1,0 +1,15 @@
+# the administrator will be able to enable multiple chat models for the users
+[[chat]]
+hf = "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M"
+name = "mistral7b"
+
+[[chat]]
+hf = "mobilint/Qwen3-0.6B-GGUF"
+name = "qwen3-06b"
+
+# only one embeddings model can be selected and only at install time as all the embeddings need to be created using the same model for them to have any meaning
+[[embeddings]] 
+hf = "mykor/paraphrase-multilingual-mpnet-base-v2.gguf:Q4_K_M"
+name = "paraphrase-multilingual"
+
+

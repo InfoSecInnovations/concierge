@@ -5,7 +5,7 @@ import getDefaultDirectory from "./getDefaultDirectory";
 import getEnvPath from "./getEnvPath";
 import { VersionSelector } from "./versionSelector";
 import currentIsLocal from "./currentIsLocal";
-import shabtiModels from "../docker_compose/docker_compose_dependencies/shabti_config/shabti_models.toml";
+import shabtiModels from "../shabti_models.toml";
 
 export const InstallOptionsForm = async (props: {
 	devMode: boolean;
