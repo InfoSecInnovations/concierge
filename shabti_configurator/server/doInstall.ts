@@ -15,6 +15,7 @@ import downloadModel from "./downloadModel";
 import * as TOML from "@iarna/toml";
 import shabtiModels from "../shabti_models.toml";
 import * as humanize from "ts-humanize";
+import removeAllContainers from "./removeAllContainers";
 
 export default async function* (
 	options: FormData,
@@ -98,6 +99,9 @@ export default async function* (
 		envs.SHABTI_BASE_SERVICE = "shabti";
 	}
 	await updateEnv();
+	yield logMessage("cleaning up existing containers...");
+	// if we don't do this we can get glitches with the shabti network having a different ID across different containers
+	await removeAllContainers();
 	yield logMessage("loading selected models...");
 	const loaderComposeFile = path.join(
 		"docker_compose",

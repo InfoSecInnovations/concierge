@@ -1,7 +1,0 @@
-[[chat]]
-hf = "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M"
-name = "mistral7b"
-
-[[chat]]
-hf = "mobilint/Qwen3-0.6B-GGUF"
-name = "qwen3-06b"

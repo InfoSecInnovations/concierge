@@ -7,6 +7,13 @@ export default async function* (modelName: string) {
 		(model) => model.name == modelName,
 	);
 	if (!modelData) throw new HTTPException(404, { message: "model not found" });
+	while (
+		await fetch("http://localhost:8090/api/health").then(
+			(res) => res.status != 200,
+		)
+	) {
+		sleep(300);
+	}
 	const res = (await fetch("http://localhost:8090/api/download", {
 		body: JSON.stringify({ repo: modelData.hf }),
 		method: "POST",

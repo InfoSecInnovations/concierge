@@ -2,6 +2,7 @@ import { $ } from "bun";
 import * as envfile from "envfile";
 import getEnvPath from "./getEnvPath";
 import logMessage from "./logMessage";
+import removeAllContainers from "./removeAllContainers";
 
 export default async function* (
 	options: FormData,
@@ -26,6 +27,7 @@ export default async function* (
 	yield logMessage(
 		`Launching Shabti ${envs.SHABTI_COMPUTE == "cuda" ? "with" : "without"} GPU acceleration.`,
 	);
+	await removeAllContainers();
 	await Bun.write(getEnvPath(), envfile.stringify(envs));
 	if (isLocal) {
 		if (state.watchProcess) {
