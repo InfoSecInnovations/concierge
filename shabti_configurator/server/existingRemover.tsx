@@ -12,7 +12,7 @@ export const ExistingRemover = async () => {
 		dockerItemExists("shabti", "container"),
 		Promise.all([
 			dockerItemExists("llama_cpp", "container"),
-			dockerItemExists("shabti_llama_cpp", "volume"),
+			dockerItemExists("shabti_llama-cpp-models", "volume"),
 		]).then((res) => res.some((exists) => exists)),
 		Promise.all([
 			dockerItemExists("keycloak", "container"),

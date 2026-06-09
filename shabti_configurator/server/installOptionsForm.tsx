@@ -53,8 +53,10 @@ export const InstallOptionsForm = async (props: {
 				<p>
 					<label for="language_model">Select Chat Models</label>
 					<select name="language_model" id="language_model" multiple>
-						{shabtiModels.chat.map((model: any) => (
-							<option value={model.name}>{model.name}</option>
+						{shabtiModels.chat.map((model: any, i: number) => (
+							<option value={model.name} selected={i == 0}>
+								{model.name}
+							</option>
 						))}
 					</select>
 					The language models which will be available to users when querying

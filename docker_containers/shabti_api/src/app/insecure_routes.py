@@ -7,7 +7,6 @@ from .document_collections import (
     delete_document,
     get_document_types,
 )
-from fastapi.responses import StreamingResponse
 from shabti_types import (
     BaseCollectionCreateInfo,
     CollectionInfo,
@@ -19,6 +18,10 @@ from shabti_types import (
     PromptConfigInfo,
     TempFileInfo,
     ModelInfo,
+    ModelLoadInfo,
+    DocumentIngestInfo,
+    DocumentIngestError,
+    PromptChunk,
 )
 from .status import check_llm, check_opensearch
 from .load_prompter_config import load_prompter_config
@@ -27,8 +30,9 @@ from .insert_urls import insert_urls
 from .run_prompt import run_prompt
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
-from .models import load_model_stream
+from .models import load_model
 from typing import Annotated
+from collections.abc import AsyncIterable
 
 router = APIRouter()
 
@@ -76,8 +80,9 @@ async def get_document_types_route(collection_id: str) -> list[str]:
 )
 async def insert_files_document_route(
     collection_id: str, files: list[UploadFile]
-) -> StreamingResponse:
-    return await insert_uploaded_files(None, collection_id, files)
+) -> AsyncIterable[DocumentIngestInfo | DocumentIngestError]:
+    async for x in insert_uploaded_files(None, collection_id, files):
+        yield x
 
 
 @router.post(
@@ -85,8 +90,9 @@ async def insert_files_document_route(
 )
 async def insert_urls_document_route(
     collection_id: str, urls: list[str]
-) -> StreamingResponse:
-    return insert_urls(None, collection_id, urls)
+) -> AsyncIterable[DocumentIngestInfo]:
+    async for x in insert_urls(None, collection_id, urls):
+        yield x
 
 
 @router.delete(
@@ -123,8 +129,9 @@ async def prompt_file_route(file: UploadFile) -> TempFileInfo:
 
 
 @router.post("/prompt")
-async def prompt_route(prompt_info: PromptInfo) -> StreamingResponse:
-    return await run_prompt(None, prompt_info)
+async def prompt_route(prompt_info: PromptInfo) -> AsyncIterable[PromptChunk]:
+    async for x in run_prompt(None, prompt_info):
+        yield x
 
 
 @router.get("/status/llm")
@@ -143,5 +150,6 @@ async def get_files_route(collection_id: str, doc_id: str):
 
 
 @router.post("/models/pull")
-async def load_model_route(model_info: ModelInfo):
-    return load_model_stream(model_info.model_name)
+async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:
+    for x in load_model(model_info.model_name):
+        yield x

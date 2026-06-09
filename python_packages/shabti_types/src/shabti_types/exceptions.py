@@ -25,3 +25,9 @@ class UnsupportedFileError(Exception):
     def __init__(self, filename, message=""):
         self.message = message
         self.filename = filename
+
+
+class ModelNotFoundError(Exception):
+    def __init__(self, model: str, message=""):
+        self.message = message
+        self.model = model

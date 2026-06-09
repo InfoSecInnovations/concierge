@@ -130,7 +130,7 @@ export default async function* (
 					(chatModel: any) => chatModel.name == model.toString(),
 				),
 			),
-			embeddings: shabtiModels.chat.find(
+			embeddings: shabtiModels.embeddings.find(
 				(chatModel: any) => chatModel.name == embeddingsModel.toString(),
 			),
 		}),

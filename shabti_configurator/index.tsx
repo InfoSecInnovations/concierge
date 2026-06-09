@@ -198,7 +198,7 @@ app.post("/remove", (c) =>
 		if (service == "llama_cpp")
 			return streamHtml(c, "Removing Llama.cpp service", async (_) => {
 				await $`docker container rm --force llama_cpp`;
-				await $`docker volume rm --force shabti_llama-cpp-models shabti_llama-cpp-cache`;
+				await $`docker volume rm --force shabti_llama-cpp-models`;
 			});
 		if (service == "opensearch")
 			return streamHtml(c, "Removing OpenSearch service", async (_) => {

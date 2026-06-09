@@ -11,5 +11,5 @@ EXPOSE 15131
 
 RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project
 COPY . /app/shabti/
-RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
+RUN --mount=type=cache,target=/root/.cache/uv uv sync
 RUN --mount=type=cache,target=/root/.cache uv pip install -r requirements.txt

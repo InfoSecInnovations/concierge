@@ -6,13 +6,6 @@ from shabti_types import DocumentIngestInfo
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 
-tokenizer = Tokenizer.from_pretrained(
-    "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
-)
-splitter = TextSplitter.from_huggingface_tokenizer(
-    tokenizer, tokenizer.truncation["max_length"], overlap=50
-)
-
 
 def get_field_type(python_type):
     if python_type == "int":
@@ -29,9 +22,15 @@ def insert(
     document: ShabtiDocument,
     binary_path: str | None = None,
 ):
+    tokenizer = Tokenizer.from_pretrained(
+        "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
+    )
+    splitter = TextSplitter.from_huggingface_tokenizer(
+        tokenizer, tokenizer.truncation["max_length"], overlap=50
+    )
+
     client = get_client()
     entries = []
-
     additional = {}
     if binary_path:
         additional["binary_path"] = binary_path

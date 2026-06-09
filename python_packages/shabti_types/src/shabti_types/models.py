@@ -57,6 +57,12 @@ class DocumentIngestInfo(BaseModel):
     label: str
 
 
+class DocumentIngestError(BaseModel):
+    error: str
+    message: str
+    filename: Optional[str] = None
+
+
 class ModelLoadInfo(BaseModel):
     progress: int
     total: int

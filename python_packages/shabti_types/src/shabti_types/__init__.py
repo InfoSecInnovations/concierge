@@ -19,6 +19,7 @@ from .models import (
     PromptChunk as PromptChunk,
     PromptSource as PromptSource,
     DocumentList as DocumentList,
+    DocumentIngestError as DocumentIngestError,
 )
 from .exceptions import (
     ShabtiError as ShabtiError,
@@ -26,4 +27,5 @@ from .exceptions import (
     InvalidLocationError as InvalidLocationError,
     InvalidUserError as InvalidUserError,
     UnsupportedFileError as UnsupportedFileError,
+    ModelNotFoundError as ModelNotFoundError,
 )

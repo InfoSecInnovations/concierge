@@ -5,6 +5,7 @@ from isi_util.async_single import asyncify
 import httpx
 from shabti_util import auth_enabled
 from httpx_sse import aconnect_sse
+from .models import get_model_id
 
 
 def host():
@@ -63,8 +64,10 @@ async def stream_response(
         source_file_contents,
     )
 
+    # TODO: pass model name in
+
     data = {
-        "model": "mistral7b",
+        "model": get_model_id("mistral7b"),
         "messages": [{"role": "user", "content": prompt}],
         "stream": True,
     }

@@ -5,7 +5,7 @@ requires-python = ">=3.14, <3.15"
 dependencies = [
     "beautifulsoup4~=4.14.3",
     "configobj~=5.0.9",
-    "fastapi[standard]~=0.119.0",
+    "fastapi[standard]~=0.136.3",
     "langchain~=1.2.10",
     "langchain-community~=0.4.1",
     "lxml~=6.0.1",

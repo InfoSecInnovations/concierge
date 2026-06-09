@@ -2,17 +2,26 @@ import { HTTPException } from "hono/http-exception";
 import shabtiModels from "../shabti_models.toml";
 import { sleep } from "bun";
 
+const TIMEOUT = 10000;
+const HEALTH_POLL_INTERVAL = 300;
+const DOWNLOAD_POLL_INTERVAL = 1000;
+
 export default async function* (modelName: string) {
 	const modelData = [...shabtiModels.chat, ...shabtiModels.embeddings].find(
 		(model) => model.name == modelName,
 	);
 	if (!modelData) throw new HTTPException(404, { message: "model not found" });
-	while (
-		await fetch("http://localhost:8090/api/health").then(
-			(res) => res.status != 200,
-		)
-	) {
-		sleep(300);
+	const start = performance.now();
+	while (performance.now() - start < TIMEOUT) {
+		try {
+			if (
+				await fetch("http://localhost:8090/api/health").then(
+					(res) => res.status == 200,
+				)
+			)
+				break;
+		} catch {}
+		sleep(HEALTH_POLL_INTERVAL);
 	}
 	const res = (await fetch("http://localhost:8090/api/download", {
 		body: JSON.stringify({ repo: modelData.hf }),
@@ -40,6 +49,6 @@ export default async function* (modelName: string) {
 			modelName,
 			status: status.status,
 		};
-		await sleep(1000);
+		await sleep(DOWNLOAD_POLL_INTERVAL);
 	} while (!["completed", "failed"].includes(status.status));
 }

@@ -8,7 +8,6 @@ from .document_collections import (
     get_document_types,
 )
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from fastapi.responses import StreamingResponse
 from typing import Annotated
 from shabti_keycloak import server_url, get_token_info, get_keycloak_client
 from shabti_types import (
@@ -22,6 +21,10 @@ from shabti_types import (
     TempFileInfo,
     ModelInfo,
     DocumentList,
+    ModelLoadInfo,
+    DocumentIngestInfo,
+    DocumentIngestError,
+    PromptChunk,
 )
 from .insert_uploaded_files import insert_uploaded_files
 from .insert_urls import insert_urls
@@ -38,7 +41,8 @@ from .authorization import (
     list_scopes,
     UnauthorizedOperationError,
 )
-from .models import load_model_stream
+from .models import load_model
+from collections.abc import AsyncIterable
 import asyncio
 
 oauth_2_scheme = OAuth2AuthorizationCodeBearer(
@@ -55,6 +59,20 @@ async def valid_access_token(access_token: Annotated[str, Depends(oauth_2_scheme
         return access_token
     except JWTExpired:
         raise HTTPException(status_code=401, detail="Token expired")
+
+
+class AuthChecker:
+    def __init__(self, scope: str = "read"):
+        self.scope = scope
+
+    async def __call__(
+        self,
+        credentials: Annotated[str, Depends(valid_access_token)],
+        collection_id: str,
+    ):
+        authorized = await authorize(credentials, collection_id, self.scope)
+        if not authorized:
+            raise UnauthorizedOperationError()
 
 
 # all these routes require a valid account to view
@@ -120,33 +138,31 @@ async def get_document_types_route(
 
 
 @router.post(
-    "/collections/{collection_id}/documents/files", response_model_exclude_unset=True
+    "/collections/{collection_id}/documents/files",
+    response_model_exclude_unset=True,
+    dependencies=[Depends(AuthChecker("update"))],
 )
 async def insert_files_document_route(
     collection_id: str,
     files: list[UploadFile],
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> StreamingResponse:
-    # verify before starting the stream, as exceptions can't be properly thrown once streaming has started
-    authorized = await authorize(credentials, collection_id, "update")
-    if not authorized:
-        raise UnauthorizedOperationError()
-    return await insert_uploaded_files(credentials, collection_id, files)
+) -> AsyncIterable[DocumentIngestInfo | DocumentIngestError]:
+    async for x in insert_uploaded_files(credentials, collection_id, files):
+        yield x
 
 
 @router.post(
-    "/collections/{collection_id}/documents/urls", response_model_exclude_unset=True
+    "/collections/{collection_id}/documents/urls",
+    response_model_exclude_unset=True,
+    dependencies=[Depends(AuthChecker("update"))],
 )
 async def insert_urls_document_route(
     collection_id: str,
     urls: list[str],
     credentials: Annotated[str, Depends(valid_access_token)],
-) -> StreamingResponse:
-    # verify before starting the stream, as exceptions can't be properly thrown once streaming has started
-    authorized = await authorize(credentials, collection_id, "update")
-    if not authorized:
-        raise UnauthorizedOperationError()
-    return insert_urls(credentials, collection_id, urls)
+) -> AsyncIterable[DocumentIngestInfo]:
+    async for x in insert_urls(credentials, collection_id, urls):
+        yield x
 
 
 @router.delete(
@@ -194,8 +210,9 @@ async def prompt_file_route(file: UploadFile) -> TempFileInfo:
 @router.post("/prompt")
 async def prompt_route(
     prompt_info: PromptInfo, credentials: Annotated[str, Depends(valid_access_token)]
-) -> StreamingResponse:
-    return await run_prompt(credentials, prompt_info)
+) -> AsyncIterable[PromptChunk]:
+    async for x in run_prompt(credentials, prompt_info):
+        yield x
 
 
 @router.get("/status/llm")
@@ -241,6 +258,7 @@ async def get_files_route(
 
 
 @router.post("/models/pull")
-async def load_model_route(model_info: ModelInfo):
+async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:
     # TODO: should this be locked behind higher permissions levels?
-    return load_model_stream(model_info.model_name)
+    for x in load_model(model_info.model_name):
+        yield x

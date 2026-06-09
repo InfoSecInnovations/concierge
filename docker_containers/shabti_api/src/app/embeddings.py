@@ -1,5 +1,6 @@
 import requests
 import os
+import tomllib
 
 
 def create_embeddings(text):
@@ -8,8 +9,11 @@ def create_embeddings(text):
         return None
     if not text:
         return []
+    with open("/opt/shabti_config/shabti_models.toml", "rb") as f:
+        models_data = tomllib.load(f)
+    model = models_data["embeddings"]
     data = {
-        "model": "paraphrase-multilingual",
+        "model": model["hf"],
         "input": text,
         "encoding_format": "float",
     }

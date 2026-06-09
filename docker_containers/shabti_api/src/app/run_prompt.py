@@ -1,5 +1,4 @@
 from fastapi import HTTPException
-from fastapi.responses import StreamingResponse
 import aiofiles
 from shabti_types import PromptInfo, PromptChunk, PromptSource, DocumentInfo, PageInfo
 from .prompting import stream_response, get_context
@@ -11,7 +10,7 @@ from shabti_util import auth_enabled
 from .document_collections import get_collection_info
 
 
-async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingResponse:
+async def run_prompt(token: None | str, prompt_info: PromptInfo):
     tasks = load_prompter_config("tasks")
     if prompt_info.task not in tasks:
         raise HTTPException(status_code=400, detail="Requested task not found")
@@ -50,77 +49,70 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo) -> StreamingRes
     )
 
     if not len(context["sources"]):
-
-        def no_sources_response():
-            yield f"{json.dumps({'response': 'No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data.'})}\n"
-
+        yield PromptChunk(
+            response="No sources were found matching your query. Please refine your request to closer match the data in the database or ingest more data."
+        )
         # TODO: log the no sources response
+        return
 
-        return StreamingResponse(no_sources_response())
+    response = ""
+    for source in context["sources"]:
+        yield PromptChunk(
+            source=PromptSource(
+                document_metadata=DocumentInfo(**source["doc_metadata"]),
+                page_metadata=PageInfo(**source["page_metadata"]),
+            )
+        )
+    async for x in stream_response(
+        context=context["context"],
+        task_prompt=task_prompt,
+        user_input=prompt_info.user_input,
+        persona_prompt=persona_prompt,
+        source_file_contents=source_file_contents,
+    ):
+        try:
+            obj = json.loads(x)
+            if "choices" in obj and "content" in obj["choices"][0]["delta"]:
+                yield PromptChunk(response=obj["choices"][0]["delta"]["content"])
+                if logging_enabled():
+                    response += obj["choices"][0]["delta"]["content"]
+        except json.decoder.JSONDecodeError as e:
+            if x.startswith("[DONE]"):
+                return
+            raise e
 
-    async def stream_context_and_response():
-        response = ""
-        for source in context["sources"]:
-            yield f"{
-                PromptChunk(
-                    source=PromptSource(
-                        document_metadata=DocumentInfo(**source['doc_metadata']),
-                        page_metadata=PageInfo(**source['page_metadata']),
-                    )
-                ).model_dump_json(exclude_unset=True)
-            }\n"
-        async for x in stream_response(
-            context=context["context"],
-            task_prompt=task_prompt,
-            user_input=prompt_info.user_input,
-            persona_prompt=persona_prompt,
-            source_file_contents=source_file_contents,
-        ):
-            try:
-                obj = json.loads(x)
-                if "choices" in obj and "content" in obj["choices"][0]["delta"]:
-                    yield f"{json.dumps({'response': obj['choices'][0]['delta']['content']})}\n"
-                    if logging_enabled():
-                        response += obj["choices"][0]["delta"]["content"]
-            except json.decoder.JSONDecodeError as e:
-                if x.startswith("[DONE]"):
-                    return
-                raise e
-
-        if logging_enabled():
-            prompt = {
-                "response": response,
-                "sources": context["sources"],
-                "input": prompt_info.user_input,
-                "task": prompt_info.task,
+    if logging_enabled():
+        prompt = {
+            "response": response,
+            "sources": context["sources"],
+            "input": prompt_info.user_input,
+            "task": prompt_info.task,
+        }
+        if prompt_info.persona:
+            prompt["persona"] = prompt_info.persona
+        if prompt_info.enhancers:
+            prompt["enhancers"] = prompt_info.enhancers
+        if prompt_info.file_id:
+            prompt["input_file"] = {
+                "file_id": prompt_info.file_id,
+                "contents": source_file_contents,
             }
-            if prompt_info.persona:
-                prompt["persona"] = prompt_info.persona
-            if prompt_info.enhancers:
-                prompt["enhancers"] = prompt_info.enhancers
-            if prompt_info.file_id:
-                prompt["input_file"] = {
-                    "file_id": prompt_info.file_id,
-                    "contents": source_file_contents,
-                }
-            if auth_enabled():
-                await log_user_action(
-                    token,
-                    "QUERY",
-                    f"User ran a prompt on collection with ID {prompt_info.collection_id}",
-                    collection=(
-                        await get_collection_info(prompt_info.collection_id)
-                    ).model_dump(),
-                    prompt=prompt,
-                )
-            else:
-                await log_action(
-                    "QUERY",
-                    f"User ran a prompt on collection with ID {prompt_info.collection_id}",
-                    collection=(
-                        await get_collection_info(prompt_info.collection_id)
-                    ).model_dump(),
-                    prompt=prompt,
-                )
-
-    return StreamingResponse(stream_context_and_response())
+        if auth_enabled():
+            await log_user_action(
+                token,
+                "QUERY",
+                f"User ran a prompt on collection with ID {prompt_info.collection_id}",
+                collection=(
+                    await get_collection_info(prompt_info.collection_id)
+                ).model_dump(),
+                prompt=prompt,
+            )
+        else:
+            await log_action(
+                "QUERY",
+                f"User ran a prompt on collection with ID {prompt_info.collection_id}",
+                collection=(
+                    await get_collection_info(prompt_info.collection_id)
+                ).model_dump(),
+                prompt=prompt,
+            )
