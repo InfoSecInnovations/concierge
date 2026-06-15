@@ -207,7 +207,21 @@ async def prompt_file_route(file: UploadFile) -> TempFileInfo:
     return await upload_prompt_file(file)
 
 
-@router.post("/prompt")
+class PromptBodyAuthChecker:
+    def __init__(self, scope: str = "read"):
+        self.scope = scope
+
+    async def __call__(
+        self,
+        prompt_info: PromptInfo,
+        credentials: Annotated[str, Depends(valid_access_token)],
+    ):
+        authorized = await authorize(credentials, prompt_info.collection_id, self.scope)
+        if not authorized:
+            raise UnauthorizedOperationError()
+
+
+@router.post("/prompt", dependencies=[Depends(PromptBodyAuthChecker("read"))])
 async def prompt_route(
     prompt_info: PromptInfo, credentials: Annotated[str, Depends(valid_access_token)]
 ) -> AsyncIterable[PromptChunk]:
@@ -253,7 +267,9 @@ async def get_files_route(
     doc_id: str,
     credentials: Annotated[str, Depends(valid_access_token)],
 ):
-    await authorize(credentials, collection_id, "read")
+    authorized = await authorize(credentials, collection_id, "read")
+    if not authorized:
+        raise UnauthorizedOperationError()
     return await serve_binary(collection_id, doc_id)
 
 

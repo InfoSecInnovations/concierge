@@ -44,9 +44,7 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo):
     else:
         source_file_contents = None
 
-    context = await get_context(
-        token, prompt_info.collection_id, 5, prompt_info.user_input
-    )
+    context = await get_context(prompt_info.collection_id, 5, prompt_info.user_input)
 
     if not len(context["sources"]):
         yield PromptChunk(

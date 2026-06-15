@@ -1,9 +1,7 @@
 import os
 from .opensearch_prompting import get_context_from_opensearch
-from .authorization import authorize, UnauthorizedOperationError
 from isi_util.async_single import asyncify
 import httpx
-from shabti_util import auth_enabled
 from httpx_sse import aconnect_sse
 from .models import get_model_id
 
@@ -12,11 +10,7 @@ def host():
     return os.getenv("LLM_HOST") or "localhost"
 
 
-async def get_context(token, collection_id: str, reference_limit: int, user_input: str):
-    if auth_enabled():
-        authorized = await authorize(token, collection_id, "read")
-        if not authorized:
-            raise UnauthorizedOperationError()
+async def get_context(collection_id: str, reference_limit: int, user_input: str):
     return await asyncify(
         get_context_from_opensearch, collection_id, reference_limit, user_input
     )
