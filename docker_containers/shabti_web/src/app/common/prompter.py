@@ -3,7 +3,6 @@ from ..common.collection_selector_ui import collection_selector_ui
 from shabti_api_client import BaseShabtiClient
 from ..common.collections_data import CollectionsData
 import asyncio
-import humanize
 from tqdm import tqdm
 from shabti_types import TaskInfo, PromptConfigInfo, CollectionInfo
 from ..common.doc_page_link import page_link
@@ -55,34 +54,35 @@ def prompter_server(
     chat = ui.Chat(id="prompter_chat")
 
     @reactive.extended_task
-    async def load_prompting_llm_model(model_name: str):
-        print(f"Checking {model_name} language model...")
-        pbar = None
-        with ui.Progress() as p:
-            p.set(value=0, message=f"Loading {model_name} Language Model...")
-            async for load_info in client.load_model(model_name):
-                if not pbar:
-                    pbar = tqdm(
-                        unit="B",
-                        unit_scale=True,
-                        unit_divisor=1024,
-                        desc=f"Loading {model_name} Language Model",
+    async def load_prompting_llm_model(*model_names: str):
+        for model_name in model_names:
+            print(f"Checking {model_name} language model...")
+            pbar = None
+            with ui.Progress() as p:
+                p.set(value=0, message=f"Loading {model_name} Language Model...")
+                async for load_info in client.load_model(model_name):
+                    if not pbar:
+                        pbar = tqdm(
+                            unit="B",
+                            unit_scale=True,
+                            unit_divisor=1024,
+                            desc=f"Loading {model_name} Language Model",
+                        )
+                    pbar.total = load_info.total
+                    p.max = load_info.total
+                    # slight hackiness to set the initial value if resuming a download or switching files
+                    if pbar.initial == 0 or pbar.initial > load_info.progress:
+                        pbar.initial = load_info.progress
+                    p.set(
+                        value=load_info.progress,
+                        message=f"Loading {model_name} Language Model...",
                     )
-                pbar.total = load_info.total
-                p.max = load_info.total
-                # slight hackiness to set the initial value if resuming a download or switching files
-                if pbar.initial == 0 or pbar.initial > load_info.progress:
-                    pbar.initial = load_info.progress
-                p.set(
-                    value=load_info.progress,
-                    message=f"Loading {model_name} Language Model: {humanize.naturalsize(load_info.progress, binary=True)}/{humanize.naturalsize(load_info.total, binary=True)}",
-                )
-                pbar.n = load_info.progress
-                pbar.refresh()
-        if pbar:
-            pbar.close()
-        print(f"{model_name} language model loaded.\n")
-        ui.notification_show(f"{model_name} Language Model loaded")
+                    pbar.n = load_info.progress
+                    pbar.refresh()
+            if pbar:
+                pbar.close()
+            print(f"{model_name} language model loaded.\n")
+            ui.notification_show(f"{model_name} Language Model loaded")
 
     @reactive.effect
     def load_model_effect():
@@ -92,7 +92,7 @@ def prompter_server(
     @reactive.effect
     def init():
         if llm_status.get() and not llm_loaded.get():
-            load_prompting_llm_model("mistral7b")
+            load_prompting_llm_model("mistral7b", "paraphrase-multilingual")
 
     @render.ui
     def prompter_ui():

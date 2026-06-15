@@ -49,7 +49,7 @@ def load_model(model_name: str):
 
     while current_status != "loaded":
         yield ModelLoadInfo(
-            progress=1, total=1, model_name=model_name, info=current_status
+            progress=0, total=1, model_name=model_name, info=current_status
         )
         time.sleep(1)
         current_status = model_status()
