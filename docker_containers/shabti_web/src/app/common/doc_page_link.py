@@ -5,12 +5,13 @@ from shabti_types import PromptSource
 import os
 
 
-def page_link(collection_id: str, source: PromptSource):
+def page_link(collection_id: str, source: PromptSource, with_target_blank: False):
     if source.document_metadata.media_type == "application/pdf":
         return f"PDF File: {
             md_link(
                 f'{doc_url(collection_id, source.document_metadata.document_id)}#page={source.page_metadata.page_number}',
                 f'page {source.page_metadata.page_number} of {source.document_metadata.filename}',
+                with_target_blank
             )
         }"
     if (
@@ -21,13 +22,14 @@ def page_link(collection_id: str, source: PromptSource):
         ingest_time = datetime.fromtimestamp(
             source.document_metadata.ingest_date / 1000
         )
-        return f"Web page: {md_link(source.page_metadata.source)} scraped {ingest_time.ctime()} from parent URL {md_link(source.document_metadata.source)}"
+        return f"Web page: {md_link(source.page_metadata.source, with_target_blank=with_target_blank)} scraped {ingest_time.ctime()} from parent URL {md_link(source.document_metadata.source, with_target_blank=with_target_blank)}"
     if source.document_metadata.filename:
         extension = os.path.splitext(source.document_metadata.filename)[1]
         return f"{extension} file {
             md_link(
                 doc_url(collection_id, source.document_metadata.document_id),
                 source.document_metadata.filename,
+                with_target_blank
             )
         }{
             f' (page {source.page_metadata.page_number})'

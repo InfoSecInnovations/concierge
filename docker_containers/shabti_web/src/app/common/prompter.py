@@ -1,11 +1,10 @@
 from shiny import ui, Inputs, Outputs, Session, module, reactive, render, req
 from ..common.collection_selector_ui import collection_selector_ui
-from ..common.markdown_renderer import md
 from shabti_api_client import BaseShabtiClient
 from ..common.collections_data import CollectionsData
 import asyncio
 import humanize
-import tqdm
+from tqdm import tqdm
 from shabti_types import TaskInfo, PromptConfigInfo, CollectionInfo
 from ..common.doc_page_link import page_link
 from typing import TypeVar
@@ -55,17 +54,13 @@ def prompter_server(
     collection_selector_server("collection_selector", selected_collection, collections)
     chat = ui.Chat(id="prompter_chat")
 
-    @chat.transform_assistant_response
-    def render_md(s: str):
-        return md.render(s)
-
     @reactive.extended_task
     async def load_prompting_llm_model(model_name: str):
         print(f"Checking {model_name} language model...")
         pbar = None
         with ui.Progress() as p:
             p.set(value=0, message=f"Loading {model_name} Language Model...")
-            async for progress in client.load_model(model_name):
+            async for load_info in client.load_model(model_name):
                 if not pbar:
                     pbar = tqdm(
                         unit="B",
@@ -73,16 +68,16 @@ def prompter_server(
                         unit_divisor=1024,
                         desc=f"Loading {model_name} Language Model",
                     )
-                pbar.total = progress[1]
-                p.max = progress[1]
+                pbar.total = load_info.total
+                p.max = load_info.total
                 # slight hackiness to set the initial value if resuming a download or switching files
-                if pbar.initial == 0 or pbar.initial > progress[0]:
-                    pbar.initial = progress[0]
+                if pbar.initial == 0 or pbar.initial > load_info.progress:
+                    pbar.initial = load_info.progress
                 p.set(
-                    value=progress[0],
-                    message=f"Loading {model_name} Language Model: {humanize.naturalsize(progress[0], binary=True)}/{humanize.naturalsize(progress[1], binary=True)}",
+                    value=load_info.progress,
+                    message=f"Loading {model_name} Language Model: {humanize.naturalsize(load_info.progress, binary=True)}/{humanize.naturalsize(load_info.total, binary=True)}",
                 )
-                pbar.n = progress[0]
+                pbar.n = load_info.progress
                 pbar.refresh()
         if pbar:
             pbar.close()
