@@ -13,9 +13,9 @@ import getKeycloakClientSecret from "./getKeycloakClientSecret";
 import getCurrentVersion from "./getCurrentVersion";
 import downloadModel from "./downloadModel";
 import * as TOML from "@iarna/toml";
-import shabtiModels from "../shabti_models.toml";
 import * as humanize from "ts-humanize";
 import removeAllContainers from "./removeAllContainers";
+import getModelsConfig from "./getModelsConfig";
 
 export default async function* (
 	options: FormData,
@@ -117,6 +117,7 @@ export default async function* (
 			);
 		}
 	}
+	const shabtiModels = await getModelsConfig();
 	Bun.write(
 		path.resolve(
 			"docker_compose",

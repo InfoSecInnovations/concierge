@@ -5,7 +5,7 @@ import getDefaultDirectory from "./getDefaultDirectory";
 import getEnvPath from "./getEnvPath";
 import { VersionSelector } from "./versionSelector";
 import currentIsLocal from "./currentIsLocal";
-import shabtiModels from "../shabti_models.toml";
+import getModelsConfig from "./getModelsConfig";
 
 export const InstallOptionsForm = async (props: {
 	devMode: boolean;
@@ -23,6 +23,7 @@ export const InstallOptionsForm = async (props: {
 		(envs && envs.SHABTI_LOG_DIR) ||
 		path.join(getDefaultDirectory()!, "shabti", "logs");
 	const keycloakEnabled = await keycloakExists();
+	const shabtiModels = await getModelsConfig();
 	return (
 		<form action="/install" method="post" id="install_form">
 			<fieldset>

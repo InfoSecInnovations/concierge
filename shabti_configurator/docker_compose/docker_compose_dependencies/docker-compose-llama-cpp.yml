@@ -9,7 +9,7 @@ services:
         - llama-cpp-models:/models_dir
   llama-cpp-cpu:
     container_name: llama_cpp
-    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b9468
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b9755
     restart: unless-stopped
     ports:
       - "11434:11434"
@@ -17,7 +17,8 @@ services:
       - "LLAMA_CACHE=/models/hub"  
     volumes:
       - llama-cpp-models:/models
-    command: ["--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
+      - ./llama_models/my-models.ini:/my-models.ini
+    command: ["--models-preset", "/my-models.ini", "--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
   llama-cpp-cuda:
     extends: llama-cpp-cpu
     deploy:

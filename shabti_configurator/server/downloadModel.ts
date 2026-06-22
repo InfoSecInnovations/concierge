@@ -1,12 +1,13 @@
 import { HTTPException } from "hono/http-exception";
-import shabtiModels from "../shabti_models.toml";
 import { sleep } from "bun";
+import getModelsConfig from "./getModelsConfig";
 
 const TIMEOUT = 10000;
 const HEALTH_POLL_INTERVAL = 300;
 const DOWNLOAD_POLL_INTERVAL = 1000;
 
 export default async function* (modelName: string) {
+	const shabtiModels = await getModelsConfig();
 	const modelData = [...shabtiModels.chat, ...shabtiModels.embeddings].find(
 		(model) => model.name == modelName,
 	);

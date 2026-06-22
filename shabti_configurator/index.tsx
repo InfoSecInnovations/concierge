@@ -11,13 +11,13 @@ import dockerIsRunning from "./server/dockerIsRunning";
 import { ExistingRemover } from "./server/existingRemover";
 import { InstallOptionsForm } from "./server/installOptionsForm";
 import { RelaunchForm } from "./server/relaunchForm";
-import streamHtml from "./server/streamHtml.js";
-import validateInstallForm from "./server/validateInstallForm.js";
-import { WebUILink } from "./server/webUiLink.js";
+import streamHtml from "./server/streamHtml";
+import validateInstallForm from "./server/validateInstallForm";
+import { WebUILink } from "./server/webUiLink";
 import packageJson from "./package.json";
-import getCurrentVersion from "./server/getCurrentVersion.js";
-import listCompatibleDockerTags from "./server/listCompatibleDockerTags.js";
-import currentIsLocal from "./server/currentIsLocal.js";
+import getCurrentVersion from "./server/getCurrentVersion";
+import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
+import currentIsLocal from "./server/currentIsLocal";
 
 const { values } = parseArgs({
 	args: Bun.argv,
