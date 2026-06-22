@@ -54,11 +54,13 @@ export const InstallOptionsForm = async (props: {
 				<p>
 					<label for="language_model">Select Chat Models</label>
 					<select name="language_model" id="language_model" multiple>
-						{shabtiModels.chat.map((model: any, i: number) => (
-							<option value={model.name} selected={i == 0}>
-								{model.name}
-							</option>
-						))}
+						{Object.entries(shabtiModels)
+							.filter(([k, v]) => v.tags.includes("chat"))
+							.map(([k, v], i: number) => (
+								<option value={k} selected={i == 0}>
+									{k}
+								</option>
+							))}
 					</select>
 					The language models which will be available to users when querying
 					Shabti.
@@ -66,9 +68,13 @@ export const InstallOptionsForm = async (props: {
 				<p>
 					<label for="embeddings_model">Select Embeddings Model</label>
 					<select name="embeddings_model" id="embeddings_model">
-						{shabtiModels.embeddings.map((model: any) => (
-							<option value={model.name}>{model.name}</option>
-						))}
+						{Object.entries(shabtiModels)
+							.filter(([k, v]) => v.tags.includes("embeddings"))
+							.map(([k, v], i: number) => (
+								<option value={k} selected={i == 0}>
+									{k}
+								</option>
+							))}
 					</select>
 					The language model which will be used to vectorize documents. If you
 					change this, it will invalidate all existing ingested documents!

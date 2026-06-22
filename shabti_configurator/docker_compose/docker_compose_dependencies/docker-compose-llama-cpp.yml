@@ -28,14 +28,3 @@ services:
             - driver: nvidia
               count: 1
               capabilities: [gpu]
-  huggingface-downloader:
-    container_name: huggingface-downloader
-    image: ghcr.io/bodaay/huggingfacemodeldownloader:3.1.0
-    restart: unless-stopped
-    ports:
-      - "8090:8090"
-    volumes: 
-      - llama-cpp-models:/home/hfdownloader/.cache/huggingface
-    depends_on:
-      - volume-ownership-changer
-    command: ["serve", "--port", "8090"]

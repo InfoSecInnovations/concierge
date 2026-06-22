@@ -3,7 +3,6 @@ from .opensearch_prompting import get_context_from_opensearch
 from isi_util.async_single import asyncify
 import httpx
 from httpx_sse import aconnect_sse
-from .models import get_model_id
 
 
 def host():
@@ -61,7 +60,7 @@ async def stream_response(
     # TODO: pass model name in
 
     data = {
-        "model": get_model_id("mistral7b"),
+        "model": "mistral7b",
         "messages": [{"role": "user", "content": prompt}],
         "stream": True,
     }

@@ -12,10 +12,11 @@ import createVenv from "./createVenv";
 import getKeycloakClientSecret from "./getKeycloakClientSecret";
 import getCurrentVersion from "./getCurrentVersion";
 import downloadModel from "./downloadModel";
-import * as TOML from "@iarna/toml";
 import * as humanize from "ts-humanize";
 import removeAllContainers from "./removeAllContainers";
 import getModelsConfig from "./getModelsConfig";
+import { stringify } from "ini";
+import { HTTPException } from "hono/http-exception";
 
 export default async function* (
 	options: FormData,
@@ -107,35 +108,44 @@ export default async function* (
 		"docker_compose",
 		"docker-compose-download-model.yml",
 	);
-	await $`docker compose -f ${loaderComposeFile} up -d`;
 	const chatModels = options.getAll("language_model");
 	const embeddingsModel = options.get("embeddings_model")!;
-	for (const modelName of [...chatModels, embeddingsModel]) {
-		for await (const json of downloadModel(modelName!.toString())) {
-			yield logMessage(
-				`loaded ${humanize.bytes(json.progress)} / ${humanize.bytes(json.total)} of model ${json.modelName}`,
-			);
-		}
-	}
 	const shabtiModels = await getModelsConfig();
+	const embeddingKey = embeddingsModel.toString();
+	const embeddingModelData = shabtiModels[embeddingKey];
+	if (!embeddingModelData)
+		throw new HTTPException(404, {
+			message: `model ${embeddingKey} not found`,
+		});
 	Bun.write(
 		path.resolve(
 			"docker_compose",
 			"docker_compose_dependencies",
-			"shabti_config",
-			"shabti_models.toml",
+			"llama_models",
+			"my-models.ini",
 		),
-		TOML.stringify({
-			chat: chatModels.map((model) =>
-				shabtiModels.chat.find(
-					(chatModel: any) => chatModel.name == model.toString(),
-				),
-			),
-			embeddings: shabtiModels.embeddings.find(
-				(chatModel: any) => chatModel.name == embeddingsModel.toString(),
-			),
-		}),
-	);
+		stringify(
+			{
+				...chatModels.reduce((acc, v) => {
+					const key = v.toString();
+					const modelData = shabtiModels[key];
+					if (!v)
+						throw new HTTPException(404, { message: `model ${key} not found` });
+					return { ...acc, [key]: modelData };
+				}, {}),
+				[embeddingKey]: embeddingModelData,
+			},
+			{ bracketedArray: false },
+		),
+	); // write to ini file used by llama.cpp
+	await $`docker compose -f ${loaderComposeFile} up -d`; // launch llama.cpp
+	for (const modelName of [...chatModels, embeddingsModel]) {
+		for await (const json of downloadModel(modelName!.toString())) {
+			yield logMessage(
+				`loaded ${humanize.bytes(json.progress)} / ${humanize.bytes(json.total)} of file ${json.file} for model ${json.modelName}`,
+			);
+		}
+	} // ensure requested models are downloaded so they will be available once the install is done
 	await $`docker compose -f ${loaderComposeFile} down`;
 	yield logMessage(
 		"launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",

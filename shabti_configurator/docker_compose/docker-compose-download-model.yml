@@ -1,14 +1,10 @@
 name: shabti
 
 services:
-  volume-ownership-changer:
+  llama-cpp:
     extends:
       file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
-      service: volume-ownership-changer
-  huggingface-downloader:
-    extends:
-      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
-      service: huggingface-downloader
+      service: llama-cpp-${SHABTI_COMPUTE:-cpu}
 
 volumes:
   llama-cpp-models:

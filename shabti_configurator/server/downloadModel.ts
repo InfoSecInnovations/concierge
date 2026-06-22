@@ -1,22 +1,21 @@
 import { HTTPException } from "hono/http-exception";
 import { sleep } from "bun";
 import getModelsConfig from "./getModelsConfig";
+import { createEventSource } from "eventsource-client";
 
 const TIMEOUT = 10000;
 const HEALTH_POLL_INTERVAL = 300;
-const DOWNLOAD_POLL_INTERVAL = 1000;
 
 export default async function* (modelName: string) {
+	// TODO: hit llama.cpp API instead
 	const shabtiModels = await getModelsConfig();
-	const modelData = [...shabtiModels.chat, ...shabtiModels.embeddings].find(
-		(model) => model.name == modelName,
-	);
+	const modelData = shabtiModels[modelName];
 	if (!modelData) throw new HTTPException(404, { message: "model not found" });
 	const start = performance.now();
 	while (performance.now() - start < TIMEOUT) {
 		try {
 			if (
-				await fetch("http://localhost:8090/api/health").then(
+				await fetch("http://localhost:11434/v1/health").then(
 					(res) => res.status == 200,
 				)
 			)
@@ -24,32 +23,40 @@ export default async function* (modelName: string) {
 		} catch {}
 		sleep(HEALTH_POLL_INTERVAL);
 	}
-	const res = (await fetch("http://localhost:8090/api/download", {
-		body: JSON.stringify({ repo: modelData.hf }),
+	// TODO: this must be the actual repo instead of modelName
+	const res = await fetch("http://localhost:11434/models/", {
+		body: JSON.stringify({ model: modelName }),
 		method: "POST",
-	}).then((res) => res.json())) as any;
-	const jobId =
-		res.id ||
-		(await fetch("http://localhost:8090/api/jobs")
-			.then((res) => res.json)
-			.then(
-				(res: any) => res.jobs.find((job: any) => job.repo == modelData.hf)?.id,
-			));
-	if (typeof jobId == "undefined")
-		throw new HTTPException(404, { message: "model loading job not found" });
-	const getStatus = () =>
-		fetch(`http://localhost:8090/api/jobs/${jobId}`).then((res) =>
-			res.json(),
-		) as any;
-	let status;
-	do {
-		status = await getStatus();
-		yield {
-			progress: status.progress.downloadedBytes,
-			total: status.progress.totalBytes,
-			modelName,
-			status: status.status,
-		};
-		await sleep(DOWNLOAD_POLL_INTERVAL);
-	} while (!["completed", "failed"].includes(status.status));
+	});
+	if (res.status != 200) {
+		const json = (await res.json()) as any;
+		console.log(json.error.error);
+		// TODO: capture whether this is actually because the model is already downloaded or another reason
+		throw new HTTPException(500, { message: json.error.error });
+	}
+	const eventSource = createEventSource("http://localhost:11434/models/sse");
+	for await (const { data, event, model } of eventSource) {
+		console.log(data);
+		console.log(event);
+		console.log(model);
+		if (model != modelName) continue;
+		const jsonData = JSON.parse(data) as { [key: string]: any };
+		if (event == "download_progress") {
+			for (const [k, v] of Object.entries(jsonData)) {
+				yield {
+					progress: v.done,
+					total: v.total,
+					modelName,
+					status: "downloading",
+					file: k,
+				};
+			}
+		}
+		if (event == "model_status") {
+			if (["download_finished", "download_failed"].includes(jsonData.status))
+				break;
+		}
+	}
+
+	eventSource.close();
 }

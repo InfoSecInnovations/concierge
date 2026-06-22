@@ -21,6 +21,7 @@
 		"@zxcvbn-ts/language-en": "^3.0.2",
 		"adm-zip": "^0.5.16",
 		"envfile": "^7.1.0",
+		"eventsource-client": "^1.2.0",
 		"hono": "^4.7.7",
 		"ini": "^7.0.0",
 		"node-forge": "^1.3.1",

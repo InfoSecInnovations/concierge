@@ -1,6 +1,6 @@
 import requests
 import os
-import tomllib
+from shabti_types import ModelNotFoundError
 
 
 def create_embeddings(text):
@@ -9,11 +9,14 @@ def create_embeddings(text):
         return None
     if not text:
         return []
-    with open("/opt/shabti_config/shabti_models.toml", "rb") as f:
-        models_data = tomllib.load(f)
-    model = models_data["embeddings"]
+    models_data = requests.get(f"http://{os.getenv('LLM_HOST')}:11434/models").json()
+    embeddings_model_data = next(
+        (x for x in models_data["data"] if "embeddings" in x["tags"]), None
+    )
+    if not embeddings_model_data:
+        raise ModelNotFoundError()
     data = {
-        "model": model["hf"],
+        "model": embeddings_model_data["id"],
         "input": text,
         "encoding_format": "float",
     }
