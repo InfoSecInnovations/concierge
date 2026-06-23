@@ -43,9 +43,19 @@ You should perform the following system configuration steps according to your Op
 
 Shabti now has a visual configurator which we hope you will like a lot more than the previous text-based one. Just go to the release you wish to install and download the executable for your Operating System. Please let us know if you're using a different Operating System, it may be possible for us to make a build for it. You can also use the development version.
 
-Launch the executable and visit the address indicated in your web browser. Select your desired options and click "Start Installation!".
+Launch the executable and visit the indicated address in your web browser. Select your desired options and click "Start Installation!".
 
 Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Shabti" button. Docker will keep everything running for you and you will be able to access Shabti without going via the Configurator once installed.
+
+### Windows SmartScreen
+
+As we have just recently released the executable, Windows may not yet recognize it as being "safe". We would really appreciate it if you could run the app anyway, as this will allow us to increase trust with Microsoft and prevent future released from being blocked by SmartScreen.
+
+If you see this popup:
+
+![SmartScreen popup](smartscreen.png)
+
+Please click "More info" which should reveal that the executable is in fact signed by InfoSec Innovations, LLC. If you do not see that it's signed by us, please do not proceed! In the case that our name does appear there, click "Run anyway" and you will be able to use Shabti and help us out a great deal, thank you!
 
 ## Usage
 
