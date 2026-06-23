@@ -1,0 +1,7 @@
+[[chat]]
+hf = "bartowski/Mistral-7B-Instruct-v0.3-GGUF:Q4_K_M"
+name = "mistral7b"
+
+[embeddings]
+hf = "mykor/paraphrase-multilingual-mpnet-base-v2.gguf:Q4_K_M"
+name = "paraphrase-multilingual"
