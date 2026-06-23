@@ -7,7 +7,6 @@ const TIMEOUT = 10000;
 const HEALTH_POLL_INTERVAL = 300;
 
 export default async function* (modelName: string) {
-	// TODO: hit llama.cpp API instead
 	const shabtiModels = await getModelsConfig();
 	const modelData = shabtiModels[modelName];
 	if (!modelData) throw new HTTPException(404, { message: "model not found" });
@@ -23,26 +22,29 @@ export default async function* (modelName: string) {
 		} catch {}
 		sleep(HEALTH_POLL_INTERVAL);
 	}
-	// TODO: this must be the actual repo instead of modelName
-	const res = await fetch("http://localhost:11434/models/", {
-		body: JSON.stringify({ model: modelName }),
+	console.log(`loading ${modelData.hf}`);
+	// this must be the actual repo instead of modelName
+	// unfortunately llama.cpp won't show progress when pulling a model saved in the ini file?
+	const res = await fetch("http://localhost:11434/models", {
+		body: JSON.stringify({ model: modelData.hf }),
 		method: "POST",
 	});
 	if (res.status != 200) {
 		const json = (await res.json()) as any;
-		console.log(json.error.error);
+		console.log(json);
 		// TODO: capture whether this is actually because the model is already downloaded or another reason
 		throw new HTTPException(500, { message: json.error.error });
 	}
 	const eventSource = createEventSource("http://localhost:11434/models/sse");
-	for await (const { data, event, model } of eventSource) {
-		console.log(data);
-		console.log(event);
-		console.log(model);
-		if (model != modelName) continue;
+	for await (const { data } of eventSource) {
 		const jsonData = JSON.parse(data) as { [key: string]: any };
-		if (event == "download_progress") {
-			for (const [k, v] of Object.entries(jsonData)) {
+		if (jsonData.model != modelData.hf) continue;
+		console.log(jsonData.event);
+		console.log(jsonData.data.progress);
+		if (jsonData.event == "download_progress") {
+			for (const [k, v] of Object.entries(
+				jsonData.data.progress as { [key: string]: any },
+			)) {
 				yield {
 					progress: v.done,
 					total: v.total,
@@ -52,7 +54,7 @@ export default async function* (modelName: string) {
 				};
 			}
 		}
-		if (event == "model_status") {
+		if (jsonData.event == "model_status") {
 			if (["download_finished", "download_failed"].includes(jsonData.status))
 				break;
 		}

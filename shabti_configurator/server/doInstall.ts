@@ -138,6 +138,9 @@ export default async function* (
 			{ bracketedArray: false },
 		),
 	); // write to ini file used by llama.cpp
+	yield logMessage(
+		"launching LLM service. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",
+	);
 	await $`docker compose -f ${loaderComposeFile} up -d`; // launch llama.cpp
 	for (const modelName of [...chatModels, embeddingsModel]) {
 		for await (const json of downloadModel(modelName!.toString())) {

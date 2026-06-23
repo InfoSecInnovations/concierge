@@ -1,15 +1,8 @@
 services:
-  volume-ownership-changer:
-    container_name: volume-ownership-changer
-    image: alpine
-    restart: "no"
-    entrypoint: |
-        /bin/sh -c "chown -R 1000:1000 /models_dir"
-    volumes:
-        - llama-cpp-models:/models_dir
+
   llama-cpp-cpu:
     container_name: llama_cpp
-    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b9755
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b9765
     restart: unless-stopped
     ports:
       - "11434:11434"
