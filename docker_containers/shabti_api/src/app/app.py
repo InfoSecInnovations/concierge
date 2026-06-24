@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from shabti_util import auth_enabled
@@ -7,13 +7,39 @@ from . import secure_routes
 import os
 from keycloak import KeycloakPostError, KeycloakAuthenticationError
 import json
-from shabti_types import (
-    ShabtiError,
-)
+from shabti_types import ShabtiError, DocumentList
 import logging
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2AuthorizationCodeBearer
+from typing import Annotated
+from shabti_keycloak import server_url, get_keycloak_client
+from jwcrypto.jwt import JWTExpired
+from .document_collections import get_documents
 
 
 def create_app():
+    auth_is_enabled = auth_enabled()
+
+    oauth_2_scheme = OAuth2AuthorizationCodeBearer(
+        tokenUrl=f"{server_url()}/realms/shabti/protocol/openid-connect/token",
+        authorizationUrl=f"{server_url()}/realms/shabti/protocol/openid-connect/auth",
+        refreshUrl=f"{server_url()}/realms/shabti/protocol/openid-connect/token",
+    )
+
+    async def valid_access_token(
+        access_token: Annotated[
+            str, Depends(oauth_2_scheme if auth_is_enabled else None)
+        ],
+    ):
+        if not auth_is_enabled:
+            return None
+        try:
+            client = get_keycloak_client()
+            client.decode_token(access_token)
+            return access_token
+        except JWTExpired:
+            raise HTTPException(status_code=401, detail="Token expired")
+
     app = FastAPI(
         swagger_ui_init_oauth={
             "clientId": os.getenv("KEYCLOAK_CLIENT_ID"),
@@ -30,9 +56,7 @@ def create_app():
         allow_headers=["*"],
     )
 
-    # without security the API routes are simplified
-
-    if not auth_enabled():
+    if not auth_is_enabled:
         app.include_router(insecure_routes.router)
     else:
 
@@ -55,6 +79,28 @@ def create_app():
     @app.get("/")
     def is_online():
         return Response("Shabti API is up and running!")
+
+    @app.get(
+        "/collections/{collection_id}/documents", response_model_exclude_unset=True
+    )
+    async def get_documents_route(
+        collection_id: str,
+        credentials: Annotated[str, Depends(valid_access_token)],
+        search: str | None = None,
+        sort: str | None = None,
+        max_results: int | None = None,
+        filter_document_type: Annotated[list[str] | None, Query()] = None,
+        page: int = 0,
+    ) -> DocumentList:
+        return await get_documents(
+            credentials,
+            collection_id,
+            search,
+            sort,
+            max_results,
+            filter_document_type,
+            page,
+        )
 
     @app.exception_handler(ShabtiError)
     def shabti_error_handler(request: Request, exc: ShabtiError):

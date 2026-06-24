@@ -1,16 +1,14 @@
-from fastapi import APIRouter, UploadFile, Query
+from fastapi import APIRouter, UploadFile
 from .document_collections import (
     create_collection,
     get_collections,
     delete_collection,
-    get_documents,
     delete_document,
     get_document_types,
 )
 from shabti_types import (
     BaseCollectionCreateInfo,
     CollectionInfo,
-    DocumentList,
     DeletedDocumentInfo,
     ServiceStatus,
     PromptInfo,
@@ -31,7 +29,6 @@ from .run_prompt import run_prompt
 from .upload_prompt_file import upload_prompt_file
 from .opensearch_binary import serve_binary
 from .models import load_model
-from typing import Annotated
 from collections.abc import AsyncIterable
 
 router = APIRouter()
@@ -52,20 +49,6 @@ async def get_collections_route() -> list[CollectionInfo]:
 @router.delete("/collections/{collection_id}", response_model_exclude_unset=True)
 async def delete_collection_route(collection_id: str) -> CollectionInfo:
     return await delete_collection(None, collection_id)
-
-
-@router.get("/collections/{collection_id}/documents", response_model_exclude_unset=True)
-async def get_documents_route(
-    collection_id: str,
-    search: str | None = None,
-    sort: str | None = None,
-    max_results: int | None = None,
-    filter_document_type: Annotated[list[str] | None, Query()] = None,
-    page: int = 0,
-) -> DocumentList:
-    return await get_documents(
-        None, collection_id, search, sort, max_results, filter_document_type, page
-    )
 
 
 @router.get(
