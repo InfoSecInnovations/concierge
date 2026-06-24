@@ -57,7 +57,7 @@ async def load_model(model_name: str):
                         progress=json_data["data"]["progress"]["value"],
                         total=1,
                         model_name=model_name,
-                        info=f"{status} {json_data["data"]["progress"]["current"]}",
+                        info=f"{status} {json_data['data']['progress']['current']}",
                     )
 
     while current_status != "loaded":

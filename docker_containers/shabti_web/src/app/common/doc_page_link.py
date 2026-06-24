@@ -11,7 +11,7 @@ def page_link(collection_id: str, source: PromptSource, with_target_blank: False
             md_link(
                 f'{doc_url(collection_id, source.document_metadata.document_id)}#page={source.page_metadata.page_number}',
                 f'page {source.page_metadata.page_number} of {source.document_metadata.filename}',
-                with_target_blank
+                with_target_blank,
             )
         }"
     if (
@@ -29,7 +29,7 @@ def page_link(collection_id: str, source: PromptSource, with_target_blank: False
             md_link(
                 doc_url(collection_id, source.document_metadata.document_id),
                 source.document_metadata.filename,
-                with_target_blank
+                with_target_blank,
             )
         }{
             f' (page {source.page_metadata.page_number})'
