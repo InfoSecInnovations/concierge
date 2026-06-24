@@ -31,16 +31,16 @@ export default async function* (modelName: string) {
 	});
 	if (res.status != 200) {
 		const json = (await res.json()) as any;
+		// if the model already exists we don't need to download it again
+		if (res.status == 400 && json.error?.message?.includes("already exists"))
+			return;
 		console.log(json);
-		// TODO: capture whether this is actually because the model is already downloaded or another reason
 		throw new HTTPException(500, { message: json.error.error });
 	}
 	const eventSource = createEventSource("http://localhost:11434/models/sse");
 	for await (const { data } of eventSource) {
 		const jsonData = JSON.parse(data) as { [key: string]: any };
 		if (jsonData.model != modelData.hf) continue;
-		console.log(jsonData.event);
-		console.log(jsonData.data.progress);
 		if (jsonData.event == "download_progress") {
 			for (const [k, v] of Object.entries(
 				jsonData.data.progress as { [key: string]: any },
@@ -54,10 +54,9 @@ export default async function* (modelName: string) {
 				};
 			}
 		}
-		if (jsonData.event == "model_status") {
-			if (["download_finished", "download_failed"].includes(jsonData.status))
-				break;
-		}
+		if (["download_finished", "download_failed"].includes(jsonData.event))
+			// TODO: handle failed state
+			break;
 	}
 
 	eventSource.close();

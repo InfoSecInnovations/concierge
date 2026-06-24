@@ -151,5 +151,5 @@ async def get_files_route(collection_id: str, doc_id: str):
 
 @router.post("/models/pull")
 async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:
-    for x in load_model(model_info.model_name):
+    async for x in load_model(model_info.model_name):
         yield x

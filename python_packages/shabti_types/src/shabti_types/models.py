@@ -64,8 +64,8 @@ class DocumentIngestError(BaseModel):
 
 
 class ModelLoadInfo(BaseModel):
-    progress: int
-    total: int
+    progress: int | float
+    total: int | float
     model_name: str
     info: Optional[str] = None
 

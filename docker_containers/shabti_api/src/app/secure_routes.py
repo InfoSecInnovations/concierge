@@ -276,5 +276,5 @@ async def get_files_route(
 @router.post("/models/pull")
 async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:
     # TODO: should this be locked behind higher permissions levels?
-    for x in load_model(model_info.model_name):
+    async for x in load_model(model_info.model_name):
         yield x

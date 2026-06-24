@@ -1,10 +1,13 @@
 import requests
 import os
 import time
+import httpx
 from shabti_types import ModelLoadInfo
+from httpx_sse import aconnect_sse
+import json
 
 
-def load_model(model_name: str):
+async def load_model(model_name: str):
     print(f"loading model {model_name}")
 
     def model_status():
@@ -27,6 +30,35 @@ def load_model(model_name: str):
             f"http://{os.getenv('LLM_HOST')}:11434/models/load",
             json={"model": model_name},
         )
+
+    async with httpx.AsyncClient(timeout=None) as httpx_client:
+        async with aconnect_sse(
+            httpx_client,
+            "GET",
+            f"http://{os.getenv('LLM_HOST')}:11434/models/sse",
+        ) as event_source:
+            async for sse in event_source.aiter_sse():
+                json_data = json.loads(sse.data)
+                print(json_data)
+                if json_data["model"] != model_name:
+                    continue
+                status = (
+                    "data" in json_data
+                    and "status" in json_data["data"]
+                    and json_data["data"]["status"]
+                )
+                if json_data["event"] == "status_change":
+                    if status == "loaded":
+                        break
+                    if status == "unloaded" and json_data["data"]["failed"]:
+                        raise Exception("Model not loaded")
+                if status == "loading":
+                    yield ModelLoadInfo(
+                        progress=json_data["data"]["progress"]["value"],
+                        total=1,
+                        model_name=model_name,
+                        info=f"{status} {json_data["data"]["progress"]["current"]}",
+                    )
 
     while current_status != "loaded":
         yield ModelLoadInfo(
