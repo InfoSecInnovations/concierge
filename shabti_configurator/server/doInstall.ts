@@ -109,6 +109,8 @@ export default async function* (
 		"docker-compose-download-model.yml",
 	);
 	const chatModels = options.getAll("language_model");
+	const defaultModel =
+		options.get("default_model")?.toString() || chatModels[0].toString();
 	const embeddingsModel = options.get("embeddings_model")!;
 	const shabtiModels = await getModelsConfig();
 	const embeddingKey = embeddingsModel.toString();
@@ -131,6 +133,9 @@ export default async function* (
 					const modelData = shabtiModels[key];
 					if (!v)
 						throw new HTTPException(404, { message: `model ${key} not found` });
+					if (key == defaultModel) {
+						modelData.tags += ", default";
+					}
 					return { ...acc, [key]: modelData };
 				}, {}),
 				[embeddingKey]: embeddingModelData,

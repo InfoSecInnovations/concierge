@@ -46,11 +46,17 @@ const loggingToggle = document.getElementById(
 	"activity_logging",
 )! as HTMLInputElement;
 const formEl = document.getElementById("install_form") as HTMLFormElement;
+const chatModelSelector = document.getElementById(
+	"language_model",
+) as HTMLSelectElement;
 let passwordStatus: VNode = toVNode(
 	document.getElementById("password_status")!,
 );
 let formErrors: VNode = toVNode(document.getElementById("form_errors")!);
 let formSuccess: VNode = toVNode(document.getElementById("form_success")!);
+let defaultModel: VNode = toVNode(
+	document.getElementById("default_model_selector")!,
+);
 
 const patchPassword = (contents: VNodeChildren) => {
 	passwordStatus = patch(
@@ -65,6 +71,10 @@ const patchFormErrors = (contents: VNodeChildren) => {
 
 const patchFormSuccess = (contents: VNodeChildren) => {
 	formSuccess = patch(formSuccess, h("div#form_success.success", contents));
+};
+
+const patchDefaultModel = (contents: VNodeChildren) => {
+	defaultModel = patch(defaultModel, h("div#default_model_selector", contents));
 };
 
 const enableSubmit = () =>
@@ -139,6 +149,28 @@ const setFormVisibility = () => {
 };
 setFormVisibility();
 formEl.onchange = setFormVisibility;
+
+if (chatModelSelector)
+	chatModelSelector.onchange = (e) => {
+		const selected = (e.target as HTMLSelectElement).selectedOptions;
+		if (selected.length <= 1) {
+			patchDefaultModel(undefined);
+			return;
+		}
+		patchDefaultModel(
+			h("p", [
+				h("label", { attrs: { for: "default_model" } }, "Default Chat Model"),
+				h(
+					"select",
+					{ attrs: { id: "default_model", name: "default_model" } },
+					[...selected].map((s) =>
+						h("option", { props: { value: s.label } }, s.label),
+					),
+				),
+				"This model will be selected by default unless the user chooses a different one.",
+			]),
+		);
+	};
 
 const params = new URLSearchParams(window.location.search);
 const err = params.get("err");

@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 import aiofiles
 from shabti_types import PromptInfo, PromptChunk, PromptSource, DocumentInfo, PageInfo
 from .prompting import stream_response, get_context
@@ -12,14 +11,10 @@ from .document_collections import get_collection_info
 
 async def run_prompt(token: None | str, prompt_info: PromptInfo):
     tasks = load_prompter_config("tasks")
-    if prompt_info.task not in tasks:
-        raise HTTPException(status_code=400, detail="Requested task not found")
     task_prompt = tasks[prompt_info.task]["prompt"]
 
     if prompt_info.persona:
         personas = load_prompter_config("personas")
-        if prompt_info.persona not in personas:
-            raise HTTPException(status_code=400, detail="Requested persona not found")
         persona_prompt = personas[prompt_info.persona]["prompt"]
 
     else:
@@ -29,10 +24,6 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo):
         enhancers = load_prompter_config("enhancers")
         enhancer_prompts = []
         for enhancer in prompt_info.enhancers:
-            if enhancer not in enhancers:
-                raise HTTPException(
-                    status_code=400, detail="Requested enhancer not found"
-                )
             enhancer_prompts.append(enhancers[enhancer]["prompt"])
     else:
         enhancer_prompts = None
@@ -62,6 +53,7 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo):
             )
         )
     async for x in stream_response(
+        model_name=prompt_info.model_name,
         context=context["context"],
         task_prompt=task_prompt,
         user_input=prompt_info.user_input,

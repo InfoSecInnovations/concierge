@@ -39,14 +39,15 @@ from .functionality.load_prompter_config import load_prompter_config
 from .functionality.upload_prompt_file import upload_prompt_file
 from .functionality.opensearch_binary import serve_binary
 from .authorization import (
-    authorize,
     list_scopes,
-    UnauthorizedOperationError,
 )
 from .functionality.models import load_model
 from collections.abc import AsyncIterable
 from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
+from .dependencies.prompt_info_validator import PromptInfoValidator
+from .dependencies.prompt_body_auth_checker import PromptBodyAuthChecker
+import httpx
 
 
 def create_app():
@@ -201,24 +202,12 @@ def create_app():
         # TODO: maybe something like S3 upload where we pregenerate the URL or ID so a file can only be linked to a prompt?
         return await upload_prompt_file(file)
 
-    class PromptBodyAuthChecker:
-        def __init__(self, scope: str = "read"):
-            self.scope = scope
-
-        async def __call__(
-            self,
-            prompt_info: PromptInfo,
-            credentials: Annotated[str, Depends(access_token)],
-        ):
-            authorized = await authorize(
-                credentials, prompt_info.collection_id, self.scope
-            )
-            if not authorized:
-                raise UnauthorizedOperationError()
-
     body_checker = PromptBodyAuthChecker if auth_is_enabled else NoAuth
 
-    @app.post("/prompt", dependencies=[Depends(body_checker("read"))])
+    @app.post(
+        "/prompt",
+        dependencies=[Depends(body_checker("read")), Depends(PromptInfoValidator())],
+    )
     async def prompt_route(
         prompt_info: PromptInfo, credentials: Annotated[str, Depends(access_token)]
     ) -> AsyncIterable[PromptChunk]:
@@ -242,6 +231,14 @@ def create_app():
         credentials: Annotated[str, Depends(access_token)],
     ):
         return await serve_binary(collection_id, doc_id)
+
+    @app.get("/models", dependencies=[Depends(access_token)])
+    async def get_models_route():
+        async with httpx.AsyncClient() as client:
+            res = (
+                await client.get(f"http://{os.getenv('LLM_HOST')}:11434/models")
+            ).json()
+        return res
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
     async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:

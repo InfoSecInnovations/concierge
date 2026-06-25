@@ -75,6 +75,7 @@ class ModelInfo(BaseModel):
 
 
 class PromptInfo(BaseModel):
+    model_name: str
     collection_id: str
     task: str
     user_input: str

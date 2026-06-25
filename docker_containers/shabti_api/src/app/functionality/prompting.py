@@ -41,6 +41,7 @@ def prepare_prompt(
 
 
 async def stream_response(
+    model_name,
     context,
     task_prompt,
     user_input,
@@ -60,7 +61,7 @@ async def stream_response(
     # TODO: pass model name in
 
     data = {
-        "model": "mistral7b",
+        "model": model_name,
         "messages": [{"role": "user", "content": prompt}],
         "stream": True,
     }

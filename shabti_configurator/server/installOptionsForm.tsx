@@ -65,6 +65,7 @@ export const InstallOptionsForm = async (props: {
 					The language models which will be available to users when querying
 					Shabti.
 				</p>
+				<div id="default_model_selector"></div>
 				<p>
 					<label for="embeddings_model">Select Embeddings Model</label>
 					<select name="embeddings_model" id="embeddings_model">
