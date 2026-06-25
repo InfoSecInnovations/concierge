@@ -59,6 +59,7 @@ def create_app():
     # this allows us to avoid duplicating all the routes
     access_token = valid_access_token if auth_is_enabled else none_access_token
 
+    # the NoAuth class always returns true so it can be used as the authorization function when security is disabled
     auth_class = AuthChecker if auth_is_enabled else NoAuth
 
     app = FastAPI(
