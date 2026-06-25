@@ -27,18 +27,19 @@ def create_app():
     )
 
     async def valid_access_token(
-        access_token: Annotated[
-            str, Depends(oauth_2_scheme if auth_is_enabled else None)
-        ],
+        access_token: Annotated[str, Depends(oauth_2_scheme)],
     ):
-        if not auth_is_enabled:
-            return None
         try:
             client = get_keycloak_client()
             client.decode_token(access_token)
             return access_token
         except JWTExpired:
             raise HTTPException(status_code=401, detail="Token expired")
+
+    def no_access_token():
+        return None
+
+    access_token = valid_access_token if auth_is_enabled else no_access_token
 
     app = FastAPI(
         swagger_ui_init_oauth={
@@ -85,7 +86,7 @@ def create_app():
     )
     async def get_documents_route(
         collection_id: str,
-        credentials: Annotated[str, Depends(valid_access_token)],
+        credentials: Annotated[str | None, Depends(access_token)],
         search: str | None = None,
         sort: str | None = None,
         max_results: int | None = None,
