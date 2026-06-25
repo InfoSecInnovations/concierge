@@ -5,7 +5,7 @@ from .prompting import stream_response, get_context
 from .opensearch import get_temp_file
 from .load_prompter_config import load_prompter_config
 import json
-from .shabti_logging import log_action, log_user_action, logging_enabled
+from ..shabti_logging import log_action, log_user_action, logging_enabled
 from shabti_util import auth_enabled
 from .document_collections import get_collection_info
 

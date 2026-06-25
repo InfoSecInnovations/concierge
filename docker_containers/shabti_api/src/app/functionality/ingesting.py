@@ -3,7 +3,7 @@ from isi_util.async_generator import asyncify_generator
 from shabti_types import DocumentIngestInfo, DocumentInfo
 from typing import AsyncGenerator, Any
 from shabti_util import auth_enabled
-from .shabti_logging import log_action, log_user_action, logging_enabled
+from ..shabti_logging import log_action, log_user_action, logging_enabled
 from .document_collections import get_collection_info
 from .opensearch import get_document
 

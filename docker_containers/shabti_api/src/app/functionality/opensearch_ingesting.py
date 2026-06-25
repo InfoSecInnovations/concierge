@@ -1,6 +1,6 @@
 from opensearchpy import helpers
 from .embeddings import create_embeddings
-from ..loaders.base_loader import ShabtiDocument
+from .loaders.base_loader import ShabtiDocument
 from .opensearch import get_client, delete_opensearch_document
 from shabti_types import DocumentIngestInfo
 from semantic_text_splitter import TextSplitter

@@ -1,5 +1,5 @@
 from typing import Literal
-from .authorization import (
+from ..authorization import (
     authorize,
     create_resource,
     list_resources,
@@ -38,7 +38,7 @@ from shabti_types import (
     InvalidUserError,
     DocumentList,
 )
-from .shabti_logging import log_user_action, log_action, logging_enabled
+from ..shabti_logging import log_user_action, log_action, logging_enabled
 import os
 
 type Location = Literal["private", "shared"]
