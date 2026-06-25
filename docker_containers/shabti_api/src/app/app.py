@@ -46,6 +46,7 @@ from .authorization import (
 from .functionality.models import load_model
 from collections.abc import AsyncIterable
 from .dependencies.auth_checker import AuthChecker
+from .dependencies.no_auth import NoAuth
 
 
 def create_app():
@@ -57,6 +58,8 @@ def create_app():
     # if security is disabled we will just use None as the value of the token, which is supported by the underlying functions
     # this allows us to avoid duplicating all the routes
     access_token = valid_access_token if auth_is_enabled else none_access_token
+
+    auth_class = AuthChecker if auth_is_enabled else NoAuth
 
     app = FastAPI(
         swagger_ui_init_oauth={
@@ -132,7 +135,7 @@ def create_app():
     @app.post(
         "/collections/{collection_id}/documents/files",
         response_model_exclude_unset=True,
-        dependencies=[Depends(AuthChecker("update"))],
+        dependencies=[Depends(auth_class("update"))],
     )
     async def insert_files_document_route(
         collection_id: str,
@@ -145,7 +148,7 @@ def create_app():
     @app.post(
         "/collections/{collection_id}/documents/urls",
         response_model_exclude_unset=True,
-        dependencies=[Depends(AuthChecker("update"))],
+        dependencies=[Depends(auth_class("update"))],
     )
     async def insert_urls_document_route(
         collection_id: str,
@@ -172,23 +175,29 @@ def create_app():
     ):
         return await list_scopes(credentials, collection_id)
 
-    @app.get("/tasks", response_model_exclude_unset=True)
+    @app.get(
+        "/tasks",
+        response_model_exclude_unset=True,
+        dependencies=[Depends(access_token)],
+    )
     def get_tasks_route() -> dict[str, TaskInfo]:
         tasks = load_prompter_config("tasks")
         return {key: TaskInfo(**value) for key, value in tasks.items()}
 
-    @app.get("/personas")
+    @app.get("/personas", dependencies=[Depends(access_token)])
     def get_personas_route() -> dict[str, PromptConfigInfo]:
         personas = load_prompter_config("personas")
         return {key: PromptConfigInfo(**value) for key, value in personas.items()}
 
-    @app.get("/enhancers")
+    @app.get("/enhancers", dependencies=[Depends(access_token)])
     def get_enhancers_route() -> dict[str, PromptConfigInfo]:
         enhancers = load_prompter_config("enhancers")
         return {key: PromptConfigInfo(**value) for key, value in enhancers.items()}
 
-    @app.post("/prompt/source_file")
+    @app.post("/prompt/source_file", dependencies=[Depends(access_token)])
     async def prompt_file_route(file: UploadFile) -> TempFileInfo:
+        # TODO: should there be more restrictions on this route to avoid spamming the server with files?
+        # TODO: maybe something like S3 upload where we pregenerate the URL or ID so a file can only be linked to a prompt?
         return await upload_prompt_file(file)
 
     class PromptBodyAuthChecker:
@@ -206,7 +215,9 @@ def create_app():
             if not authorized:
                 raise UnauthorizedOperationError()
 
-    @app.post("/prompt", dependencies=[Depends(PromptBodyAuthChecker("read"))])
+    body_checker = PromptBodyAuthChecker if auth_is_enabled else NoAuth
+
+    @app.post("/prompt", dependencies=[Depends(body_checker("read"))])
     async def prompt_route(
         prompt_info: PromptInfo, credentials: Annotated[str, Depends(access_token)]
     ) -> AsyncIterable[PromptChunk]:
@@ -221,18 +232,17 @@ def create_app():
     def opensearch_status():
         return ServiceStatus(running=check_opensearch())
 
-    @app.get("/files/{collection_id}/{doc_id}")
+    @app.get(
+        "/files/{collection_id}/{doc_id}", dependencies=[Depends(auth_class("read"))]
+    )
     async def get_files_route(
         collection_id: str,
         doc_id: str,
         credentials: Annotated[str, Depends(access_token)],
     ):
-        authorized = await authorize(credentials, collection_id, "read")
-        if not authorized:
-            raise UnauthorizedOperationError()
         return await serve_binary(collection_id, doc_id)
 
-    @app.post("/models/pull")
+    @app.post("/models/pull", dependencies=[Depends(access_token)])
     async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:
         # TODO: should this be locked behind higher permissions levels?
         async for x in load_model(model_info.model_name):
