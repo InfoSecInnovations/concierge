@@ -1,4 +1,4 @@
-from ...src.loaders.tika_loader import TikaFileLoader
+from ...src.app.functionality.loaders.tika_loader import TikaFileLoader
 import os
 from fastapi import UploadFile
 from io import BytesIO

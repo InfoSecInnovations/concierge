@@ -1,4 +1,4 @@
-from ...src.app.opensearch import get_temp_file
+from ...src.app.functionality.opensearch import get_temp_file
 import os
 import aiofiles
 

@@ -4,7 +4,7 @@
 
 from shabti_keycloak import get_keycloak_client, get_keycloak_admin_openid_token
 from ...src.app.authorization import UnauthorizedOperationError
-from ...src.app.document_collections import (
+from ...src.app.functionality.document_collections import (
     delete_collection,
     get_documents,
     delete_document,

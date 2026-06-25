@@ -1,5 +1,5 @@
 import os
-from ...src.app.document_collections import (
+from ...src.app.functionality.document_collections import (
     get_collections,
     get_documents,
 )

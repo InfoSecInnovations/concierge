@@ -1,6 +1,6 @@
-from ...src.app.ingesting import insert_document
+from ...src.app.functionality.ingesting import insert_document
 import os
-from ...src.app.loading import load_file
+from ...src.app.functionality.loading import load_file
 from uuid import uuid4
 
 filename = "prompt_test.md"

@@ -1,5 +1,5 @@
 from shabti_keycloak import get_keycloak_admin_openid_token
-from ...src.app.document_collections import get_collections
+from ...src.app.functionality.document_collections import get_collections
 import pytest
 
 

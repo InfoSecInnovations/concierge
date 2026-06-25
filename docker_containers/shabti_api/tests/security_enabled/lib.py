@@ -1,5 +1,8 @@
 from shabti_keycloak import get_keycloak_client, get_keycloak_admin_openid_token
-from ...src.app.document_collections import create_collection, delete_collection
+from ...src.app.functionality.document_collections import (
+    create_collection,
+    delete_collection,
+)
 
 
 async def create_collection_for_user(user, location, collection_name):

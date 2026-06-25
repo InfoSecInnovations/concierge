@@ -1,17 +1,17 @@
-from ...src.app.status import check_opensearch
+from ...src.app.functionality.status import check_opensearch
 from ...src.load_dotenv import load_env
 from ...src.app.app import create_app
 from fastapi.testclient import TestClient
-from ...src.app.document_collections import (
+from ...src.app.functionality.document_collections import (
     create_collection,
     delete_collection,
     get_collections,
 )
-from ...src.app.ingesting import insert_document
+from ...src.app.functionality.ingesting import insert_document
 import secrets
 import pytest_asyncio
 import os
-from ...src.app.loading import load_file
+from ...src.app.functionality.loading import load_file
 from uuid import uuid4
 import aiofiles
 

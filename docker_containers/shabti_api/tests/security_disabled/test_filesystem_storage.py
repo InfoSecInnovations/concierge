@@ -1,8 +1,8 @@
 import aiofiles
 import aiofiles.os
 import os
-from ...src.app.opensearch import get_document_file_path
-from ...src.app.document_collections import (
+from ...src.app.functionality.opensearch import get_document_file_path
+from ...src.app.functionality.document_collections import (
     delete_document,
     get_documents,
     delete_collection,
