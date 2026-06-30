@@ -233,11 +233,20 @@ def create_app():
         return await serve_binary(collection_id, doc_id)
 
     @app.get("/models", dependencies=[Depends(access_token)])
-    async def get_models_route():
+    async def get_models_route(tags: list[str] | None = None):
         async with httpx.AsyncClient() as client:
             res = (
                 await client.get(f"http://{os.getenv('LLM_HOST')}:11434/models")
             ).json()
+        if tags:
+            new_data = []
+            for x in res["data"]:
+                if "tags" in x:
+                    for tag in x["tags"]:
+                        if tag in tags:
+                            new_data.append(x)
+                            break
+            res["data"] = new_data
         return res
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
