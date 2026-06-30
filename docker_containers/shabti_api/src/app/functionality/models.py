@@ -1,6 +1,5 @@
 import requests
 import os
-import time
 import httpx
 from shabti_types import ModelLoadInfo
 from httpx_sse import aconnect_sse
@@ -59,14 +58,5 @@ async def load_model(model_name: str):
                         model_name=model_name,
                         info=f"{status} {json_data['data']['progress']['current']}",
                     )
-
-    while current_status != "loaded":
-        yield ModelLoadInfo(
-            progress=0, total=1, model_name=model_name, info=current_status
-        )
-        time.sleep(1)
-        current_status = model_status()
-        if not current_status:
-            raise Exception("Model not found in Llama.cpp")
 
     print(f"Loaded model {model_name}")
