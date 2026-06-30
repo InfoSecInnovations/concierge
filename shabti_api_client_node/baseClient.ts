@@ -296,4 +296,8 @@ export class BaseShabtiClient {
 		const mediaType = res.headers.get("Content-Type");
 		return new WebFile(await res.blob(), mediaType);
 	}
+
+	async getModels() {
+		return await this.makeRequest("GET", "models").then((res) => res.json());
+	}
 }

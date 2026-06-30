@@ -50,7 +50,7 @@ async def load_model(model_name: str):
                 if json_data["event"] == "status_change":
                     if status == "loaded":
                         break
-                    if status == "unloaded" and json_data["data"]["failed"]:
+                    if status == "unloaded":
                         raise Exception("Model not loaded")
                 if status == "loading":
                     yield ModelLoadInfo(

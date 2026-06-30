@@ -4,6 +4,7 @@ from .text_input_list import text_input_list
 from typing import AsyncGenerator, Any
 from shabti_types import DocumentIngestInfo, UnsupportedFileError
 from shabti_api_client import BaseShabtiClient
+from .load_models import load_models
 import os
 
 
@@ -23,14 +24,20 @@ def ingester_server(
     session: Session,
     client: BaseShabtiClient,
     selected_collection: reactive.Value,
+    llm_status: reactive.Value,
 ):
     file_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
     files_are_ingesting = reactive.value(False)
     urls_are_ingesting = reactive.value(False)
+    embedding_model_loaded = reactive.value(False)
 
     @render.ui
     def ingester_content():
+        if not llm_status.get():
+            return ui.markdown("Waiting for LLM host to come online...")
+        if not embedding_model_loaded.get():
+            return ui.markdown("Loading embeddings model...")
         return ui.TagList(
             ui.markdown("#### Files"),
             ui.output_ui("file_input"),
@@ -130,5 +137,21 @@ def ingester_server(
         print(f"ingesting documents into collection {collection_id}")
         urls_are_ingesting.set(True)
         ingest_urls(urls, collection_id)
+
+    @reactive.extended_task
+    async def load_embedding_model():
+        models = await client.get_models()
+        embeddings = next(m for m in models["data"] if "embeddings" in m["tags"])
+        await load_models(client, embeddings["id"])
+
+    @reactive.effect
+    def load_model_effect():
+        load_embedding_model.result()
+        embedding_model_loaded.set(True)
+
+    @reactive.effect
+    def init():
+        if llm_status.get() and not embedding_model_loaded.get():
+            load_embedding_model()
 
     return ingesting_done

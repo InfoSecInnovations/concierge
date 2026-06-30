@@ -132,6 +132,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         opensearch_status,
         user_info,
         permissions,
+        llm_status,
     )
     prompter_server(
         "prompter",

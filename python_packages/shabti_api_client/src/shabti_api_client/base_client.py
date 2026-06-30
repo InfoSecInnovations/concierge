@@ -11,6 +11,7 @@ from shabti_types import (
 )
 import httpx
 import json
+from typing import Any
 
 
 class BaseShabtiClient(ABC):
@@ -175,3 +176,6 @@ class BaseShabtiClient(ABC):
             media_type=media_type,
             content_disposition=content_disposition,
         )
+
+    async def get_models(self) -> dict[str, Any]:
+        return (await self._make_request("GET", "models")).json()

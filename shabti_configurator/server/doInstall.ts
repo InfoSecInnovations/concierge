@@ -15,8 +15,9 @@ import downloadModel from "./downloadModel";
 import * as humanize from "ts-humanize";
 import removeAllContainers from "./removeAllContainers";
 import getModelsConfig from "./getModelsConfig";
-import { stringify } from "ini";
 import { HTTPException } from "hono/http-exception";
+import _ from "lodash";
+import * as ini from "@std/ini";
 
 export default async function* (
 	options: FormData,
@@ -126,22 +127,24 @@ export default async function* (
 			"llama_models",
 			"my-models.ini",
 		),
-		stringify(
-			{
-				...chatModels.reduce((acc, v) => {
-					const key = v.toString();
-					const modelData = shabtiModels[key];
-					if (!v)
-						throw new HTTPException(404, { message: `model ${key} not found` });
-					if (key == defaultModel) {
-						modelData.tags += ", default";
-					}
-					return { ...acc, [key]: modelData };
-				}, {}),
-				[embeddingKey]: embeddingModelData,
-			},
-			{ bracketedArray: false },
-		),
+		ini.stringify({
+			...chatModels.reduce((acc, v) => {
+				const key = v.toString();
+				const modelData = _.cloneDeep(shabtiModels[key]);
+				if (!v)
+					throw new HTTPException(404, { message: `model ${key} not found` });
+				modelData.tags = modelData.tags.filter(
+					(tag: string) => tag != "default",
+				); // remove the default tag set in the config file
+				if (key == defaultModel) {
+					// set the default tag if this model is the selected default
+					modelData.tags.push("default");
+				}
+				modelData.tags = modelData.tags.join(", "); // llama.cpp expects the tags in CSV
+				return { ...acc, [key]: modelData };
+			}, {}),
+			[embeddingKey]: embeddingModelData,
+		}),
 	); // write to ini file used by llama.cpp
 	yield logMessage(
 		"launching LLM service. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",

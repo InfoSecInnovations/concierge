@@ -6,7 +6,7 @@
 	"devDependencies": {
 		"@types/adm-zip": "^0.5.7",
 		"@types/bun": "latest",
-		"@types/ini": "^4.1.1",
+		"@types/lodash": "^4.17.24",
 		"@types/node-forge": "^1.3.11",
 		"@types/readline-sync": "^1.4.8"
 	},
@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
 		"@keycloak/keycloak-admin-client": "^26.2.0",
+		"@std/ini": "npm:@jsr/std__ini",
 		"@zxcvbn-ts/core": "^3.0.4",
 		"@zxcvbn-ts/language-common": "^3.0.4",
 		"@zxcvbn-ts/language-en": "^3.0.2",
@@ -23,7 +24,7 @@
 		"envfile": "^7.1.0",
 		"eventsource-client": "^1.2.0",
 		"hono": "^4.7.7",
-		"ini": "^7.0.0",
+		"lodash": "^4.18.1",
 		"node-forge": "^1.3.1",
 		"readline-sync": "^1.4.10",
 		"semver": "^7.7.4",

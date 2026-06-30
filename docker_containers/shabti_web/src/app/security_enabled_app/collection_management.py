@@ -22,6 +22,7 @@ def collection_management_server(
     opensearch_status: reactive.Value,
     user_info: reactive.Value,
     permissions: reactive.Value[set],
+    llm_status: reactive.Value,
 ):
     collection_create_server(
         "collection_create", client, selected_collection, collections, permissions
@@ -29,7 +30,9 @@ def collection_management_server(
     collection_selector_server(
         "collection_select", selected_collection, collections, user_info
     )
-    ingestion_done_trigger = ingester_server("ingester", client, selected_collection)
+    ingestion_done_trigger = ingester_server(
+        "ingester", client, selected_collection, llm_status
+    )
     current_scopes = reactive.value(set())
     fetching_scopes = reactive.value(False)
 

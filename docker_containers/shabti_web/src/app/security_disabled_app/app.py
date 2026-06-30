@@ -53,6 +53,7 @@ def server(input: Inputs, output: Outputs, session: Session):
         collections,
         api_status,
         opensearch_status,
+        llm_status,
     )
 
     @reactive.effect

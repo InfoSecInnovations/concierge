@@ -19,12 +19,15 @@ def collection_management_server(
     collections: reactive.Value[CollectionsData[CollectionInfo]],
     api_status: reactive.Value,
     opensearch_status: reactive.Value,
+    llm_status: reactive.Value,
 ):
     collection_create_server(
         "collection_create", client, selected_collection, collections
     )
     collection_selector_server("collection_select", selected_collection, collections)
-    ingestion_done_trigger = ingester_server("ingester", client, selected_collection)
+    ingestion_done_trigger = ingester_server(
+        "ingester", client, selected_collection, llm_status
+    )
 
     @render.ui
     def collection_management_content():
