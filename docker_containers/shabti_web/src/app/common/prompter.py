@@ -110,18 +110,23 @@ def prompter_server(
         tasks_dict = tasks.get()
         task_list = list(tasks_dict)
         selected_task = task_list[0] if "question" not in tasks_dict else "question"
-        return ui.TagList(
-            ui.chat_ui(
-                id="prompter_chat", placeholder=tasks_dict[selected_task].greeting
-            ),
-            collection_selector_ui("collection_selector"),
-            ui.layout_columns(
+        selectors = [collection_selector_ui("collection_selector")]
+        # we only display the model selector if more than one model is available
+        if len(chat_models.get()) > 1:
+            selectors.append(
                 ui.input_select(
                     id="model_select",
                     label="Model",
                     choices=[m["id"] for m in chat_models.get()],
                     selected=default_model.get(),
-                ),
+                )
+            )
+        return ui.TagList(
+            ui.chat_ui(
+                id="prompter_chat", placeholder=tasks_dict[selected_task].greeting
+            ),
+            ui.layout_columns(*selectors),
+            ui.layout_columns(
                 ui.input_select(
                     id="task_select",
                     label="Task",

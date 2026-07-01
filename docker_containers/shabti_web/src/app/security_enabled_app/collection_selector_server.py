@@ -22,7 +22,7 @@ def collection_selector_server(
         req(collections.get())
         return ui.input_select(
             id="internal_selected_collection",
-            label="Select Collection",
+            label="Collection",
             choices={
                 collection.collection_id: format_collection_name(
                     collection, user_info.get()
