@@ -232,7 +232,7 @@ def create_app():
         return await serve_binary(collection_id, doc_id)
 
     @app.get("/models", dependencies=[Depends(access_token)])
-    async def get_models_route(tags: list[str] | None = None):
+    async def get_models_route(tags: Annotated[list[str] | None, Query()] = None):
         return await get_models(tags)
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
