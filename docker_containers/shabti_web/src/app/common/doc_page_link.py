@@ -5,7 +5,9 @@ from shabti_types import PromptSource
 import os
 
 
-def page_link(collection_id: str, source: PromptSource, with_target_blank: False):
+def page_link(
+    collection_id: str, source: PromptSource, with_target_blank: bool = False
+):
     if source.document_metadata.media_type == "application/pdf":
         return f"PDF File: {
             md_link(

@@ -37,7 +37,7 @@ def prompter_server(
     personas: reactive.Value[dict[str, PromptConfigInfo] | None] = reactive.value(None)
     enhancers: reactive.Value[dict[str, PromptConfigInfo] | None] = reactive.value(None)
     chat_models: reactive.Value[list[dict] | None] = reactive.value(None)
-    default_model: reactive.Value[str | None] = reactive.value(None)
+    current_model: reactive.Value[str | None] = reactive.value(None)
 
     @reactive.extended_task
     async def load_prompter_config():
@@ -56,34 +56,41 @@ def prompter_server(
     chat = ui.Chat(id="prompter_chat")
 
     @reactive.extended_task
-    async def load_prompting_llm_model():
-        models = await client.get_models(tags=["chat"])
-        default = next(m for m in models["data"] if "default" in m["tags"])
-        await load_models(client, default["id"])
-        return models["data"], default["id"]
-
-    @reactive.effect
-    def load_model_effect():
-        models_list, default_id = load_prompting_llm_model.result()
-        chat_models.set(models_list)
-        default_model.set(default_id)
-        llm_loaded.set(True)
-
-    @reactive.extended_task
     async def load_selected_model(model_name: str):
         await load_models(client, model_name)
 
     @reactive.effect
-    @reactive.event(input.model_select)
-    def on_model_change():
-        model_name = input.model_select()
-        if model_name and model_name != default_model.get():
-            load_selected_model(model_name)
+    def load_selected_model_effect():
+        load_selected_model.result()
+        llm_loaded.set(True)
+
+    @reactive.extended_task
+    async def init_models():
+        models = await client.get_models(tags=["chat"])
+        default = next(m for m in models["data"] if "default" in m["tags"])
+        return models["data"], default["id"]
+
+    @reactive.effect
+    def init_models_effect():
+        models_list, default_id = init_models.result()
+        chat_models.set(models_list)
+        current_model.set(default_id)
+
+    @reactive.effect
+    @reactive.event(input.model_select, ignore_none=True, ignore_init=True)
+    def on_model_select():
+        llm_loaded.set(False)
+        current_model.set(input.model_select())
+
+    @reactive.effect
+    @reactive.event(current_model, ignore_none=True, ignore_init=True)
+    def on_current_model_set():
+        load_selected_model(current_model.get())
 
     @reactive.effect
     def init():
-        if llm_status.get() and not llm_loaded.get():
-            load_prompting_llm_model()
+        if llm_status.get() and not chat_models.get():
+            init_models()
 
     @render.ui
     def prompter_ui():
@@ -118,7 +125,7 @@ def prompter_server(
                     id="model_select",
                     label="Model",
                     choices=[m["id"] for m in chat_models.get()],
-                    selected=default_model.get(),
+                    selected=current_model.get(),
                 )
             )
         return ui.TagList(
