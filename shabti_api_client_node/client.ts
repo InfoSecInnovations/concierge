@@ -1,4 +1,3 @@
-import path = require("node:path");
 import { BaseShabtiClient } from "./baseClient";
 import { CollectionInfo } from "./dataTypes";
 
@@ -11,15 +10,16 @@ export class ShabtiClient extends BaseShabtiClient {
 		const res = await this.makeRequest("POST", "collections", {
 			collection_name: collectionName,
 		});
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.collection_id;
 	}
 
 	async getCollections(): Promise<CollectionInfo[]> {
 		const res = await this.makeRequest("GET", "collections");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.map(
-			(item) => new CollectionInfo(item.collection_name, item.collection_id),
+			(item: any) =>
+				new CollectionInfo(item.collection_name, item.collection_id),
 		);
 	}
 }

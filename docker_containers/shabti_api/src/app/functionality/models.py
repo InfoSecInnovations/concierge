@@ -6,6 +6,16 @@ from httpx_sse import aconnect_sse
 import json
 
 
+async def get_models(tags: list[str] | None = None):
+    async with httpx.AsyncClient() as client:
+        res = (await client.get(f"http://{os.getenv('LLM_HOST')}:11434/models")).json()
+    if tags:
+        res["data"] = [
+            x for x in res["data"] if any(tag in tags for tag in x.get("tags", []))
+        ]
+    return res
+
+
 async def load_model(model_name: str):
     print(f"loading model {model_name}")
 

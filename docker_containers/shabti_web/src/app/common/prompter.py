@@ -36,6 +36,8 @@ def prompter_server(
     tasks: reactive.Value[dict[str, TaskInfo] | None] = reactive.value(None)
     personas: reactive.Value[dict[str, PromptConfigInfo] | None] = reactive.value(None)
     enhancers: reactive.Value[dict[str, PromptConfigInfo] | None] = reactive.value(None)
+    chat_models: reactive.Value[list[dict] | None] = reactive.value(None)
+    default_model: reactive.Value[str | None] = reactive.value(None)
 
     @reactive.extended_task
     async def load_prompter_config():
@@ -55,14 +57,28 @@ def prompter_server(
 
     @reactive.extended_task
     async def load_prompting_llm_model():
-        models = await client.get_models()
+        models = await client.get_models(tags=["chat"])
         default = next(m for m in models["data"] if "default" in m["tags"])
         await load_models(client, default["id"])
+        return models["data"], default["id"]
 
     @reactive.effect
     def load_model_effect():
-        load_prompting_llm_model.result()
+        models_list, default_id = load_prompting_llm_model.result()
+        chat_models.set(models_list)
+        default_model.set(default_id)
         llm_loaded.set(True)
+
+    @reactive.extended_task
+    async def load_selected_model(model_name: str):
+        await load_models(client, model_name)
+
+    @reactive.effect
+    @reactive.event(input.model_select)
+    def on_model_change():
+        model_name = input.model_select()
+        if model_name and model_name != default_model.get():
+            load_selected_model(model_name)
 
     @reactive.effect
     def init():
@@ -101,6 +117,12 @@ def prompter_server(
             collection_selector_ui("collection_selector"),
             ui.layout_columns(
                 ui.input_select(
+                    id="model_select",
+                    label="Model",
+                    choices=[m["id"] for m in chat_models.get()],
+                    selected=default_model.get(),
+                ),
+                ui.input_select(
                     id="task_select",
                     label="Task",
                     choices=task_list,
@@ -134,6 +156,7 @@ def prompter_server(
         collection_id: str,
         user_input: str,
         task: str,
+        model_name: str,
         persona: str | None,
         selected_enhancers: list[str] | None,
         file_path: str | None,
@@ -142,6 +165,7 @@ def prompter_server(
             collection_id,
             user_input,
             task,
+            model_name,
             None if not persona or persona == "None" else persona,
             selected_enhancers,
             file_path,
@@ -155,6 +179,7 @@ def prompter_server(
     async def on_chat_submit(user_input: str):
         collection_id = selected_collection.get()
         task = input.task_select()
+        model_name = input.model_select()
         persona = input.persona_select()
         selected_enhancers = input.enhancers_select()
         input_files = input[f"prompt_file_{current_file_id.get()}"]()
@@ -166,6 +191,7 @@ def prompter_server(
                 collection_id,
                 user_input,
                 task,
+                model_name,
                 persona,
                 selected_enhancers,
                 file_path,

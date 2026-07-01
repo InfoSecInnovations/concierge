@@ -41,13 +41,12 @@ from .functionality.opensearch_binary import serve_binary
 from .authorization import (
     list_scopes,
 )
-from .functionality.models import load_model
+from .functionality.models import load_model, get_models
 from collections.abc import AsyncIterable
 from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
 from .dependencies.prompt_info_validator import PromptInfoValidator
 from .dependencies.prompt_body_auth_checker import PromptBodyAuthChecker
-import httpx
 
 
 def create_app():
@@ -234,15 +233,7 @@ def create_app():
 
     @app.get("/models", dependencies=[Depends(access_token)])
     async def get_models_route(tags: list[str] | None = None):
-        async with httpx.AsyncClient() as client:
-            res = (
-                await client.get(f"http://{os.getenv('LLM_HOST')}:11434/models")
-            ).json()
-        if tags:
-            res["data"] = [
-                x for x in res["data"] if any(tag in tags for tag in x.get("tags", []))
-            ]
-        return res
+        return await get_models(tags)
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
     async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:

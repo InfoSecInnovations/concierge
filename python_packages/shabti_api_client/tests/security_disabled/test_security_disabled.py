@@ -105,7 +105,12 @@ async def test_prompting(shabti_client, shabti_collection_id):
     file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
     async for info in shabti_client.insert_files(shabti_collection_id, [file_path]):
         pass
+    models = await shabti_client.get_models(tags=["chat"])
+    model_name = next(m for m in models["data"] if "default" in m["tags"])["id"]
     async for response in shabti_client.prompt(
-        shabti_collection_id, "What does the word prompting mean?", "question"
+        shabti_collection_id,
+        "What does the word prompting mean?",
+        "question",
+        model_name,
     ):
         pass

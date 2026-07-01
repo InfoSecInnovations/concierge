@@ -232,6 +232,7 @@ export class BaseShabtiClient {
 		collectionId: string,
 		prompt: string,
 		task: string,
+		modelName: string,
 		persona?: string,
 		enhancers?: string[],
 		filePath?: string,
@@ -250,6 +251,7 @@ export class BaseShabtiClient {
 		})();
 
 		return this.streamRequest("POST", "prompt", undefined, {
+			model_name: modelName,
 			collection_id: collectionId,
 			user_input: prompt,
 			task,

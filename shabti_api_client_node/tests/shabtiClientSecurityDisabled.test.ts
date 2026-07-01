@@ -91,10 +91,15 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 					promptDocPath,
 				])) {
 				}
+				const models = (await client.getModels(["chat"])) as any;
+				const modelName = models.data.find((m: any) =>
+					m.tags.includes("default"),
+				).id;
 				for await (const item of await client.prompt(
 					collectionId,
 					"What does the word prompting mean?",
 					"question",
+					modelName,
 				)) {
 				}
 			});

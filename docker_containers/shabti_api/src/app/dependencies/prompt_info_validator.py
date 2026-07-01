@@ -1,11 +1,16 @@
 from shabti_types import PromptInfo
 from fastapi import HTTPException
 from ..functionality.load_prompter_config import load_prompter_config
+from ..functionality.models import get_models
 
 
 class PromptInfoValidator:
     async def __call__(self, prompt_info: PromptInfo):
-        # TODO: validate prompt_info.model, model must exist and have chat tag
+        chat_models = await get_models(tags=["chat"])
+        if not any(m["id"] == prompt_info.model_name for m in chat_models["data"]):
+            raise HTTPException(
+                status_code=400, detail="Requested model not found or not chat-enabled"
+            )
         tasks = load_prompter_config("tasks")
         if prompt_info.task not in tasks:
             raise HTTPException(status_code=400, detail="Requested task not found")
