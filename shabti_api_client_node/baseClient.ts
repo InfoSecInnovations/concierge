@@ -1,5 +1,5 @@
 import { openAsBlob } from "node:fs";
-import path = require("node:path");
+import * as path from "node:path";
 import { EXPECTED_CODES } from "./codes";
 import {
 	DocumentInfo,
@@ -68,6 +68,7 @@ export class BaseShabtiClient {
 		params?: {},
 	): Promise<ReadableStream<T>> {
 		const res = await this.makeRequest(method, url, json, files, params);
+		if (!res.body) throw new Error("Response had no body");
 		const reader = res.body.getReader();
 		const decoder = new TextDecoder();
 		let current = "";
@@ -89,7 +90,7 @@ export class BaseShabtiClient {
 					// we add the first split to the currently collected text
 					const lines = [current + splits[0], ...splits.slice(1, -1)];
 					// the last split is either empty due to the newline being at the end or contains the start of a new chunk
-					current = splits[splits.length - 1];
+					current = splits[splits.length - 1]!;
 					for (const line of lines.filter((line) => line.trim())) {
 						const json = JSON.parse(line);
 						controller.enqueue(resultFunction ? resultFunction(json) : json);
@@ -103,7 +104,7 @@ export class BaseShabtiClient {
 
 	async deleteCollection(collectionId: string): Promise<string> {
 		const res = await this.makeRequest("DELETE", `collections/${collectionId}`);
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.collection_id;
 	}
 
@@ -124,14 +125,14 @@ export class BaseShabtiClient {
 		const res = await this.makeRequest(
 			"GET",
 			`collections/${collectionId}/documents`,
-			null,
-			null,
+			undefined,
+			undefined,
 			params,
 		);
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return new DocumentList(
 			json.documents.map(
-				(item) =>
+				(item: any) =>
 					new DocumentInfo(
 						item.document_id,
 						item.source,
@@ -152,7 +153,7 @@ export class BaseShabtiClient {
 			"GET",
 			`collections/${collectionId}/document_types`,
 		);
-		return await res.json();
+		return (await res.json()) as string[];
 	}
 
 	async insertFiles(collectionId: string, filePaths: string[]) {
@@ -199,13 +200,13 @@ export class BaseShabtiClient {
 			"DELETE",
 			`collections/${collectionId}/documents/${documentId}`,
 		);
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.document_id;
 	}
 
 	async getTasks(): Promise<{ [key: string]: TaskInfo }> {
 		const res = await this.makeRequest("GET", "tasks");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return Object.entries(json).reduce((acc, [key, value]: any) => {
 			return { ...acc, [key]: new TaskInfo(value.greeting, value.prompt) };
 		}, {});
@@ -213,7 +214,7 @@ export class BaseShabtiClient {
 
 	async getPersonas(): Promise<{ [key: string]: PromptConfigInfo }> {
 		const res = await this.makeRequest("GET", "personas");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return Object.entries(json).reduce((acc, [key, value]: any) => {
 			return { ...acc, [key]: new PromptConfigInfo(value.prompt) };
 		}, {});
@@ -221,7 +222,7 @@ export class BaseShabtiClient {
 
 	async getEnhancers(): Promise<{ [key: string]: PromptConfigInfo }> {
 		const res = await this.makeRequest("GET", "enhancers");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return Object.entries(json).reduce((acc, [key, value]: any) => {
 			return { ...acc, [key]: new PromptConfigInfo(value.prompt) };
 		}, {});
@@ -242,7 +243,7 @@ export class BaseShabtiClient {
 					"/prompt/source_file",
 					undefined,
 					await this.createFormData("file", [filePath]),
-				).then((res) => res.json());
+				).then((res) => res.json() as any);
 				return res.id;
 			}
 			return undefined;
@@ -269,13 +270,13 @@ export class BaseShabtiClient {
 
 	async llmStatus(): Promise<boolean> {
 		const res = await this.makeRequest("GET", "status/llm");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.running;
 	}
 
 	async opensearchStatus(): Promise<boolean> {
 		const res = await this.makeRequest("GET", "status/opensearch");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.running;
 	}
 
@@ -294,10 +295,19 @@ export class BaseShabtiClient {
 			`files/${collectionId}/${documentId}`,
 		);
 		const mediaType = res.headers.get("Content-Type");
+		if (!mediaType) throw new Error("Content-Type header was missing");
 		return new WebFile(await res.blob(), mediaType);
 	}
 
-	async getModels() {
-		return await this.makeRequest("GET", "models").then((res) => res.json());
+	async getModels(tags?: string[]) {
+		const params: any = {};
+		if (tags) params.tags = tags;
+		return await this.makeRequest(
+			"GET",
+			"models",
+			undefined,
+			undefined,
+			params,
+		).then((res) => res.json());
 	}
 }

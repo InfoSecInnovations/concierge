@@ -177,5 +177,8 @@ class BaseShabtiClient(ABC):
             content_disposition=content_disposition,
         )
 
-    async def get_models(self) -> dict[str, Any]:
-        return (await self._make_request("GET", "models")).json()
+    async def get_models(self, tags: list[str] | None = None) -> dict[str, Any]:
+        params = {}
+        if tags:
+            params["tags"] = tags
+        return (await self._make_request("GET", "models", params=params)).json()

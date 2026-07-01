@@ -38,21 +38,18 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 		json?: any,
 		files?: FormData,
 		params?: {},
-	) {
+	): Promise<Response> {
 		const doRequest = async (token: client.TokenEndpointResponse) => {
 			const body = (() => {
 				if (json) return JSON.stringify(json);
 				if (files) return files;
 				return undefined;
 			})();
-			const headers = (() => {
-				if (json)
-					return {
-						"Content-Type": "application/json",
-						Authorization: `Bearer ${token.access_token}`,
-					};
-				return { Authorization: `Bearer ${token.access_token}` };
-			})();
+			// if there is a JSON body, add the correct content type header
+			const headers: Record<string, string> = {
+				Authorization: `Bearer ${token.access_token}`,
+				...(json && { "Content-Type": "application/json" }),
+			};
 			const fullUrl = new URL(url, this.serverUrl);
 			if (params && Object.keys(params).length) {
 				fullUrl.search = new URLSearchParams(params).toString();
@@ -88,6 +85,8 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 				if (currentToken === this.token) {
 					// this means we're probably using an expired token
 					if (!this.refreshTask) {
+						if (!this.token.refresh_token)
+							throw new Error("No refresh token found!");
 						this.refreshTask = client.refreshTokenGrant(
 							this.openIdConfig,
 							this.token.refresh_token,
@@ -113,15 +112,15 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 			location,
 			owner_username: ownerUsername,
 		});
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.collection_id;
 	}
 
 	async getCollections(): Promise<AuthzCollectionInfo[]> {
 		const res = await this.makeRequest("GET", "collections");
-		const json = await res.json();
+		const json = (await res.json()) as any;
 		return json.map(
-			(item) =>
+			(item: any) =>
 				new AuthzCollectionInfo(
 					item.collection_name,
 					item.collection_id,
@@ -139,7 +138,7 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 
 	async getPermissions() {
 		const res = await this.makeRequest("GET", "permissions");
-		const json = await res.json();
+		const json = (await res.json()) as string[];
 		return new Set(json);
 	}
 
@@ -148,7 +147,7 @@ export class ShabtiAuthorizationClient extends BaseShabtiClient {
 			"GET",
 			`collections/${collectionId}/scopes`,
 		);
-		const json = await res.json();
+		const json = (await res.json()) as string[];
 		return new Set(json);
 	}
 }

@@ -239,14 +239,9 @@ def create_app():
                 await client.get(f"http://{os.getenv('LLM_HOST')}:11434/models")
             ).json()
         if tags:
-            new_data = []
-            for x in res["data"]:
-                if "tags" in x:
-                    for tag in x["tags"]:
-                        if tag in tags:
-                            new_data.append(x)
-                            break
-            res["data"] = new_data
+            res["data"] = [
+                x for x in res["data"] if any(tag in tags for tag in x.get("tags", []))
+            ]
         return res
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
