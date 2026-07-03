@@ -11,13 +11,13 @@ import dockerIsRunning from "./server/dockerIsRunning";
 import { ExistingRemover } from "./server/existingRemover";
 import { InstallOptionsForm } from "./server/installOptionsForm";
 import { RelaunchForm } from "./server/relaunchForm";
-import streamHtml from "./server/streamHtml.js";
-import validateInstallForm from "./server/validateInstallForm.js";
-import { WebUILink } from "./server/webUiLink.js";
+import streamHtml from "./server/streamHtml";
+import validateInstallForm from "./server/validateInstallForm";
+import { WebUILink } from "./server/webUiLink";
 import packageJson from "./package.json";
-import getCurrentVersion from "./server/getCurrentVersion.js";
-import listCompatibleDockerTags from "./server/listCompatibleDockerTags.js";
-import currentIsLocal from "./server/currentIsLocal.js";
+import getCurrentVersion from "./server/getCurrentVersion";
+import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
+import currentIsLocal from "./server/currentIsLocal";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -155,7 +155,7 @@ app.get("/", async (c) => {
 						</p>
 						<p>
 							If you have already installed it, please launch Docker Desktop or
-							start the daemon and this page should display the Shabti
+							start the daemon, refresh the page and you should see the Shabti
 							installation options.
 						</p>
 					</section>
@@ -198,7 +198,7 @@ app.post("/remove", (c) =>
 		if (service == "llama_cpp")
 			return streamHtml(c, "Removing Llama.cpp service", async (_) => {
 				await $`docker container rm --force llama_cpp`;
-				await $`docker volume rm --force shabti_llama-cpp-models shabti_llama-cpp-cache`;
+				await $`docker volume rm --force shabti_llama-cpp-models`;
 			});
 		if (service == "opensearch")
 			return streamHtml(c, "Removing OpenSearch service", async (_) => {
