@@ -16,6 +16,7 @@ from .lib import create_collection_for_user, delete_collection_as_admin
 import os
 import json
 import secrets
+from ...src.app.functionality.models import get_models
 
 
 @pytest.mark.parametrize(
@@ -720,11 +721,14 @@ async def test_can_prompt(
 ):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
+    models = await get_models(tags=["chat"])
+    model_name = next(m for m in models["data"] if "default" in m["tags"])["id"]
     response = shabti_client.post(
         "/prompt",
         json={
             "collection_id": shabti_collection_id,
             "task": "question",
+            "model_name": model_name,
             "user_input": "What does the word prompting mean?",
         },
         headers={"Authorization": f"Bearer {token['access_token']}"},
@@ -749,11 +753,14 @@ async def test_cannot_prompt(
 ):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
+    models = await get_models(tags=["chat"])
+    model_name = next(m for m in models["data"] if "default" in m["tags"])["id"]
     response = shabti_client.post(
         "/prompt",
         json={
             "collection_id": shabti_collection_id,
             "task": "question",
+            "model_name": model_name,
             "user_input": "What does the word prompting mean?",
         },
         headers={"Authorization": f"Bearer {token['access_token']}"},

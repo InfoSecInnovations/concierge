@@ -1,5 +1,5 @@
 import { file } from "bun";
-import shabtiModelsFile from "../shabti_models.ini" with { type: "file" };
+import shabtiModelsFile from "./shabti_models.ini" with { type: "file" };
 import * as ini from "@std/ini";
 
 export default async () => {

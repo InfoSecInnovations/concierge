@@ -14,7 +14,7 @@ import getCurrentVersion from "./getCurrentVersion";
 import downloadModel from "./downloadModel";
 import * as humanize from "ts-humanize";
 import removeAllContainers from "./removeAllContainers";
-import getModelsConfig from "./getModelsConfig";
+import getModelsConfig from "../getModelsConfig";
 import { HTTPException } from "hono/http-exception";
 import _ from "lodash";
 import * as ini from "@std/ini";

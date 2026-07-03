@@ -5,6 +5,7 @@
 import { parseArgs } from "node:util";
 import doInstall from "./server/doInstall";
 import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
+import getModelsConfig from "./getModelsConfig";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -44,6 +45,18 @@ options.set("security_level", values["security-level"]);
 if (values["keycloak-password"])
 	options.set("keycloak_password", values["keycloak-password"]);
 if (values["use-gpu"]) options.set("use_gpu", "True");
+const modelsConfig = await getModelsConfig();
+for (const [k, v] of Object.entries(modelsConfig).filter(([k, v]) =>
+	v.tags?.includes("chat"),
+)) {
+	options.append("language_model", k);
+}
+options.set(
+	"embeddings_model",
+	Object.entries(modelsConfig).find(([k, v]) =>
+		v.tags?.includes("embeddings"),
+	)![0],
+);
 
 const defaultVersion = (await listCompatibleDockerTags())[0];
 

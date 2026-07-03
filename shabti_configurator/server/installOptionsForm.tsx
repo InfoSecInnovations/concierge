@@ -5,7 +5,7 @@ import getDefaultDirectory from "./getDefaultDirectory";
 import getEnvPath from "./getEnvPath";
 import { VersionSelector } from "./versionSelector";
 import currentIsLocal from "./currentIsLocal";
-import getModelsConfig from "./getModelsConfig";
+import getModelsConfig from "../getModelsConfig";
 
 export const InstallOptionsForm = async (props: {
 	devMode: boolean;

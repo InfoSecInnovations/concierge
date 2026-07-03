@@ -1,6 +1,6 @@
 import { HTTPException } from "hono/http-exception";
 import { sleep } from "bun";
-import getModelsConfig from "./getModelsConfig";
+import getModelsConfig from "../getModelsConfig";
 import { createEventSource } from "eventsource-client";
 
 const TIMEOUT = 10000;
