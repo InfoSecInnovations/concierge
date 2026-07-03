@@ -1,18 +1,18 @@
 [project]
 name = "shabti-api-client"
-version = "0.1a12"
+version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
   "httpx",
   "python-keycloak~=5.8.1",
-  "shabti-types==0.1a8",
+  "shabti-types==0.1.0",
 ]
 
 [dependency-groups]
 dev = [
   "pytest~=8.4.2",
   "pytest-asyncio~=1.2.0",
-  "shabti-keycloak==0.1a3"
+  "shabti-keycloak==0.1.0"
 ]
 
 [build-system]
