@@ -105,7 +105,8 @@ app.get("/", async (c) => {
 										</p>
 										<p>
 											Bear in mind that if you just installed Shabti it can take
-											a few minutes before it's up and running.
+											a few minutes before it's up and running, especially if it
+											needs to download the language models.
 										</p>
 									</>
 								) : (
