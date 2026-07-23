@@ -1,54 +1,28 @@
-import minimumVersion from "../minimumVersion";
+import { Octokit } from "octokit";
 import semver from "semver";
+import packageJson from "../package.json";
 
-export default async () => {
-	let next =
-		"https://hub.docker.com/v2/namespaces/infosecinnovations/repositories/shabti/tags?page_size=100";
-	const tags = [] as string[];
-	while (next) {
-		const response: any = await fetch(
-			"https://hub.docker.com/v2/namespaces/infosecinnovations/repositories/shabti/tags?page_size=100",
-		).then((res) => res.json());
-		next = response.next;
-		for (const tag of response.results) {
-			tags.push(tag.name);
-		}
-	}
-	// filter out cuda tagged versions (we don't do that anymore)
-	// filter out "latest" tag
-	const filteredTags = tags.filter(
-		(tag) => !tag.endsWith("-cuda") && tag != "latest",
-	);
-	return filteredTags
-		.filter(
-			(tag) =>
-				semver.compare(
-					semver.coerce(tag, { loose: true }) || "",
-					minimumVersion,
-					true,
-				) >= 0,
-		)
-		.sort((a, b) => {
-			// put "invalid" versions the lowest, these are probably using the old Python versioning
-			if (semver.valid(a, true) && !semver.valid(b, true)) return -1;
-			if (semver.valid(b, true) && !semver.valid(a, true)) return 1;
-			// sort prerelease versions after "stable"
-			try {
-				if (
-					semver.prerelease(a, true)?.length &&
-					!semver.prerelease(b, true)?.length
-				)
-					return 1;
-				if (
-					semver.prerelease(b, true)?.length &&
-					!semver.prerelease(a, true)?.length
-				)
-					return -1;
-			} catch {}
-			return semver.rcompare(
-				semver.coerce(a, { loose: true }) || "",
-				semver.coerce(b, { loose: true }) || "",
-				true,
-			);
-		}); // sort by highest first
-};
+//export default async () => {
+const octokit = new Octokit();
+const releases = await octokit.paginate(octokit.rest.repos.listReleases, {
+	owner: "InfoSecInnovations",
+	repo: "shabti",
+	per_page: 100,
+	headers: {
+		"X-GitHub-Api-Version": "2026-03-10",
+	},
+});
+const componentsAssets = releases
+	.map((release) =>
+		release.assets.filter((asset) => asset.name == "shabti-components.json"),
+	)
+	.flat();
+const releaseData = await Promise.all(
+	componentsAssets.map((asset) =>
+		fetch(asset.url, { headers: { Accept: "application/octet-stream" } }).then(
+			(res) => res.json() as any,
+		),
+	),
+);
+console.log(releaseData);
+//};

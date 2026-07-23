@@ -69,7 +69,9 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
-          files: ./dist/*.zip
+          files: |
+            ./dist/*.zip
+            ./shabti-components.json
           tag_name: shabti-v${{steps.package-version.outputs.current-version}}
           target_commitish: ${{github.sha}}
           overwrite_files: false

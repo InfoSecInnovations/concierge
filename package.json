@@ -18,7 +18,8 @@
 		"tests_docker_compose/"
 	],
 	"dependencies": {
-		"dotenv": "^17.2.2"
+		"dotenv": "^17.2.2",
+		"octokit": "^5.0.5"
 	},
-	"version": "0.8.0"
+	"version": "0.8.0-rc10"
 }
