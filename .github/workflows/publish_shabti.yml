@@ -53,12 +53,9 @@ jobs:
 
       - name: Install project
         run: bun install
-      - name: Publish API Client
+      - name: Build API Client
         working-directory: ./shabti_api_client_node
-        # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
-        run: |
-          bun run build
-          bun x publish-if-not-exists --access public
+        run: bun run build
       - name: Build CLI Executable
         working-directory: ./shabti_cli
         run: |
