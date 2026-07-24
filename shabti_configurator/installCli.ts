@@ -4,7 +4,7 @@
 
 import { parseArgs } from "node:util";
 import doInstall from "./server/doInstall";
-import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
+import listCompatibleVersions from "./server/listCompatibleVersions";
 
 const { values } = parseArgs({
 	args: Bun.argv,
@@ -45,7 +45,7 @@ if (values["keycloak-password"])
 	options.set("keycloak_password", values["keycloak-password"]);
 if (values["use-gpu"]) options.set("use_gpu", "True");
 
-const defaultVersion = (await listCompatibleDockerTags())[0];
+const defaultVersion = (await listCompatibleVersions())[0].version;
 
 for await (const _ of doInstall(
 	options,

@@ -16,7 +16,7 @@ import validateInstallForm from "./server/validateInstallForm";
 import { WebUILink } from "./server/webUiLink";
 import packageJson from "./package.json";
 import getCurrentVersion from "./server/getCurrentVersion";
-import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
+import listCompatibleVersions from "./server/listCompatibleVersions.js";
 import currentIsLocal from "./server/currentIsLocal";
 
 const { values } = parseArgs({
@@ -36,7 +36,7 @@ const app = new Hono();
 const state: { watchProcess?: Bun.Subprocess } = {
 	watchProcess: undefined,
 };
-const defaultVersion = (await listCompatibleDockerTags())[0];
+const defaultVersion = (await listCompatibleVersions())[0].version;
 
 app.get("/style.css", async (c) =>
 	c.body(await file(css).text(), 201, {
