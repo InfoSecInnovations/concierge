@@ -8,6 +8,7 @@ Action runner requirements:
 - uv
 - JRE
 - libicu-dev
+- wget
 
 all of the above must run for the user which runs the runner
 
