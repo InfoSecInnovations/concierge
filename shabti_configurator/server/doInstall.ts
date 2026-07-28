@@ -11,6 +11,7 @@ import logMessage from "./logMessage";
 import createVenv from "./createVenv";
 import getKeycloakClientSecret from "./getKeycloakClientSecret";
 import getCurrentVersion from "./getCurrentVersion";
+import getVersionData from "./getVersionData";
 
 export default async function* (
 	options: FormData,
@@ -84,6 +85,11 @@ export default async function* (
 		selectedVersion == "local"
 			? (await getCurrentVersion()) || defaultVersion
 			: selectedVersion;
+	const versionData = await getVersionData(envs.SHABTI_VERSION);
+	// if the version is a legacy version, the API and Web images will have the same tag as the overall version
+	// if it's a newer version, versionData will tell us which tags to look up
+	envs.SHABTI_API_VERSION = versionData?.apiVersion || envs.SHABTI_VERSION;
+	envs.SHABTI_WEB_VERSION = versionData?.webVersion || envs.SHABTI_VERSION;
 	envs.SHABTI_LOCAL_VERSION = selectedVersion == "local" ? "True" : "False";
 	envs.SHABTI_COMPUTE = options.has("use_gpu") ? "cuda" : "cpu";
 	if (securityLevel == "demo") envs.IS_SECURITY_DEMO = "True";

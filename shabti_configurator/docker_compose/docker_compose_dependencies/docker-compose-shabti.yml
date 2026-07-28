@@ -1,6 +1,6 @@
 services:
   shabti:
-    image: infosecinnovations/shabti:${SHABTI_VERSION:-latest}
+    image: infosecinnovations/shabti:${SHABTI_API_VERSION:-latest}
     container_name: shabti
     environment:
       - OPENSEARCH_HOST=opensearch-node1
@@ -39,7 +39,7 @@ services:
       - ${API_KEY:-empty}:/api_certs/key.pem
       - ${ROOT_CA:-empty}:/opensearch_certs/root-ca.pem
   shabti-web:
-    image: infosecinnovations/shabti-web:${SHABTI_VERSION:-latest}
+    image: infosecinnovations/shabti-web:${SHABTI_WEB_VERSION:-latest}
     container_name: shabti-web
     environment:
       - SHABTI_SECURITY_ENABLED=False

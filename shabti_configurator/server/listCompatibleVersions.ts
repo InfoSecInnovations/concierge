@@ -47,7 +47,8 @@ export default async () => {
 					semver.coerce(a.version, { loose: true }) || "",
 					semver.coerce(b.version, { loose: true }) || "",
 					true,
-				);
-			}),
-	); // sort by highest first);
+				); // sort by highest first
+			})
+			.map((release) => release.version),
+	);
 };

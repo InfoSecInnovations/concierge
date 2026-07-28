@@ -36,7 +36,7 @@ const app = new Hono();
 const state: { watchProcess?: Bun.Subprocess } = {
 	watchProcess: undefined,
 };
-const defaultVersion = (await listCompatibleVersions())[0].version;
+const defaultVersion = (await listCompatibleVersions())[0];
 
 app.get("/style.css", async (c) =>
 	c.body(await file(css).text(), 201, {

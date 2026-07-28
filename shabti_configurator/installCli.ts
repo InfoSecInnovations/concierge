@@ -45,7 +45,7 @@ if (values["keycloak-password"])
 	options.set("keycloak_password", values["keycloak-password"]);
 if (values["use-gpu"]) options.set("use_gpu", "True");
 
-const defaultVersion = (await listCompatibleVersions())[0].version;
+const defaultVersion = (await listCompatibleVersions())[0];
 
 for await (const _ of doInstall(
 	options,
