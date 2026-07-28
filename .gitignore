@@ -1,13 +1,19 @@
-# config files used by Concierge
+# config files used by Shabti
 .env
-concierge.yml
+shabti_log.json
+shabti_logs/
+test_results/
+processed_test_runs/
 
-# directory used by web server to store uploaded files
-uploads
+# generated certificates
+self_signed_certificates
 
 # files that appear to be due to installing dependencies, try un-ignoring these if needed
 share
 etc
+
+# VSCode settings
+.vscode/settings.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -29,3 +35,10 @@ pip-selfcheck.json
 
 # package builds
 dist
+
+# assets built by scripts
+shabti_configurator/assets/docker_compose.zip
+shabti_configurator/assets/index.js
+
+# avoid accidentally committing orphaned node_modules directories after deleting or rename a JS package!
+node_modules

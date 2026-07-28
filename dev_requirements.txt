@@ -1,5 +1,5 @@
-ruff
-pre-commit
--e util_package
--e script_builder_package
--e launcher_package
+-e python_packages/shabti_api_client
+-e python_packages/shabti_keycloak
+-e python_packages/shabti_types
+-e python_packages/isi_util
+-e test_setup_tools/

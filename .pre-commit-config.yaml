@@ -8,3 +8,10 @@ repos:
       args: [ --fix ]
     # Run the formatter.
     - id: ruff-format
+- repo: local
+  hooks:
+    - id: local-biome-format
+      name: biome format
+      entry: bunx biome format --write --no-errors-on-unmatched
+      language: system
+      types: [text]

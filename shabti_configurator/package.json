@@ -1,0 +1,37 @@
+{
+	"name": "bun_installer",
+	"module": "index.ts",
+	"type": "module",
+	"workspaces": ["client/"],
+	"devDependencies": {
+		"@types/adm-zip": "^0.5.7",
+		"@types/bun": "latest",
+		"@types/node-forge": "^1.3.11",
+		"@types/readline-sync": "^1.4.8"
+	},
+	"peerDependencies": {
+		"typescript": "^5.7.3"
+	},
+	"dependencies": {
+		"@keycloak/keycloak-admin-client": "^26.2.0",
+		"@zxcvbn-ts/core": "^3.0.4",
+		"@zxcvbn-ts/language-common": "^3.0.4",
+		"@zxcvbn-ts/language-en": "^3.0.2",
+		"adm-zip": "^0.5.16",
+		"envfile": "^7.1.0",
+		"hono": "^4.7.7",
+		"node-forge": "^1.3.1",
+		"readline-sync": "^1.4.10",
+		"semver": "^7.7.4"
+	},
+	"scripts": {
+		"dev_client": "bun build ./client/index.ts --outfile ./assets/index.js --watch",
+		"dev_install": "bun run build_client && bun run --watch index.tsx --dev-mode",
+		"build_zip": "bun run ./zipDockerCompose.ts",
+		"build_client": "bun build ./client/index.ts --outfile ./assets/index.js --minify",
+		"build_win": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-windows-x64 --outfile dist/windows/shabti",
+		"build_linux": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-linux-x64 --outfile dist/linux/shabti",
+		"build_mac": "bun run build_zip && bun run build_client && bun build ./index.tsx --compile --target=bun-darwin-arm64 --outfile dist/mac/shabti"
+	},
+	"version": "0.1.0"
+}

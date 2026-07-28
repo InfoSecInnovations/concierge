@@ -1,28 +1,31 @@
-# Data Concierge AI #  
+# Shabti AI #  
 AI should be simple, safe, and amazing.  
 
+[Home Page](https://shabti.ai)
+
+A project by [InfoSec Innovations (ISI)](https://www.infosecinnovations.com/)
+
 ## TL;DR: ##
-Data Concierge AI (aka Concierge) is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
+Shabti AI is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
 
 ## More details ##
-Concierge is a local and modular RAG framework still in alpha.  
+Shabti is a local and modular RAG framework still in alpha.  
 
 Built with simplicy and security in mind, it has some features we love -- and hope you do too!
 * The quick install method is so easy.
-* Loading data: Upload PDFs or point to a URL, click the ingest button... and the data is there for your use.
+* Loading data: Upload documents or point to a URL, click the ingest button... and the data is there for your use.
 * Tasks: you can change what the AI can do for you via dropdowns.
 
 ## Dependencies ##  
 
-These versions are currently being used to develop Concierge, lower versions may work but are untested. See [Known Issues](#known-issues) for an older Docker Compose command which might work for you if you're unable to upgrade.
+These versions are currently being used to develop Shabti, lower versions may work but are untested. See [Known Issues](#known-issues) for an older Docker Compose command which might work for you if you're unable to upgrade.
 
-- **Python >= 3.12** (note: for all commands in documentation we will call the executable `python`. On your system you may need to use `python3`, you can use the `python-is-python3` package to configure the `python` command on Linux). Check with `python --version`.
 - **Docker >= 25.0.3** (currently the vector database and natural language response engine are running in docker containers). Check with `docker --version`.
 - **Docker Compose >= 2.24.6** (while frequently installed with docker, sometimes it's not. Docker compose files are how the docker containers are setup). Check with `docker compose version`.  
    
 Optional:  
-If you want to use GPU acceleration (Concierge does NOT require this, but it will make responses dramatically faster), you must have the 
-NVIDIA drivers correctly setup and running. Concierge will not install or make any adjustments to your driver configuration.  
+If you want to use GPU acceleration (Shabti does NOT require this, but it will make responses and ingesting dramatically faster), you must have the 
+NVIDIA drivers correctly setup and running. Shabti will not install or make any adjustments to your driver configuration.  
 
 Note: if you want to use GPU acceleration on a Windows host, you must use WSL2.  
 More details here:  
@@ -32,197 +35,108 @@ Refer to the documentation from NVIDIA for information on how to do this for you
 
 ## System Requirements ##
 
-It is unlikely you'll be able to run Concierge with less than 8GB RAM, at least 16GB is desirable.
+It is unlikely you'll be able to run Shabti with less than 16GB RAM.
 
-If you're using Docker Desktop you need to make sure at least 4GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 8GB RAM and haven't modified your configuration it's likely you don't need to do anything.
+If you're using Docker Desktop you need to make sure at least 8GB RAM is assigned to be used by containers. The default is half of the system memory, so if you have at least 16GB RAM and haven't modified your configuration it's likely you don't need to do anything.
 
-You should perform the following system configuration steps according to your Operating System: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, otherwise you may not be able to run the OpenSearch container Concierge depends on.
+You should perform the following system configuration steps according to your Operating System: https://opensearch.org/docs/latest/install-and-configure/install-opensearch/docker/#install-docker-and-docker-compose, otherwise you may not be able to run the OpenSearch container Shabti depends on.
 
 ## Setup
 
-The provided install scripts perform a lot of automated cleanup and ensure that all the components are configured correctly to work together, so we strongly recommend you use these instead of attempting the manual install. However if you need to customize the Docker environment the manual steps may help you find what you need to be able to do so.
+Shabti now has a visual configurator which we hope you will like a lot more than the previous text-based one. Just go to the release you wish to install and download the executable for your Operating System. Please let us know if you're using a different Operating System, it may be possible for us to make a build for it. You can also use the development version.
 
-### Quick install (Recommended)
+Launch the executable and visit the indicated address in your web browser. Select your desired options and click "Start Installation!".
 
-You no longer need to clone this repository.
+Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Shabti" button. Docker will keep everything running for you and you will be able to access Shabti without going via the Configurator once installed.
 
-You have a couple of options depending on your preferences.
+### Windows SmartScreen
 
-> [!TIP]
-> Pay attention to the use of dashes and underscores in the commands!
+As we have just recently released the executable, Windows may not yet recognize it as being "safe". We would really appreciate it if you could run the app anyway, as this will allow us to increase trust with Microsoft and prevent future released from being blocked by SmartScreen.
 
-If you're not concerned about using a virtual environment you can just use the 2 commands below in the directory of your choosing:
+If you see this popup:
 
-`python -m pip install launch-concierge`
+![SmartScreen popup](smartscreen.png)
 
-`python -m launch_concierge.install`
+Please click "More info" which should reveal that the executable is in fact signed by InfoSec Innovations, LLC. If you do not see that it's signed by us, please do not proceed! In the case that our name does appear there, click "Run anyway" and you will be able to use Shabti and help us out a great deal, thank you!
 
-If you prefer to keep things contained in a virtual environment you can use the 4 commands below:
-
-`python -m venv .`
-
-`.\scripts\activate.ps1` or `source bin/activate` depending on your Operating System
-
-`pip install launch-concierge`
-
-`install_concierge`
-
-Answer the questions and then the installer will ask if you are ready to make changes to the system.  
-Answer "yes" and let the downloading begin!
-
-Please note that the package isn't the Concierge app itself, it's just a utility that helps you configure the environment and launch the correct Docker Compose file based on your choices, so it shouldn't be hugely risky to download it without using a virtual environment.
-
-### Manual install
-
-If you would prefer to configure and launch the app without going through our utility script it is also fairly straightforward:
-
-Create a file called `.env` following the template of `.env.example` in this repository.
-
-From `launcher_package/src/launch_concierge/docker_compose` copy `docker_compose_dependencies`.
-
-From the same directory, if you wish to use the CPU only, copy `docker-compose.yml`, if you wish to use GPU acceleration where available, copy `docker-compose-gpu.yml` instead.
-
-To launch the CPU compose file use `docker compose up -d`, to launch the GPU version you need to use `docker compose -f docker-compose-gpu.yml up -d`.
+![SmartScreen showing the app is signed by ISI](smartscreen-isi.png)
 
 ## Usage
 
-Once you have set up the Docker containers using one of the methods above, Concierge will be running on localhost:15130 or the port you selected during setup. It can take a couple of minutes for the containers to be ready after install or relaunch.
+Once you have completed the installation process, Shabti will be running on `localhost:15130` or the host and port you selected during setup. It can take a little while for the containers to be ready after install or relaunch, especially on the first launch as the API needs to pull the embeddings model. If you chose to enable security you will need to access it using `https://` at the start of the address.
 
-## Update to new release
+## Using Security Features
 
-If running a version prior to 0.3.0 you should delete the files you cloned from the repository, remove the related Docker containers and proceed with a fresh install following the instructions above.
+As we are a cybersecurity company, security considerations are driving the development of Shabti. You can just run on a local machine without any security features if that suits your needs, but if you need an enterprise solution that can run LLM tools while having full control of the data being fed into them, Shabti's security features may well be a good fit for you! We have built our Identity and Access Management solution on top of Keycloak, which is a very flexible tool allowing you to connect to existing user accounts from the vast majority of providers. We provide an extensible Role-Based Access Control configuration so you can manage how your users are able to access the data ingested into Shabti.
 
-### Quick install (Recommended)
+See the [dedicated guide](docs/user/Security_and_RBAC_Features.md) about using Shabti with security enabled.
 
-#### Without virtual environment
+## Known Issues
 
-`python -m pip install launch-concierge --upgrade`
+### MacOS executable will not run
 
-`python -m launch_concierge.install`
+We do not yet have code signing configured for MacOS so it will not recognize Shabti as a legitimate application. It is possible to bypass Gatekeeper if you wish to run Shabti anyway, but we have found that certain MacOS versions don't appear to "officially" support doing this.
 
-#### With virtual environment
+### Ingesting documents appears to hang for a while
 
-Activate the environment if not already done
+We do not yet have a way to display progress when a document is being processed into text, only once the text is being fed into the database. For smaller documents you probably won't notice this delay much, but processing a document with a very large amount of text can take a long time, please be patient!
 
-`pip install launch-concierge --upgrade`
+## Troubleshooting
 
-`install_concierge`
+### Shabti API is down
 
-### Manual install
+Check the Docker logs for the container called `shabti`. If you don't see a log that says "Application startup complete", keep waiting, it may still be loading the LLM models.
 
-Make sure to grab the latest version of the Docker Compose files.
+### Shabti Web UI is broken or blank
 
-`docker compose pull` or `docker compose -f docker-compose-gpu.yml pull` will get the latest versions of the containers being used.
+Perform an "Empty Cache and Hard Reload" on the page. Depending on your browser you may need to open the dev tools to do this.
 
-Then you can simply launch the containers again using the command from the install step.
+### Other issues
+
+Please create an issue [here](https://github.com/InfoSecInnovations/concierge/issues). Check the Docker logs of the containers inside the `shabti` compose stack for any errors or warnings and include those in your report. Also include any errors displayed in the Web UI or the console during the install process.
 
 ## Setup: development environment
 
+### Dependencies
+
+The ones listed at the top of this page, and:
+- **Bun >= 1.3.1** - the configurator is written in JavaScript that depends on the Bun runtime. Bun allows us to effortlessly build the executable files for each Operating System.
+- **uv >= 0.10.0, Python 3.13** - most of the Python code runs in Docker containers now, however we also use Python to configure the pre-commit hooks for formatting. We're using Python through uv as it makes it easier to manage the Python executables and virtual environments in our experience.
+
+### Installation
+
 git clone repo or extract zip. 
 
-### Quick install (Recommended)
+`cd shabti` go into the cloned project directory.
 
-`cd concierge` go into the cloned project directory.
+do `bun install` in the repository root. This will set up all the JavaScript projects.
 
-You should not create a virtual environment as the script below will handle it for you.
+`cd shabti_configurator` to go to the configurator directory.
 
-`python install_dev.py` to launch the installer (same steps as the user installer).
-
-### Manual install
-
-Configure the `.env` file like in the user install.
-
-Set `ENVIRONMENT` to `development`
-
-`python -m venv .` create a python virtual environment in the current directory.
-
-Linux: `source ./bin/activate` / Windows PowerShell: `.\Scripts\Activate.ps1` enter into the virtual environment.
-
-`pip install -r requirements.txt -r dev_requirements.txt` install all dependencies.
-
-`pre-commit install` install the linting script that hooks into the commit command.
-
-`docker compose -f docker-compose-dev.yml up -d` will load the docker dependencies for developers.
-
-`docker compose -f docker-compose-dev-gpu.yml up -d` will load the docker dependencies for developers and use the GPU.
-
-If you want to build the code to a Docker container to simulate the production environment you can use the `docker-compose-local.yml` or `docker-compose-gpu-local.yml` files. On initial launch and when you've made changes to the code you'll need to use `docker compose -f <docker-compose-file.yml> build` to update the container and then launch the compose file again.
+`bun run dev_install` will launch the web server in dev mode which provides additional install and launch options compared to the distributed executable. Once the server is running go to http://localhost:3000 to see the configuration options. If you select the `local` version in the version dropdown the development environment will be configured to use the files on your machine to run Shabti, if you select another version it will pull the images from Docker Hub, essentially functioning like the compiled executable we provide with releases.
 
 ## Usage: development environment
 
-Complete one of the installation methods above.
+Install using the instructions above making sure to install the `local` version.
+
+The recommended way to edit the code that runs in Docker is to open each subdirectory of `docker_containers` in Visual Studio Code using the provided devcontainer configuration.
+
+With the subdirectory open in VSCode, press F1 and search for `Dev Container: Rebuild and Reopen in Container`. Using the rebuild command ensures the correct configuration of Shabti is launched, if you have run Shabti anywhere outside of the devcontainer environment you can end up with a mismatch between the development configuration and whatever you were running before if you don't rebuild.
+
+If you don't wish to use the VSCode and devcontainer setup you can use the Launch button from the configurator which will launch the code in Docker, mounting the appropriate directories so changes are reflected both on the host system and inside the container.
+
+Both of these methods will reload the program when changes are made to the code files.
 
 Make sure to read the [Contribution Guide](CONTRIBUTING.md) to find out more about coding style enforcement and commit etiquette!
 
-### Visual Studio Code
-
-Install Shiny for Python VSCode extension.
-
-Run Shiny for Python VSCode extension from `concierge_shiny/app.py`. 
-
-At the time of writing we have noticed an issue where the VSCode browser window doesn't automatically refresh and you have to copy/paste the URL from the console into it. Do this if after seeing the log `Application startup complete.` you still don't see anything in the VSCode browser.
-
-You can also access the URL by pasting it into another browser.
-
-### Launch script
-
-From the cloned project directory simply run `launch_dev.py`.
-
-If the Docker container dependencies aren't found, you will be given the option to launch with CPU or GPU.
-
-`python launch_local.py` will build and launch the code in a Docker container as if it were the production environment.
-
-### Manual launch
-
-If the above methods did not work:
-
-If you are not in the python virtual environment, please enter it by the correct method:  
-Linux and MacOS: `source ./bin/activate`  
-Windows PowerShell: `.\Scripts\Activate.ps1`
-
-To start the web UI, run the following command:
-
-`python -m shiny run --reload --launch-browser concierge_shiny/app.py`
-
-## Update to new release: development environment
-
-Clone the latest version of the repo.
-
-### Quick install
-
-Repeat the process used during install.
-
-### Manual update
-
-Use `docker compose -f <docker-compose-file.yml> pull` to update the Docker containers.
-
-Repeat the process used during install.
-
 ## CLI ##
 
-While we're currently more focused on the GUI element, we have provided some CLI scripts to be able to perform some functions without launching the web app.
+Shabti now ships with a standalone executable for the Command Line Interface and the syntax has been completely revamped. We will add proper documentation for this, but you can call the executable with the `-h` flag to see which commands exist and how to use them. The CLI executable must be in the same directory as the main executable and will only work after you've installed Shabti. The CLI currently uses an admin account if you're using security features, so use it wisely!
 
-One notable feature is that the `loader` script loads an entire directory of documents which the GUI is currently unable to do.
+## Known Issues
 
-To use them you can navigate to the `cli` subdirectory or append `cli.` to the script name from the parent directory.
-
-Make sure you are running inside the venv.
-
-Call commands like this: `python -m <script_name> <options>`. Use the `-h` or `--help` option to see what the options are.
-
-Available commands:
-- `loader`
-- `web_loader`
-- `prompter`
-- `list_collections`
-- `list_documents`
-- `delete_collection`
-- `delete_document`
-
-## Known issues
-
-- `unknown shorthand flag: 'd' in -d` and/or you have the `docker-compose` command instead of `docker compose`. This indicates that you're using an older version of Docker than we support. The best course of action would be to install the latest version following instructions from here: https://docs.docker.com/engine/install/. However if you're unable to do this, you may be able to get the Concierge Docker requirements running using `docker-compose --file ./docker-compose.yml up`.
-- on MacOS urllib3 gives a `NotOpenSSLWarning`, as far as we aware you can ignore this warning without issue. This should only be present when using the development environment.
+- Startup of the Shabti API service can be quite slow because it has to download models on the first run. It should generally start up faster subsequent times as it will cache the model downloads.
+- Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work. Look up bypassing Gatekeeper on your MacOS version or use the development version of the configurator.
 
 ## Want to get involved? ##
 

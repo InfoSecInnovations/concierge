@@ -1,0 +1,11 @@
+{
+	"name": "tests-docker-compose",
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"dependencies": {
+		"fast-xml-parser": "^5.3.0",
+		"junit-report-merger": "^8.0.0",
+		"xunit-viewer": "^10.6.1"
+	}
+}

@@ -1,5 +1,42 @@
 # Changelog
 
+## 0.8.0 - TBD
+
+Due to having several tasks ongoing simultaneously we've been unable to release the previous versions, but you can finally get your hands on a greatly upgraded version of Shabti (previously known as Concierge)! See also 0.7.0 changes below for the full list since the last official release.
+
+### Changes
+
+- The project is now called Shabti
+- Added Apache Tika document processing solution to Shabti's dependencies. This allows you to load many types of document out of the box including Microsoft Office and open document formats, but also images of text using its built-in OCR capabilities!
+- Switched from Ollama to Llama.cpp model runner. This offers a small increase in performance for prompting and allows us to generate embeddings much faster than Ollama could.
+- The above changes have allowed us to remove various dependencies from the Shabti API project including PyTorch, this makes for a much much smaller Docker image and removes the need for separate CPU and cuda versions of Shabti. Note that the GPU accleration setting still exists but now only applies to the model runner container and not the Shabti API container.
+- The development environment has been reworked to only support running the code within Docker in order to replicate the production environment more precisely. We have provided VSCode devcontainer configurations to enable developing directly inside the containers.
+- Document metadata has been streamlined into a single format, this greatly simplifies the schema and queries in OpenSearch and makes it much simpler to handle multiple types of document.
+- We've switched Python tooling from pip to uv which offers some additional features and hopefully more robustness in resolving dependencies and publishing packages.
+- Documents can be ingested from a zip file.
+- Much more extensive automated tests.
+
+### Known Issues
+
+- Code signing is not yet implemented for MacOS, the executable will be blocked without doing some "hacks" to make it work.
+
+## 0.7.0 - rolled into 0.8.0 release
+
+### Changes
+
+- RBAC is here. Shabti can optionally be configured to use Keycloak to handle user accounts and permissions. You can keep using it without user accounts if you're just using it for personal use on a local machine. We imagine RBAC to be useful in an enterprise setting with multiple users being able to access the instance. Please let us know if you like this feature, and what additional controls we could ship with it.
+- The installer script has been replaced by an executable file available for Windows, Linux and MacOS. This executable serves up a web UI to enable you to configure Shabti locally or remotely. This should make it a lot easier to get Shabti up and running, we felt that the text based installer was no longer practical and it was running into issues with different OSes and Python versions.
+- The backend code has been moved to a REST API so you can integrate Shabti into your own stack or build your own front end if you wish. We have provided Python and Node.js client packages to provide a more streamlined experience calling the API.
+- The CLI has been revamped and now calls the REST API.
+- The base Docker image has been switched to the Python slim image which has much fewer known vulnerabilities than the full Python image and reduces the image size slightly, although we're aware that it's still quite large.
+- Implemented JSON logging to a file. Logging can be enabled or disabled when setting up Shabti.
+- Still a work in progress but some automated tests are now present. This will help us catch bugs more easily in the various permutations of Shabti that are possible.
+
+### Fixes
+
+- URL input list has been replaced with a custom component which should be much more robust.
+- Fixed an issue where newly inserted documents could be missing from the web UI, sometimes even causing errors.
+
 ## 0.4.0 - 2024-09-05
 
 ### Changes

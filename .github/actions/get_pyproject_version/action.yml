@@ -1,0 +1,19 @@
+name: Get pyproject.toml version
+description: Get the version from a pyproject.toml file
+inputs:
+  path:
+    required: false
+    default: "."
+outputs:
+  current-version:
+    value: ${{steps.package-version.outputs.current-version}}
+runs:
+  using: "composite"
+  steps:
+    - name: "Get version"
+      id: package-version
+      shell: "bash"
+      run: |
+        PACKAGE_VERSION=$(grep -m 1 '^version' ${{inputs.path}}/pyproject.toml | sed -E 's/version[[:space:]]*=[[:space:]]*"([^"]+)"/\1/')
+        echo "package_version: ${PACKAGE_VERSION}"
+        echo "current-version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT

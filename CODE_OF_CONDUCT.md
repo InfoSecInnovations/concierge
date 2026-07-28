@@ -1,7 +1,7 @@
-# Concierge Contributor Code of Conduct
+# Shabti Contributor Code of Conduct
 
 ## About "The Core Rule":
-Concierge is a project attempting to do many difficult things.  
+Shabti is a project attempting to do many difficult things.  
 The last thing we need is making this tough — yet important — work all the 
 more tricky due to problematic behaviors. Toward that end, we have one core
 rule that we hope will help set a tone of mutual admiration, respect, and
@@ -11,7 +11,7 @@ All other “sub rules” are pretty much situational interpretations of this
 core rule. As such, it’s vital that you read this core rule, and 
 consider it at all times, but especially whenever things are rocky.
 
-## Concierge Project Core Rule:
+## Shabti Project Core Rule:
 
 Don’t be a jerk.
 
@@ -90,7 +90,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-dataconcierge@infosecinnovations.com.
+shabti@infosecinnovations.com.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

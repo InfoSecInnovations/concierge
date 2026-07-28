@@ -1,0 +1,24 @@
+[project]
+name = "shabti-web"
+version = "0.1.0"
+requires-python = ">=3.14, <3.15"
+dependencies = [
+    "htmltools==0.6.0",
+    "humanize==4.15.0",
+    "shiny==1.6.0",
+    "shinyswatch==0.10.0",
+    "tqdm==4.67.3",
+]
+# [tool.uv.sources]
+# shabti-util = [
+#     { path = "/python_packages/shabti_util", editable = true }
+# ]
+# shabti-types = [
+#     { path = "/python_packages/shabti_types", editable = true }
+# ]
+# shabti-keycloak = [
+#     { path = "/python_packages/shabti_keycloak", editable = true }
+# ]
+# shabti-api-client = [
+#     { path = "/python_packages/shabti_api_client", editable = true }
+# ]

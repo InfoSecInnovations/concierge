@@ -1,0 +1,41 @@
+name: shabti
+
+# this is a bit of a hack to conditionally include keycloak if we're running security, the blank compose stops Docker from complaining when doing an unsecured instance.
+include:
+  - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
+services:
+  llama-cpp:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
+      service: llama-cpp-${SHABTI_COMPUTE:-cpu}
+  opensearch-node1:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-opensearch.yml
+      service: opensearch-node-base
+  tika:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-tika.yml
+      service: tika
+  shabti:
+    extends:
+      file: docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti}
+  shabti-web:
+    extends:
+      file: docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_WEB_SERVICE:-shabti-web}
+  # unstructured:
+  #   extends:
+  #     file: docker_compose_dependencies/docker-compose-unstructured.yml
+  #     service: unstructured
+
+volumes:
+  opensearch-data1:
+  llama-cpp-models:
+  llama-cpp-cache:
+  shabti-files:
+
+networks:
+  default:
+    name: shabti

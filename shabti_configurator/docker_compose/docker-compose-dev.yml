@@ -1,0 +1,72 @@
+name: shabti
+
+# this is a bit of a hack to conditionally include keycloak if we're running security, the blank compose stops Docker from complaining when doing an unsecured instance.
+include:
+  - ./docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
+services:
+  llama-cpp:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-llama-cpp.yml
+      service: llama-cpp-${SHABTI_COMPUTE:-cpu}
+  opensearch-node1:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-opensearch.yml
+      service: opensearch-node-base
+  tika:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-tika.yml
+      service: tika
+  shabti:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti}
+    image: null
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    build:
+      context: ../../docker_containers/shabti_api
+      additional_contexts: 
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile.local
+    volumes:
+      - ../../docker_containers/shabti_api:/app/shabti
+      - /app/shabti/.venv
+      - ../../python_packages:/app/python_packages
+  shabti-web:
+    extends:
+      file: ./docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_WEB_SERVICE:-shabti-web}
+    environment:
+      - WATCHFILES_FORCE_POLLING=true   
+    build:
+      context: ../../docker_containers/shabti_web
+      additional_contexts: 
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile.local
+    volumes:
+      - ../../docker_containers/shabti_web:/app/shabti_web
+      - /app/shabti_web/.venv
+      - ../../python_packages:/app/python_packages
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:3.5.0
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601 # Map host port 5601 to container port 5601
+    expose:
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true" # disables security dashboards plugin in OpenSearch Dashboards
+    restart: unless-stopped
+  
+
+volumes:
+  opensearch-data1:
+  llama-cpp-models:
+  llama-cpp-cache:
+  shabti-files:
+
+networks:
+  default:
+    name: shabti

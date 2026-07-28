@@ -1,11 +1,77 @@
-name: Dummy
+name: Publish Launcher
 
 on:
   workflow_dispatch:
 
 jobs:
-  dummy:
-    runs-on: ubuntu-latest
+  publish:
+    runs-on: [self-hosted, linux]
     steps:
-      - name: dummy
-        run: echo "I'm not a real workflow"
+      - uses: actions/checkout@v6
+      - name: Install project
+        run: bun install
+      - name: Build Launcher Executable
+        working-directory: ./shabti_configurator
+        run: |
+          bun run build_win
+          bun run build_linux
+          bun run build_mac
+          
+      - name: signing path creation
+        run: mkdir -p ./signed/windows
+
+      - name: Install codesigner tool
+        run: |
+          wget https://github.com/SSLcom/CodeSignTool/releases/download/v1.3.0/CodeSignTool-v1.3.0.zip
+          unzip ./CodeSignTool-v1.3.0.zip -d codesign
+          chmod +x ./codesign/CodeSignTool.sh
+        
+      # WORKING: Code signing attempt 
+      # Windows only for now
+      # created exe is here:
+      #./shabti_configurator/dist/windows/shabti.exe
+      - name: Sign Artifact with CodeSignTool
+      #  uses: sslcom/esigner-codesign@develop
+      #  with:
+      #    command: sign
+      #    username: ${{secrets.ES_USERNAME}}
+      #    password: ${{secrets.ES_PASSWORD}}
+      #    credential_id: ${{secrets.CREDENTIAL_ID}}
+      #    totp_secret: ${{secrets.ES_TOTP_SECRET}}
+      #    file_path: ${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe
+      #    output_path: ${GITHUB_WORKSPACE}/signed/windows 
+        working-directory: ./codesign
+        run: ./CodeSignTool.sh sign \
+          -credential_id="$ES_CREDENTIAL_ID" \
+          -username="$ES_USERNAME" \
+          -password="$ES_PASSWORD" \ 
+          -totp_secret="$ES_TOTP_SECRET" \ 
+          -output_dir_path=${GITHUB_WORKSPACE}/signed/windows \ 
+          -input_file_path=${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe  
+        env:
+          ES_CREDENTIAL_ID: ${{ secrets.CREDENTIAL_ID }}
+          ES_USERNAME: ${{ secrets.ES_USERNAME }}
+          ES_PASSWORD: ${{ secrets.ES_PASSWORD }}       
+          ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
+      
+      - name: Get Shabti version
+        id: package-version
+        uses: ./.github/actions/get_package_json_version
+
+      - uses: ./.github/actions/get_previous_release_assets
+
+      - name: Zip executables
+        run: | 
+          mkdir -p dist
+          zip -j ./dist/shabti_win.zip ${GITHUB_WORKSPACE}/signed/windows/shabti.exe ./unzipped/win/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./unzipped/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./unzipped/mac/shabti_cli
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            ./dist/*.zip
+            ./shabti-components.json
+          tag_name: shabti-v${{steps.package-version.outputs.current-version}}
+          target_commitish: ${{github.sha}}
+          overwrite_files: false

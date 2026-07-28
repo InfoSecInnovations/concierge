@@ -1,11 +1,115 @@
-name: Dummy
+name: Publish Shabti
 
 on:
   workflow_dispatch:
 
+env:
+  UV_PUBLISH_CHECK_URL: "https://pypi.org/simple"
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write
+
 jobs:
-  dummy:
-    runs-on: ubuntu-latest
+  publish:
+    runs-on: [self-hosted, linux]
     steps:
-      - name: dummy
-        run: echo "I'm not a real workflow"
+      - uses: actions/checkout@v6
+
+      - name: Debug PATH
+        run: |
+          echo "PATH: $PATH"
+          which uv || echo "uv not in PATH"
+          ls -la /home/gh-runner/.local/bin/uv || echo "binary not found"
+          /home/gh-runner/.local/bin/uv --version || echo "direct exec failed"
+      
+      - name: Install Python 3.14
+        run: uv python install 3.14
+      - name: Publish shabti_util
+        working-directory: ./python_packages/shabti_util
+        run: |
+          uv build
+          uv publish
+      - name: Publish isi_util
+        working-directory: ./python_packages/isi_util
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_api_client
+        working-directory: ./python_packages/shabti_api_client
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_keycloak
+        working-directory: ./python_packages/shabti_keycloak
+        run: |
+          uv build
+          uv publish
+      - name: Publish shabti_types
+        working-directory: ./python_packages/shabti_types
+        run: |
+          uv build
+          uv publish
+
+      - name: Install project
+        run: bun install
+      - name: Build API Client
+        working-directory: ./shabti_api_client_node
+        run: bun run build
+      - name: Build CLI Executable
+        working-directory: ./shabti_cli
+        run: |
+          bun run build_win
+          bun run build_linux
+          bun run build_mac
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      - name: Get Shabti version
+        id: package-version
+        uses: ./.github/actions/get_package_json_version
+      - name: Get Shabti API version
+        id: shabti-version
+        uses: ./.github/actions/get_pyproject_version
+        with:
+          path: ./docker_containers/shabti_api
+      - name: Get Shabti Web version
+        id: shabti-web-version
+        uses: ./.github/actions/get_pyproject_version
+        with:
+          path: ./docker_containers/shabti_web
+      - name: Build and push CPU Docker image
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          context: ./docker_containers/shabti_api
+          tags: infosecinnovations/shabti:${{steps.shabti-version.outputs.current-version}}
+      - name: Build and push web client Docker image
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          context: ./docker_containers/shabti_web
+          tags: infosecinnovations/shabti-web:${{steps.shabti-web-version.outputs.current-version}}
+
+      - uses: ./.github/actions/get_previous_release_assets
+
+      - name: Zip executables
+        run: | 
+          mkdir -p dist
+          zip -j ./dist/shabti_win.zip ./unzipped/win/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip ./unzipped/linux/shabti ./shabti_cli/dist/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip ./unzipped/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+      - name: Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            ./dist/*.zip
+            ./shabti-components.json
+          tag_name: shabti-v${{steps.package-version.outputs.current-version}}
+          target_commitish: ${{github.sha}}
+          overwrite_files: false

@@ -1,0 +1,10 @@
+services: 
+  tika:
+    container_name: tika
+    image: apache/tika:3.3.0.0-full
+    ports:
+      - "9998:9998"
+    restart: unless-stopped
+    command: ["--config", "/tika-config.xml"]
+    volumes:
+      - ./tika_config/tika-config.xml:/tika-config.xml

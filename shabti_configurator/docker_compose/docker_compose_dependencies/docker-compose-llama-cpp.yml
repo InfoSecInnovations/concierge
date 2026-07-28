@@ -1,0 +1,24 @@
+services:
+  llama-cpp-cpu:
+    container_name: llama_cpp
+    image: ghcr.io/ggml-org/llama.cpp:server-cuda-b8895
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    environment:
+      - "LLAMA_CACHE=/models/"  
+      - "HF_HUB_CACHE=/hf_cache/"
+    volumes:
+      - llama-cpp-models:/models
+      - llama-cpp-cache:/hf_cache
+      - ./llama_models/my-models.ini:/my-models.ini
+    command: ["--models-preset", "/my-models.ini", "--embeddings", "--port", "11434", "-ub", "256", "-b", "1024"]
+  llama-cpp-cuda:
+    extends: llama-cpp-cpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
