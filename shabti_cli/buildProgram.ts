@@ -152,7 +152,11 @@ export default async () => {
 			"collection id to source the response from",
 		)
 		.requiredOption("-t, --task <task>", "task to use for the prompt")
-		.option("-p, persona <persona>", "persona to use for the prompt")
+		.option(
+			"-m, --model <model>",
+			"model to use for the prompt, defaults to the server's default chat model",
+		)
+		.option("-p, --persona <persona>", "persona to use for the prompt")
 		.option("-e, --enhancers <enhancers...>", "enhancers to use for the prompt")
 		.option(
 			"-f, --file <file>",
@@ -164,6 +168,7 @@ export default async () => {
 				options.collection,
 				userInput,
 				options.task,
+				options.model,
 				options.persona,
 				options.enhancers,
 				options.file,
