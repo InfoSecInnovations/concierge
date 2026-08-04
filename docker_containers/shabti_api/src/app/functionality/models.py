@@ -1,7 +1,7 @@
 import requests
 import os
 import httpx
-from shabti_types import ModelLoadInfo
+from shabti_types import ModelLoadInfo, ModelNotFoundError
 from httpx_sse import aconnect_sse
 import json
 
@@ -14,6 +14,25 @@ async def get_models(tags: list[str] | None = None):
             x for x in res["data"] if any(tag in tags for tag in x.get("tags", []))
         ]
     return res
+
+
+# takes the output of get_models so the caller can reuse a list it has already fetched
+# this function does not check the other tags and will use whichever data is passed in
+def default_model_id(models_data) -> str | None:
+    models = models_data["data"]
+    if not models:
+        return None
+    # if no model is tagged as the default we just use the first one available
+    return next(
+        (x["id"] for x in models if "default" in x.get("tags", [])), models[0]["id"]
+    )
+
+
+async def get_default_chat_model() -> str:
+    model_id = default_model_id(await get_models(tags=["chat"]))
+    if not model_id:
+        raise ModelNotFoundError(message="No chat model is available")
+    return model_id
 
 
 async def load_model(model_name: str):

@@ -114,3 +114,17 @@ async def test_prompting(shabti_client, shabti_collection_id):
         model_name,
     ):
         pass
+
+
+# omitting the model name should fall back to the default model
+async def test_prompting_without_model_name(shabti_client, shabti_collection_id):
+    filename = "prompt_test.md"
+    file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
+    async for info in shabti_client.insert_files(shabti_collection_id, [file_path]):
+        pass
+    async for response in shabti_client.prompt(
+        shabti_collection_id,
+        "What does the word prompting mean?",
+        "question",
+    ):
+        pass

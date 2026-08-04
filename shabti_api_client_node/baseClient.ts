@@ -232,7 +232,8 @@ export class BaseShabtiClient {
 		collectionId: string,
 		prompt: string,
 		task: string,
-		modelName: string,
+		// if no model is specified the API will use the default chat model
+		modelName?: string,
 		persona?: string,
 		enhancers?: string[],
 		filePath?: string,

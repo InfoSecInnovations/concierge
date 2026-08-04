@@ -27,3 +27,21 @@ async def test_prompt(shabti_client, shabti_collection_id):
         },
     )
     assert response.status_code == 200
+
+
+# omitting the model name should fall back to the default model
+async def test_prompt_without_model_name(shabti_client, shabti_collection_id):
+    unique_filename = uuid4().hex
+    with open(file_path, "rb") as f:
+        doc = load_file(f, filename)
+    async for _ in insert_document(None, shabti_collection_id, doc, unique_filename):
+        pass
+    response = shabti_client.post(
+        "/prompt",
+        json={
+            "collection_id": shabti_collection_id,
+            "task": "question",
+            "user_input": "What does the word prompting mean?",
+        },
+    )
+    assert response.status_code == 200

@@ -127,7 +127,8 @@ class BaseShabtiClient(ABC):
         collection_id: str,
         prompt: str,
         task: str,
-        model_name: str,
+        # if no model is specified the API will use the default chat model
+        model_name: str | None = None,
         persona: str | None = None,
         enhancers: list[str] | None = None,
         file_path: str | None = None,

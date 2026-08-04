@@ -103,6 +103,20 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				)) {
 				}
 			});
+			// omitting the model name should fall back to the default model
+			test("prompt without model name", async () => {
+				const client = getClient();
+				for await (const item of await client.insertFiles(collectionId, [
+					promptDocPath,
+				])) {
+				}
+				for await (const item of await client.prompt(
+					collectionId,
+					"What does the word prompting mean?",
+					"question",
+				)) {
+				}
+			});
 			describe("Node Client - Security disabled Shabti instance - tests with document ID", () => {
 				let documentId: string;
 				beforeEach(async () => {
