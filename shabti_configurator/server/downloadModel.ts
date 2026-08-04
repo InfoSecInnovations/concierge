@@ -20,7 +20,7 @@ export default async function* (modelName: string) {
 			)
 				break;
 		} catch {}
-		sleep(HEALTH_POLL_INTERVAL);
+		await sleep(HEALTH_POLL_INTERVAL);
 	}
 	console.log(`loading ${modelData.hf}`);
 	// this must be the actual repo instead of modelName

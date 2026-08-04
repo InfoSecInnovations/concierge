@@ -2,6 +2,7 @@ import { $ } from "bun";
 import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
 import runSecurityTests from "./runSecurityTests";
+import writeTestModelsIni from "./writeTestModelsIni";
 import { mergeFiles, mergeToString } from "junit-report-merger";
 import { rm, mkdir } from "node:fs/promises";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
@@ -19,6 +20,7 @@ try {
 	`);
 
 	dotenv.config({ path: "security-disabled-env", override: true, quiet: true });
+	await writeTestModelsIni();
 	await nukeExisting();
 	console.log(
 		"building Docker Compose... (can take some time if there are updates to the dependencies)",

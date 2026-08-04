@@ -14,10 +14,8 @@ import getCurrentVersion from "./getCurrentVersion";
 import downloadModel from "./downloadModel";
 import * as humanize from "ts-humanize";
 import removeAllContainers from "./removeAllContainers";
-import getModelsConfig from "../getModelsConfig";
-import { HTTPException } from "hono/http-exception";
-import _ from "lodash";
-import * as ini from "@std/ini";
+import getDefaultModelSelection from "../getDefaultModelSelection";
+import writeModelsIni from "./writeModelsIni";
 
 export default async function* (
 	options: FormData,
@@ -109,49 +107,25 @@ export default async function* (
 		"docker_compose",
 		"docker-compose-download-model.yml",
 	);
-	const chatModels = options.getAll("language_model");
+	const defaults = await getDefaultModelSelection();
+	const selectedChatModels = options
+		.getAll("language_model")
+		.map((v) => v.toString());
+	const chatModels = selectedChatModels.length
+		? selectedChatModels
+		: defaults.chatModels;
+	const embeddingsModel =
+		options.get("embeddings_model")?.toString() || defaults.embeddingsModel;
 	const defaultModel =
-		options.get("default_model")?.toString() || chatModels[0].toString();
-	const embeddingsModel = options.get("embeddings_model")!;
-	const shabtiModels = await getModelsConfig();
-	const embeddingKey = embeddingsModel.toString();
-	const embeddingModelData = shabtiModels[embeddingKey];
-	if (!embeddingModelData)
-		throw new HTTPException(404, {
-			message: `model ${embeddingKey} not found`,
-		});
-	Bun.write(
-		path.resolve(
-			"docker_compose",
-			"docker_compose_dependencies",
-			"llama_models",
-			"my-models.ini",
-		),
-		ini.stringify({
-			...chatModels.reduce((acc, v) => {
-				const key = v.toString();
-				const modelData = _.cloneDeep(shabtiModels[key]);
-				if (!v)
-					throw new HTTPException(404, { message: `model ${key} not found` });
-				modelData.tags = modelData.tags.filter(
-					(tag: string) => tag != "default",
-				); // remove the default tag set in the config file
-				if (key == defaultModel) {
-					// set the default tag if this model is the selected default
-					modelData.tags.push("default");
-				}
-				modelData.tags = modelData.tags.join(", "); // llama.cpp expects the tags in CSV
-				return { ...acc, [key]: modelData };
-			}, {}),
-			[embeddingKey]: embeddingModelData,
-		}),
-	); // write to ini file used by llama.cpp
+		options.get("default_model")?.toString() ||
+		(selectedChatModels.length ? chatModels[0]! : defaults.defaultModel);
+	await writeModelsIni({ chatModels, embeddingsModel, defaultModel });
 	yield logMessage(
 		"launching LLM service. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",
 	);
 	await $`docker compose -f ${loaderComposeFile} up -d`; // launch llama.cpp
 	for (const modelName of [...chatModels, embeddingsModel]) {
-		for await (const json of downloadModel(modelName!.toString())) {
+		for await (const json of downloadModel(modelName)) {
 			yield logMessage(
 				`loaded ${humanize.bytes(json.progress)} / ${humanize.bytes(json.total)} of file ${json.file} for model ${json.modelName}`,
 			);

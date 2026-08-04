@@ -4,6 +4,7 @@ import getKeycloakClientSecret from "../shabti_configurator/server/getKeycloakCl
 import path from "path";
 import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
+import writeTestModelsIni from "./writeTestModelsIni";
 
 export default async () => {
 	console.log(`
@@ -13,6 +14,7 @@ export default async () => {
   `);
 
 	dotenv.config({ path: "security-enabled-env", override: true, quiet: true });
+	await writeTestModelsIni();
 	await nukeExisting();
 	await createCertificates("./self_signed_certificates");
 	await Bun.write(
