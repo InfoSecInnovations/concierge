@@ -19,16 +19,31 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 
 		// prompting runs on whichever chat model is currently loaded, so we make sure
 		// there is one
+		let loadedChatModel: string;
 		beforeAll(async () => {
 			const client = getClient();
-			const models = (await client.getModels(["chat"])) as any;
-			const modelName =
-				models.data.find((m: any) => m.tags.includes("default"))?.id ??
-				models.data[0].id;
-			for await (const item of await client.loadModel(modelName)) {
+			const models = await client.getModels(["chat"]);
+			loadedChatModel =
+				models.data.find((model) => model.tags.includes("default"))?.id ??
+				models.data[0]!.id;
+			for await (const item of await client.loadModel(loadedChatModel)) {
 			}
 		});
 
+		test("get models", async () => {
+			const models = await getClient().getModels(["chat"]);
+			expect(
+				models.data.some(
+					(model) =>
+						model.id == loadedChatModel &&
+						model.tags.includes("chat") &&
+						model.status == "loaded",
+				),
+			).toBeTrue();
+		});
+		test("get chat model", async () => {
+			expect(await getClient().getChatModel()).toBe(loadedChatModel);
+		});
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");
 			const client = getClient();

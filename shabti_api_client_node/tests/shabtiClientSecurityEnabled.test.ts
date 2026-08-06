@@ -51,10 +51,10 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 		// there is one
 		beforeAll(async () => {
 			const client = await getAdminClient();
-			const models = (await client.getModels(["chat"])) as any;
+			const models = await client.getModels(["chat"]);
 			const modelName =
-				models.data.find((m: any) => m.tags.includes("default"))?.id ??
-				models.data[0].id;
+				models.data.find((model) => model.tags.includes("default"))?.id ??
+				models.data[0]!.id;
 			for await (const item of await client.loadModel(modelName)) {
 			}
 		});

@@ -145,6 +145,45 @@ export default async () => {
 			insert(await client.insertUrls(options.collection, urls), command),
 		);
 
+	const model = program.command("model");
+	model
+		.command("pull <model>")
+		.description("load a model, unloading any other of the same kind first")
+		.action(async (modelName, options, command) => {
+			let bar: cliProgress.SingleBar | undefined = undefined;
+			for await (const item of await client.loadModel(modelName)) {
+				if (!bar) {
+					bar = new cliProgress.SingleBar(
+						{ format: "{bar} {percentage}% {info}" },
+						cliProgress.Presets.shades_classic,
+					);
+					bar.start(item.total, item.progress, { info: item.info ?? "" });
+				}
+				bar.update(item.progress, { info: item.info ?? "" });
+			}
+			if (bar) bar.stop();
+			console.log(`Model ${modelName} is loaded`);
+		});
+	model
+		.command("list")
+		.description("list the models available to the server")
+		.option("-t, --tags [tags...]", "only list models with these tags")
+		.action((options, command) =>
+			client
+				.getModels(options.tags)
+				.then((models) => models.data.forEach((model) => console.log(model))),
+		);
+	model
+		.command("current")
+		.description("show the chat model currently loaded for prompting")
+		.action((options, command) =>
+			client
+				.getChatModel()
+				.then((modelName) =>
+					console.log(modelName ?? "No chat model is loaded"),
+				),
+		);
+
 	program
 		.command("prompt <userInput>")
 		.requiredOption(

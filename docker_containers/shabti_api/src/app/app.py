@@ -41,7 +41,7 @@ from .functionality.opensearch_binary import serve_binary
 from .authorization import (
     list_scopes,
 )
-from .functionality.models import load_model, get_models
+from .functionality.models import load_model, get_models, loaded_chat_model
 from collections.abc import AsyncIterable
 from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
@@ -234,6 +234,12 @@ def create_app():
     @app.get("/models", dependencies=[Depends(access_token)])
     async def get_models_route(tags: Annotated[list[str] | None, Query()] = None):
         return await get_models(tags)
+
+    # the chat model the prompt route will use, null if there isn't one loaded
+    @app.get("/models/chat", dependencies=[Depends(access_token)])
+    async def get_chat_model_route() -> ModelInfo | None:
+        model_id = await loaded_chat_model()
+        return ModelInfo(model_name=model_id) if model_id else None
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
     async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:

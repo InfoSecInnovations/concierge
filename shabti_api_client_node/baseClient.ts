@@ -1,11 +1,13 @@
 import { openAsBlob } from "node:fs";
 import * as path from "node:path";
+import * as querystring from "node:querystring";
 import { EXPECTED_CODES } from "./codes";
 import {
 	DocumentInfo,
 	DocumentIngestInfo,
 	DocumentList,
 	ModelLoadInfo,
+	ModelStatusInfo,
 	PromptConfigInfo,
 	TaskInfo,
 	UnsupportedFileError,
@@ -44,9 +46,10 @@ export class BaseShabtiClient {
 			return undefined;
 		})();
 		const fullUrl = new URL(url, this.serverUrl);
-		if (params) {
-			fullUrl.search = new URLSearchParams(params).toString();
-		}
+		// querystring is used rather than URLSearchParams as it expands list params
+		// into the repeated keys the API expects, instead of joining them into a
+		// single comma separated value
+		if (params) fullUrl.search = querystring.stringify(params);
 		const response = await fetch(fullUrl, {
 			method,
 			body,
@@ -280,11 +283,24 @@ export class BaseShabtiClient {
 		return json.running;
 	}
 
+	// the chat model prompts will run on, null if there isn't one loaded
+	async getChatModel(): Promise<string | null> {
+		const res = await this.makeRequest("GET", "models/chat");
+		const json = (await res.json()) as any;
+		return json ? json.model_name : null;
+	}
+
 	async loadModel(modelName: string) {
 		return this.streamRequest(
 			"POST",
 			"models/pull",
-			(json) => new ModelLoadInfo(json.progress, json.total, json.model_name),
+			(json) =>
+				new ModelLoadInfo(
+					json.progress,
+					json.total,
+					json.model_name,
+					json.info,
+				),
 			{ model_name: modelName },
 		);
 	}
@@ -299,15 +315,22 @@ export class BaseShabtiClient {
 		return new WebFile(await res.blob(), mediaType);
 	}
 
-	async getModels(tags?: string[]) {
+	async getModels(tags?: string[]): Promise<{ data: ModelStatusInfo[] }> {
 		const params: any = {};
 		if (tags) params.tags = tags;
-		return await this.makeRequest(
+		const res = await this.makeRequest(
 			"GET",
 			"models",
 			undefined,
 			undefined,
 			params,
-		).then((res) => res.json());
+		);
+		const json = (await res.json()) as any;
+		return {
+			data: json.data.map(
+				(item: any) =>
+					new ModelStatusInfo(item.id, item.tags, item.status.value),
+			),
+		};
 	}
 }

@@ -127,10 +127,28 @@ export class ModelLoadInfo {
 	progress: number;
 	total: number;
 	modelName: string;
-	constructor(progress: number, total: number, modelName: string) {
+	info?: string;
+	constructor(
+		progress: number,
+		total: number,
+		modelName: string,
+		info?: string,
+	) {
 		this.progress = progress;
 		this.total = total;
 		this.modelName = modelName;
+		this.info = info;
+	}
+}
+
+export class ModelStatusInfo {
+	id: string;
+	tags: string[];
+	status: string;
+	constructor(id: string, tags: string[], status: string) {
+		this.id = id;
+		this.tags = tags;
+		this.status = status;
 	}
 }
 

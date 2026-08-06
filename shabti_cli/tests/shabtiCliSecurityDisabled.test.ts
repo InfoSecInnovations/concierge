@@ -22,14 +22,36 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 		const filePath = path.join(import.meta.dir, filename);
 		// prompting runs on whichever chat model is currently loaded, so we make sure
 		// there is one
+		let loadedChatModel: string;
 		beforeAll(async () => {
 			const client = getClient();
-			const models = (await client.getModels(["chat"])) as any;
-			const modelName =
-				models.data.find((m: any) => m.tags.includes("default"))?.id ??
-				models.data[0].id;
-			for await (const item of await client.loadModel(modelName)) {
+			const models = await client.getModels(["chat"]);
+			loadedChatModel =
+				models.data.find((model) => model.tags.includes("default"))?.id ??
+				models.data[0]!.id;
+			for await (const item of await client.loadModel(loadedChatModel)) {
 			}
+		});
+		test("pull model", async () => {
+			const program = await buildProgram();
+			await program.parseAsync(["model", "pull", loadedChatModel], {
+				from: "user",
+			});
+			expect(await getClient().getChatModel()).toBe(loadedChatModel);
+		});
+		test("list models", async () => {
+			const output = await $`bun run index.ts model list --tags chat embeddings`
+				.cwd(path.resolve(path.join(import.meta.dir, "..")))
+				.env({ ...process.env })
+				.text();
+			expect(output).toInclude(loadedChatModel);
+		});
+		test("current model", async () => {
+			const output = await $`bun run index.ts model current`
+				.cwd(path.resolve(path.join(import.meta.dir, "..")))
+				.env({ ...process.env })
+				.text();
+			expect(output).toInclude(loadedChatModel);
 		});
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");
