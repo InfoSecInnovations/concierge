@@ -10,10 +10,11 @@ import doLaunch from "./server/doLaunch";
 import dockerIsRunning from "./server/dockerIsRunning";
 import { ExistingRemover } from "./server/existingRemover";
 import { InstallOptionsForm } from "./server/installOptionsForm";
+import manageModels from "./server/manageModels";
+import { ModelManagementForm } from "./server/modelManagementForm";
 import { RelaunchForm } from "./server/relaunchForm";
 import streamHtml from "./server/streamHtml";
 import validateInstallForm from "./server/validateInstallForm";
-import { WebUILink } from "./server/webUiLink";
 import packageJson from "./package.json";
 import getCurrentVersion from "./server/getCurrentVersion";
 import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
@@ -87,7 +88,7 @@ app.get("/", async (c) => {
 					<>
 						{currentVersion ? (
 							<section>
-								<h3>Launch Shabti</h3>
+								<h3>Manage Shabti</h3>
 								<p>Shabti appears to be configured on this system</p>
 								{isLocal ? (
 									<p>
@@ -96,35 +97,11 @@ app.get("/", async (c) => {
 								) : (
 									<p>You are using version {currentVersion}</p>
 								)}
-								{!isLocal || localIsRunning ? (
-									<>
-										<WebUILink></WebUILink>
-										<p>
-											If the link above isn't working, try (re)launching using
-											the button below.
-										</p>
-										<p>
-											Bear in mind that if you just installed Shabti it can take
-											a few minutes before it's up and running.
-										</p>
-									</>
-								) : (
-									<>
-										<p>
-											Use the button below to launch Shabti in development mode
-											with reloading.
-										</p>
-										<p>
-											We recommend using Visual Studio Code with the provided
-											devcontainer configuration instead of launching Shabti
-											from here.
-										</p>
-									</>
-								)}
 								<RelaunchForm
-									devMode={devMode}
+									isLocal={isLocal}
 									localIsRunning={localIsRunning}
 								></RelaunchForm>
+								<ModelManagementForm></ModelManagementForm>
 							</section>
 						) : null}
 						<ExistingRemover></ExistingRemover>
@@ -216,6 +193,20 @@ app.post("/remove", (c) =>
 			});
 		return c.html(<p>Invalid service name was provided!</p>);
 	}),
+);
+app.post("/manage-models", (c) =>
+	c.req.formData().then((data) =>
+		streamHtml(
+			c,
+			"Updating language models",
+			async (stream) => {
+				for await (const message of manageModels(data)) {
+					await stream.writeln(await (<p>{message}</p>));
+				}
+			},
+			"Language models updated successfully.",
+		),
+	),
 );
 app.post("/launch", (c) =>
 	c.req.formData().then((data) =>

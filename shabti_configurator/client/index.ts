@@ -46,17 +46,11 @@ const loggingToggle = document.getElementById(
 	"activity_logging",
 )! as HTMLInputElement;
 const formEl = document.getElementById("install_form") as HTMLFormElement;
-const chatModelSelector = document.getElementById(
-	"language_model",
-) as HTMLSelectElement;
 let passwordStatus: VNode = toVNode(
 	document.getElementById("password_status")!,
 );
 let formErrors: VNode = toVNode(document.getElementById("form_errors")!);
 let formSuccess: VNode = toVNode(document.getElementById("form_success")!);
-let defaultModel: VNode = toVNode(
-	document.getElementById("default_model_selector")!,
-);
 
 const patchPassword = (contents: VNodeChildren) => {
 	passwordStatus = patch(
@@ -73,8 +67,49 @@ const patchFormSuccess = (contents: VNodeChildren) => {
 	formSuccess = patch(formSuccess, h("div#form_success.success", contents));
 };
 
-const patchDefaultModel = (contents: VNodeChildren) => {
-	defaultModel = patch(defaultModel, h("div#default_model_selector", contents));
+// the default chat model can only be chosen when more than one model is selected, so the
+// selector is rendered on the fly. Both the install form and the model management form have
+// one, hence the ids being parameters, they have to be unique across the page.
+const wireDefaultModelSelector = (selectId: string, containerId: string) => {
+	const chatModelSelector = document.getElementById(
+		selectId,
+	) as HTMLSelectElement | null;
+	const container = document.getElementById(containerId);
+	if (!chatModelSelector || !container) return; // the section this belongs to isn't on the page
+	const selectorId = `${containerId}_select`;
+	let vnode: VNode = toVNode(container);
+	chatModelSelector.onchange = () => {
+		const selected = [...chatModelSelector.selectedOptions].map((s) => s.value);
+		// keep the current choice if it's still selected, otherwise the browser would silently
+		// fall back to the first option
+		const previous = (
+			document.getElementById(selectorId) as HTMLSelectElement | null
+		)?.value;
+		const options = selected.map((model) =>
+			h(
+				"option",
+				{ attrs: { value: model, selected: model == previous } },
+				model,
+			),
+		);
+		vnode = patch(
+			vnode,
+			h(
+				`div#${containerId}`,
+				selected.length > 1
+					? h("p", [
+							h("label", { attrs: { for: selectorId } }, "Default Chat Model"),
+							h(
+								"select",
+								{ attrs: { id: selectorId, name: "default_model" } },
+								options,
+							),
+							"This model will be selected by default unless the user chooses a different one.",
+						])
+					: undefined,
+			),
+		);
+	};
 };
 
 const enableSubmit = () =>
@@ -150,27 +185,11 @@ const setFormVisibility = () => {
 setFormVisibility();
 formEl.onchange = setFormVisibility;
 
-if (chatModelSelector)
-	chatModelSelector.onchange = (e) => {
-		const selected = (e.target as HTMLSelectElement).selectedOptions;
-		if (selected.length <= 1) {
-			patchDefaultModel(undefined);
-			return;
-		}
-		patchDefaultModel(
-			h("p", [
-				h("label", { attrs: { for: "default_model" } }, "Default Chat Model"),
-				h(
-					"select",
-					{ attrs: { id: "default_model", name: "default_model" } },
-					[...selected].map((s) =>
-						h("option", { props: { value: s.label } }, s.label),
-					),
-				),
-				"This model will be selected by default unless the user chooses a different one.",
-			]),
-		);
-	};
+wireDefaultModelSelector("language_model", "default_model_selector");
+wireDefaultModelSelector(
+	"manage_language_model",
+	"manage_default_model_selector",
+);
 
 const params = new URLSearchParams(window.location.search);
 const err = params.get("err");

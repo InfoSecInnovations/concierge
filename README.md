@@ -45,7 +45,9 @@ Shabti now has a visual configurator which we hope you will like a lot more than
 
 Launch the executable and visit the indicated address in your web browser. Select your desired options and click "Start Installation!".
 
-Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Shabti" button. Docker will keep everything running for you and you will be able to access Shabti without going via the Configurator once installed.
+Note that the installer launches all the requirements for you, you generally won't need to use the "Launch Shabti" button in the "Manage Shabti" section. Docker will keep everything running for you and you will be able to access Shabti without going via the Configurator once installed.
+
+Once Shabti is installed, the "Manage Shabti" section also lets you change which language models are available without reinstalling. Adding a model downloads it, removing one leaves the downloaded files in place so you can add it back again quickly. Applying changes restarts the LLM service, as it only picks up model configuration changes on startup.
 
 ### Windows SmartScreen
 
