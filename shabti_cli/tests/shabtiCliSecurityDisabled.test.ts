@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, jest, test } from "bun:test";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	jest,
+	test,
+} from "bun:test";
 import buildProgram from "../buildProgram";
 import getClient from "../getClient";
 import { $ } from "bun";
@@ -12,6 +20,17 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	() => {
 		const filename = "test_doc.txt";
 		const filePath = path.join(import.meta.dir, filename);
+		// prompting runs on whichever chat model is currently loaded, so we make sure
+		// there is one
+		beforeAll(async () => {
+			const client = getClient();
+			const models = (await client.getModels(["chat"])) as any;
+			const modelName =
+				models.data.find((m: any) => m.tags.includes("default"))?.id ??
+				models.data[0].id;
+			for await (const item of await client.loadModel(modelName)) {
+			}
+		});
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");
 			const program = await buildProgram();
@@ -109,33 +128,6 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 						collectionId,
 						"--task",
 						"question",
-					],
-					{ from: "user" },
-				);
-			});
-			test("prompt with model name", async () => {
-				const filename = "prompt_test.md";
-				const filePath = path.join(import.meta.dir, filename);
-				const client = getClient();
-				for await (const item of await client.insertFiles(collectionId, [
-					filePath,
-				])) {
-				}
-				const models = (await client.getModels(["chat"])) as any;
-				const modelName = models.data.find((m: any) =>
-					m.tags.includes("default"),
-				).id;
-				const program = await buildProgram();
-				await program.parseAsync(
-					[
-						"prompt",
-						"What does the word prompting mean?",
-						"--collection",
-						collectionId,
-						"--task",
-						"question",
-						"--model",
-						modelName,
 					],
 					{ from: "user" },
 				);

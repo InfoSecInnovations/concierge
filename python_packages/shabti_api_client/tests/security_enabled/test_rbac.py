@@ -456,15 +456,15 @@ async def test_cannot_delete_collection(shabti_user_client, shabti_collection_id
     indirect=True,
 )
 async def test_can_prompt(
-    shabti_user_client, shabti_collection_id, shabti_prompt_document_id
+    shabti_user_client,
+    shabti_collection_id,
+    shabti_prompt_document_id,
+    loaded_chat_model,
 ):
-    models = await shabti_user_client.get_models(tags=["chat"])
-    model_name = next(m for m in models["data"] if "default" in m["tags"])["id"]
     async for response in shabti_user_client.prompt(
         shabti_collection_id,
         "What does the word prompting mean?",
         "question",
-        model_name,
     ):
         pass
 
@@ -482,15 +482,15 @@ async def test_can_prompt(
     indirect=True,
 )
 async def test_cannot_prompt(
-    shabti_user_client, shabti_collection_id, shabti_prompt_document_id
+    shabti_user_client,
+    shabti_collection_id,
+    shabti_prompt_document_id,
+    loaded_chat_model,
 ):
-    models = await shabti_user_client.get_models(tags=["chat"])
-    model_name = next(m for m in models["data"] if "default" in m["tags"])["id"]
     with pytest.raises(ShabtiAuthenticationError):
         async for response in shabti_user_client.prompt(
             shabti_collection_id,
             "What does the word prompting mean?",
             "question",
-            model_name,
         ):
             pass

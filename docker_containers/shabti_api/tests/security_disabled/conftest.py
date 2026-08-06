@@ -8,6 +8,7 @@ from ...src.app.functionality.document_collections import (
     get_collections,
 )
 from ...src.app.functionality.ingesting import insert_document
+from ...src.app.functionality.models import get_models, default_model_id, load_model
 import secrets
 import pytest_asyncio
 import os
@@ -35,6 +36,15 @@ async def shabti_client():
             await delete_collection(None, collection.collection_id)
         except Exception:  # we're not trying to test collection getting and deletion here so just do our best to clean up!
             pass
+
+
+# prompting runs on whichever chat model is currently loaded, so we make sure there is one
+@pytest_asyncio.fixture(loop_scope="session", autouse=True, scope="session")
+async def loaded_chat_model(shabti_client):
+    model_id = default_model_id(await get_models(tags=["chat"]))
+    async for _ in load_model(model_id):
+        pass
+    return model_id
 
 
 @pytest_asyncio.fixture(scope="function")

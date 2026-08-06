@@ -21,6 +21,19 @@ async def shabti_client():
     yield ShabtiClient("http://shabti:15131")
 
 
+# prompting runs on whichever chat model is currently loaded, so we make sure there is one
+@pytest_asyncio.fixture(loop_scope="session", autouse=True, scope="session")
+async def loaded_chat_model(shabti_client):
+    models = await shabti_client.get_models(tags=["chat"])
+    model_id = next(
+        (m["id"] for m in models["data"] if "default" in m["tags"]),
+        models["data"][0]["id"],
+    )
+    async for _ in shabti_client.load_model(model_id):
+        pass
+    return model_id
+
+
 @pytest_asyncio.fixture(scope="function")
 async def shabti_collection_id(shabti_client):
     collection_id = await shabti_client.create_collection(secrets.token_hex(8))

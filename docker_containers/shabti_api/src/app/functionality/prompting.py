@@ -58,8 +58,6 @@ async def stream_response(
         source_file_contents,
     )
 
-    # TODO: pass model name in
-
     data = {
         "model": model_name,
         "messages": [{"role": "user", "content": prompt}],

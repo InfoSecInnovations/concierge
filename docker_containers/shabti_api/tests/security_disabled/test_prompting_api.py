@@ -1,7 +1,7 @@
 from ...src.app.functionality.ingesting import insert_document
 import os
 from ...src.app.functionality.loading import load_file
-from ...src.app.functionality.models import get_models
+from ...src.app.functionality.models import get_models, load_model, unload_models
 from uuid import uuid4
 
 filename = "prompt_test.md"
@@ -9,28 +9,7 @@ file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
 # the main purpose of this test is just to ensure prompting can run without errors as the output isn't expected to be deterministic
-async def test_prompt(shabti_client, shabti_collection_id):
-    models = await get_models(tags=["chat"])
-    model_name = next(m for m in models["data"] if "default" in m["tags"])["id"]
-    unique_filename = uuid4().hex
-    with open(file_path, "rb") as f:
-        doc = load_file(f, filename)
-    async for _ in insert_document(None, shabti_collection_id, doc, unique_filename):
-        pass
-    response = shabti_client.post(
-        "/prompt",
-        json={
-            "collection_id": shabti_collection_id,
-            "task": "question",
-            "model_name": model_name,
-            "user_input": "What does the word prompting mean?",
-        },
-    )
-    assert response.status_code == 200
-
-
-# omitting the model name should fall back to the default model
-async def test_prompt_without_model_name(shabti_client, shabti_collection_id):
+async def test_prompt(shabti_client, shabti_collection_id, loaded_chat_model):
     unique_filename = uuid4().hex
     with open(file_path, "rb") as f:
         doc = load_file(f, filename)
@@ -45,3 +24,26 @@ async def test_prompt_without_model_name(shabti_client, shabti_collection_id):
         },
     )
     assert response.status_code == 200
+
+
+# the prompt runs on whichever chat model is loaded, so there is nothing to run if none is
+async def test_prompt_without_a_loaded_chat_model(
+    shabti_client, shabti_collection_id, loaded_chat_model
+):
+    chat_models = (await get_models(tags=["chat"]))["data"]
+    async for _ in unload_models([x["id"] for x in chat_models]):
+        pass
+    try:
+        response = shabti_client.post(
+            "/prompt",
+            json={
+                "collection_id": shabti_collection_id,
+                "task": "question",
+                "user_input": "What does the word prompting mean?",
+            },
+        )
+        assert response.status_code == 400
+        assert response.json()["detail"] == "No chat model is loaded"
+    finally:
+        async for _ in load_model(loaded_chat_model):
+            pass

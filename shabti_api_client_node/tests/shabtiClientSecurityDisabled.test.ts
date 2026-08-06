@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, jest, test } from "bun:test";
+import { beforeAll, beforeEach, describe, expect, jest, test } from "bun:test";
 import { ShabtiClient } from "../client";
 import path = require("node:path");
 import { randomBytes } from "node:crypto";
@@ -16,6 +16,18 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	"Node Client - Security disabled Shabti instance",
 	() => {
 		const getClient = () => new ShabtiClient("http://localhost:15131");
+
+		// prompting runs on whichever chat model is currently loaded, so we make sure
+		// there is one
+		beforeAll(async () => {
+			const client = getClient();
+			const models = (await client.getModels(["chat"])) as any;
+			const modelName =
+				models.data.find((m: any) => m.tags.includes("default"))?.id ??
+				models.data[0].id;
+			for await (const item of await client.loadModel(modelName)) {
+			}
+		});
 
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");
@@ -86,25 +98,6 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				).toBeTrue();
 			});
 			test("prompt", async () => {
-				const client = getClient();
-				for await (const item of await client.insertFiles(collectionId, [
-					promptDocPath,
-				])) {
-				}
-				const models = (await client.getModels(["chat"])) as any;
-				const modelName = models.data.find((m: any) =>
-					m.tags.includes("default"),
-				).id;
-				for await (const item of await client.prompt(
-					collectionId,
-					"What does the word prompting mean?",
-					"question",
-					modelName,
-				)) {
-				}
-			});
-			// omitting the model name should fall back to the default model
-			test("prompt without model name", async () => {
 				const client = getClient();
 				for await (const item of await client.insertFiles(collectionId, [
 					promptDocPath,

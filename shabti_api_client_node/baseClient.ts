@@ -232,8 +232,6 @@ export class BaseShabtiClient {
 		collectionId: string,
 		prompt: string,
 		task: string,
-		// if no model is specified the API will use the default chat model
-		modelName?: string,
 		persona?: string,
 		enhancers?: string[],
 		filePath?: string,
@@ -252,7 +250,6 @@ export class BaseShabtiClient {
 		})();
 
 		return this.streamRequest("POST", "prompt", undefined, {
-			model_name: modelName,
 			collection_id: collectionId,
 			user_input: prompt,
 			task,

@@ -1,4 +1,4 @@
-import { describe, expect, jest, test } from "bun:test";
+import { beforeAll, describe, expect, jest, test } from "bun:test";
 import { ShabtiAuthorizationClient } from "../authClient";
 import * as openIdClient from "openid-client";
 import path = require("node:path");
@@ -47,6 +47,17 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				config,
 			);
 		};
+		// prompting runs on whichever chat model is currently loaded, so we make sure
+		// there is one
+		beforeAll(async () => {
+			const client = await getAdminClient();
+			const models = (await client.getModels(["chat"])) as any;
+			const modelName =
+				models.data.find((m: any) => m.tags.includes("default"))?.id ??
+				models.data[0].id;
+			for await (const item of await client.loadModel(modelName)) {
+			}
+		});
 		const createCollectionForUser = (owner: string, location: string) =>
 			getAdminClient().then((client) =>
 				client.createCollection(
@@ -489,15 +500,10 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						promptDocumentIdFixture(owner, location);
 						test(`user ${username} cannot delete document from ${owner}'s ${location} collection`, async () => {
 							const userClient = await getClientForUser(username);
-							const models = (await userClient.getModels(["chat"])) as any;
-							const modelName = models.data.find((m: any) =>
-								m.tags.includes("default"),
-							).id;
 							for await (const item of await userClient.prompt(
 								collectionId,
 								"What does the word prompting mean?",
 								"question",
-								modelName,
 							)) {
 							}
 						});
@@ -517,16 +523,11 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 						promptDocumentIdFixture(owner, location);
 						test(`user ${username} cannot delete document from ${owner}'s ${location} collection`, async () => {
 							const userClient = await getClientForUser(username);
-							const models = (await userClient.getModels(["chat"])) as any;
-							const modelName = models.data.find((m: any) =>
-								m.tags.includes("default"),
-							).id;
 							expect(async () => {
 								for await (const item of await userClient.prompt(
 									collectionId,
 									"What does the word prompting mean?",
 									"question",
-									modelName,
 								)) {
 								}
 							}).toThrow();

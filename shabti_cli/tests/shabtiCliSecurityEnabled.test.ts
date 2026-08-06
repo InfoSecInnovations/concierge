@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, jest, test } from "bun:test";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	jest,
+	test,
+} from "bun:test";
 import buildProgram from "../buildProgram";
 import { $ } from "bun";
 import path from "node:path";
@@ -12,6 +20,17 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 	() => {
 		const filename = "test_doc.txt";
 		const filePath = path.join(import.meta.dir, filename);
+		// prompting runs on whichever chat model is currently loaded, so we make sure
+		// there is one
+		beforeAll(async () => {
+			const client = await getAuthClient();
+			const models = (await client.getModels(["chat"])) as any;
+			const modelName =
+				models.data.find((m: any) => m.tags.includes("default"))?.id ??
+				models.data[0].id;
+			for await (const item of await client.loadModel(modelName)) {
+			}
+		});
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");
 			const program = await buildProgram();

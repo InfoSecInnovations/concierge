@@ -127,8 +127,6 @@ class BaseShabtiClient(ABC):
         collection_id: str,
         prompt: str,
         task: str,
-        # if no model is specified the API will use the default chat model
-        model_name: str | None = None,
         persona: str | None = None,
         enhancers: list[str] | None = None,
         file_path: str | None = None,
@@ -143,7 +141,6 @@ class BaseShabtiClient(ABC):
             "POST",
             "prompt",
             json={
-                "model_name": model_name,
                 "collection_id": collection_id,
                 "user_input": prompt,
                 "task": task,

@@ -7,7 +7,7 @@ import json
 from ..shabti_logging import log_action, log_user_action, logging_enabled
 from shabti_util import auth_enabled
 from .document_collections import get_collection_info
-from .models import get_default_chat_model
+from .models import get_loaded_chat_model
 
 
 async def run_prompt(token: None | str, prompt_info: PromptInfo):
@@ -53,7 +53,7 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo):
                 page_metadata=PageInfo(**source["page_metadata"]),
             )
         )
-    model_name = prompt_info.model_name or await get_default_chat_model()
+    model_name = await get_loaded_chat_model()
     async for x in stream_response(
         model_name=model_name,
         context=context["context"],

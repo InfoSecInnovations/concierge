@@ -75,8 +75,6 @@ class ModelInfo(BaseModel):
 
 
 class PromptInfo(BaseModel):
-    # if no model is specified the default chat model is used
-    model_name: Optional[str] = None
     collection_id: str
     task: str
     user_input: str

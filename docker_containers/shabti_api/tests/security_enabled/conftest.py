@@ -13,6 +13,7 @@ from shabti_keycloak import (
     get_keycloak_admin_openid_token,
 )
 from ...src.app.functionality.ingesting import insert_document
+from ...src.app.functionality.models import get_models, default_model_id, load_model
 import os
 from ...src.app.functionality.loading import load_file
 from uuid import uuid4
@@ -42,6 +43,15 @@ async def shabti_client():
     collections = await get_collections(token["access_token"])
     for collection in collections:
         await delete_collection(token["access_token"], collection.collection_id)
+
+
+# prompting runs on whichever chat model is currently loaded, so we make sure there is one
+@pytest_asyncio.fixture(loop_scope="session", autouse=True, scope="session")
+async def loaded_chat_model(shabti_client):
+    model_id = default_model_id(await get_models(tags=["chat"]))
+    async for _ in load_model(model_id):
+        pass
+    return model_id
 
 
 @pytest_asyncio.fixture(scope="function")

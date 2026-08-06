@@ -31,6 +31,20 @@ async def shabti_instance():
             pass
 
 
+# prompting runs on whichever chat model is currently loaded, so we make sure there is one
+@pytest_asyncio.fixture(scope="session", loop_scope="session", autouse=True)
+async def loaded_chat_model(shabti_instance):
+    client = await get_admin_client()
+    models = await client.get_models(tags=["chat"])
+    model_id = next(
+        (m["id"] for m in models["data"] if "default" in m["tags"]),
+        models["data"][0]["id"],
+    )
+    async for _ in client.load_model(model_id):
+        pass
+    return model_id
+
+
 @pytest_asyncio.fixture(scope="function")
 async def shabti_user_client(request):
     keycloak_client = get_keycloak_client()

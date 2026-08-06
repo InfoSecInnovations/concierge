@@ -168,7 +168,6 @@ def prompter_server(
         collection_id: str,
         user_input: str,
         task: str,
-        model_name: str,
         persona: str | None,
         selected_enhancers: list[str] | None,
         file_path: str | None,
@@ -177,7 +176,6 @@ def prompter_server(
             collection_id,
             user_input,
             task,
-            model_name,
             None if not persona or persona == "None" else persona,
             selected_enhancers,
             file_path,
@@ -191,7 +189,6 @@ def prompter_server(
     async def on_chat_submit(user_input: str):
         collection_id = selected_collection.get()
         task = input.task_select()
-        model_name = input.model_select()
         persona = input.persona_select()
         selected_enhancers = input.enhancers_select()
         input_files = input[f"prompt_file_{current_file_id.get()}"]()
@@ -203,7 +200,6 @@ def prompter_server(
                 collection_id,
                 user_input,
                 task,
-                model_name,
                 persona,
                 selected_enhancers,
                 file_path,

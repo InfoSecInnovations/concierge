@@ -27,7 +27,7 @@ class UnsupportedFileError(Exception):
         self.filename = filename
 
 
-class ModelNotFoundError(Exception):
+class ModelNotFoundError(ShabtiError):
     def __init__(self, model="", message=""):
-        self.message = message
+        super().__init__(message)
         self.model = model
