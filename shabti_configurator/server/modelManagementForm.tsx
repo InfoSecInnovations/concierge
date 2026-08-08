@@ -20,15 +20,24 @@ export const ModelManagementForm = async () => {
 					chatModels={chatModels}
 					selectedChatModels={selectedChatModels}
 					defaultModel={selection.defaultModel}
-				>
-					The language models which will be available to users when querying
-					Shabti.
-				</ChatModelSelector>
+				></ChatModelSelector>
 				<p>
-					<label>Current Embeddings Model</label>{" "}
-					<strong>{selection.embeddingsModel}</strong>. You cannot change the
-					embeddings model as this would invalidate all currently ingested
-					documents.
+					<label for="current_embeddings_model">Current Embeddings Model</label>
+					<select
+						name="current_embeddings_model"
+						id="current_embeddings_model"
+						disabled
+					>
+						<option value={selection.embeddingsModel} selected>
+							{selection.embeddingsModel}
+						</option>
+					</select>
+				</p>
+				<p>
+					<small>
+						You cannot change the embeddings model as this would invalidate all
+						currently ingested documents.
+					</small>
 				</p>
 				<button type="submit">Apply Model Changes</button>
 			</fieldset>

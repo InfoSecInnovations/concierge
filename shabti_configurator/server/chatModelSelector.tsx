@@ -1,4 +1,3 @@
-import type { PropsWithChildren } from "hono/jsx";
 import getDefaultModelSelection from "../getDefaultModelSelection";
 import getModelsConfig from "../getModelsConfig";
 import readModelsIni from "./readModelsIni";
@@ -37,16 +36,14 @@ export const resolveModelSelection = async (options: {
 // The ids are parameters because both the install form and the model management form have one
 // and they have to be unique across the page, and the container's inner select is always
 // `${containerId}_select`, which wireDefaultModelSelector in the client bundle relies on.
-export const ChatModelSelector = (
-	props: PropsWithChildren<{
-		selectId: string;
-		containerId: string;
-		required?: boolean;
-		chatModels: string[];
-		selectedChatModels: string[];
-		defaultModel: string;
-	}>,
-) => (
+export const ChatModelSelector = (props: {
+	selectId: string;
+	containerId: string;
+	required?: boolean;
+	chatModels: string[];
+	selectedChatModels: string[];
+	defaultModel: string;
+}) => (
 	<>
 		<p>
 			<label for={props.selectId}>Select Chat Models</label>
@@ -65,7 +62,12 @@ export const ChatModelSelector = (
 					</option>
 				))}
 			</select>
-			{props.children}
+		</p>
+		<p>
+			<small>
+				The language models which will be available to users when querying
+				Shabti.
+			</small>
 		</p>
 		<div id={props.containerId}>
 			{props.selectedChatModels.length > 1 && (
@@ -78,8 +80,6 @@ export const ChatModelSelector = (
 							</option>
 						))}
 					</select>
-					This model will be selected by default unless the user chooses a
-					different one.
 				</p>
 			)}
 		</div>

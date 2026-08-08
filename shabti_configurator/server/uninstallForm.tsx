@@ -17,8 +17,10 @@ export const UninstallForm = () => (
 				<label for="delete_model_files">Delete language model files</label>
 			</p>
 			<p>
-				Leaving this unchecked keeps the models you've already downloaded, so a
-				future install won't have to fetch them again.
+				<small>
+					Leaving this unchecked keeps the models you've already downloaded, so
+					a future install won't have to fetch them again.
+				</small>
 			</p>
 			<button type="submit">Uninstall Shabti</button>
 		</fieldset>

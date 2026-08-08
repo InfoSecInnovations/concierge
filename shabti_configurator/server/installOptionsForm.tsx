@@ -64,10 +64,7 @@ export const InstallOptionsForm = async (props: {
 					chatModels={chatModels}
 					selectedChatModels={selectedChatModels}
 					defaultModel={selection.defaultModel}
-				>
-					The language models which will be available to users when querying
-					Shabti.
-				</ChatModelSelector>
+				></ChatModelSelector>
 				<p>
 					<label for="embeddings_model">Select Embeddings Model</label>
 					<select name="embeddings_model" id="embeddings_model">
@@ -79,8 +76,13 @@ export const InstallOptionsForm = async (props: {
 								</option>
 							))}
 					</select>
-					The language model which will be used to vectorize documents. If you
-					change this, it will invalidate all existing ingested documents!
+				</p>
+				<p>
+					<small>
+						The language model which will be used to vectorize documents. This
+						cannot be changed after installing as it would invalidate all
+						existing data.
+					</small>
 				</p>
 			</fieldset>
 			<fieldset>
@@ -114,9 +116,13 @@ export const InstallOptionsForm = async (props: {
 						id="web-host"
 						value="localhost"
 					></input>
-					This should be the URL from which the Shabti Web UI is being accessed.
-					Leave it as "localhost" unless you need to access Shabti from another
-					machine.
+				</p>
+				<p>
+					<small>
+						This should be the URL from which the Shabti Web UI is being
+						accessed. Leave it as "localhost" unless you need to access Shabti
+						from another machine.
+					</small>
 				</p>
 				<p>
 					<label for="web-port">Web Port</label>
@@ -126,7 +132,9 @@ export const InstallOptionsForm = async (props: {
 						id="web-port"
 						value="15130"
 					></input>
-					The Shabti Web UI will be served on this port.
+				</p>
+				<p>
+					<small>The Shabti Web UI will be served on this port.</small>
 				</p>
 				<p>
 					<label for="host">API Host</label>
@@ -136,14 +144,20 @@ export const InstallOptionsForm = async (props: {
 						id="host"
 						value="localhost"
 					></input>
-					This should be the URL from which the Shabti API is being accessed.
-					Leave it as "localhost" unless you need to access Shabti from another
-					machine.
+				</p>
+				<p>
+					<small>
+						This should be the URL from which the Shabti API is being accessed.
+						Leave it as "localhost" unless you need to access Shabti from
+						another machine.
+					</small>
 				</p>
 				<p>
 					<label for="port">API Port</label>
 					<input type="number" name="api-port" id="port" value="15131"></input>
-					The Shabti API will be served on this port.
+				</p>
+				<p>
+					<small>The Shabti API will be served on this port.</small>
 				</p>
 			</fieldset>
 			<fieldset>
