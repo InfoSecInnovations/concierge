@@ -1,8 +1,6 @@
-import path from "node:path";
-import * as envfile from "envfile";
-import { keycloakExists } from "./dockerItemsExist";
-import getDefaultDirectory from "./getDefaultDirectory";
-import getEnvPath from "./getEnvPath";
+import getEnvs from "./getEnvs";
+import { HostsAndPortsFieldset } from "./hostsAndPortsFieldset";
+import { LoggingFieldset } from "./loggingFieldset";
 import { VersionSelector } from "./versionSelector";
 import currentIsLocal from "./currentIsLocal";
 import {
@@ -15,18 +13,10 @@ export const InstallOptionsForm = async (props: {
 	devMode: boolean;
 	currentVersion?: string;
 }) => {
-	const envFile = Bun.file(getEnvPath());
-	const envs =
-		(await envFile.exists()) &&
-		(await envFile.text().then((body) => envfile.parse(body)));
-	const securityEnabled = envs && envs.SHABTI_SECURITY_ENABLED == "True";
+	const envs = await getEnvs();
+	const securityEnabled = envs.SHABTI_SECURITY_ENABLED == "True";
 	const demoEnabled = securityEnabled && envs.IS_SECURITY_DEMO == "True";
-	const gpuEnabled = envs && envs.SHABTI_COMPUTE == "cuda";
-	const loggingEnabled = envs && envs.SHABTI_BASE_SERVICE?.endsWith("logging");
-	const logDir =
-		(envs && envs.SHABTI_LOG_DIR) ||
-		path.join(getDefaultDirectory()!, "shabti", "logs");
-	const keycloakEnabled = await keycloakExists();
+	const gpuEnabled = envs.SHABTI_COMPUTE == "cuda";
 	const { shabtiModels, selection, chatModels, selectedChatModels } =
 		await resolveModelSelection({
 			fallback: ModelSelectionFallback.DefaultModelOnly,
@@ -85,81 +75,8 @@ export const InstallOptionsForm = async (props: {
 					</small>
 				</p>
 			</fieldset>
-			<fieldset>
-				<legend>Logging</legend>
-				<p>
-					<input
-						type="checkbox"
-						id="activity_logging"
-						name="activity_logging"
-						checked={loggingEnabled}
-					></input>
-					<label for="activity_logging">Enable Activity Logging</label>
-				</p>
-				<p class="logging_element">
-					<label for="logging_location">Log Directory</label>
-					<input
-						type="text"
-						name="logging_location"
-						id="logging_location"
-						value={logDir}
-					></input>
-				</p>
-			</fieldset>
-			<fieldset>
-				<legend>Hosts and Ports</legend>
-				<p>
-					<label for="web-host">Web Host</label>
-					<input
-						type="text"
-						name="web-host"
-						id="web-host"
-						value="localhost"
-					></input>
-				</p>
-				<p>
-					<small>
-						This should be the URL from which the Shabti Web UI is being
-						accessed. Leave it as "localhost" unless you need to access Shabti
-						from another machine.
-					</small>
-				</p>
-				<p>
-					<label for="web-port">Web Port</label>
-					<input
-						type="number"
-						name="web-port"
-						id="web-port"
-						value="15130"
-					></input>
-				</p>
-				<p>
-					<small>The Shabti Web UI will be served on this port.</small>
-				</p>
-				<p>
-					<label for="host">API Host</label>
-					<input
-						type="text"
-						name="api-host"
-						id="host"
-						value="localhost"
-					></input>
-				</p>
-				<p>
-					<small>
-						This should be the URL from which the Shabti API is being accessed.
-						Leave it as "localhost" unless you need to access Shabti from
-						another machine.
-					</small>
-				</p>
-				<p>
-					<label for="port">API Port</label>
-					<input type="number" name="api-port" id="port" value="15131"></input>
-				</p>
-				<p>
-					<small>The Shabti API will be served on this port.</small>
-				</p>
-			</fieldset>
+			<LoggingFieldset></LoggingFieldset>
+			<HostsAndPortsFieldset></HostsAndPortsFieldset>
 			<fieldset>
 				<legend>Security Level</legend>
 				<p>
@@ -201,37 +118,24 @@ export const InstallOptionsForm = async (props: {
 					very insecure configuration designed to show off the different access
 					levels using test users.
 				</p>
-				{keycloakEnabled ? (
-					<div id="keycloak_config">
-						<p>
-							<strong>There is an existing Keycloak installation.</strong>
-						</p>
-						<p>
-							We strongly recommend removing that and OpenSearch using the
-							buttons above before proceeding.
-						</p>
-						<p>
-							If not the installer will attempt to keep the existing
-							configuration but be aware that this isn't well supported and you
-							may end up with an unusable setup.
-						</p>
-					</div>
-				) : (
-					<p id="keycloak_config">
-						<label for="keycloak_password_first">Keycloak Admin Password</label>
-						<input type="password" id="keycloak_password_first"></input>
-						<label for="keycloak_password">
-							Confirm Keycloak Admin Password
-						</label>
-						<input
-							type="password"
-							id="keycloak_password"
-							name="keycloak_password"
-						></input>
-					</p>
-				)}
+				<p id="keycloak_config">
+					<label for="keycloak_password_first">Keycloak Admin Password</label>
+					<input type="password" id="keycloak_password_first"></input>
+					<label for="keycloak_password">Confirm Keycloak Admin Password</label>
+					<input
+						type="password"
+						id="keycloak_password"
+						name="keycloak_password"
+					></input>
+				</p>
 				<div id="password_status" class="error"></div>
 			</fieldset>
+			{props.currentVersion && (
+				<p id="install_warning" class="error">
+					Installing will remove your existing installation. All document
+					collections and the documents they contain will be permanently lost.
+				</p>
+			)}
 			<button type="submit" id="install_submit" class="install_button">
 				Start Installation!
 			</button>

@@ -4,20 +4,15 @@ import { $ } from "bun";
 import getEnvPath from "./getEnvPath";
 import logMessage from "./logMessage";
 import removeAllContainers from "./removeAllContainers";
+import stopWatchProcess from "./stopWatchProcess";
 import { getModelsIniPath } from "./writeModelsIni";
 
 export default async function* (
-	options: FormData,
+	deleteModels: boolean,
 	state: { watchProcess?: Bun.Subprocess },
 ) {
-	// the development configuration runs in watch mode, so it would bring the containers back
-	// up as soon as we removed them
-	if (state.watchProcess) {
-		yield logMessage("Stopping local Docker development configuration...");
-		state.watchProcess.kill("SIGINT");
-		await state.watchProcess.exited;
-		delete state.watchProcess;
-	}
+	if (await stopWatchProcess(state))
+		yield logMessage("Stopped local Docker development configuration.");
 	yield logMessage("Removing Shabti Docker containers...");
 	await removeAllContainers();
 	yield logMessage("Removing Shabti data volumes...");
@@ -25,7 +20,7 @@ export default async function* (
 	// volumes a given configuration doesn't have (postgres without security, for instance) are
 	// a no-op rather than an error
 	await $`docker volume rm --force shabti_opensearch-data1 shabti_shabti-files shabti_postgres_data`;
-	if (options.has("delete_models")) {
+	if (deleteModels) {
 		yield logMessage("Removing downloaded language model files...");
 		await $`docker volume rm --force shabti_llama-cpp-models`;
 	}

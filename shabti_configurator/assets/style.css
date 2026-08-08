@@ -79,6 +79,28 @@ section {
 	margin: 1rem 0;
 }
 
+.tabs {
+	display: flex;
+	gap: 0.25rem;
+	margin-block-start: 1rem;
+}
+
+/* the tabs sit directly on top of their panel, so they lose the pill shape and the margin the
+   other buttons have */
+.tab {
+	margin: 0;
+	border-radius: 0.5rem 0.5rem 0 0;
+	background-color: #475c6f;
+}
+
+.tab.active {
+	background-color: #4b0082;
+}
+
+.tab_panel {
+	margin-block-start: 0;
+}
+
 /* tom-select replaces the native select with a div, so it needs the spacing and inline flow
    the rules above give the other form controls */
 .ts-wrapper {

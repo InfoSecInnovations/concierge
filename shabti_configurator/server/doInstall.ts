@@ -5,7 +5,7 @@ import * as envfile from "envfile";
 // import configurePlaywright from "./configurePlaywright";
 import configurePreCommit from "./configurePreCommit";
 import createCertificates from "./createCertificates";
-import { keycloakExists } from "./dockerItemsExist";
+import doUninstall from "./doUninstall";
 import getEnvPath from "./getEnvPath";
 import logMessage from "./logMessage";
 import createVenv from "./createVenv";
@@ -13,7 +13,6 @@ import getKeycloakClientSecret from "./getKeycloakClientSecret";
 import getCurrentVersion from "./getCurrentVersion";
 import downloadModel from "./downloadModel";
 import * as humanize from "ts-humanize";
-import removeAllContainers from "./removeAllContainers";
 import getDefaultModelSelection from "../getDefaultModelSelection";
 import writeModelsIni from "./writeModelsIni";
 
@@ -21,8 +20,14 @@ export default async function* (
 	options: FormData,
 	selectedVersion: string,
 	defaultVersion: string,
+	state: { watchProcess?: Bun.Subprocess },
 	installVenv = true,
 ) {
+	// installing over an existing configuration isn't supported, so we tear the whole stack
+	// down first. This has to be read before that as the uninstall removes the environment file
+	const existingVersion = await getCurrentVersion();
+	// keeping the language models, they're slow to download and the install can reuse them
+	yield* doUninstall(false, state);
 	// we keep track of the environment variables so we can write to the .env file and the process environment as needed
 	const envs: { [key: string]: string } = {};
 	const updateEnv = () => {
@@ -50,33 +55,29 @@ export default async function* (
 		envs.WEB_CERT = path.join(certDir, "shabti-web-cert.pem");
 		envs.WEB_KEY = path.join(certDir, "shabti-web-key.pem");
 		yield logMessage("configured TLS certificates.");
-		if (!(await keycloakExists())) {
-			const keycloakPassword = options.get("keycloak_password")?.toString();
-			// TODO: create error type for this
-			if (!keycloakPassword)
-				throw new Error("Keycloak admin password is invalid!");
-			// TODO: validate password strength
-			// in case we have old postgres data we should remove it to avoid mismatches
-			await $`docker volume rm --force shabti_postgres_data`.quiet();
-			envs.KEYCLOAK_INITIAL_ADMIN_PASSWORD = keycloakPassword;
-			const postgresPassword = crypto.randomBytes(25).toString("hex");
-			// TODO: validate password strength
-			envs.POSTGRES_DB_PASSWORD = postgresPassword;
-			updateEnv();
-			yield logMessage(
-				"getting OpenID credentials from Keycloak service. This can take a few minutes!",
-			);
-			const keycloakComposeFile = path.join(
-				"docker_compose",
-				"docker-compose-launch-keycloak.yml",
-			);
-			// update the keycloak image otherwise it can get overwritten when we launch everything below
-			await $`docker compose -f ${keycloakComposeFile} pull`;
-			await $`docker compose -f ${keycloakComposeFile} up -d`;
-			envs.KEYCLOAK_CLIENT_ID = "shabti-auth";
-			envs.KEYCLOAK_CLIENT_SECRET = await getKeycloakClientSecret();
-			yield logMessage("got Keycloak credentials.");
-		}
+		const keycloakPassword = options.get("keycloak_password")?.toString();
+		// TODO: create error type for this
+		if (!keycloakPassword)
+			throw new Error("Keycloak admin password is invalid!");
+		// TODO: validate password strength
+		envs.KEYCLOAK_INITIAL_ADMIN_PASSWORD = keycloakPassword;
+		const postgresPassword = crypto.randomBytes(25).toString("hex");
+		// TODO: validate password strength
+		envs.POSTGRES_DB_PASSWORD = postgresPassword;
+		updateEnv();
+		yield logMessage(
+			"getting OpenID credentials from Keycloak service. This can take a few minutes!",
+		);
+		const keycloakComposeFile = path.join(
+			"docker_compose",
+			"docker-compose-launch-keycloak.yml",
+		);
+		// update the keycloak image otherwise it can get overwritten when we launch everything below
+		await $`docker compose -f ${keycloakComposeFile} pull`;
+		await $`docker compose -f ${keycloakComposeFile} up -d`;
+		envs.KEYCLOAK_CLIENT_ID = "shabti-auth";
+		envs.KEYCLOAK_CLIENT_SECRET = await getKeycloakClientSecret();
+		yield logMessage("got Keycloak credentials.");
 		envs.KEYCLOAK_SERVICE_FILE = "docker-compose-keycloak.yml";
 	} else {
 		envs.SHABTI_SERVICE = "shabti-disable-security";
@@ -87,7 +88,7 @@ export default async function* (
 	envs.ENVIRONMENT = selectedVersion == "local" ? "development" : "production";
 	envs.SHABTI_VERSION =
 		selectedVersion == "local"
-			? (await getCurrentVersion()) || defaultVersion
+			? existingVersion || defaultVersion
 			: selectedVersion;
 	envs.SHABTI_LOCAL_VERSION = selectedVersion == "local" ? "True" : "False";
 	envs.SHABTI_COMPUTE = options.has("use_gpu") ? "cuda" : "cpu";
@@ -99,9 +100,6 @@ export default async function* (
 		envs.SHABTI_BASE_SERVICE = "shabti";
 	}
 	await updateEnv();
-	yield logMessage("cleaning up existing containers...");
-	// if we don't do this we can get glitches with the shabti network having a different ID across different containers
-	await removeAllContainers();
 	yield logMessage("loading selected models...");
 	const loaderComposeFile = path.join(
 		"docker_compose",

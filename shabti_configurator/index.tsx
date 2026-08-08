@@ -11,9 +11,12 @@ import doUninstall from "./server/doUninstall";
 import dockerIsRunning from "./server/dockerIsRunning";
 import { InstallOptionsForm } from "./server/installOptionsForm";
 import manageModels from "./server/manageModels";
+import { manageHostsAndPorts, manageLogging } from "./server/manageSettings";
 import { ModelManagementForm } from "./server/modelManagementForm";
 import { RelaunchForm } from "./server/relaunchForm";
+import { SettingsManagementForm } from "./server/settingsManagementForm";
 import streamHtml from "./server/streamHtml";
+import { Tabs } from "./server/tabs";
 import { UninstallForm } from "./server/uninstallForm";
 import validateInstallForm from "./server/validateInstallForm";
 import packageJson from "./package.json";
@@ -94,34 +97,48 @@ app.get("/", async (c) => {
 					!
 				</p>
 				{dockerStatus ? (
-					<>
-						{currentVersion ? (
-							<section>
-								<h3>Manage Shabti</h3>
-								<p>Shabti appears to be configured on this system</p>
-								{isLocal ? (
-									<p>
-										You are running the development version from local files
-									</p>
-								) : (
-									<p>You are using version {currentVersion}</p>
-								)}
-								<RelaunchForm
-									isLocal={isLocal}
-									localIsRunning={localIsRunning}
-								></RelaunchForm>
-								<ModelManagementForm></ModelManagementForm>
-								<UninstallForm></UninstallForm>
-							</section>
-						) : null}
-						<section>
-							<h3>Install Shabti</h3>
-							<InstallOptionsForm
-								devMode={devMode}
-								currentVersion={currentVersion}
-							></InstallOptionsForm>
-						</section>
-					</>
+					<Tabs
+						tabs={[
+							...(currentVersion
+								? [
+										{
+											id: "manage_tab",
+											label: "Manage Shabti",
+											content: (
+												<>
+													<p>Shabti appears to be configured on this system</p>
+													{isLocal ? (
+														<p>
+															You are running the development version from local
+															files
+														</p>
+													) : (
+														<p>You are using version {currentVersion}</p>
+													)}
+													<RelaunchForm
+														isLocal={isLocal}
+														localIsRunning={localIsRunning}
+													></RelaunchForm>
+													<ModelManagementForm></ModelManagementForm>
+													<SettingsManagementForm></SettingsManagementForm>
+													<UninstallForm></UninstallForm>
+												</>
+											),
+										},
+									]
+								: []),
+							{
+								id: "install_tab",
+								label: "Install Shabti",
+								content: (
+									<InstallOptionsForm
+										devMode={devMode}
+										currentVersion={currentVersion}
+									></InstallOptionsForm>
+								),
+							},
+						]}
+					></Tabs>
 				) : (
 					<section>
 						<h3>Docker isn't running, please start it!</h3>
@@ -162,6 +179,7 @@ app.post("/install", (c) =>
 					data,
 					data.get("version")!.toString(),
 					defaultVersion,
+					state,
 				)) {
 					await stream.writeln(await (<p>{message}</p>));
 				}
@@ -176,7 +194,10 @@ app.post("/uninstall", (c) =>
 			c,
 			"Uninstalling Shabti",
 			async (stream) => {
-				for await (const message of doUninstall(data, state)) {
+				for await (const message of doUninstall(
+					data.has("delete_models"),
+					state,
+				)) {
 					await stream.writeln(await (<p>{message}</p>));
 				}
 			},
@@ -195,6 +216,34 @@ app.post("/manage-models", (c) =>
 				}
 			},
 			"Language models updated successfully.",
+		),
+	),
+);
+app.post("/manage-logging", (c) =>
+	c.req.formData().then((data) =>
+		streamHtml(
+			c,
+			"Updating logging settings",
+			async (stream) => {
+				for await (const message of manageLogging(data, state)) {
+					await stream.writeln(await (<p>{message}</p>));
+				}
+			},
+			"Logging settings updated successfully.",
+		),
+	),
+);
+app.post("/manage-hosts", (c) =>
+	c.req.formData().then((data) =>
+		streamHtml(
+			c,
+			"Updating hosts and ports",
+			async (stream) => {
+				for await (const message of manageHostsAndPorts(data, state)) {
+					await stream.writeln(await (<p>{message}</p>));
+				}
+			},
+			"Hosts and ports updated successfully.",
 		),
 	),
 );

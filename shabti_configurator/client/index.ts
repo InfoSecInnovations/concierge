@@ -43,10 +43,6 @@ const password2El = document.getElementById(
 	"keycloak_password",
 ) as HTMLInputElement;
 const formSubmitEls = document.querySelectorAll(".install_button");
-const loggingEls = document.querySelectorAll(".logging_element");
-const loggingToggle = document.getElementById(
-	"activity_logging",
-)! as HTMLInputElement;
 const formEl = document.getElementById("install_form") as HTMLFormElement;
 let passwordStatus: VNode = toVNode(
 	document.getElementById("password_status")!,
@@ -124,28 +120,52 @@ const wireDefaultModelSelector = (selectId: string, containerId: string) => {
 	};
 };
 
-// uninstalling can't be undone, so we make the user confirm what they're about to lose. The
-// warning is built here rather than server side because it depends on the checkbox state
-const wireUninstallConfirmation = () => {
-	const form = document.getElementById(
-		"uninstall_form",
-	) as HTMLFormElement | null;
-	if (!form) return; // Shabti isn't configured, so there's nothing to uninstall
+// uninstalling and installing over an existing configuration both destroy the user's data and
+// can't be undone, so we make them confirm what they're about to lose. The warning is built
+// here rather than server side because it depends on the state of the form
+const wireDataLossConfirmation = (
+	formId: string,
+	question: string,
+	extraWarnings: () => string[],
+) => {
+	const form = document.getElementById(formId) as HTMLFormElement | null;
+	if (!form) return; // the section this belongs to isn't on the page
 	form.onsubmit = (e) => {
-		const deleteModels = (
-			document.getElementById("delete_model_files") as HTMLInputElement | null
-		)?.checked;
 		const warnings = [
-			"Are you sure you want to uninstall Shabti?",
+			question,
 			"All document collections and the documents they contain will be permanently lost.",
-			...(deleteModels
-				? [
-						"The language model files will be deleted, and will have to be downloaded again if you install Shabti in the future.",
-					]
-				: []),
+			...extraWarnings(),
 		];
 		if (!window.confirm(warnings.join("\n\n"))) e.preventDefault();
 	};
+};
+
+// the log directory only applies when logging is on, and both the install form and the
+// settings management form have their own copy of the fieldset
+const wireLoggingVisibility = (toggleId: string) => {
+	const toggle = document.getElementById(toggleId) as HTMLInputElement | null;
+	const fieldset = toggle?.closest("fieldset");
+	if (!toggle || !fieldset) return; // the section this belongs to isn't on the page
+	const loggingEls = fieldset.querySelectorAll(".logging_element");
+	const setLoggingVisibility = () =>
+		loggingEls.forEach((el) => el.classList.toggle("hidden", !toggle.checked));
+	setLoggingVisibility();
+	toggle.onchange = setLoggingVisibility;
+};
+
+const wireTabs = () => {
+	const nav = document.getElementById("tab_nav");
+	if (!nav) return; // only one section is available, so there's nothing to switch between
+	const tabs = [...nav.querySelectorAll<HTMLButtonElement>(".tab")];
+	tabs.forEach((tab) => {
+		tab.onclick = () =>
+			tabs.forEach((other) => {
+				other.classList.toggle("active", other == tab);
+				document
+					.getElementById(other.dataset.tab!)
+					?.classList.toggle("hidden", other != tab);
+			});
+	});
 };
 
 const enableSubmit = () =>
@@ -196,16 +216,6 @@ const checkPasswords = () => {
 
 if (password2El) password2El.oninput = checkPasswords;
 
-const setLoggingVisibility = () => {
-	if (loggingToggle.checked) {
-		loggingEls.forEach((el) => el.classList.remove("hidden"));
-	} else {
-		loggingEls.forEach((el) => el.classList.add("hidden"));
-	}
-};
-setLoggingVisibility();
-loggingToggle.onchange = setLoggingVisibility;
-
 const setFormVisibility = () => {
 	const formData = new FormData(formEl);
 	const keycloakConfig = document.getElementById("keycloak_config");
@@ -228,7 +238,28 @@ wireDefaultModelSelector(
 	"manage_language_model",
 	"manage_default_model_selector",
 );
-wireUninstallConfirmation();
+wireLoggingVisibility("activity_logging");
+wireLoggingVisibility("manage_activity_logging");
+wireTabs();
+wireDataLossConfirmation(
+	"uninstall_form",
+	"Are you sure you want to uninstall Shabti?",
+	() =>
+		(document.getElementById("delete_model_files") as HTMLInputElement | null)
+			?.checked
+			? [
+					"The language model files will be deleted, and will have to be downloaded again if you install Shabti in the future.",
+				]
+			: [],
+);
+// the warning is only rendered when there's an existing installation for the install to
+// destroy, so a first time install doesn't get a dialog
+if (document.getElementById("install_warning"))
+	wireDataLossConfirmation(
+		"install_form",
+		"Are you sure you want to install Shabti over your existing installation?",
+		() => [],
+	);
 
 const params = new URLSearchParams(window.location.search);
 const err = params.get("err");
