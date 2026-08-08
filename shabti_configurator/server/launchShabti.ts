@@ -1,6 +1,8 @@
 import { $ } from "bun";
+import getEnvs from "./getEnvs";
 import logMessage from "./logMessage";
 import removeAllContainers from "./removeAllContainers";
+import updateKeycloakRedirects from "./updateKeycloakRedirects";
 
 // brings the containers up from whatever is currently in the environment file. The containers
 // are removed rather than restarted because port mappings and bind mounts are fixed when a
@@ -31,8 +33,25 @@ export default async function* (
 			"./docker_compose/docker-compose-dev.yml",
 			"up",
 		]);
-		return;
+	} else {
+		yield logMessage("Launching Shabti Docker Compose configuration...");
+		await $`docker compose -f ./docker_compose/docker-compose.yml up -d`;
 	}
-	yield logMessage("Launching Shabti Docker Compose configuration...");
-	await $`docker compose -f ./docker_compose/docker-compose.yml up -d`;
+	const envs = await getEnvs();
+	if (envs.SHABTI_SECURITY_ENABLED != "True") return;
+	yield logMessage(
+		"Updating the Keycloak configuration to match the current host and port...",
+	);
+	// the settings are already applied and the containers are already up at this point, so a
+	// failure here isn't worth failing the whole operation over
+	try {
+		await updateKeycloakRedirects(
+			envs.WEB_HOST || "localhost",
+			envs.WEB_PORT || "15130",
+		);
+	} catch (error) {
+		yield logMessage(
+			`Couldn't update the Keycloak configuration: ${error instanceof Error ? error.message : error}. Users may not be able to log in until Shabti is relaunched.`,
+		);
+	}
 }
