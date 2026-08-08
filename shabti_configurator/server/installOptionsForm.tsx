@@ -5,7 +5,11 @@ import getDefaultDirectory from "./getDefaultDirectory";
 import getEnvPath from "./getEnvPath";
 import { VersionSelector } from "./versionSelector";
 import currentIsLocal from "./currentIsLocal";
-import getModelsConfig from "../getModelsConfig";
+import {
+	ChatModelSelector,
+	ModelSelectionFallback,
+	resolveModelSelection,
+} from "./chatModelSelector";
 
 export const InstallOptionsForm = async (props: {
 	devMode: boolean;
@@ -23,7 +27,10 @@ export const InstallOptionsForm = async (props: {
 		(envs && envs.SHABTI_LOG_DIR) ||
 		path.join(getDefaultDirectory()!, "shabti", "logs");
 	const keycloakEnabled = await keycloakExists();
-	const shabtiModels = await getModelsConfig();
+	const { shabtiModels, selection, chatModels, selectedChatModels } =
+		await resolveModelSelection({
+			fallback: ModelSelectionFallback.DefaultModelOnly,
+		});
 	return (
 		<form action="/install" method="post" id="install_form">
 			<fieldset>
@@ -51,28 +58,23 @@ export const InstallOptionsForm = async (props: {
 					></input>
 					<label for="use_gpu">Enable GPU Acceleration</label>
 				</p>
-				<p>
-					<label for="language_model">Select Chat Models</label>
-					<select name="language_model" id="language_model" multiple>
-						{Object.entries(shabtiModels)
-							.filter(([k, v]) => v.tags.includes("chat"))
-							.map(([k, v], i: number) => (
-								<option value={k} selected={i == 0}>
-									{k}
-								</option>
-							))}
-					</select>
+				<ChatModelSelector
+					selectId="language_model"
+					containerId="default_model_selector"
+					chatModels={chatModels}
+					selectedChatModels={selectedChatModels}
+					defaultModel={selection.defaultModel}
+				>
 					The language models which will be available to users when querying
 					Shabti.
-				</p>
-				<div id="default_model_selector"></div>
+				</ChatModelSelector>
 				<p>
 					<label for="embeddings_model">Select Embeddings Model</label>
 					<select name="embeddings_model" id="embeddings_model">
 						{Object.entries(shabtiModels)
-							.filter(([k, v]) => v.tags.includes("embeddings"))
-							.map(([k, v], i: number) => (
-								<option value={k} selected={i == 0}>
+							.filter(([_, v]) => v.tags.includes("embeddings"))
+							.map(([k]) => (
+								<option value={k} selected={k == selection.embeddingsModel}>
 									{k}
 								</option>
 							))}

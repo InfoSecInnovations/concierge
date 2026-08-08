@@ -78,3 +78,34 @@ section {
 	padding: 1rem;
 	margin: 1rem 0;
 }
+
+/* tom-select replaces the native select with a div, so it needs the spacing and inline flow
+   the rules above give the other form controls */
+.ts-wrapper {
+	display: inline-flex;
+	width: auto;
+	margin: 0 0.6em;
+	vertical-align: middle;
+}
+
+/* the selected models, themed like the buttons */
+.ts-wrapper.multi .ts-control > div {
+	background: #4b0082;
+	color: white;
+	border-radius: 3px;
+}
+
+.ts-wrapper.multi .ts-control > div.active {
+	background: #475c6f;
+	color: white;
+}
+
+/* the remove button's divider and hover shading assume a light coloured item */
+.ts-wrapper.plugin-remove_button:not(.rtl) .item .remove,
+.ts-wrapper.plugin-remove_button:not(.rtl) .item.active .remove {
+	border-left-color: rgba(255, 255, 255, 0.4);
+}
+
+.ts-wrapper.plugin-remove_button .item .remove:hover {
+	background: rgba(255, 255, 255, 0.2);
+}

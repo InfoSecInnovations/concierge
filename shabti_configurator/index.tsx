@@ -4,6 +4,7 @@ import { file } from "bun";
 import { $ } from "bun";
 import { Hono } from "hono";
 import js from "./assets/index.js" with { type: "file" };
+import clientCss from "./assets/index.css" with { type: "file" };
 import css from "./assets/style.css" with { type: "file" };
 import doInstall from "./server/doInstall";
 import doLaunch from "./server/doLaunch";
@@ -44,6 +45,13 @@ app.get("/style.css", async (c) =>
 		"Content-Type": "text/css",
 	}),
 );
+// styles from the packages used by the client bundle, our own style.css is loaded after this
+// one so it can override them
+app.get("/index.css", async (c) =>
+	c.body(await file(clientCss).text(), 201, {
+		"Content-Type": "text/css",
+	}),
+);
 app.get("/index.js", async (c) =>
 	c.body(await file(js).text(), 201, {
 		"Content-Type": "text/javascript",
@@ -57,6 +65,7 @@ app.get("/", async (c) => {
 	return await c.html(
 		<html>
 			<head>
+				<link rel="stylesheet" href="./index.css" />
 				<link rel="stylesheet" href="./style.css" />
 			</head>
 			<body>

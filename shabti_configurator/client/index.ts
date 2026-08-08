@@ -13,6 +13,8 @@ import {
 	styleModule,
 	toVNode,
 } from "snabbdom";
+import TomSelect from "tom-select";
+import "tom-select/dist/css/tom-select.css";
 
 const patch = init([
 	// Init patch function with chosen modules
@@ -65,6 +67,16 @@ const patchFormErrors = (contents: VNodeChildren) => {
 
 const patchFormSuccess = (contents: VNodeChildren) => {
 	formSuccess = patch(formSuccess, h("div#form_success.success", contents));
+};
+
+// the native multiple select needs ctrl-clicking and gives no indication that more than one
+// option can be picked, so we replace it with a tag style widget. Tom Select keeps the original
+// select in the DOM and mirrors the selection onto it, so the form submission and the
+// onchange handler below carry on working as they did.
+const wireMultiSelect = (selectId: string) => {
+	const el = document.getElementById(selectId) as HTMLSelectElement | null;
+	if (!el) return; // the section this belongs to isn't on the page
+	new TomSelect(el, { plugins: ["remove_button"] });
 };
 
 // the default chat model can only be chosen when more than one model is selected, so the
@@ -185,6 +197,8 @@ const setFormVisibility = () => {
 setFormVisibility();
 formEl.onchange = setFormVisibility;
 
+wireMultiSelect("language_model");
+wireMultiSelect("manage_language_model");
 wireDefaultModelSelector("language_model", "default_model_selector");
 wireDefaultModelSelector(
 	"manage_language_model",
