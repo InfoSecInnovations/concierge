@@ -1,20 +1,20 @@
 import { parseArgs } from "node:util";
 import AdmZip from "adm-zip";
 import { file } from "bun";
-import { $ } from "bun";
 import { Hono } from "hono";
 import js from "./assets/index.js" with { type: "file" };
 import clientCss from "./assets/index.css" with { type: "file" };
 import css from "./assets/style.css" with { type: "file" };
 import doInstall from "./server/doInstall";
 import doLaunch from "./server/doLaunch";
+import doUninstall from "./server/doUninstall";
 import dockerIsRunning from "./server/dockerIsRunning";
-import { ExistingRemover } from "./server/existingRemover";
 import { InstallOptionsForm } from "./server/installOptionsForm";
 import manageModels from "./server/manageModels";
 import { ModelManagementForm } from "./server/modelManagementForm";
 import { RelaunchForm } from "./server/relaunchForm";
 import streamHtml from "./server/streamHtml";
+import { UninstallForm } from "./server/uninstallForm";
 import validateInstallForm from "./server/validateInstallForm";
 import packageJson from "./package.json";
 import getCurrentVersion from "./server/getCurrentVersion";
@@ -111,9 +111,9 @@ app.get("/", async (c) => {
 									localIsRunning={localIsRunning}
 								></RelaunchForm>
 								<ModelManagementForm></ModelManagementForm>
+								<UninstallForm></UninstallForm>
 							</section>
 						) : null}
-						<ExistingRemover></ExistingRemover>
 						<section>
 							<h3>Install Shabti</h3>
 							<InstallOptionsForm
@@ -170,38 +170,19 @@ app.post("/install", (c) =>
 		);
 	}),
 );
-app.post("/remove", (c) =>
-	c.req.formData().then((data) => {
-		const service = data.get("service");
-		if (service == "shabti")
-			return streamHtml(c, "Removing Shabti API service", async (_) => {
-				await $`docker container rm --force shabti`;
-			});
-		if (service == "shabti-web")
-			return streamHtml(c, "Removing Shabti Web UI service", async (_) => {
-				await $`docker container rm --force shabti-web`;
-			});
-		if (service == "llama_cpp")
-			return streamHtml(c, "Removing Llama.cpp service", async (_) => {
-				await $`docker container rm --force llama_cpp`;
-				await $`docker volume rm --force shabti_llama-cpp-models`;
-			});
-		if (service == "opensearch")
-			return streamHtml(c, "Removing OpenSearch service", async (_) => {
-				await $`docker container rm --force opensearch-node1`;
-				await $`docker volume rm --force shabti_opensearch-data1`;
-			});
-		if (service == "keycloak")
-			return streamHtml(c, "Removing Keycloak service", async (_) => {
-				await $`docker container rm --force keycloak postgres`;
-				await $`docker volume rm --force shabti_postgres_data`;
-			});
-		if (service == "tika")
-			return streamHtml(c, "Removing Apache Tika service", async (_) => {
-				await $`docker container rm --force tika`;
-			});
-		return c.html(<p>Invalid service name was provided!</p>);
-	}),
+app.post("/uninstall", (c) =>
+	c.req.formData().then((data) =>
+		streamHtml(
+			c,
+			"Uninstalling Shabti",
+			async (stream) => {
+				for await (const message of doUninstall(data, state)) {
+					await stream.writeln(await (<p>{message}</p>));
+				}
+			},
+			"Shabti uninstalled successfully.",
+		),
+	),
 );
 app.post("/manage-models", (c) =>
 	c.req.formData().then((data) =>

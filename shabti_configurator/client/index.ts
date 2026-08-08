@@ -124,6 +124,30 @@ const wireDefaultModelSelector = (selectId: string, containerId: string) => {
 	};
 };
 
+// uninstalling can't be undone, so we make the user confirm what they're about to lose. The
+// warning is built here rather than server side because it depends on the checkbox state
+const wireUninstallConfirmation = () => {
+	const form = document.getElementById(
+		"uninstall_form",
+	) as HTMLFormElement | null;
+	if (!form) return; // Shabti isn't configured, so there's nothing to uninstall
+	form.onsubmit = (e) => {
+		const deleteModels = (
+			document.getElementById("delete_model_files") as HTMLInputElement | null
+		)?.checked;
+		const warnings = [
+			"Are you sure you want to uninstall Shabti?",
+			"All document collections and the documents they contain will be permanently lost.",
+			...(deleteModels
+				? [
+						"The language model files will be deleted, and will have to be downloaded again if you install Shabti in the future.",
+					]
+				: []),
+		];
+		if (!window.confirm(warnings.join("\n\n"))) e.preventDefault();
+	};
+};
+
 const enableSubmit = () =>
 	formSubmitEls.forEach((el) => ((el as HTMLButtonElement).disabled = false));
 
@@ -204,6 +228,7 @@ wireDefaultModelSelector(
 	"manage_language_model",
 	"manage_default_model_selector",
 );
+wireUninstallConfirmation();
 
 const params = new URLSearchParams(window.location.search);
 const err = params.get("err");
