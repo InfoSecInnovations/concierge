@@ -14,6 +14,10 @@ export default async (webHost: string, webPort: string) => {
 	await client.clients.update(
 		{ id: shabtiAuthId },
 		{
+			// Keycloak treats this one as an absolute value rather than a patch, so leaving it
+			// out disables authorization services and deletes the resource server along with
+			// every collection resource in it. Every other field falls back to its stored value
+			authorizationServicesEnabled: true,
 			redirectUris: [
 				`http://${webHost}:${webPort}/callback`,
 				`https://${webHost}:${webPort}/callback`,

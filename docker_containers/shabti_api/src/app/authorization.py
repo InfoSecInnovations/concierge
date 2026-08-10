@@ -15,6 +15,18 @@ class UnauthorizedOperationError(Exception):
         self.message = message
 
 
+def no_access_result(error, empty, codes=(401, 403)):
+    """the result to use when Keycloak refuses a permissions request
+
+    401 means no authorization was provided and 403 means not authorized, in both cases the
+    caller simply has no access, so an empty result is the correct answer. Anything else is a
+    real failure and gets raised rather than being reported as having no access
+    """
+    if error.response_code in codes:
+        return empty
+    raise error
+
+
 async def authorize(token, resource, scope: str | None = None):
     permission = resource
     if scope:
@@ -64,9 +76,7 @@ async def list_resources(token):
     try:
         response = await keycloak_openid.a_uma_permissions(token)
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
-        # 401 means no authorization provided, 403 means not authorized, so we can return an empty list
-        if e.response_code == 401 or e.response_code == 403:
-            return []
+        return no_access_result(e, [])
     admin_client = get_keycloak_admin_client()
     client_id = await admin_client.a_get_client_id("shabti-auth")
     resources = [
@@ -82,9 +92,7 @@ async def has_scope(token, scope):
     try:
         response = await keycloak_openid.a_uma_permissions(token, f"#{scope}")
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
-        # 401 means no authorization provided, 403 means not authorized, so we can return False
-        if e.response_code == 401 or e.response_code == 403:
-            return False
+        return no_access_result(e, False)
     return len(response) != 0
 
 
@@ -100,9 +108,7 @@ async def list_permissions(token):
             ],
         )
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
-        # 401 means no authorization provided, 403 means not authorized, so we can return an empty set
-        if e.response_code == 401 or e.response_code == 403:
-            return set()
+        return no_access_result(e, set())
     admin_client = get_keycloak_admin_client()
     client_id = await admin_client.a_get_client_id("shabti-auth")
     resources = [
@@ -120,11 +126,8 @@ async def list_scopes(token, resource_id):
             return []
         return response[0]["scopes"]
     except (KeycloakPostError, KeycloakAuthenticationError) as e:
-        # 403 means not authorized, so we can return an empty list
-        if e.response_code == 403:
-            return []
-        # if it's not a 403 we want to raise as normal and the client will deal with it as appropriate
-        raise e
+        # a 401 isn't expected here because the request names a resource we already have
+        return no_access_result(e, [], (403,))
 
 
 async def delete_resource(resource_id):

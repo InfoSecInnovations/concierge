@@ -15,7 +15,7 @@
 	},
 	"dependencies": {
 		"@iarna/toml": "^2.2.5",
-		"@keycloak/keycloak-admin-client": "^26.2.0",
+		"@keycloak/keycloak-admin-client": "26.6.4",
 		"@std/ini": "npm:@jsr/std__ini",
 		"@zxcvbn-ts/core": "^3.0.4",
 		"@zxcvbn-ts/language-common": "^3.0.4",
