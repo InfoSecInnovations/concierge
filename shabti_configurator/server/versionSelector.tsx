@@ -1,11 +1,11 @@
-import listCompatibleDockerTags from "./listCompatibleDockerTags";
+import listCompatibleVersions from "./listCompatibleVersions";
 
 export const VersionSelector = async (props: {
 	id: string;
 	devMode: boolean;
 	currentVersion?: string;
 }) => {
-	const availableVersions = await listCompatibleDockerTags();
+	const availableVersions = await listCompatibleVersions();
 	return (
 		<select id={props.id} name="version">
 			{props.devMode && <option value="local">local</option>}

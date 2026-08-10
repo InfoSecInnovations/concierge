@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.0 - TBD
+## 0.8.0 - 2026-07-28
 
 Due to having several tasks ongoing simultaneously we've been unable to release the previous versions, but you can finally get your hands on a greatly upgraded version of Shabti (previously known as Concierge)! See also 0.7.0 changes below for the full list since the last official release.
 

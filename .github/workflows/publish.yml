@@ -1,0 +1,11 @@
+name: Dummy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  dummy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: dummy
+        run: echo "I'm not a real workflow"

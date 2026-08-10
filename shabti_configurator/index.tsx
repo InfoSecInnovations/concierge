@@ -21,7 +21,7 @@ import { UninstallForm } from "./server/uninstallForm";
 import validateInstallForm from "./server/validateInstallForm";
 import packageJson from "./package.json";
 import getCurrentVersion from "./server/getCurrentVersion";
-import listCompatibleDockerTags from "./server/listCompatibleDockerTags";
+import listCompatibleVersions from "./server/listCompatibleVersions.js";
 import currentIsLocal from "./server/currentIsLocal";
 
 const { values } = parseArgs({
@@ -41,7 +41,7 @@ const app = new Hono();
 const state: { watchProcess?: Bun.Subprocess } = {
 	watchProcess: undefined,
 };
-const defaultVersion = (await listCompatibleDockerTags())[0];
+const defaultVersion = (await listCompatibleVersions())[0];
 
 app.get("/style.css", async (c) =>
 	c.body(await file(css).text(), 201, {
@@ -158,7 +158,7 @@ app.get("/", async (c) => {
 						</p>
 						<p>
 							If you have already installed it, please launch Docker Desktop or
-							start the daemon and this page should display the Shabti
+							start the daemon, refresh the page and you should see the Shabti
 							installation options.
 						</p>
 					</section>

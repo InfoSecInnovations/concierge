@@ -1,0 +1,23 @@
+name: Publish Shabti Node Client
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - name: Install project
+        run: bun install
+      - name: Publish API Client
+        working-directory: ./shabti_api_client_node
+        # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
+        run: |
+          bun run build
+          bun x publish-if-not-exists --access public

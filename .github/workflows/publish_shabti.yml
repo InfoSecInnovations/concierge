@@ -53,12 +53,9 @@ jobs:
 
       - name: Install project
         run: bun install
-      - name: Publish API Client
+      - name: Build API Client
         working-directory: ./shabti_api_client_node
-        # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
-        run: |
-          bun run build
-          bun x publish-if-not-exists --access public
+        run: bun run build
       - name: Build CLI Executable
         working-directory: ./shabti_cli
         run: |
@@ -76,18 +73,28 @@ jobs:
       - name: Get Shabti version
         id: package-version
         uses: ./.github/actions/get_package_json_version
+      - name: Get Shabti API version
+        id: shabti-version
+        uses: ./.github/actions/get_pyproject_version
+        with:
+          path: ./docker_containers/shabti_api
+      - name: Get Shabti Web version
+        id: shabti-web-version
+        uses: ./.github/actions/get_pyproject_version
+        with:
+          path: ./docker_containers/shabti_web
       - name: Build and push CPU Docker image
         uses: docker/build-push-action@v7
         with:
           push: true
           context: ./docker_containers/shabti_api
-          tags: infosecinnovations/shabti:${{steps.package-version.outputs.current-version}}
+          tags: infosecinnovations/shabti:${{steps.shabti-version.outputs.current-version}}
       - name: Build and push web client Docker image
         uses: docker/build-push-action@v7
         with:
           push: true
           context: ./docker_containers/shabti_web
-          tags: infosecinnovations/shabti-web:${{steps.package-version.outputs.current-version}}
+          tags: infosecinnovations/shabti-web:${{steps.shabti-web-version.outputs.current-version}}
 
       - uses: ./.github/actions/get_previous_release_assets
 
@@ -100,7 +107,9 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
-          files: ./dist/*.zip
+          files: |
+            ./dist/*.zip
+            ./shabti-components.json
           tag_name: shabti-v${{steps.package-version.outputs.current-version}}
           target_commitish: ${{github.sha}}
           overwrite_files: false

@@ -3,6 +3,8 @@ AI should be simple, safe, and amazing.
 
 [Home Page](https://shabti.ai)
 
+A project by [InfoSec Innovations (ISI)](https://www.infosecinnovations.com/)
+
 ## TL;DR: ##
 Shabti AI is an AI system that works ONLY with the data you feed it. Your data, your prompts, everything are local to your instance.
 
@@ -58,6 +60,8 @@ If you see this popup:
 ![SmartScreen popup](smartscreen.png)
 
 Please click "More info" which should reveal that the executable is in fact signed by InfoSec Innovations, LLC. If you do not see that it's signed by us, please do not proceed! In the case that our name does appear there, click "Run anyway" and you will be able to use Shabti and help us out a great deal, thank you!
+
+![SmartScreen showing the app is signed by ISI](smartscreen-isi.png)
 
 ## Usage
 
