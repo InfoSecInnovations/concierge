@@ -66,21 +66,27 @@ def prompter_server(
 
     @reactive.extended_task
     async def init_models():
-        models = await client.get_models(tags=["chat"])
-        default = next(m for m in models["data"] if "default" in m["tags"])
-        return models["data"], default["id"]
+        models, selection = await asyncio.gather(
+            client.get_models(tags=["chat"]), client.get_chat_model_selection()
+        )
+        return models["data"], selection
 
     @reactive.effect
     def init_models_effect():
-        models_list, default_id = init_models.result()
+        models_list, selected_id = init_models.result()
         chat_models.set(models_list)
-        current_model.set(default_id)
+        current_model.set(selected_id)
+
+    @reactive.extended_task
+    async def persist_model_selection(model_name: str):
+        await client.set_chat_model_selection(model_name)
 
     @reactive.effect
     @reactive.event(input.model_select, ignore_none=True, ignore_init=True)
     def on_model_select():
         llm_loaded.set(False)
         current_model.set(input.model_select())
+        persist_model_selection(input.model_select())
 
     @reactive.effect
     @reactive.event(current_model, ignore_none=True, ignore_init=True)

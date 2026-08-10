@@ -37,7 +37,7 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 			await program.parseAsync(["model", "pull", loadedChatModel], {
 				from: "user",
 			});
-			expect(await getClient().getChatModel()).toBe(loadedChatModel);
+			expect(await getClient().getChatModelSelection()).toBe(loadedChatModel);
 		});
 		test("list models", async () => {
 			const output = await $`bun run index.ts model list --tags chat embeddings`

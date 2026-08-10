@@ -175,12 +175,12 @@ export default async () => {
 		);
 	model
 		.command("current")
-		.description("show the chat model currently loaded for prompting")
+		.description("show the chat model that will be used for prompting")
 		.action((options, command) =>
 			client
-				.getChatModel()
+				.getChatModelSelection()
 				.then((modelName) =>
-					console.log(modelName ?? "No chat model is loaded"),
+					console.log(modelName ?? "No chat model is available"),
 				),
 		);
 

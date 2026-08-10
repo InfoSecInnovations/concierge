@@ -159,10 +159,16 @@ class BaseShabtiClient(ABC):
         response = await self._make_request("GET", "status/opensearch")
         return response.json()["running"]
 
-    # the chat model prompts will run on, None if there isn't one loaded
-    async def get_chat_model(self) -> str | None:
-        response = (await self._make_request("GET", "models/chat")).json()
+    # the chat model to start on: the user's last choice when security is enabled, otherwise
+    # whichever model is currently loaded
+    async def get_chat_model_selection(self) -> str | None:
+        response = (await self._make_request("GET", "models/chat/selection")).json()
         return response["model_name"] if response else None
+
+    async def set_chat_model_selection(self, model_name: str):
+        await self._make_request(
+            "PUT", "models/chat/selection", json={"model_name": model_name}
+        )
 
     async def load_model(self, model_name: str):
         async for line in self._stream_request(

@@ -41,8 +41,8 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 				),
 			).toBeTrue();
 		});
-		test("get chat model", async () => {
-			expect(await getClient().getChatModel()).toBe(loadedChatModel);
+		test("get chat model selection", async () => {
+			expect(await getClient().getChatModelSelection()).toBe(loadedChatModel);
 		});
 		test("create collection", async () => {
 			const collectionName = randomBytes(8).toString("hex");

@@ -41,7 +41,11 @@ from .functionality.opensearch_binary import serve_binary
 from .authorization import (
     list_scopes,
 )
-from .functionality.models import load_model, get_models, loaded_chat_model
+from .functionality.models import load_model, get_models
+from .functionality.chat_model_selection import (
+    chat_model_selection,
+    set_chat_model_selection,
+)
 from collections.abc import AsyncIterable
 from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
@@ -235,11 +239,22 @@ def create_app():
     async def get_models_route(tags: Annotated[list[str] | None, Query()] = None):
         return await get_models(tags)
 
-    # the chat model the prompt route will use, null if there isn't one loaded
-    @app.get("/models/chat", dependencies=[Depends(access_token)])
-    async def get_chat_model_route() -> ModelInfo | None:
-        model_id = await loaded_chat_model()
+    # the chat model a client should start on: the user's last choice when security is enabled,
+    # otherwise whichever model is currently loaded
+    @app.get("/models/chat/selection")
+    async def get_chat_model_selection_route(
+        credentials: Annotated[str, Depends(access_token)],
+    ) -> ModelInfo | None:
+        model_id = await chat_model_selection(credentials)
         return ModelInfo(model_name=model_id) if model_id else None
+
+    @app.put("/models/chat/selection")
+    async def set_chat_model_selection_route(
+        model_info: ModelInfo,
+        credentials: Annotated[str, Depends(access_token)],
+    ) -> ModelInfo:
+        await set_chat_model_selection(credentials, model_info.model_name)
+        return model_info
 
     @app.post("/models/pull", dependencies=[Depends(access_token)])
     async def load_model_route(model_info: ModelInfo) -> AsyncIterable[ModelLoadInfo]:

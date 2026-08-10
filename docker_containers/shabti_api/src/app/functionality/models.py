@@ -50,17 +50,17 @@ def default_model_id(models_data) -> str | None:
     )
 
 
-async def loaded_chat_model() -> str | None:
-    models = await get_models(tags=["chat"])
+# takes the output of get_models so the caller can reuse a list it has already fetched
+def active_chat_model(models_data) -> str | None:
     model = next(
-        (x for x in models["data"] if model_status(x) in ACTIVE_STATUSES), None
+        (x for x in models_data["data"] if model_status(x) in ACTIVE_STATUSES), None
     )
     return model["id"] if model else None
 
 
 # for callers that can't do anything without a chat model, such as prompting
 async def get_loaded_chat_model() -> str:
-    model_id = await loaded_chat_model()
+    model_id = active_chat_model(await get_models(tags=["chat"]))
     if not model_id:
         raise ModelNotFoundError(message="No chat model is loaded")
     return model_id

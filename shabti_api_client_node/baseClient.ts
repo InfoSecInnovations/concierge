@@ -283,11 +283,18 @@ export class BaseShabtiClient {
 		return json.running;
 	}
 
-	// the chat model prompts will run on, null if there isn't one loaded
-	async getChatModel(): Promise<string | null> {
-		const res = await this.makeRequest("GET", "models/chat");
+	// the chat model to start on: the user's last choice when security is enabled,
+	// otherwise whichever model is currently loaded
+	async getChatModelSelection(): Promise<string | null> {
+		const res = await this.makeRequest("GET", "models/chat/selection");
 		const json = (await res.json()) as any;
 		return json ? json.model_name : null;
+	}
+
+	async setChatModelSelection(modelName: string) {
+		await this.makeRequest("PUT", "models/chat/selection", {
+			model_name: modelName,
+		});
 	}
 
 	async loadModel(modelName: string) {

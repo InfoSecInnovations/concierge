@@ -1,5 +1,6 @@
 import pytest
 from ...src.app.functionality.models import (
+    default_model_id,
     get_models,
     load_model,
     model_status,
@@ -17,8 +18,9 @@ async def test_get_models_with_tags(shabti_client):
     assert all("tags" in x and "chat" in x["tags"] for x in response.json()["data"])
 
 
-async def test_get_chat_model(shabti_client, loaded_chat_model):
-    response = shabti_client.get("/models/chat")
+# with security disabled the selection is whichever model happens to be loaded
+async def test_get_chat_model_selection(shabti_client, loaded_chat_model):
+    response = shabti_client.get("/models/chat/selection")
     assert response.status_code == 200
     assert response.json()["model_name"] == loaded_chat_model
 
@@ -54,17 +56,17 @@ async def test_loading_a_chat_model_keeps_the_embeddings_model(
     assert statuses(await get_models())[embeddings_id] == "loaded"
 
 
-# asking which chat model is in use answers null rather than erroring when there isn't one
-async def test_get_chat_model_without_a_loaded_chat_model(
+# with nothing loaded there is no selection to report, so we fall back to the default
+async def test_get_chat_model_selection_without_a_loaded_chat_model(
     shabti_client, loaded_chat_model
 ):
-    chat_models = (await get_models(tags=["chat"]))["data"]
-    async for _ in unload_models([x["id"] for x in chat_models]):
+    models_data = await get_models(tags=["chat"])
+    async for _ in unload_models([x["id"] for x in models_data["data"]]):
         pass
     try:
-        response = shabti_client.get("/models/chat")
+        response = shabti_client.get("/models/chat/selection")
         assert response.status_code == 200
-        assert response.json() is None
+        assert response.json()["model_name"] == default_model_id(models_data)
     finally:
         async for _ in load_model(loaded_chat_model):
             pass
