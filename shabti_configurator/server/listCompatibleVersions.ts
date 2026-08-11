@@ -1,6 +1,21 @@
 import { Octokit } from "octokit";
 import semver from "semver";
+import compatibility from "../compatibility.json";
 import packageJson from "../package.json";
+
+// Releases declare the oldest configurator that can install them, and this configurator declares the
+// oldest release it can install. Keeping the second half here rather than as a ceiling in each
+// release's shabti-components.json is what makes it settable at all: a published release asset can't
+// be changed after the fact.
+const supportsRelease = (version: string) => {
+	try {
+		const coerced = semver.coerce(version, { loose: true });
+		// legacy versions we can't parse are left to the rest of the filter
+		return coerced ? semver.gte(coerced, compatibility.minShabtiVersion) : true;
+	} catch {
+		return true;
+	}
+};
 
 export default async () => {
 	const octokit = new Octokit();
@@ -26,8 +41,10 @@ export default async () => {
 		),
 	).then((releases) =>
 		releases
-			.filter((release) =>
-				semver.gte(configuratorVersion, release.configuratorMinVersion),
+			.filter(
+				(release) =>
+					semver.gte(configuratorVersion, release.configuratorMinVersion) &&
+					supportsRelease(release.version),
 			)
 			.sort((a, b) => {
 				// sort prerelease versions after "stable"

@@ -21,7 +21,7 @@ Several dependencies used by components of Shabti are released as packages so we
 - **shabti-util** - PyPI
 - **@infosecinnovations/shabti-api-client** - NPM
 
-It is not necessary to publish changes to these when using the development environment as the source files are pulled locally. Whenever a new version of Shabti is being pushed, however, the version for each dependency must be incremented before running the publish action if there were any changes since the last release.
+It is not necessary to publish changes to these when using the development environment as the source files are pulled locally. Whenever a new version of Shabti is being pushed the version of each dependency that changed since the last release must be incremented, along with every pin referring to it. This is done automatically, see [Releasing](#releasing).
 
 ### Pre 1.0 versions
 
@@ -30,6 +30,25 @@ Until Shabti reaches the 1.0 feature set we will use 0.x.y versions where x repr
 ### Pre-release versions
 
 Before publishing an official release (i.e. an "x" in the 0.x.y scheme) we may publish a number of pre-release versions to try out the publishing process and test how Shabti runs in a production environment. We generally use alpha versions when the next version is still a work in progress, and will publish release candidate versions when the development version of Shabti is feature complete for the next release and we need to try it before officially releasing. Any of the dependencies which have changed since the previous release will also use alpha and release candidate versioning.
+
+## Releasing
+
+Versions are incremented by the publish workflows, not by hand. Both `Publish Shabti` and `Publish Launcher` take a **release type** (`alpha`, `rc` or `latest`) and a **release importance** (`major`, `minor` or `patch`), and both run `versioning/bump.ts`, which works out which components changed, bumps those, and rewrites every reference to the versions it moved.
+
+`Publish Shabti` covers the overall version, the API and Web images, the CLI, the Node client and the Python packages. `Publish Launcher` covers the configurator and the overall version, since it is the only workflow that builds and signs the launcher.
+
+Each workflow only builds one of the two executables in the release zips, so it carries the other one forward from the release it follows. `alpha` and `rc` runs are marked as prereleases on GitHub, which is why the carry-forward asks for that release by tag rather than for the "latest" release, which would skip past every prerelease.
+
+To see what a release would do without publishing anything, dispatch either workflow with `dry_run`, or run it locally:
+
+```sh
+bun run bump -- --release-type alpha --importance major --dry-run
+```
+
+### Manual steps
+
+- **`configurator-versions.json`** - `configuratorMinVersion` is the oldest configurator that can install the release being made. Bump it when Shabti starts relying on something a configurator did not have.
+- **`shabti_configurator/compatibility.json`** - `minShabtiVersion` is the oldest release this configurator can install. Bump it when the configurator drops support for older releases.
 
 ## Third party dependencies
 

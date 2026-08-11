@@ -2,14 +2,60 @@ name: Publish Launcher
 
 on:
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: "Release type"
+        type: choice
+        options: [alpha, rc, latest]
+        default: alpha
+        required: true
+      release_importance:
+        description: "Release importance (while pre 1.0, major bumps 0.x and minor/patch bump 0.x.y)"
+        type: choice
+        options: [major, minor, patch]
+        default: minor
+        required: true
+      dry_run:
+        description: "Work out the versions without releasing anything"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
   publish:
     runs-on: [self-hosted, linux]
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # the version bump diffs the configurator against the previous release tag
       - name: Install project
         run: bun install
+
+      # only the configurator and the overall Shabti version: the rest of Shabti is released by
+      # publish_shabti.yml. The overall version has to move too, because both workflows release into
+      # shabti-v<overall version> and an existing release keeps its existing assets
+      - name: Increment versions
+        id: bump
+        run: >
+          bun run ./versioning/bump.ts
+          --scope launcher
+          --release-type ${{inputs.release_type}}
+          --importance ${{inputs.release_importance}}
+          ${{inputs.dry_run && '--dry-run' || ''}}
+        env:
+          GITHUB_TOKEN: ${{github.token}}
+      - name: Commit versions
+        id: commit
+        if: steps.bump.outputs.bumped == 'true' && !inputs.dry_run
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          printf '%s\n' "${{steps.bump.outputs.touched-files}}" | git add --pathspec-from-file=-
+          git commit -m "${{steps.bump.outputs.commit-message}}"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
       - name: Build Launcher Executable
         working-directory: ./shabti_configurator
         run: |
@@ -54,11 +100,11 @@ jobs:
           ES_PASSWORD: ${{ secrets.ES_PASSWORD }}       
           ES_TOTP_SECRET: ${{ secrets.ES_TOTP_SECRET }}
       
-      - name: Get Shabti version
-        id: package-version
-        uses: ./.github/actions/get_package_json_version
-
+      # the CLI is carried forward from the release this one follows, which can itself be a prerelease,
+      # so the tag is passed explicitly rather than resolved as "latest"
       - uses: ./.github/actions/get_previous_release_assets
+        with:
+          tag: ${{steps.bump.outputs.previous-release-tag}}
 
       - name: Zip executables
         run: | 
@@ -66,12 +112,18 @@ jobs:
           zip -j ./dist/shabti_win.zip ${GITHUB_WORKSPACE}/signed/windows/shabti.exe ./unzipped/win/shabti_cli.exe
           zip -j ./dist/shabti_linux.zip ./shabti_configurator/dist/linux/shabti ./unzipped/linux/shabti_cli
           zip -j ./dist/shabti_mac.zip ./shabti_configurator/dist/mac/shabti ./unzipped/mac/shabti_cli
+      - name: Push versions
+        if: steps.bump.outputs.bumped == 'true' && !inputs.dry_run
+        run: git push origin HEAD:${{github.ref_name}}
       - name: Release
+        if: ${{ !inputs.dry_run }}
         uses: softprops/action-gh-release@v3
         with:
           files: |
             ./dist/*.zip
             ./shabti-components.json
-          tag_name: shabti-v${{steps.package-version.outputs.current-version}}
-          target_commitish: ${{github.sha}}
+          tag_name: ${{steps.bump.outputs.release-tag}}
+          prerelease: ${{steps.bump.outputs.prerelease}}
+          # the version bump has to be inside the tag, otherwise the next run sees it as a change
+          target_commitish: ${{steps.commit.outputs.sha || github.sha}}
           overwrite_files: false

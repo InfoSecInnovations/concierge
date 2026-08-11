@@ -5,7 +5,8 @@
 	"private": true,
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
-		"@types/bun": "latest"
+		"@types/bun": "latest",
+		"@types/semver": "^7.7.1"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
@@ -19,7 +20,12 @@
 	],
 	"dependencies": {
 		"dotenv": "^17.2.2",
-		"octokit": "^5.0.5"
+		"octokit": "^5.0.5",
+		"semver": "^7.7.4"
+	},
+	"scripts": {
+		"bump": "bun ./versioning/bump.ts",
+		"components": "bun ./generateComponentsJson.ts"
 	},
 	"version": "0.8.0"
 }
