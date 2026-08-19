@@ -75,6 +75,15 @@ export const versionIn = (file: string, text: string): string | null => {
 	}
 };
 
+/** the manifest a package declares its version in, its ecosystem, and that version */
+export const declaredVersion = async (repoDir: string, packageDir: string) => {
+	const manifest = await manifestIn(repoDir, packageDir);
+	const text = await Bun.file(path.join(repoDir, manifest)).text();
+	const version = versionIn(manifest, text);
+	if (!version) throw new Error(`no version declared in ${manifest}`);
+	return { manifest, type: typeIn(manifest), version };
+};
+
 /** the distribution name a manifest declares, or null if it declares none */
 export const nameIn = (file: string, text: string): string | null => {
 	const manifest = parsed(file, text);

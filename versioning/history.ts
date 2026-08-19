@@ -1,6 +1,5 @@
-import path from "node:path";
 import { git } from "./git";
-import { manifestIn, versionIn } from "./manifest";
+import { declaredVersion, versionIn } from "./manifest";
 
 /**
  * The commit that set the version a package currently declares, or null if that version is not in
@@ -13,13 +12,7 @@ import { manifestIn, versionIn } from "./manifest";
  * A package whose manifest first appears already at this version resolves to the commit that added it.
  */
 export const versionCommit = async (repoDir: string, packageDir: string) => {
-	const manifest = await manifestIn(repoDir, packageDir);
-	const declared = versionIn(
-		manifest,
-		await Bun.file(path.join(repoDir, manifest)).text(),
-	);
-	if (!declared) throw new Error(`no version declared in ${manifest}`);
-
+	const { manifest, version } = await declaredVersion(repoDir, packageDir);
 	const inRepo = git(repoDir);
 	const { stdout } = await inRepo("log", "--format=%H", "--", manifest);
 	let found: string | null = null;
@@ -29,7 +22,7 @@ export const versionCommit = async (repoDir: string, packageDir: string) => {
 			"show",
 			`${commit}:${manifest}`,
 		);
-		if (exitCode !== 0 || versionIn(manifest, text) !== declared) break;
+		if (exitCode !== 0 || versionIn(manifest, text) !== version) break;
 		found = commit;
 	}
 	return found;
