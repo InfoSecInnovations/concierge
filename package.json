@@ -4,7 +4,9 @@
 	"type": "module",
 	"private": true,
 	"scripts": {
-		"lock": "docker compose -f ./docker_containers/docker-compose-uv-lock.yml run --rm uv-lock"
+		"lock": "docker compose -f ./docker_containers/docker-compose-uv-lock.yml run --rm uv-lock",
+		"components": "bun ./generateComponentsJson.ts",
+		"test:versioning": "bun test versioning"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
@@ -26,10 +28,6 @@
 		"dotenv": "^17.2.2",
 		"octokit": "^5.0.5",
 		"semver": "^7.7.4"
-	},
-	"scripts": {
-		"bump": "bun ./versioning/bump.ts",
-		"components": "bun ./generateComponentsJson.ts"
 	},
 	"version": "0.8.0"
 }
