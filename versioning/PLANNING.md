@@ -19,11 +19,10 @@ The initial attempt using a version number and a tag type is flawed.
 
 ## Diffing
 
-- Can't really walk the git history as this gets complex with branches and stuff.
-- We should go back through each release to find the release in which the relevant `package.json` or `pyproject.toml` had its version changed, this isn't always chronological as we may have a prerelease branch for the next version but be pushing fixes to the release version at the same time. Sort existing GitHub tags by semver ordering and filter by less than or equal to current release.
-- Read each component's version using `git show <tag>:<version file>`, we're searching for the oldest commit with a version matching current.
-- If no match is found, we treat as changed/new.
-- Git diff the directory against the commit where the version was changed to see if anything changed.
+- The baseline is the commit that set the version a package currently declares, not a release tag: releases don't have to be chronological (a prerelease branch and fixes to the released version can be in flight at once), and a bump that was committed but never released still needs a correct baseline. No tag prefixes, no semver ordering.
+- Walk `git log` for that package's `package.json` or `pyproject.toml`, newest first, reading each commit's version with `git show <commit>:<version file>`, and take the last commit still declaring the current version. That's the most recent transition into it, so a version that was adopted, dropped and adopted again resolves to the latest adoption. A package whose manifest first appears already at this version resolves to the commit that added it.
+- If no match is found the version is not in committed history, and we treat the package as changed/new.
+- Git diff the directory against that commit to see if anything changed.
 - Just use git command as we already have that installed on the runner and the local machine.
 
 ## Updating dependency links

@@ -59,6 +59,8 @@ export type Repo = {
 	dir: string;
 	git: ReturnType<typeof gitIn>;
 	read: (file: string) => Promise<string>;
+	/** dirties the working tree, for the cases that only exist uncommitted */
+	write: (file: string, text: string) => Promise<unknown>;
 	versionOf: (name: string) => Promise<string>;
 	tags: () => Promise<string[]>;
 	/** the package directories, i.e. the tool's `--paths` list */
@@ -225,6 +227,7 @@ export const createRepo = async (spec: RepoSpec): Promise<Repo> => {
 		dir,
 		git,
 		read: (file) => Bun.file(path.join(dir, file)).text(),
+		write: (file, text) => Bun.write(path.join(dir, file), text),
 		/** parsed here rather than with the tool's own reader, so a bug in it cannot hide itself */
 		versionOf: async (name) => {
 			const pkg = spec.packages.find((candidate) => candidate.name === name);
