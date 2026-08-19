@@ -1,6 +1,7 @@
 import { $ } from "bun";
 import getEnvs from "./getEnvs";
 import logMessage from "./logMessage";
+import lockPythonDeps from "./lockPythonDeps";
 import removeAllContainers from "./removeAllContainers";
 import updateKeycloakRedirects from "./updateKeycloakRedirects";
 
@@ -19,6 +20,8 @@ export default async function* (
 			);
 			return;
 		}
+		yield logMessage("Updating Python lockfiles...");
+		await lockPythonDeps();
 		yield logMessage(
 			"Building Docker image to run local code. This can take a while depending on your internet connection...",
 		);

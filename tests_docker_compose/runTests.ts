@@ -1,5 +1,6 @@
 import { $ } from "bun";
 import * as dotenv from "dotenv";
+import lockPythonDeps from "../shabti_configurator/server/lockPythonDeps";
 import nukeExisting from "./nukeExisting";
 import runSecurityTests from "./runSecurityTests";
 import writeTestModelsIni from "./writeTestModelsIni";
@@ -11,6 +12,9 @@ import xunitViewer from "xunit-viewer";
 
 console.clear();
 await rm("./test_results", { recursive: true, force: true });
+
+console.log("updating Python lockfiles...");
+await lockPythonDeps();
 
 try {
 	console.log(`

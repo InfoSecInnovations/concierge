@@ -1,4 +1,0 @@
-shabti-util==0.3.0
-shabti-types==0.1.0
-shabti-keycloak==0.1.0
-shabti-api-client==0.1.0

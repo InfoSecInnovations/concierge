@@ -7,17 +7,15 @@ dependencies = [
     "shiny==1.6.3",
     "shinyswatch==0.11.0",
     "tqdm==4.67.3",
+    "shabti-util",
+    "shabti-types",
+    "shabti-keycloak",
+    "shabti-api-client",
 ]
-# [tool.uv.sources]
-# shabti-util = [
-#     { path = "/python_packages/shabti_util", editable = true }
-# ]
-# shabti-types = [
-#     { path = "/python_packages/shabti_types", editable = true }
-# ]
-# shabti-keycloak = [
-#     { path = "/python_packages/shabti_keycloak", editable = true }
-# ]
-# shabti-api-client = [
-#     { path = "/python_packages/shabti_api_client", editable = true }
-# ]
+
+# these paths are only valid inside the container, run uv lock in Docker (see docs/developer/LOCKFILES.md)
+[tool.uv.sources]
+shabti-util = { path = "/app/python_packages/shabti_util", editable = true }
+shabti-types = { path = "/app/python_packages/shabti_types", editable = true }
+shabti-keycloak = { path = "/app/python_packages/shabti_keycloak", editable = true }
+shabti-api-client = { path = "/app/python_packages/shabti_api_client", editable = true }

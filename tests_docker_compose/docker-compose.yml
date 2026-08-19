@@ -22,9 +22,10 @@ services:
       service: ${SHABTI_SERVICE:-shabti}
     build:
       context: ../docker_containers/shabti_api
-      additional_contexts: 
+      additional_contexts:
         python_packages: ../python_packages
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
+      target: local
     restart: unless-stopped
 
 volumes:

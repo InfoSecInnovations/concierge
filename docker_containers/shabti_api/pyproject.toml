@@ -17,6 +17,10 @@ dependencies = [
     "tokenizers~=0.22.2",
     "tika~=3.1.0",
     "httpx-sse~=0.4.3",
+    "isi-util",
+    "shabti-util",
+    "shabti-types",
+    "shabti-keycloak",
 ]
 
 [dependency-groups]
@@ -24,6 +28,13 @@ dev = [
     "pytest~=8.4.2",
     "pytest-asyncio~=1.2.0",
 ]
+
+# these paths are only valid inside the container, run uv lock in Docker (see docs/developer/LOCKFILES.md)
+[tool.uv.sources]
+isi-util = { path = "/app/python_packages/isi_util", editable = true }
+shabti-util = { path = "/app/python_packages/shabti_util", editable = true }
+shabti-types = { path = "/app/python_packages/shabti_types", editable = true }
+shabti-keycloak = { path = "/app/python_packages/shabti_keycloak", editable = true }
 
 [tool.pytest.ini_options]
 asyncio_mode="auto"

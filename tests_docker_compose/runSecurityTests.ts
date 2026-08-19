@@ -1,6 +1,7 @@
 import { $ } from "bun";
 import createCertificates from "../shabti_configurator/server/createCertificates";
 import getKeycloakClientSecret from "../shabti_configurator/server/getKeycloakClientSecret";
+import lockPythonDeps from "../shabti_configurator/server/lockPythonDeps";
 import path from "path";
 import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
@@ -12,6 +13,9 @@ export default async () => {
     RUNNING TESTS FOR SECURITY ENABLED INSTANCE...
   -----------------------------------------------------
   `);
+
+	console.log("updating Python lockfiles...");
+	await lockPythonDeps();
 
 	dotenv.config({ path: "security-enabled-env", override: true, quiet: true });
 	await writeTestModelsIni();

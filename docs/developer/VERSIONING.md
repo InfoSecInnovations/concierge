@@ -23,6 +23,8 @@ Several dependencies used by components of Shabti are released as packages so we
 
 It is not necessary to publish changes to these when using the development environment as the source files are pulled locally. Whenever a new version of Shabti is being pushed the version of each dependency that changed since the last release must be incremented, along with every pin referring to it. This is done automatically, see [Releasing](#releasing).
 
+The version of each Python package is only declared in its own `pyproject.toml` under `python_packages`. The Shabti API and Web projects depend on them by name and always install them from the local source. Their lockfiles record the version of each package, so incrementing one makes those lockfiles out of date; this is handled for you by the install, launch, test and publish processes (see [LOCKFILES.md](./LOCKFILES.md)).
+
 ### Pre 1.0 versions
 
 Until Shabti reaches the 1.0 feature set we will use 0.x.y versions where x represents a new feature set and y is used for any hotfixes.

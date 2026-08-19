@@ -23,13 +23,16 @@ services:
       service: ${SHABTI_SERVICE:-shabti}
     build:
       context: ../docker_containers/shabti_api
-      additional_contexts: 
+      additional_contexts:
         python_packages: ../python_packages
-      dockerfile: Dockerfile.local
-    command: ["sh", "-c", "uv run pytest --junit-xml=/test_results/shabti_api_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest shabti_api_${JUNIT_FILENAME}' && if [ $${SHABTI_SECURITY_ENABLED} = 'False' ]; then cd /python_packages/isi_util/ && uv run pytest --junit-xml=/test_results/isi_util_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest isi_util_${JUNIT_FILENAME}'; fi"]
+      dockerfile: Dockerfile
+      target: local
+    command: ["sh", "-c", "uv run pytest --junit-xml=/test_results/shabti_api_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest shabti_api_${JUNIT_FILENAME}' && if [ $${SHABTI_SECURITY_ENABLED} = 'False' ]; then cd /app/python_packages/isi_util/ && uv run pytest --junit-xml=/test_results/isi_util_${JUNIT_FILENAME}.xml -o junit_suite_name='pytest isi_util_${JUNIT_FILENAME}'; fi"]
     restart: no
     volumes:
       - ./test_results:/test_results/
+      # tests are excluded from the image so they don't ship to production
+      - ../docker_containers/shabti_api/tests:/app/shabti/tests
 
 volumes:
   opensearch-data1:
