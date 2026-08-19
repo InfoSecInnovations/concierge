@@ -1,5 +1,11 @@
 import { describe, expect, test } from "bun:test";
-import { manifestIn, versionIn } from "../manifest";
+import {
+	dependencyNamesIn,
+	manifestIn,
+	nameIn,
+	typeIn,
+	versionIn,
+} from "../manifest";
 import { nodePackage, pythonPackage, useRepo } from "./fixture";
 
 describe("manifestIn", () => {
@@ -80,5 +86,92 @@ describe("versionIn", () => {
 
 	test("throws for a file it does not know how to read", () => {
 		expect(() => versionIn("a/setup.cfg", "")).toThrow(/not a package.json/);
+	});
+});
+
+describe("typeIn", () => {
+	test("names the ecosystem a manifest belongs to", () => {
+		expect(typeIn("a/package.json")).toBe("node");
+		expect(typeIn("a/b/pyproject.toml")).toBe("python");
+		expect(() => typeIn("a/setup.cfg")).toThrow(/not a package.json/);
+	});
+});
+
+describe("nameIn", () => {
+	test("reads a distribution name", () => {
+		expect(nameIn("a/package.json", '{ "name": "@scope/a" }')).toBe("@scope/a");
+		expect(nameIn("a/pyproject.toml", '[project]\nname = "a-b"\n')).toBe("a-b");
+	});
+
+	test("returns null when there is no name", () => {
+		expect(nameIn("a/package.json", '{ "version": "1.2.3" }')).toBeNull();
+		expect(
+			nameIn("a/pyproject.toml", '[project]\nversion = "1.2.3"\n'),
+		).toBeNull();
+		// Bun's TOML parser reads this as a bare key and an unquoted value, so it is
+		// a manifest without a name rather than one that failed to parse
+		expect(nameIn("a/pyproject.toml", "not a manifest")).toBeNull();
+	});
+
+	test("throws for text that does not parse, naming the file", () => {
+		expect(() => nameIn("a/pyproject.toml", 'dependencies = ["a",')).toThrow(
+			/could not parse a\/pyproject.toml/,
+		);
+	});
+});
+
+describe("dependencyNamesIn", () => {
+	test("reads every kind of node dependency", () => {
+		const manifest = JSON.stringify({
+			dependencies: { runtime: "^1.0.0" },
+			devDependencies: { dev: "^1.0.0" },
+			peerDependencies: { peer: "^1.0.0" },
+			optionalDependencies: { optional: "^1.0.0" },
+		});
+		expect(dependencyNamesIn("a/package.json", manifest).sort()).toEqual([
+			"dev",
+			"optional",
+			"peer",
+			"runtime",
+		]);
+	});
+
+	test("reads every kind of python dependency", () => {
+		const manifest = `[project]
+dependencies = ["runtime"]
+
+[project.optional-dependencies]
+extra = ["optional"]
+
+[dependency-groups]
+dev = ["dev", { include-group = "test" }]
+test = ["testing"]
+`;
+		expect(dependencyNamesIn("a/pyproject.toml", manifest).sort()).toEqual([
+			"dev",
+			"optional",
+			"runtime",
+			"testing",
+		]);
+	});
+
+	test("strips extras, specifiers and markers from a requirement", () => {
+		const manifest = `[project]
+dependencies = [
+    "fastapi[standard]~=0.136.3",
+    "shabti-types==0.1.0",
+    "tqdm>=4 ; python_version > '3.12'",
+]
+`;
+		expect(dependencyNamesIn("a/pyproject.toml", manifest)).toEqual([
+			"fastapi",
+			"shabti-types",
+			"tqdm",
+		]);
+	});
+
+	test("returns nothing for a manifest that declares no dependencies", () => {
+		expect(dependencyNamesIn("a/package.json", '{ "name": "a" }')).toEqual([]);
+		expect(dependencyNamesIn("a/pyproject.toml", "[project]\n")).toEqual([]);
 	});
 });

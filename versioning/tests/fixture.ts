@@ -23,6 +23,8 @@ export type PackageSpec = {
 	 * written as given at every release, whatever version the dependency itself declares there.
 	 */
 	deps?: Record<string, string | null>;
+	/** the same, in devDependencies for node and the `dev` dependency group for python */
+	devDeps?: Record<string, string | null>;
 	/** raw files, written after the manifest so they can override it */
 	files?: Record<string, string>;
 };
@@ -95,20 +97,29 @@ const manifestOf = (pkg: PackageSpec) =>
 const jsonManifest = (fields: Record<string, unknown>, version: string) =>
 	`${JSON.stringify({ ...fields, version }, null, "\t")}\n`;
 
+const specifiers = (deps: PackageSpec["deps"]) =>
+	Object.fromEntries(
+		Object.entries(deps ?? {}).map(([name, pin]) => [name, pin ?? "*"]),
+	);
+
 const nodeManifest = (pkg: PackageSpec) =>
 	jsonManifest(
 		{
 			name: pkg.name,
 			private: true,
-			dependencies: Object.fromEntries(
-				Object.entries(pkg.deps ?? {}).map(([name, pin]) => [name, pin ?? "*"]),
-			),
+			dependencies: specifiers(pkg.deps),
+			devDependencies: specifiers(pkg.devDeps),
 		},
 		pkg.version,
 	);
 
+const requirements = (deps: PackageSpec["deps"]) =>
+	Object.entries(deps ?? {}).map(
+		([name, pin]) => `    "${pin ? `${name}==${pin}` : name}",`,
+	);
+
 const pythonManifest = (pkg: PackageSpec, dirs: Map<string, string>) => {
-	const deps = Object.entries(pkg.deps ?? {});
+	const deps = Object.entries({ ...pkg.deps, ...pkg.devDeps });
 	const sources = deps.map(([name]) => {
 		const target = dirs.get(name);
 		if (!target)
@@ -116,14 +127,16 @@ const pythonManifest = (pkg: PackageSpec, dirs: Map<string, string>) => {
 		const relative = path.posix.relative(dirOf(pkg), target);
 		return `${name} = { path = "${relative}", editable = true }`;
 	});
+	const dev = requirements(pkg.devDeps);
 	return `${[
 		"[project]",
 		`name = "${pkg.name}"`,
 		`version = "${pkg.version}"`,
 		'requires-python = ">=3.12"',
 		"dependencies = [",
-		...deps.map(([name, pin]) => `    "${pin ? `${name}==${pin}` : name}",`),
+		...requirements(pkg.deps),
 		"]",
+		...(dev.length ? ["", "[dependency-groups]", "dev = [", ...dev, "]"] : []),
 		...(sources.length ? ["", "[tool.uv.sources]", ...sources] : []),
 	].join("\n")}\n`;
 };
