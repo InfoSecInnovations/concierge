@@ -9,6 +9,7 @@ import isiUtilPyProject from "./python_packages/isi_util/pyproject.toml";
 import packageJson from "./package.json";
 import AdmZip from "adm-zip";
 import * as readline from "readline-sync";
+import lockPythonDeps from "./shabti_configurator/server/lockPythonDeps";
 
 console.log("Shabti release publisher\n");
 console.log(`Current version: ${packageJson.version}`);
@@ -64,11 +65,12 @@ if (npmJson.versions[shabtiApiPackageJson.version]) {
 } else {
 	await $`bun publish --access public`.cwd(nodeClientDir); // TODO: detect if prerelease
 }
-await $`docker build --build-arg ACCELERATION_TYPE=cpu -t infosecinnovations/shabti:${version} ./docker_containers/shabti_api`;
+// the package versions published above are recorded in the container lockfiles, so they're out of
+// date by this point
+await lockPythonDeps(".");
+await $`docker build --build-context python_packages=./python_packages --target online -t infosecinnovations/shabti:${version} ./docker_containers/shabti_api`;
 await $`docker image push infosecinnovations/shabti:${version}`;
-await $`docker build --build-arg ACCELERATION_TYPE=cuda -t infosecinnovations/shabti:${version}-cuda ./docker_containers/shabti_api`;
-await $`docker image push infosecinnovations/shabti:${version}-cuda`;
-await $`docker build -t infosecinnovations/shabti-web:${version} ./docker_containers/shabti_web`;
+await $`docker build --build-context python_packages=./python_packages --target online -t infosecinnovations/shabti-web:${version} ./docker_containers/shabti_web`;
 await $`docker image push infosecinnovations/shabti-web:${version}`;
 await $`git add -A`;
 await $`git commit -m 'increment version to ${version}'`;

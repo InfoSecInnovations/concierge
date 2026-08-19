@@ -16,5 +16,7 @@
 		}
 	},
 	"shutdownAction": "stopCompose",
-	"workspaceFolder": "/app/"
+	"workspaceFolder": "/app/",
+	// the build uses uv sync --locked, so the lockfiles have to be up to date before it runs
+	"initializeCommand": "docker compose -f ../docker-compose-uv-lock.yml run --rm uv-lock"
 }

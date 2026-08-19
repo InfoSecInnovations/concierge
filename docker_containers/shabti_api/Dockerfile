@@ -5,11 +5,30 @@ ENV PYTHONPATH=/
 WORKDIR /app/shabti/
 ENV UV_LINK_MODE=copy
 ENV UV_HTTP_TIMEOUT=500
-CMD [ "uv", "run", "docker_run.py" ]
 
 EXPOSE 15131
 
-RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml uv sync --no-install-project
+# these must match the paths in [tool.uv.sources] in pyproject.toml
+COPY --from=python_packages ./isi_util /app/python_packages/isi_util/
+COPY --from=python_packages ./shabti_util /app/python_packages/shabti_util/
+COPY --from=python_packages ./shabti_types /app/python_packages/shabti_types/
+COPY --from=python_packages ./shabti_keycloak /app/python_packages/shabti_keycloak/
+
+FROM base AS local
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --locked --no-install-project
 COPY . /app/shabti/
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked
+
+# isi_util's own tests are run from this image by docker-compose-pytest.yml
+WORKDIR /app/python_packages/isi_util/
 RUN --mount=type=cache,target=/root/.cache/uv uv sync
-RUN --mount=type=cache,target=/root/.cache uv pip install -r requirements.txt
+WORKDIR /app/shabti/
+
+CMD [ "uv", "run", "docker_run.py", "--development" ]
+
+FROM base AS online
+RUN --mount=type=cache,target=/root/.cache/uv --mount=type=bind,source=pyproject.toml,target=pyproject.toml --mount=type=bind,source=uv.lock,target=uv.lock uv sync --locked --no-install-project --no-dev --no-editable
+COPY . /app/shabti/
+RUN --mount=type=cache,target=/root/.cache/uv uv sync --locked --no-dev --no-editable
+
+CMD [ "uv", "run", "docker_run.py" ]

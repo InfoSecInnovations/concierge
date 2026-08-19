@@ -16,6 +16,7 @@ import * as humanize from "ts-humanize";
 import getDefaultModelSelection from "../getDefaultModelSelection";
 import writeModelsIni from "./writeModelsIni";
 import getVersionData from "./getVersionData";
+import lockPythonDeps from "./lockPythonDeps";
 
 export default async function* (
 	options: FormData,
@@ -140,6 +141,8 @@ export default async function* (
 		"launching Docker containers. This can take quite a long time if this is your first launch or updates have been released to the Docker images...",
 	);
 	if (selectedVersion == "local") {
+		yield logMessage("updating Python lockfiles...");
+		await lockPythonDeps();
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml pull --ignore-buildable`;
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml build`;
 		await $`docker compose -f ./docker_compose/docker-compose-dev.yml up -d`;

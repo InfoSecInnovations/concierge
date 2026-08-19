@@ -15,6 +15,10 @@ dev = [
   "shabti-keycloak==0.1.0"
 ]
 
+[tool.uv.sources]
+shabti-types = { path = "../shabti_types", editable = true }
+shabti-keycloak = { path = "../shabti_keycloak", editable = true }
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

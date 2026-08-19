@@ -35,4 +35,3 @@ contribution_guides
 # docker files
 **/docker-compose*
 Dockerfile
-Dockerfile.local

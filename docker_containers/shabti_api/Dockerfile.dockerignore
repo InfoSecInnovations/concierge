@@ -3,7 +3,10 @@
 .env.example
 ruff.toml
 
-# we don't want tests in the Docker image
+# generated certificates
+self_signed_certificates
+
+# we don't want tests in the Docker image, docker-compose-pytest.yml mounts them instead
 tests/
 
 # files that appear to be due to installing dependencies, try un-ignoring these if needed

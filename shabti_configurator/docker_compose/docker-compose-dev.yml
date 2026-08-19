@@ -26,24 +26,28 @@ services:
       - WATCHFILES_FORCE_POLLING=true
     build:
       context: ../../docker_containers/shabti_api
-      additional_contexts: 
+      additional_contexts:
         python_packages: ../../python_packages
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
+      target: local
     volumes:
       - ../../docker_containers/shabti_api:/app/shabti
       - /app/shabti/.venv
       - ../../python_packages:/app/python_packages
+      - /app/python_packages/isi_util/.venv
   shabti-web:
     extends:
       file: ./docker_compose_dependencies/docker-compose-shabti.yml
       service: ${SHABTI_WEB_SERVICE:-shabti-web}
+    image: null
     environment:
-      - WATCHFILES_FORCE_POLLING=true   
+      - WATCHFILES_FORCE_POLLING=true
     build:
       context: ../../docker_containers/shabti_web
-      additional_contexts: 
+      additional_contexts:
         python_packages: ../../python_packages
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
+      target: local
     volumes:
       - ../../docker_containers/shabti_web:/app/shabti_web
       - /app/shabti_web/.venv

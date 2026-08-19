@@ -70,6 +70,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+      - name: Regenerate Python lockfiles
+        # the runner is self-hosted, so passing the current user keeps root owned files out of the
+        # checkout where they would break the clean step of later runs
+        run: UV_LOCK_USER="$(id -u):$(id -g)" docker compose -f ./docker_containers/docker-compose-uv-lock.yml run --rm uv-lock
       - name: Get Shabti version
         id: package-version
         uses: ./.github/actions/get_package_json_version
@@ -83,17 +87,23 @@ jobs:
         uses: ./.github/actions/get_pyproject_version
         with:
           path: ./docker_containers/shabti_web
-      - name: Build and push CPU Docker image
+      - name: Build and push API Docker image
         uses: docker/build-push-action@v7
         with:
           push: true
           context: ./docker_containers/shabti_api
+          build-contexts: |
+            python_packages=./python_packages
+          target: online
           tags: infosecinnovations/shabti:${{steps.shabti-version.outputs.current-version}}
       - name: Build and push web client Docker image
         uses: docker/build-push-action@v7
         with:
           push: true
           context: ./docker_containers/shabti_web
+          build-contexts: |
+            python_packages=./python_packages
+          target: online
           tags: infosecinnovations/shabti-web:${{steps.shabti-web-version.outputs.current-version}}
 
       - uses: ./.github/actions/get_previous_release_assets

@@ -1,0 +1,22 @@
+name: shabti-uv-lock
+
+# the [tool.uv.sources] paths in the API and Web projects only exist inside the containers, so uv
+# has to run in one to resolve them. This writes the lockfiles back to the repository through the
+# bind mounts, no image build required.
+services:
+  uv-lock:
+    # keep this in step with the FROM lines in shabti_api/Dockerfile and shabti_web/Dockerfile
+    image: astral/uv:0.11.1-python3.14-trixie-slim
+    # on Linux, set UV_LOCK_USER to "$(id -u):$(id -g)" so the lockfiles aren't written as root
+    user: "${UV_LOCK_USER:-0:0}"
+    # using the default bridge stops Compose creating and leaving behind a network on every run
+    network_mode: bridge
+    environment:
+      - HOME=/tmp
+      - UV_CACHE_DIR=/tmp/uv-cache
+    volumes:
+      - ./shabti_api:/app/shabti
+      - ./shabti_web:/app/shabti_web
+      - ../python_packages:/app/python_packages
+    entrypoint: ["sh", "-c"]
+    command: ["cd /app/shabti && uv lock && cd /app/shabti_web && uv lock"]
