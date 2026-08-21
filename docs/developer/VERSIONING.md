@@ -35,16 +35,16 @@ Before publishing an official release (i.e. an "x" in the 0.x.y scheme) we may p
 
 ## Releasing
 
-Versions are incremented by the publish workflows, not by hand. Both `Publish Shabti` and `Publish Launcher` take a **release type** (`alpha`, `rc` or `latest`) and a **release importance** (`major`, `minor` or `patch`), and both run `versioning/bump.ts`, which works out which components changed, bumps those, and rewrites every reference to the versions it moved.
+Versions are incremented by the `Publish Shabti` workflow, not by hand. It takes a **release type** (any of semver's `major`, `premajor`, `minor`, `preminor`, `patch`, `prepatch`, `prerelease` and `release`) and a **preid** (`alpha`, `beta`, `rc`, or `keep` to continue the stage a prerelease is already on), and runs `versioning/bump.ts`, which works out which components changed, bumps those along with everything that depends on them, and rewrites every pin referring to a version it moved. The overall version moves by one increment however many components did.
 
-`Publish Shabti` covers the overall version, the API and Web images, the CLI, the Node client and the Python packages. `Publish Launcher` covers the configurator and the overall version, since it is the only workflow that builds and signs the launcher.
+One workflow covers the whole release: the overall version, the API and Web images, the CLI, and the configurator. The configurator is only rebuilt and resigned when it actually changed, so an unchanged launcher does not spend a signing credit — its executables are carried forward from the release this one follows. That release is the semver-previous one rather than the newest by date, because a fix release can be tagged after a prerelease of the next version.
 
-Each workflow only builds one of the two executables in the release zips, so it carries the other one forward from the release it follows. `alpha` and `rc` runs are marked as prereleases on GitHub, which is why the carry-forward asks for that release by tag rather than for the "latest" release, which would skip past every prerelease.
+The packages are not published by the release. `Publish Packages` does that, on a GitHub hosted runner because npm's trusted publishing does not support self-hosted runners. It is an optional step, normally only run for stable releases: every component installs these from local sources, and both registries skip a version that already exists.
 
-To see what a release would do without publishing anything, dispatch either workflow with `dry_run`, or run it locally:
+To see what a release would do without building or releasing anything, dispatch the workflow with `dry_run`, or run it locally:
 
 ```sh
-bun run bump -- --release-type alpha --importance major --dry-run
+bun run bump --release-type preminor --preid alpha --dry-run --paths docker_containers/shabti_api docker_containers/shabti_web python_packages/isi_util python_packages/shabti_api_client python_packages/shabti_keycloak python_packages/shabti_types python_packages/shabti_util shabti_api_client_node shabti_cli shabti_configurator
 ```
 
 ### Manual steps

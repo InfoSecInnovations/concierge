@@ -165,3 +165,7 @@ export const nextVersion = async (
 		);
 	return { current, next };
 };
+
+/** the npm tag to publish under: a prerelease must not become "latest" */
+export const npmDistTag = (version: string) =>
+	String(semver.prerelease(version)?.[0] ?? "latest");

@@ -1,0 +1,61 @@
+name: Publish Packages
+
+# Separate from the release: npm's trusted publishing does not support self-hosted runners, so this runs on
+# a GitHub hosted one. Publishing is optional anyway - every component installs these from local sources -
+# so it is normally only run for stable releases, and both registries skip a version that already exists.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag, branch or sha to publish from. Leave empty for the default branch"
+        type: string
+        default: ""
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
+env:
+  UV_PUBLISH_CHECK_URL: "https://pypi.org/simple"
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [isi_util, shabti_api_client, shabti_keycloak, shabti_types, shabti_util]
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{inputs.ref}}
+      - uses: astral-sh/setup-uv@v6
+      - name: Publish ${{matrix.package}}
+        working-directory: ./python_packages/${{matrix.package}}
+        run: |
+          uv build
+          uv publish
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{inputs.ref}}
+      - uses: oven-sh/setup-bun@v2
+      - name: Install project
+        run: bun install
+      - name: Get npm dist tag
+        id: dist-tag
+        # a prerelease must not become npm's "latest"
+        run: echo "tag=$(bun --print 'require("./versioning/versions.ts").npmDistTag(require("./shabti_api_client_node/package.json").version)')" >> "$GITHUB_OUTPUT"
+      - name: Publish API Client
+        working-directory: ./shabti_api_client_node
+        # Bun doesn't support OIDC publishing, the publish-if-not-exists package uses npm under the hood
+        # npm reads its own config from npm_config_*, so the tag applies without relying on the wrapper
+        # forwarding arguments
+        env:
+          npm_config_tag: ${{steps.dist-tag.outputs.tag}}
+        run: |
+          bun run build
+          bun x publish-if-not-exists --access public

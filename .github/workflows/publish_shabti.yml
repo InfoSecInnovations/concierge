@@ -6,25 +6,21 @@ on:
       release_type:
         description: "Release type"
         type: choice
-        options: [alpha, rc, latest]
-        default: alpha
+        options: [major, premajor, minor, preminor, patch, prepatch, prerelease, release]
+        default: prerelease
         required: true
-      release_importance:
-        description: "Release importance (while pre 1.0, major bumps 0.x and minor/patch bump 0.x.y)"
+      preid:
+        description: "Prerelease stage, ignored by the stable release types. Keep continues the existing one"
         type: choice
-        options: [major, minor, patch]
-        default: minor
+        options: [keep, alpha, beta, rc]
+        default: keep
         required: true
       dry_run:
-        description: "Work out the versions without publishing or releasing anything"
+        description: "Work out the versions without building or releasing anything"
         type: boolean
         default: false
 
-env:
-  UV_PUBLISH_CHECK_URL: "https://pypi.org/simple"
-
 permissions:
-  id-token: write  # Required for OIDC
   contents: write
 
 jobs:
@@ -33,14 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          fetch-depth: 0  # the version bump diffs components against the previous release tag
-
-      - name: Debug PATH
-        run: |
-          echo "PATH: $PATH"
-          which uv || echo "uv not in PATH"
-          ls -la /home/gh-runner/.local/bin/uv || echo "binary not found"
-          /home/gh-runner/.local/bin/uv --version || echo "direct exec failed"
+          fetch-depth: 0  # the bump walks each component's history to find the commit that set its version
 
       - name: Install Python 3.14
         run: uv python install 3.14
@@ -49,125 +38,175 @@ jobs:
 
       - name: Increment versions
         id: bump
-        run: >
-          bun run ./versioning/bump.ts
-          --release-type ${{inputs.release_type}}
-          --importance ${{inputs.release_importance}}
-          ${{inputs.dry_run && '--dry-run' || ''}}
-        env:
-          GITHUB_TOKEN: ${{github.token}}
+        # the tool writes root-version, bumped and touched-files itself. Everything derived from the
+        # release policy - the tag, whether it is a prerelease, which release the assets carry forward
+        # from - stays here
+        run: |
+          set -o pipefail  # tee must not mask a refused release
+          bun ./versioning/bump.ts \
+            --release-type ${{inputs.release_type}} \
+            ${{inputs.preid != 'keep' && format('--preid {0}', inputs.preid) || ''}} \
+            ${{inputs.dry_run && '--dry-run' || ''}} \
+            --paths \
+              docker_containers/shabti_api \
+              docker_containers/shabti_web \
+              python_packages/isi_util \
+              python_packages/shabti_api_client \
+              python_packages/shabti_keycloak \
+              python_packages/shabti_types \
+              python_packages/shabti_util \
+              shabti_api_client_node \
+              shabti_cli \
+              shabti_configurator | tee bump.json
+          root=$(jq -r .root bump.json)
+          echo "release-tag=shabti-v${root}" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$([[ $root == *-* ]] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "configurator-changed=$(jq -r '[.bumps[].path] | contains(["shabti_configurator"])' bump.json)" >> "$GITHUB_OUTPUT"
+          echo "previous-release-tag=$(bun ./versioning/previousRelease.ts --prefix shabti-v --below "$root")" >> "$GITHUB_OUTPUT"
+
+      # all three are generated from the versions, so they have to be regenerated before the commit rather
+      # than after it, or the release would ship the previous run's copies
+      - name: Regenerate Python lockfiles
+        # the runner is self-hosted, so passing the current user keeps root owned files out of the
+        # checkout where they would break the clean step of later runs
+        run: UV_LOCK_USER="$(id -u):$(id -g)" bun run lock
+      - name: Regenerate bun lockfile
+        # bun.lock records the version of every workspace member, and bun pm version does not maintain it
+        run: bun install --lockfile-only
+      - name: Regenerate components file
+        run: bun run components
+
       - name: Commit versions
         id: commit
-        if: steps.bump.outputs.bumped == 'true' && !inputs.dry_run
+        if: ${{ !inputs.dry_run }}
         # committed here but only pushed once everything has been published, so a failed run leaves
-        # the branch untouched. Only the files the bump touched are staged: the runner is self hosted
+        # the branch untouched. Only the files this release touched are staged: the runner is self hosted
         # and reuses its workspace, so `git add -A` would sweep up whatever a previous job left behind
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           printf '%s\n' "${{steps.bump.outputs.touched-files}}" | git add --pathspec-from-file=-
-          git commit -m "${{steps.bump.outputs.commit-message}}"
+          git add bun.lock docker_containers/shabti_api/uv.lock docker_containers/shabti_web/uv.lock shabti-components.json
+          git commit -m "release ${{steps.bump.outputs.release-tag}}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Publish shabti_util
-        if: ${{ !inputs.dry_run }}
-        working-directory: ./python_packages/shabti_util
-        run: |
-          uv build
-          uv publish
-      - name: Publish isi_util
-        if: ${{ !inputs.dry_run }}
-        working-directory: ./python_packages/isi_util
-        run: |
-          uv build
-          uv publish
-      - name: Publish shabti_api_client
-        if: ${{ !inputs.dry_run }}
-        working-directory: ./python_packages/shabti_api_client
-        run: |
-          uv build
-          uv publish
-      - name: Publish shabti_keycloak
-        if: ${{ !inputs.dry_run }}
-        working-directory: ./python_packages/shabti_keycloak
-        run: |
-          uv build
-          uv publish
-      - name: Publish shabti_types
-        if: ${{ !inputs.dry_run }}
-        working-directory: ./python_packages/shabti_types
-        run: |
-          uv build
-          uv publish
-
+      # a dry run stops here: it answers which versions would move without spending a signing round or a
+      # full build on it
       - name: Build API Client
+        if: ${{ !inputs.dry_run }}
         working-directory: ./shabti_api_client_node
         run: bun run build
       - name: Build CLI Executable
+        if: ${{ !inputs.dry_run }}
         working-directory: ./shabti_cli
         run: |
           bun run build_win
           bun run build_linux
           bun run build_mac
 
+      # the launcher is only rebuilt and resigned when the configurator actually changed, otherwise the
+      # signed executable is carried forward from the release this one follows, which saves a signing credit
+      - name: Build Launcher Executable
+        if: ${{ !inputs.dry_run && steps.bump.outputs.configurator-changed == 'true' }}
+        working-directory: ./shabti_configurator
+        run: |
+          bun run build_win
+          bun run build_linux
+          bun run build_mac
+      - name: Install codesigner tool
+        if: ${{ !inputs.dry_run && steps.bump.outputs.configurator-changed == 'true' }}
+        run: |
+          mkdir -p ./signed/windows
+          wget https://github.com/SSLcom/CodeSignTool/releases/download/v1.3.0/CodeSignTool-v1.3.0.zip
+          unzip ./CodeSignTool-v1.3.0.zip -d codesign
+          chmod +x ./codesign/CodeSignTool.sh
+      # Windows only for now
+      - name: Sign Artifact with CodeSignTool
+        if: ${{ !inputs.dry_run && steps.bump.outputs.configurator-changed == 'true' }}
+        working-directory: ./codesign
+        run: |
+          ./CodeSignTool.sh sign \
+            -credential_id="$ES_CREDENTIAL_ID" \
+            -username="$ES_USERNAME" \
+            -password="$ES_PASSWORD" \
+            -totp_secret="$ES_TOTP_SECRET" \
+            -output_dir_path="${GITHUB_WORKSPACE}/signed/windows" \
+            -input_file_path="${GITHUB_WORKSPACE}/shabti_configurator/dist/windows/shabti.exe"
+        env:
+          ES_CREDENTIAL_ID: ${{secrets.CREDENTIAL_ID}}
+          ES_USERNAME: ${{secrets.ES_USERNAME}}
+          ES_PASSWORD: ${{secrets.ES_PASSWORD}}
+          ES_TOTP_SECRET: ${{secrets.ES_TOTP_SECRET}}
+
+      # the launcher is carried forward from the release this one follows, which can itself be a
+      # prerelease, so the tag is passed explicitly rather than resolved as "latest"
+      - uses: ./.github/actions/get_previous_release_assets
+        if: ${{ !inputs.dry_run && steps.bump.outputs.configurator-changed != 'true' }}
+        with:
+          tag: ${{steps.bump.outputs.previous-release-tag}}
+
       - name: Login to Docker Hub
+        if: ${{ !inputs.dry_run }}
         uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Set up Docker Buildx
+        if: ${{ !inputs.dry_run }}
         uses: docker/setup-buildx-action@v4
-      - name: Regenerate Python lockfiles
-        # the runner is self-hosted, so passing the current user keeps root owned files out of the
-        # checkout where they would break the clean step of later runs
-        run: UV_LOCK_USER="$(id -u):$(id -g)" docker compose -f ./docker_containers/docker-compose-uv-lock.yml run --rm uv-lock
-      - name: Get Shabti version
-        id: package-version
-        uses: ./.github/actions/get_package_json_version
+      # read after the bump, so an unchanged component keeps the version it already declares
       - name: Get Shabti API version
-        id: shabti-version
+        if: ${{ !inputs.dry_run }}
+        id: api-version
         uses: ./.github/actions/get_pyproject_version
         with:
           path: ./docker_containers/shabti_api
       - name: Get Shabti Web version
-        id: shabti-web-version
+        if: ${{ !inputs.dry_run }}
+        id: web-version
         uses: ./.github/actions/get_pyproject_version
         with:
           path: ./docker_containers/shabti_web
       - name: Build and push API Docker image
+        if: ${{ !inputs.dry_run }}
         uses: docker/build-push-action@v7
         with:
-          push: ${{ !inputs.dry_run }}
+          push: true
           context: ./docker_containers/shabti_api
           build-contexts: |
             python_packages=./python_packages
           target: online
-          tags: infosecinnovations/shabti:${{steps.bump.outputs.api-version}}
+          tags: infosecinnovations/shabti:${{steps.api-version.outputs.current-version}}
       - name: Build and push web client Docker image
+        if: ${{ !inputs.dry_run }}
         uses: docker/build-push-action@v7
         with:
-          push: ${{ !inputs.dry_run }}
+          push: true
           context: ./docker_containers/shabti_web
           build-contexts: |
             python_packages=./python_packages
           target: online
-          tags: infosecinnovations/shabti-web:${{steps.bump.outputs.web-version}}
-
-      # the signed launcher is carried forward from the release this one follows, which can itself be a
-      # prerelease, so the tag is passed explicitly rather than resolved as "latest"
-      - uses: ./.github/actions/get_previous_release_assets
-        with:
-          tag: ${{steps.bump.outputs.previous-release-tag}}
+          tags: infosecinnovations/shabti-web:${{steps.web-version.outputs.current-version}}
 
       - name: Zip executables
+        if: ${{ !inputs.dry_run }}
         run: |
           mkdir -p dist
-          zip -j ./dist/shabti_win.zip ./unzipped/win/shabti.exe ./shabti_cli/dist/windows/shabti_cli.exe
-          zip -j ./dist/shabti_linux.zip ./unzipped/linux/shabti ./shabti_cli/dist/linux/shabti_cli
-          zip -j ./dist/shabti_mac.zip ./unzipped/mac/shabti ./shabti_cli/dist/mac/shabti_cli
+          if [ "${{steps.bump.outputs.configurator-changed}}" = "true" ]; then
+            win="./signed/windows/shabti.exe"
+            linux="./shabti_configurator/dist/linux/shabti"
+            mac="./shabti_configurator/dist/mac/shabti"
+          else
+            win="./unzipped/win/shabti.exe"
+            linux="./unzipped/linux/shabti"
+            mac="./unzipped/mac/shabti"
+          fi
+          zip -j ./dist/shabti_win.zip "$win" ./shabti_cli/dist/windows/shabti_cli.exe
+          zip -j ./dist/shabti_linux.zip "$linux" ./shabti_cli/dist/linux/shabti_cli
+          zip -j ./dist/shabti_mac.zip "$mac" ./shabti_cli/dist/mac/shabti_cli
 
       - name: Push versions
-        if: steps.bump.outputs.bumped == 'true' && !inputs.dry_run
+        if: ${{ !inputs.dry_run }}
         run: git push origin HEAD:${{github.ref_name}}
       - name: Release
         if: ${{ !inputs.dry_run }}

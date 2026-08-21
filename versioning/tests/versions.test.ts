@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { type Preid, type ReleaseType, nextVersion } from "../versions";
+import {
+	type Preid,
+	type ReleaseType,
+	nextVersion,
+	npmDistTag,
+} from "../versions";
 import { nodePackage, pythonPackage, useRepo } from "./fixture";
 
 type Case = [string, ReleaseType, Preid | undefined, string];
@@ -104,6 +109,15 @@ describe("python versions", () => {
 			).toEqual({ current, next });
 		});
 	}
+});
+
+describe("npmDistTag", () => {
+	test("keeps prereleases off the latest tag", () => {
+		expect(npmDistTag("0.9.0")).toBe("latest");
+		expect(npmDistTag("0.9.0-alpha.1")).toBe("alpha");
+		expect(npmDistTag("0.9.0-rc.1")).toBe("rc");
+		expect(npmDistTag("0.8.0-rc10")).toBe("rc10");
+	});
 });
 
 describe("refusals", () => {
