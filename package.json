@@ -6,6 +6,7 @@
 	"scripts": {
 		"lock": "docker compose -f ./docker_containers/docker-compose-uv-lock.yml run --rm uv-lock",
 		"components": "bun ./generateComponentsJson.ts",
+		"bump": "bun ./versioning/bump.ts",
 		"test:versioning": "bun test versioning"
 	},
 	"devDependencies": {
