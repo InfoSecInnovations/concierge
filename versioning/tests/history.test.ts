@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { versionCommit } from "../history";
+import { changedSince, versionCommit } from "../history";
 import {
 	type Repo,
 	nodePackage,
@@ -149,6 +149,91 @@ describe("state that was never committed", () => {
 		await expect(versionCommit(repo.dir, "node-empty")).rejects.toThrow(
 			/no package.json or pyproject.toml/,
 		);
+	});
+});
+
+describe("changedSince", () => {
+	const repo = useRepo({
+		packages: [
+			pythonPackage("python-touched", "0.2.0"),
+			pythonPackage("python-settled", "0.2.0"),
+			pythonPackage("python-early", "0.2.0"),
+			pythonPackage("python-nested", "0.2.0", { dir: "containers/nested" }),
+		],
+		releases: [
+			released("0.1.0", {
+				versions: {
+					"python-touched": "0.1.0",
+					"python-settled": "0.1.0",
+					"python-early": "0.1.0",
+					"python-nested": "0.1.0",
+				},
+				touch: ["python-early"],
+			}),
+			// every package reaches the version it still declares
+			released("0.2.0"),
+		],
+		touch: ["python-touched", "python-nested"],
+	});
+	const sha = revision(repo);
+
+	test("reports a package whose source changed after its version was set", async () => {
+		expect(await changedSince(repo.dir, "python_touched")).toEqual({
+			baseline: await sha("v0.2.0"),
+			changed: true,
+		});
+	});
+
+	test("reports a package untouched since its version was set", async () => {
+		expect(await changedSince(repo.dir, "python_settled")).toEqual({
+			baseline: await sha("v0.2.0"),
+			changed: false,
+		});
+	});
+
+	test("ignores a source change made before the version was set", async () => {
+		// the directory does differ from the earlier release, which is not what it is diffed against
+		const earlier = await repo.git(
+			"diff",
+			"--quiet",
+			"v0.1.0",
+			"--",
+			"python_early",
+		);
+		expect(earlier.exitCode).toBe(1);
+		expect(await changedSince(repo.dir, "python_early")).toEqual({
+			baseline: await sha("v0.2.0"),
+			changed: false,
+		});
+	});
+
+	test("counts an uncommitted edit to a tracked file", async () => {
+		await repo.write("python_settled/source.txt", "99\n");
+		expect((await changedSince(repo.dir, "python_settled")).changed).toBe(true);
+	});
+
+	test("ignores an untracked file, as git diff does", async () => {
+		await repo.write("python_settled/extra.txt", "x");
+		expect((await changedSince(repo.dir, "python_settled")).changed).toBe(
+			false,
+		);
+	});
+
+	test("treats an uncommitted version bump as changed, with no baseline", async () => {
+		const manifest = "python_settled/pyproject.toml";
+		const text = await repo.read(manifest);
+		await repo.write(manifest, text.replace("0.2.0", "0.3.0"));
+		expect(await changedSince(repo.dir, "python_settled")).toEqual({
+			baseline: null,
+			changed: true,
+		});
+	});
+
+	test("diffs a nested package directory", async () => {
+		expect(await changedSince(repo.dir, "containers/nested")).toEqual({
+			baseline: await sha("v0.2.0"),
+			changed: true,
+		});
 	});
 });
 

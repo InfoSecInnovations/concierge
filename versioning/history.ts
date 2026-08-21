@@ -27,3 +27,31 @@ export const versionCommit = async (repoDir: string, packageDir: string) => {
 	}
 	return found;
 };
+
+/**
+ * Whether a package's directory differs from the commit that set the version it declares, which is what
+ * makes it due a bump. No baseline means the declared version was never committed, and that counts as
+ * changed.
+ *
+ * The diff is against the working tree, so an uncommitted edit registers - which is why every version has
+ * to be computed before any of them is written: once a bump lands in the tree, a package's own manifest
+ * makes it differ from its baseline. Untracked files are ignored, as git diff always does, and that is
+ * right here because the release only ever stages the files the tool touched.
+ */
+export const changedSince = async (repoDir: string, packageDir: string) => {
+	const baseline = await versionCommit(repoDir, packageDir);
+	if (!baseline) return { baseline, changed: true };
+	const { exitCode, stderr } = await git(repoDir)(
+		"diff",
+		"--quiet",
+		baseline,
+		"--",
+		packageDir,
+	);
+	// git answers with 0 and 1 here; anything else is git failing
+	if (exitCode > 1)
+		throw new Error(
+			`could not diff ${packageDir} against ${baseline}: ${stderr.trim()}`,
+		);
+	return { baseline, changed: exitCode === 1 };
+};
