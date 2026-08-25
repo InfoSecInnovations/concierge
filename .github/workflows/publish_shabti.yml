@@ -19,6 +19,10 @@ on:
         description: "Work out the versions without building or releasing anything"
         type: boolean
         default: false
+      release_description:
+        description: "Changelog etc. for release, you should put something here when doing a stable release!"
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -220,3 +224,4 @@ jobs:
           # the version bump has to be inside the tag, otherwise the next run sees it as a change
           target_commitish: ${{steps.commit.outputs.sha || github.sha}}
           overwrite_files: false
+          body: ${{inputs.release_description || 'prerelease version'}}
