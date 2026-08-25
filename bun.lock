@@ -7,28 +7,28 @@
       "dependencies": {
         "commander": "^15.0.0",
         "dotenv": "^17.2.2",
-        "octokit": "^5.0.5",
-        "semver": "^7.7.4",
+        "octokit": "5.0.5",
+        "semver": "7.8.5",
       },
       "devDependencies": {
         "@biomejs/biome": "1.9.4",
         "@types/bun": "latest",
-        "@types/semver": "^7.7.1",
+        "@types/semver": "7.8.0",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "5.9.3",
       },
     },
     "shabti_api_client_node": {
       "name": "@infosecinnovations/shabti-api-client",
       "version": "0.1.0",
       "dependencies": {
-        "openid-client": "^6.4.2",
+        "openid-client": "6.8.4",
       },
       "devDependencies": {
-        "@types/node": "^25.1.0",
-        "esbuild": "^0.25.3",
-        "npm-run-all": "^4.1.5",
+        "@types/node": "25.9.5",
+        "esbuild": "0.25.12",
+        "npm-run-all": "4.1.5",
       },
     },
     "shabti_cli": {
@@ -36,70 +36,70 @@
       "version": "0.1.0-alpha.3",
       "dependencies": {
         "@infosecinnovations/shabti-api-client": "workspace:*",
-        "cli-progress": "^3.12.0",
+        "cli-progress": "3.12.0",
         "commander": "^14.0.2",
         "dotenv": "^16.5.0",
-        "openid-client": "^6.4.2",
+        "openid-client": "6.8.4",
       },
       "devDependencies": {
         "@types/bun": "latest",
-        "@types/cli-progress": "^3.11.6",
+        "@types/cli-progress": "3.11.6",
       },
       "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "5.9.3",
       },
     },
     "shabti_configurator": {
       "name": "bun_installer",
-      "version": "0.2.0-alpha.1",
+      "version": "0.1.0",
       "dependencies": {
-        "@iarna/toml": "^2.2.5",
+        "@iarna/toml": "2.2.5",
         "@keycloak/keycloak-admin-client": "26.6.4",
         "@std/ini": "npm:@jsr/std__ini",
-        "@zxcvbn-ts/core": "^3.0.4",
-        "@zxcvbn-ts/language-common": "^3.0.4",
-        "@zxcvbn-ts/language-en": "^3.0.2",
-        "adm-zip": "^0.5.16",
-        "envfile": "^7.1.0",
-        "eventsource-client": "^1.2.0",
-        "hono": "^4.7.7",
-        "lodash": "^4.18.1",
-        "node-forge": "^1.3.1",
-        "semver": "^7.7.4",
-        "ts-humanize": "^1.0.3",
+        "@zxcvbn-ts/core": "3.0.4",
+        "@zxcvbn-ts/language-common": "3.0.4",
+        "@zxcvbn-ts/language-en": "3.0.2",
+        "adm-zip": "0.5.18",
+        "envfile": "7.1.0",
+        "eventsource-client": "1.2.0",
+        "hono": "4.13.1",
+        "lodash": "4.18.1",
+        "node-forge": "1.4.0",
+        "semver": "7.8.5",
+        "ts-humanize": "1.0.3",
       },
       "devDependencies": {
-        "@types/adm-zip": "^0.5.7",
+        "@types/adm-zip": "0.5.8",
         "@types/bun": "latest",
-        "@types/lodash": "^4.17.24",
-        "@types/node-forge": "^1.3.11",
+        "@types/lodash": "4.17.25",
+        "@types/node-forge": "1.3.14",
       },
       "peerDependencies": {
-        "typescript": "^5.7.3",
+        "typescript": "5.9.3",
       },
     },
     "shabti_configurator/client": {
       "name": "client",
       "dependencies": {
-        "@zxcvbn-ts/core": "^3.0.4",
-        "@zxcvbn-ts/language-common": "^3.0.4",
-        "@zxcvbn-ts/language-en": "^3.0.2",
-        "snabbdom": "^3.6.2",
-        "tom-select": "^2.6.2",
+        "@zxcvbn-ts/core": "3.0.4",
+        "@zxcvbn-ts/language-common": "3.0.4",
+        "@zxcvbn-ts/language-en": "3.0.2",
+        "snabbdom": "3.6.4",
+        "tom-select": "2.6.2",
       },
       "devDependencies": {
         "@types/bun": "latest",
       },
       "peerDependencies": {
-        "typescript": "^5.0.0",
+        "typescript": "5.9.3",
       },
     },
     "tests_docker_compose": {
       "name": "tests-docker-compose",
       "dependencies": {
-        "fast-xml-parser": "^5.3.0",
-        "junit-report-merger": "^8.0.0",
-        "xunit-viewer": "^10.6.1",
+        "fast-xml-parser": "5.10.1",
+        "junit-report-merger": "8.0.1",
+        "xunit-viewer": "10.6.1",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -971,6 +971,10 @@
 
     "anymatch/picomatch": ["picomatch@2.3.2", "", {}, "sha512-V7+vQEJ06Z+c5tSye8S+nHUfI51xoXIXjHQ99cQtKUkQqqO1kO/KCJUfZXuB47h/YBlDhah2H3hdUGXn8ie0oA=="],
 
+    "bun_installer/@types/bun": ["@types/bun@1.4.0", "", { "dependencies": { "bun-types": "1.4.0" } }, "sha512-K+lZULY23vRgK/CfTjFIV+tyifaNdSMlPh9j+6mQ/cLfpOznLyAuzgV/JQysyECpkBQLVMSyvjlr2fBUSA9wFQ=="],
+
+    "client/@types/bun": ["@types/bun@1.4.0", "", { "dependencies": { "bun-types": "1.4.0" } }, "sha512-K+lZULY23vRgK/CfTjFIV+tyifaNdSMlPh9j+6mQ/cLfpOznLyAuzgV/JQysyECpkBQLVMSyvjlr2fBUSA9wFQ=="],
+
     "cross-spawn/semver": ["semver@5.7.2", "", { "bin": { "semver": "bin/semver" } }, "sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g=="],
 
     "engine.io/debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
@@ -983,6 +987,8 @@
 
     "send/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
+    "shabti_cli/@types/bun": ["@types/bun@1.4.0", "", { "dependencies": { "bun-types": "1.4.0" } }, "sha512-K+lZULY23vRgK/CfTjFIV+tyifaNdSMlPh9j+6mQ/cLfpOznLyAuzgV/JQysyECpkBQLVMSyvjlr2fBUSA9wFQ=="],
+
     "shabti_cli/commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
 
     "shabti_cli/dotenv": ["dotenv@16.6.1", "", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
@@ -992,6 +998,8 @@
     "socket.io-adapter/debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 
     "socket.io-parser/debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
+
+    "tests-docker-compose/@types/bun": ["@types/bun@1.4.0", "", { "dependencies": { "bun-types": "1.4.0" } }, "sha512-K+lZULY23vRgK/CfTjFIV+tyifaNdSMlPh9j+6mQ/cLfpOznLyAuzgV/JQysyECpkBQLVMSyvjlr2fBUSA9wFQ=="],
 
     "wrap-ansi/ansi-styles": ["ansi-styles@4.3.0", "", { "dependencies": { "color-convert": "^2.0.1" } }, "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg=="],
 
@@ -1025,13 +1033,21 @@
 
     "@octokit/request/@octokit/types/@octokit/openapi-types": ["@octokit/openapi-types@28.0.0", "", {}, "sha512-0rFyLuyHvIj6uuZWuDslxkowFYdPXoNIkeAv4b27dzm2Tf4vGWXnPsMcxs7d65kLdMERgP3wc1AEPlqMz8e1cQ=="],
 
+    "bun_installer/@types/bun/bun-types": ["bun-types@1.4.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-iIKw23BspnQQYd3prITOBxeUsxBHnwzX6YJfGMuNOZzeNcMmVqzIIVGRm1l69ogaPQmb4wB6BN8mA5bE9YuC5Q=="],
+
+    "client/@types/bun/bun-types": ["bun-types@1.4.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-iIKw23BspnQQYd3prITOBxeUsxBHnwzX6YJfGMuNOZzeNcMmVqzIIVGRm1l69ogaPQmb4wB6BN8mA5bE9YuC5Q=="],
+
     "engine.io/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+
+    "shabti_cli/@types/bun/bun-types": ["bun-types@1.4.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-iIKw23BspnQQYd3prITOBxeUsxBHnwzX6YJfGMuNOZzeNcMmVqzIIVGRm1l69ogaPQmb4wB6BN8mA5bE9YuC5Q=="],
 
     "socket.io-adapter/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
     "socket.io-parser/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
     "socket.io/debug/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
+
+    "tests-docker-compose/@types/bun/bun-types": ["bun-types@1.4.0", "", { "dependencies": { "@types/node": "*" } }, "sha512-iIKw23BspnQQYd3prITOBxeUsxBHnwzX6YJfGMuNOZzeNcMmVqzIIVGRm1l69ogaPQmb4wB6BN8mA5bE9YuC5Q=="],
 
     "wrap-ansi/ansi-styles/color-convert": ["color-convert@2.0.1", "", { "dependencies": { "color-name": "~1.1.4" } }, "sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ=="],
 

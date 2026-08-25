@@ -695,7 +695,7 @@ requires-dist = [{ name = "zxcvbn" }]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pytest", specifier = "~=8.4.2" },
+    { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-asyncio", specifier = "~=1.2.0" },
 ]
 
@@ -1591,29 +1591,29 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiofiles", specifier = "~=25.1.0" },
-    { name = "beautifulsoup4", specifier = "~=4.14.3" },
-    { name = "configobj", specifier = "~=5.0.9" },
-    { name = "fastapi", extras = ["standard"], specifier = "~=0.136.3" },
-    { name = "httpx-sse", specifier = "~=0.4.3" },
+    { name = "aiofiles", specifier = "==25.1.0" },
+    { name = "beautifulsoup4", specifier = "==4.14.3" },
+    { name = "configobj", specifier = "==5.0.9" },
+    { name = "fastapi", extras = ["standard"], specifier = "==0.136.3" },
+    { name = "httpx-sse", specifier = "==0.4.3" },
     { name = "isi-util", editable = "/app/python_packages/isi_util" },
-    { name = "langchain", specifier = "~=1.2.10" },
-    { name = "langchain-community", specifier = "~=0.4.1" },
-    { name = "lxml", specifier = "~=6.0.1" },
-    { name = "opensearch-py", specifier = "~=3.0.0" },
-    { name = "python-json-logger", specifier = "~=3.3.0" },
-    { name = "requests", specifier = "~=2.33.1" },
-    { name = "semantic-text-splitter", specifier = "~=0.30.1" },
+    { name = "langchain", specifier = "==1.2.18" },
+    { name = "langchain-community", specifier = "==0.4.2" },
+    { name = "lxml", specifier = "==6.0.4" },
+    { name = "opensearch-py", specifier = "==3.0.0" },
+    { name = "python-json-logger", specifier = "==3.3.0" },
+    { name = "requests", specifier = "==2.33.1" },
+    { name = "semantic-text-splitter", specifier = "==0.30.1" },
     { name = "shabti-keycloak", editable = "/app/python_packages/shabti_keycloak" },
     { name = "shabti-types", editable = "/app/python_packages/shabti_types" },
     { name = "shabti-util", editable = "/app/python_packages/shabti_util" },
-    { name = "tika", specifier = "~=3.1.0" },
-    { name = "tokenizers", specifier = "~=0.22.2" },
+    { name = "tika", specifier = "==3.1.0" },
+    { name = "tokenizers", specifier = "==0.22.2" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pytest", specifier = "~=8.4.2" },
+    { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-asyncio", specifier = "~=1.2.0" },
 ]
 

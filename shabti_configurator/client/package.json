@@ -6,13 +6,13 @@
 		"@types/bun": "latest"
 	},
 	"peerDependencies": {
-		"typescript": "^5.0.0"
+		"typescript": "5.9.3"
 	},
 	"dependencies": {
-		"@zxcvbn-ts/core": "^3.0.4",
-		"@zxcvbn-ts/language-common": "^3.0.4",
-		"@zxcvbn-ts/language-en": "^3.0.2",
-		"snabbdom": "^3.6.2",
-		"tom-select": "^2.6.2"
+		"@zxcvbn-ts/core": "3.0.4",
+		"@zxcvbn-ts/language-common": "3.0.4",
+		"@zxcvbn-ts/language-en": "3.0.2",
+		"snabbdom": "3.6.4",
+		"tom-select": "2.6.2"
 	}
 }

@@ -464,11 +464,11 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pre-commit", specifier = "~=4.3.0" },
-    { name = "pre-commit-uv", specifier = "~=4.1.5" },
-    { name = "pytest", specifier = "~=8.4.1" },
+    { name = "pre-commit", specifier = "==4.3.0" },
+    { name = "pre-commit-uv", specifier = "==4.1.5" },
+    { name = "pytest", specifier = "==8.4.2" },
     { name = "pytest-asyncio", specifier = "~=1.1.0" },
-    { name = "ruff", specifier = "~=0.12.11" },
+    { name = "ruff", specifier = "==0.12.12" },
 ]
 
 [[package]]
