@@ -40,10 +40,29 @@ export const writeVersion = async (
 	return manifest;
 };
 
-const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/**
+ * Every file git knows about, tracked or merely untracked, as posix paths relative to the repo root.
+ * Ignored files are excluded, which is what keeps build output such as shabti_configurator/dist - full
+ * of stale copies of the compose files - from being read as though it were a source of truth.
+ */
+export const trackedFiles = async (repoDir: string) => {
+	const { stdout } = await git(repoDir)(
+		"ls-files",
+		"--cached",
+		"--others",
+		"--exclude-standard",
+	);
+	return stdout
+		.split("\n")
+		.map((file) => file.trim())
+		.filter((file) => !!file);
+};
+
+export const escape = (value: string) =>
+	value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** matches the name however its separators and case are spelled, as PEP 503 allows */
-const namePattern = (name: string) =>
+export const namePattern = (name: string) =>
 	name
 		.toLowerCase()
 		.replace(/[-_.]+/g, "-")
@@ -90,16 +109,9 @@ const repinned = (file: string, text: string, bump: Pinned) =>
  */
 export const rewritePins = async (repoDir: string, bumps: Pinned[]) => {
 	if (!bumps.length) return [];
-	const { stdout } = await git(repoDir)(
-		"ls-files",
-		"--cached",
-		"--others",
-		"--exclude-standard",
+	const files = (await trackedFiles(repoDir)).filter((file) =>
+		PINNED_IN.test(path.posix.basename(file)),
 	);
-	const files = stdout
-		.split("\n")
-		.map((file) => file.trim())
-		.filter((file) => PINNED_IN.test(path.posix.basename(file)));
 
 	const writes: [string, string][] = [];
 	for (const file of files) {

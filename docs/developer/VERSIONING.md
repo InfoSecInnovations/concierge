@@ -54,13 +54,25 @@ bun run bump --release-type preminor --preid alpha --dry-run --paths docker_cont
 
 ## Third party dependencies
 
+Third party dependencies are pinned to exact versions, so that what gets installed is decided by a
+tracked file rather than by whatever the lockfile happened to resolve. A dependency pinned in more
+than one place uses the same version everywhere.
+
+Do this with the tooling rather than by hand — `bun run deps` reports what is behind, what is not
+pinned exactly, and where two files disagree, and `bun run deps:set` moves a pin and regenerates the
+lockfiles. See [DEPENDENCIES.md](./DEPENDENCIES.md) for the commands, and
+[dependencies/exceptions.json](../../dependencies/exceptions.json) for the dependencies that are
+deliberately left floating, each with its reason.
+
+We keep an eye on possible vulnerabilities in these packages and also look out for new features which
+we wish to leverage. During development of a new release number we evaluate the need to upgrade
+dependencies.
+
 ### Runtimes
 
 - **uv**
 - **Python**
 - **Bun**
-
-The above should be pinned to non breaking ranges to avoid surprises when publishing and releasing.
 
 When moving to a new release number we will pin these to the latest versions.
 
@@ -68,27 +80,17 @@ When moving to a new release number we will pin these to the latest versions.
 
 We don't expect Docker to release versions which would break existing images
 
-### Packages
+### Dependencies that have to move together
 
-The components of Shabti themselves depend on a variety of packages available in the Python and JavaScript ecosystems. We try to ensure that all of these are pinned to non breaking version ranges, and if we notice that any packages are introducing breaking changes without respecting the appropriate versioning scheme we will lock them more strictly to specific versions.
+Most dependencies can be moved on their own. These cannot, and nothing checks them for you:
 
-We keep an eye on possible vulnerabilities in these packages and also look out for new features which we wish to leverage. During development of a new release number we evaluate the need to upgrade dependencies.
-
-Packages of particular interest are:
-
-- **shiny** - this framework is still receiving many feature updates and these will often bring improvements and fixes to Shabti's web UI.
-- **fastapi** - the REST API is built on this.
-- **unstructured** - we use this to ingest all documents currently, so it's worth checking for improvements and fixes.
-- **opensearch-py** - ensure this is synchronized with the OpenSearch version being used in our Docker Compose.
-- **python-keycloak** - ensure this is compatible with the Keycloak version being used in our Docker Compose.
-- **@keycloak/keycloak-admin-client** - ensure this is compatible with the Keycloak version being used in our Docker Compose.
-
-### Docker images
-
-- **ollama/ollama** - this image is very frequently updated and causes large downloads each time this happens, it has been pinned to a minor version to reduce the amount of time spent downloading.
-- **opensearchproject/opensearch, opensearchproject/opensearch-dashboards** - these images follow a coupled versioning scheme and should be updated at the same time, pinned to minor version.
-- **quay.io/keycloak/keycloak** - Pinned to minor version.
-- **postgres** - Keycloak uses this as storage, there is generally more flexibility here so we just restrict it to a major version.
-- **astral/uv** - Base image used in the Shabti Docker images, pinned to minor Python version.
+- **opensearch-py** must stay in step with the `opensearchproject/opensearch` image.
+- **python-keycloak** and **@keycloak/keycloak-admin-client** must stay compatible with the
+  `quay.io/keycloak/keycloak` image.
+- **opensearchproject/opensearch** and **opensearchproject/opensearch-dashboards** follow a coupled
+  versioning scheme and should be updated at the same time.
+- **@biomejs/biome** must match the `$schema` version in `biome.json`.
+- **astral/uv** is pinned in the three Dockerfile `FROM` lines as well as
+  `docker_containers/docker-compose-uv-lock.yml`. `deps:set` changes all four together.
 
 When moving to a new release number we will pin these to the latest versions.

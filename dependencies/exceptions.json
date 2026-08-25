@@ -1,0 +1,48 @@
+{
+	"exceptions": [
+		{
+			"ecosystem": "node",
+			"name": "@types/bun",
+			"reason": "tracks whichever Bun the repo is built with, so pinning it would fix the type definitions to one Bun release"
+		},
+		{
+			"ecosystem": "node",
+			"name": "@std/ini",
+			"reason": "aliased to @jsr/std__ini through the JSR registry, so there is no npm version here to pin"
+		},
+		{
+			"ecosystem": "python",
+			"name": "zxcvbn",
+			"reason": "a dependency of a published library: an exact pin would be forced on anything installing isi-util",
+			"files": ["python_packages/isi_util/pyproject.toml"]
+		},
+		{
+			"ecosystem": "python",
+			"name": "httpx",
+			"reason": "a dependency of a published library: an exact pin would be forced on anything installing shabti-api-client",
+			"files": ["python_packages/shabti_api_client/pyproject.toml"]
+		},
+		{
+			"ecosystem": "python",
+			"name": "pydantic",
+			"reason": "a dependency of a published library: an exact pin would be forced on anything installing shabti-types",
+			"files": ["python_packages/shabti_types/pyproject.toml"]
+		},
+		{
+			"ecosystem": "python",
+			"name": "pyyaml",
+			"reason": "a dependency of a published library: an exact pin would be forced on anything installing shabti-util",
+			"files": ["python_packages/shabti_util/pyproject.toml"]
+		},
+		{
+			"ecosystem": "python",
+			"name": "hatchling",
+			"reason": "a build requirement of the published libraries, where an exact pin would constrain how downstream builds them"
+		},
+		{
+			"ecosystem": "docker",
+			"name": "javieraviles/zip",
+			"reason": "only used to zip the Keycloak policies and never deployed, so its tag has no bearing on what runs"
+		}
+	]
+}

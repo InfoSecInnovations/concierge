@@ -7,7 +7,11 @@
 		"lock": "docker compose -f ./docker_containers/docker-compose-uv-lock.yml run --rm uv-lock",
 		"components": "bun ./generateComponentsJson.ts",
 		"bump": "bun ./versioning/bump.ts",
-		"test:versioning": "bun test versioning"
+		"deps": "bun ./dependencies/check.ts",
+		"deps:set": "bun ./dependencies/set.ts",
+		"deps:migrate": "bun ./dependencies/migrate.ts",
+		"test:versioning": "bun test versioning",
+		"test:dependencies": "bun test dependencies"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",

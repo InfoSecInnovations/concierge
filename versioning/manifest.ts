@@ -3,7 +3,7 @@ import path from "node:path";
 const NODE = "package.json";
 const PYTHON = "pyproject.toml";
 
-const NODE_DEPENDENCIES = [
+export const NODE_DEPENDENCIES = [
 	"dependencies",
 	"devDependencies",
 	"peerDependencies",
@@ -92,24 +92,54 @@ export const nameIn = (file: string, text: string): string | null => {
 	return typeof declared === "string" ? declared : null;
 };
 
+/** PEP 503 normalisation: the one spelling of a name two manifests can be compared by */
+export const normalise = (name: string) =>
+	name.toLowerCase().replace(/[-_.]+/g, "-");
+
 /** the leading name of a PEP 508 requirement, dropping extras, specifiers and markers */
-const requirementName = (requirement: string) =>
+export const requirementName = (requirement: string) =>
 	/^[A-Za-z0-9][A-Za-z0-9._-]*/.exec(requirement.trim())?.[0];
+
+/** where a build requirement is declared, which is a dependency of the build and not of the project */
+const BUILD_REQUIRES = "build-system.requires";
+
+/**
+ * Every requirement a pyproject declares, specifiers intact, each with the table it came from. Build
+ * requirements are in the list because hatchling is as much a third party dependency as anything else;
+ * the internal dependency graph filters them back out, since nothing builds one of our packages.
+ */
+export const requirementsIn = (file: string, text: string) => {
+	const manifest = parsed(file, text);
+	const project = table(manifest.project);
+	const lists: [string, unknown][] = [
+		["project.dependencies", project.dependencies],
+		...Object.entries(table(project["optional-dependencies"])).map(
+			([extra, list]): [string, unknown] => [
+				`project.optional-dependencies.${extra}`,
+				list,
+			],
+		),
+		...Object.entries(table(manifest["dependency-groups"])).map(
+			([group, list]): [string, unknown] => [
+				`dependency-groups.${group}`,
+				list,
+			],
+		),
+		[BUILD_REQUIRES, table(manifest["build-system"]).requires],
+	];
+	return lists.flatMap(([location, list]) =>
+		strings(list).map((requirement) => ({ requirement, location })),
+	);
+};
 
 /** every dependency a manifest declares, external ones included, from every kind of dependency list */
 export const dependencyNamesIn = (file: string, text: string): string[] => {
-	const manifest = parsed(file, text);
 	if (typeIn(file) === "node")
 		return NODE_DEPENDENCIES.flatMap((key) =>
-			Object.keys(table(manifest[key])),
+			Object.keys(table(parsed(file, text)[key])),
 		);
-	const project = table(manifest.project);
-	return [
-		project.dependencies,
-		...Object.values(table(project["optional-dependencies"])),
-		...Object.values(table(manifest["dependency-groups"])),
-	]
-		.flatMap(strings)
-		.map(requirementName)
+	return requirementsIn(file, text)
+		.filter(({ location }) => location !== BUILD_REQUIRES)
+		.map(({ requirement }) => requirementName(requirement))
 		.filter((name): name is string => !!name);
 };

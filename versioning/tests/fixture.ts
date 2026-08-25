@@ -55,6 +55,12 @@ export type RepoSpec = {
 	/** default "v" */
 	tagPrefix?: string;
 	lockfile?: boolean;
+	/**
+	 * Raw files at paths relative to the repo root, written after every manifest so they can override
+	 * one. For the shapes that do not belong to a package at all: compose files, Dockerfiles, and a
+	 * .gitignore.
+	 */
+	files?: Record<string, string>;
 };
 
 export type Repo = {
@@ -141,10 +147,15 @@ const pythonManifest = (pkg: PackageSpec, dirs: Map<string, string>) => {
 	].join("\n")}\n`;
 };
 
-type State = { root: string; packages: PackageSpec[] };
+type State = {
+	root: string;
+	packages: PackageSpec[];
+	files?: Record<string, string>;
+};
 
 const stateAt = (spec: RepoSpec, release: ReleaseSpec): State => ({
 	root: release.root ?? release.version,
+	files: spec.files,
 	packages: spec.packages
 		.filter((pkg) => !release.absent?.includes(pkg.name))
 		.map((pkg) => ({
@@ -192,6 +203,9 @@ const writeTree = async (
 		for (const [file, text] of Object.entries(pkg.files ?? {}))
 			await Bun.write(path.join(dir, dirOf(pkg), file), text);
 	}
+	// last, so a raw file can replace a manifest this builder just wrote, the root's included
+	for (const [file, text] of Object.entries(state.files ?? {}))
+		await Bun.write(path.join(dir, file), text);
 };
 
 export const createRepo = async (spec: RepoSpec): Promise<Repo> => {
@@ -228,7 +242,12 @@ export const createRepo = async (spec: RepoSpec): Promise<Repo> => {
 	touch(spec.touch);
 	const last = releases.at(-1);
 	const root = spec.root ?? last?.root ?? last?.version ?? "0.1.0";
-	await writeTree(dir, { root, packages: spec.packages }, counters, dirs);
+	await writeTree(
+		dir,
+		{ root, packages: spec.packages, files: spec.files },
+		counters,
+		dirs,
+	);
 	await setup("add", "-A");
 	await setup("commit", "--allow-empty", "-m", "current");
 	for (const tag of spec.tags ?? []) await setup("tag", tag);
