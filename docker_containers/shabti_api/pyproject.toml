@@ -25,8 +25,8 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "pytest==8.4.2",
-    "pytest-asyncio~=1.2.0",
+    "pytest==9.1.1",
+    "pytest-asyncio==1.4.0",
 ]
 
 # these paths are only valid inside the container, run uv lock in Docker (see docs/developer/LOCKFILES.md)

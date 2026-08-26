@@ -624,8 +624,8 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pytest", specifier = "==8.4.2" },
-    { name = "pytest-asyncio", specifier = "~=1.2.0" },
+    { name = "pytest", specifier = "==9.1.1" },
+    { name = "pytest-asyncio", specifier = "==1.4.0" },
     { name = "shabti-keycloak", editable = "../python_packages/shabti_keycloak" },
 ]
 

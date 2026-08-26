@@ -1,14 +1,23 @@
 /**
- * Sets one third party dependency to one exact version everywhere the repo pins it, then regenerates
+ * Sets third party dependencies to exact versions everywhere the repo pins them, then regenerates
  * whichever lockfiles that invalidated.
  *
- * bun ./dependencies/set.ts <name> <version> [--ecosystem <python|node|docker>] [--tag] [--no-lock]
+ * bun ./dependencies/set.ts <name[@version]...> [--ecosystem <python|node|docker>] [--tag] [--no-lock] [--json]
  *
- * The version is never compared against the one already pinned: moving backwards out of a bad release is
+ * A version is never compared against the one already pinned: moving backwards out of a bad release is
  * as legitimate as moving forwards, so the only question asked is whether the version exists. That check
  * is against the registry's whole version list rather than a probe for the one version, which is what
  * lets `1.7` be accepted for `1.7.0` - the same version under PEP 440 - while the canonical spelling is
- * what gets written, and what lets a miss suggest what was meant instead.
+ * what gets written, and what lets a miss suggest what was meant instead. A name given without a
+ * version is the one case where the version is chosen for you, and it is chosen from the same
+ * `latestStable` the report prints, so `deps` and a bare name can never disagree.
+ *
+ * The whole list is one run rather than several: the working tree is read once, one HTTP client serves
+ * every lookup, and the lockfiles are regenerated once at the end however many dependencies moved.
+ * That makes the batch atomic for the reason a single dependency already was - every name resolved and
+ * every edit planned before anything is written - so one unknown name writes nothing at all. Every
+ * refusal is collected rather than the first one thrown, because three typos are worth hearing about in
+ * one run rather than three.
  */
 
 import { Command, Option } from "commander";
@@ -19,7 +28,8 @@ import { type Options, client } from "./http";
 import { type Runner, commandFor, lockActionsFor, regenerate } from "./lock";
 import { compare, parse } from "./pep440";
 import { group, readPins } from "./read";
-import { applyEdits, plannedEdits } from "./rewrite";
+import { type Tagged, byEcosystem, count, tabulate, where } from "./render";
+import { type Edit, applyEdits, plannedEdits } from "./rewrite";
 import {
 	ECOSYSTEMS,
 	type Catalogue,
@@ -28,15 +38,46 @@ import {
 	type Release,
 } from "./types";
 
-export type Result = {
+/** what one dependency became */
+export type Change = {
 	name: string;
 	ecosystem: Ecosystem;
 	/** the versions that were pinned before, which may be more than one if the files disagreed */
 	from: string[];
 	to: string;
 	files: string[];
-	locked: string[];
 	warnings: string[];
+};
+
+export type Result = {
+	changes: Change[];
+	files: string[];
+	locked: string[];
+	/** about the run rather than about any one dependency */
+	warnings: string[];
+};
+
+/** a spec as the command line spells it, split */
+export type Target = {
+	name: string;
+	/** absent when the spec named none, which means the latest stable release */
+	version?: string;
+};
+
+/**
+ * `name@version`, or a bare name meaning the latest. The split is at the last `@` and only past the
+ * start, which is what tells `@types/semver@7.8.0` and a bare `@types/bun` apart. An `@` with nothing
+ * after it is a typo rather than either, so it is refused.
+ */
+export const parseSpec = (spec: string): Target => {
+	const at = spec.lastIndexOf("@");
+	if (at <= 0) {
+		if (!spec) throw new Error("a dependency was named as an empty string");
+		return { name: spec };
+	}
+	const version = spec.slice(at + 1);
+	if (!version) throw new Error(`${spec} names no version after its @`);
+	return { name: spec.slice(0, at), version };
 };
 
 /** the dependency this name refers to, refusing rather than guessing when it refers to more than one */
@@ -115,10 +156,89 @@ const suggestions = (catalogue: Catalogue, requested: string) =>
 		]),
 	].slice(0, 4);
 
+const reasonOf = (error: unknown) =>
+	error instanceof Error ? error.message : String(error);
+
+/** one spec resolved to the version to write, or the reason it cannot be */
+type Resolution =
+	| { ok: true; dependency: Dependency; to: string; warnings: string[] }
+	| { ok: false; reason: string };
+
+/**
+ * What one spec resolves to. Every failure comes back as a reason rather than a throw, which is only so
+ * they can all be reported together: any one of them still fails the whole run, because refusing to
+ * write is the safe failure here, unlike in the report.
+ */
+const resolve = async (
+	dependencies: Dependency[],
+	spec: string,
+	{
+		ecosystem,
+		literalTag,
+		look,
+	}: { ecosystem?: Ecosystem; literalTag?: boolean; look: Registry },
+): Promise<Resolution> => {
+	try {
+		const { name, version } = parseSpec(spec);
+		const dependency = find(dependencies, name, ecosystem);
+
+		// a tag with no version in it has nothing to validate against, so --tag is taken on trust
+		if (literalTag) {
+			if (!version)
+				return {
+					ok: false,
+					reason: `${dependency.name} was given no version, and --tag has no tag to write without one`,
+				};
+			return {
+				ok: true,
+				dependency,
+				to: version,
+				warnings: [`wrote the tag ${version} without checking it exists`],
+			};
+		}
+
+		const reason = unsupported(dependency);
+		if (reason)
+			return { ok: false, reason: `cannot set ${dependency.name}: ${reason}` };
+		const catalogue = await look(dependency);
+
+		if (!version) {
+			// the same release the report calls the latest, so it is already neither a prerelease nor
+			// withdrawn; a package with only prereleases has none, and choosing one of those is a decision
+			const latest = catalogue.latestStable;
+			if (!latest)
+				return {
+					ok: false,
+					reason: `${dependency.name} has no stable release to move to, so name the version you want`,
+				};
+			return { ok: true, dependency, to: latest.version, warnings: [] };
+		}
+
+		const release = matching(catalogue, dependency.ecosystem, version);
+		if (!release)
+			return {
+				ok: false,
+				reason: `${dependency.name} ${version} is not published; did you mean ${suggestions(catalogue, version).join(", ")}?`,
+			};
+		return {
+			ok: true,
+			dependency,
+			// the registry's own spelling, so the manifest gets the canonical one
+			to: release.version,
+			warnings: release.withdrawn
+				? [`${release.version} is ${release.withdrawn}`]
+				: [],
+		};
+	} catch (error) {
+		return { ok: false, reason: reasonOf(error) };
+	}
+};
+
+type Planned = { resolution: Extract<Resolution, { ok: true }>; edits: Edit[] };
+
 export const set = async ({
 	repoDir,
-	name,
-	version,
+	specs,
 	ecosystem,
 	literalTag,
 	lock = true,
@@ -127,63 +247,137 @@ export const set = async ({
 	...options
 }: Options & {
 	repoDir: string;
-	name: string;
-	version: string;
+	/** each `name@version`, or a bare name for the latest */
+	specs: string[];
 	ecosystem?: Ecosystem;
 	literalTag?: boolean;
 	lock?: boolean;
 	registry?: Registry;
 	run?: Runner;
 }): Promise<Result> => {
-	const dependency = find(group(await readPins(repoDir)), name, ecosystem);
-	const warnings: string[] = [];
-	let resolved = version;
+	if (!specs.length) throw new Error("name at least one dependency to set");
+	const dependencies = group(await readPins(repoDir));
+	// one client for the whole run, so its memo, its concurrency limit and its per host serialisation
+	// hold across every lookup instead of being rebuilt for each dependency
+	const look = injected ?? registry(client(options), { resolveLatest: false });
+	// every lookup settles before any is judged, so one failure cannot abandon the others in flight
+	const resolutions = await Promise.all(
+		specs.map((spec) =>
+			resolve(dependencies, spec, { ecosystem, literalTag, look }),
+		),
+	);
 
-	// a tag with no version in it has nothing to validate against, so --tag is taken on trust
-	if (literalTag)
-		warnings.push(`wrote the tag ${version} without checking it exists`);
-	else {
-		const reason = unsupported(dependency);
-		if (reason) throw new Error(`cannot set ${dependency.name}: ${reason}`);
-		const look =
-			injected ?? registry(client(options), { resolveLatest: false });
-		// deliberately not caught: refusing to write is the safe failure, unlike in the report
-		const catalogue = await look(dependency);
-		const release = matching(catalogue, dependency.ecosystem, version);
-		if (!release)
-			throw new Error(
-				`${dependency.name} ${version} is not published; did you mean ${suggestions(catalogue, version).join(", ")}?`,
+	const refused = resolutions.flatMap((resolution) =>
+		resolution.ok ? [] : [resolution.reason],
+	);
+
+	// the same dependency twice is one edit when both agree, and a refusal when they do not: writing
+	// either version would be silently ignoring the other
+	const wanted = new Map<string, Extract<Resolution, { ok: true }>>();
+	for (const resolution of resolutions) {
+		if (!resolution.ok) continue;
+		const { dependency } = resolution;
+		const existing = wanted.get(`${dependency.ecosystem}:${dependency.id}`);
+		if (existing && existing.to !== resolution.to)
+			refused.push(
+				`${dependency.name} was named twice, at ${existing.to} and ${resolution.to}`,
 			);
-		if (release.withdrawn)
-			warnings.push(`${release.version} is ${release.withdrawn}`);
-		// the registry's own spelling, so the manifest gets the canonical one
-		resolved = release.version;
+		else wanted.set(`${dependency.ecosystem}:${dependency.id}`, resolution);
 	}
 
-	const edits = plannedEdits(dependency.occurrences, resolved, { literalTag });
-	const files = await applyEdits(repoDir, edits);
+	// planned for every dependency before any is written, and a refusal from any one of them fails the
+	// run: a partial write would leave exactly the disagreement between files this command removes
+	const planned = [...wanted.values()].map((resolution): Planned | null => {
+		try {
+			return {
+				resolution,
+				edits: plannedEdits(resolution.dependency.occurrences, resolution.to, {
+					literalTag,
+				}),
+			};
+		} catch (error) {
+			refused.push(reasonOf(error));
+			return null;
+		}
+	});
+	if (refused.length) throw new Error(refused.join("\n"));
+
+	const plans = planned.filter((plan): plan is Planned => !!plan);
+	const files = await applyEdits(
+		repoDir,
+		plans.flatMap((plan) => plan.edits),
+	);
+	// one round for the batch: a dozen node pins regenerate bun.lock once, not a dozen times
 	const actions = await lockActionsFor(repoDir, files);
-	const locked = lock
-		? await regenerate(repoDir, actions, run ? { run } : {})
-		: actions.map(commandFor);
-	if (!lock && actions.length)
-		warnings.push(`did not run: ${actions.map(commandFor).join(", ")}`);
+	const written = new Set(files);
 
 	return {
-		name: dependency.name,
-		ecosystem: dependency.ecosystem,
-		from: dependency.versions,
-		to: resolved,
+		changes: plans.map(({ resolution, edits }) => ({
+			name: resolution.dependency.name,
+			ecosystem: resolution.dependency.ecosystem,
+			from: resolution.dependency.versions,
+			to: resolution.to,
+			files: [...new Set(edits.map((edit) => edit.file))]
+				.filter((file) => written.has(file))
+				.sort(),
+			warnings: resolution.warnings,
+		})),
 		files,
-		locked,
-		warnings,
+		locked: lock
+			? await regenerate(repoDir, actions, run ? { run } : {})
+			: actions.map(commandFor),
+		warnings:
+			!lock && actions.length
+				? [`did not run: ${actions.map(commandFor).join(", ")}`]
+				: [],
 	};
+};
+
+/** alphabetical within each ecosystem, as `check` lists them, so a name is where you look for it */
+const byName = (a: Change, b: Change) => a.name.localeCompare(b.name);
+
+export const render = (
+	result: Result,
+	{ lock = true }: { lock?: boolean } = {},
+) => {
+	const lines = tabulate([
+		{
+			heading: "setting",
+			groups: byEcosystem(
+				[...result.changes].sort(byName).map(
+					(change): Tagged => ({
+						ecosystem: change.ecosystem,
+						left: change.name,
+						middle: `${change.from.join(", ") || "-"} -> ${change.to}`,
+						// a pin already at the version asked for is written nowhere, which is the whole row
+						right: change.files.length ? where(change.files) : "already set",
+					}),
+				),
+			),
+		},
+	]);
+
+	return [
+		...lines,
+		"",
+		`${result.changes.length} set, wrote ${count(result.files.length, "file")}`,
+		// what --no-lock leaves behind is a command to run, not a thing that happened
+		...(result.locked.length
+			? [
+					lock
+						? `ran ${result.locked.join(", ")}`
+						: `to lock, run: ${result.locked.join(", ")}`,
+				]
+			: []),
+	].join("\n");
 };
 
 if (import.meta.main) {
 	const command = new Command()
-		.argument("<name>", "the dependency as the manifests name it")
-		.argument("<version>", "the version to pin it to, newer or older")
+		.argument(
+			"<specs...>",
+			"the dependencies to set, each as name@version, or name alone for the latest",
+		)
 		.addOption(
 			new Option(
 				"--ecosystem <ecosystem>",
@@ -195,18 +389,24 @@ if (import.meta.main) {
 			"write the version as the whole image tag, for a tag with no version to substitute into",
 		)
 		.option("--no-lock", "rewrite the pins but do not regenerate any lockfile")
+		.option("--json", "emit the result as one line of JSON")
 		.parse();
-	const [name, version] = command.args;
 	const options = command.opts();
 
 	const result = await set({
 		repoDir: process.cwd(),
-		name: name as string,
-		version: version as string,
+		specs: command.args,
 		ecosystem: options.ecosystem,
 		literalTag: options.tag,
 		lock: options.lock,
 	});
-	console.log(JSON.stringify(result));
+
+	if (options.json) console.log(JSON.stringify(result));
+	else console.log(render(result, { lock: options.lock }));
+
+	// named, because a warning about one of five dependencies has to say which
+	for (const change of result.changes)
+		for (const warning of change.warnings)
+			console.error(`${change.name}: ${warning}`);
 	for (const warning of result.warnings) console.error(warning);
 }

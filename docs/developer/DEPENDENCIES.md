@@ -35,22 +35,28 @@ lookup also prints to stderr.
 ## Setting
 
 ```sh
-bun run deps:set -- fastapi 0.137.0
+bun run deps:set -- fastapi@0.137.0 astral/uv@0.9.7 @types/semver@7.8.0
 ```
 
 Writes the version as an exact pin in every file that names the dependency, then regenerates whichever
 lockfiles that invalidated. Any version is accepted as long as it exists upstream, older included:
 downgrading out of a bad release is the point, so the current pin is never consulted.
 
+A name given without a version takes the latest stable release — the same version `deps` reports as
+the newer one, so `bun run deps:set -- fastapi` moves the pin to what the report was pointing at.
+
 | flag | |
 | --- | --- |
 | `--ecosystem <python\|node\|docker>` | when the same name is pinned in more than one |
 | `--tag` | write the version as the whole image tag, for a tag with no version to substitute into |
 | `--no-lock` | rewrite the pins but print the lockfile commands instead of running them |
+| `--json` | one line of JSON instead of the table |
 
-Nothing is written until every occurrence has been resolved, so a dependency one of whose occurrences
-cannot be set leaves the tree untouched. That is deliberate: a partial write would leave exactly the
-disagreement between files this is meant to remove.
+Nothing is written until every occurrence of every dependency named has been resolved, so one
+occurrence that cannot be set — or one name that does not exist — leaves the tree untouched. That is
+deliberate: a partial write would leave exactly the disagreement between files this is meant to
+remove. Refusals are reported together rather than one run at a time, and the lockfiles are
+regenerated once at the end however many dependencies moved.
 
 A docker `set` needs no extra step for the configurator — `zipDockerCompose.ts` runs inside every
 `build_*` script, so the zipped compose files pick the change up.

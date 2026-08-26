@@ -24,7 +24,7 @@ import { normalise } from "../versioning/manifest";
 import { type Exception, exemption, readExceptions } from "./exceptions";
 import { type Runner, commandFor, lockActionsFor, regenerate } from "./lock";
 import { group, readPins } from "./read";
-import { type Tagged, byEcosystem, tabulate, where } from "./render";
+import { type Tagged, byEcosystem, count, tabulate, where } from "./render";
 import { applyEdits, plannedEdits } from "./rewrite";
 import type { Dependency, Ecosystem, Pin } from "./types";
 
@@ -245,9 +245,6 @@ const SKIPPED: Record<Skip["kind"], string> = {
 
 /** the pins as written, deduped: four files pinning ^1.2.3 is one thing to say, not four */
 const specifiers = (from: string[]) => [...new Set(from)].join(", ");
-
-const count = (n: number, thing: string) =>
-	`${n} ${thing}${n === 1 ? "" : "s"}`;
 
 /** alphabetical within each ecosystem, as `check` lists them, so a name is where you look for it */
 const byName = <T extends { name: string }>(a: T, b: T) =>

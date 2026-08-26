@@ -18,6 +18,10 @@ export type Section = { heading: string; groups: Group[] };
 
 const pad = (text: string, width: number) => text.padEnd(width);
 
+/** "1 file", "3 files" - the pluralised count every summary line ends up needing */
+export const count = (n: number, thing: string) =>
+	`${n} ${thing}${n === 1 ? "" : "s"}`;
+
 /** where a dependency is pinned: the file itself when there is one, a count when there are several */
 export const where = (files: string[]) => {
 	const distinct = [...new Set(files)];

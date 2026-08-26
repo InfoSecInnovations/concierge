@@ -9,6 +9,7 @@ import { rm, mkdir } from "node:fs/promises";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 import path from "node:path";
 import xunitViewer from "xunit-viewer";
+import nodeDirs from "./node_dirs.json";
 
 console.clear();
 await rm("./test_results", { recursive: true, force: true });
@@ -54,7 +55,7 @@ try {
 			continue;
 		}
 	}
-	await $`bun test --bail --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_disabled.xml`
+	await $`bun test ${{ raw: nodeDirs.join(" ") }} --bail --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_disabled.xml`
 		.cwd("..")
 		.env({ ...process.env, FORCE_COLOR: "1" });
 

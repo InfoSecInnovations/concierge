@@ -6,6 +6,7 @@ import path from "path";
 import * as dotenv from "dotenv";
 import nukeExisting from "./nukeExisting";
 import writeTestModelsIni from "./writeTestModelsIni";
+import nodeDirs from "./node_dirs.json";
 
 export default async () => {
 	console.log(`
@@ -91,7 +92,7 @@ export default async () => {
 			continue;
 		}
 	}
-	await $`bun test --bail --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_enabled.xml`
+	await $`bun test ${{ raw: nodeDirs.join(" ") }} --bail --reporter=junit --reporter-outfile=./tests_docker_compose/test_results/bun_security_enabled.xml`
 		.cwd("..")
 		.env({ ...process.env, FORCE_COLOR: "1" });
 };

@@ -59,8 +59,8 @@ tracked file rather than by whatever the lockfile happened to resolve. A depende
 than one place uses the same version everywhere.
 
 Do this with the tooling rather than by hand — `bun run deps` reports what is behind, what is not
-pinned exactly, and where two files disagree, and `bun run deps:set` moves a pin and regenerates the
-lockfiles. See [DEPENDENCIES.md](./DEPENDENCIES.md) for the commands, and
+pinned exactly, and where two files disagree, and `bun run deps:set` moves one or more pins and
+regenerates the lockfiles. See [DEPENDENCIES.md](./DEPENDENCIES.md) for the commands, and
 [dependencies/exceptions.json](../../dependencies/exceptions.json) for the dependencies that are
 deliberately left floating, each with its reason.
 
