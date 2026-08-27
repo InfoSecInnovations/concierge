@@ -5,8 +5,8 @@
     "": {
       "name": "shabti",
       "dependencies": {
-        "commander": "^15.0.0",
-        "dotenv": "^17.2.2",
+        "commander": "15.0.0",
+        "dotenv": "17.4.2",
         "octokit": "5.0.5",
         "semver": "7.8.5",
       },
@@ -37,8 +37,8 @@
       "dependencies": {
         "@infosecinnovations/shabti-api-client": "workspace:*",
         "cli-progress": "3.12.0",
-        "commander": "^14.0.2",
-        "dotenv": "^16.5.0",
+        "commander": "15.0.0",
+        "dotenv": "17.4.2",
         "openid-client": "6.8.4",
       },
       "devDependencies": {
@@ -988,10 +988,6 @@
     "send/ms": ["ms@2.1.3", "", {}, "sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA=="],
 
     "shabti_cli/@types/bun": ["@types/bun@1.4.0", "", { "dependencies": { "bun-types": "1.4.0" } }, "sha512-K+lZULY23vRgK/CfTjFIV+tyifaNdSMlPh9j+6mQ/cLfpOznLyAuzgV/JQysyECpkBQLVMSyvjlr2fBUSA9wFQ=="],
-
-    "shabti_cli/commander": ["commander@14.0.3", "", {}, "sha512-H+y0Jo/T1RZ9qPP4Eh1pkcQcLRglraJaSLoyOtHxu6AapkjWVCy2Sit1QQ4x3Dng8qDlSsZEet7g5Pq06MvTgw=="],
-
-    "shabti_cli/dotenv": ["dotenv@16.6.1", "", {}, "sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow=="],
 
     "socket.io/debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 

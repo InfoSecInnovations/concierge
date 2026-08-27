@@ -141,8 +141,20 @@ export default async () => {
 			"-c, --collection <collection>",
 			"collection id to ingest into",
 		)
+		.option(
+			"-d, --depth [number]",
+			"how many levels of links to follow, staying within the directory of each URL",
+			"1",
+		)
 		.action(async (urls, options, command) =>
-			insert(await client.insertUrls(options.collection, urls), command),
+			insert(
+				await client.insertUrls(
+					options.collection,
+					urls,
+					parseInt(options.depth),
+				),
+				command,
+			),
 		);
 
 	const model = program.command("model");

@@ -4,9 +4,9 @@ version = "0.1.0"
 requires-python = ">=3.14, <3.15"
 dependencies = [
     "humanize==4.15.0",
-    "shiny==1.6.3",
-    "shinyswatch==0.11.0",
-    "tqdm==4.67.3",
+    "shiny==1.7.0",
+    "shinyswatch==0.12.0",
+    "tqdm==4.70.0",
     "shabti-util",
     "shabti-types",
     "shabti-keycloak",

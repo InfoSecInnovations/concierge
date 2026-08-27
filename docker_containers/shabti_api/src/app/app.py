@@ -51,6 +51,7 @@ from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
 from .dependencies.prompt_info_validator import PromptInfoValidator
 from .dependencies.prompt_body_auth_checker import PromptBodyAuthChecker
+from .dependencies.url_list_validator import UrlListValidator
 
 
 def create_app():
@@ -153,14 +154,17 @@ def create_app():
     @app.post(
         "/collections/{collection_id}/documents/urls",
         response_model_exclude_unset=True,
-        dependencies=[Depends(auth_class("update"))],
+        dependencies=[Depends(auth_class("update")), Depends(UrlListValidator())],
     )
     async def insert_urls_document_route(
         collection_id: str,
         urls: list[str],
         credentials: Annotated[str, Depends(access_token)],
+        # 1 ingests only the given URLs; deeper crawls stay within the directory each URL is in, and
+        # are clamped to SHABTI_CRAWL_MAX_DEPTH by the loader
+        max_depth: Annotated[int, Query(ge=1)] = 1,
     ) -> AsyncIterable[DocumentIngestInfo]:
-        async for x in insert_urls(credentials, collection_id, urls):
+        async for x in insert_urls(credentials, collection_id, urls, max_depth):
             yield x
 
     @app.delete(

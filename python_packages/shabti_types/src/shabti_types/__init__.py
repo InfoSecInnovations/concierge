@@ -28,4 +28,7 @@ from .exceptions import (
     InvalidUserError as InvalidUserError,
     UnsupportedFileError as UnsupportedFileError,
     ModelNotFoundError as ModelNotFoundError,
+    EmbeddingsError as EmbeddingsError,
+    EmptyDocumentError as EmptyDocumentError,
+    ForbiddenUrlError as ForbiddenUrlError,
 )

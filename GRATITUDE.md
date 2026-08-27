@@ -25,6 +25,8 @@ Non-exhaustive list of shoutouts to projects, organizations and their communitie
 - [FastAPI](https://fastapi.tiangolo.com/)
 - [Astral](https://astral.sh/)
 - [Keycloak](https://www.keycloak.org/)
+- [Crawlee](https://crawlee.dev/)
+- [Trafilatura](https://trafilatura.readthedocs.io/)
 
 Your tech stacks are great, but it’s the ecosystem of boisterous support that makes it a joy to be working in this space.
 

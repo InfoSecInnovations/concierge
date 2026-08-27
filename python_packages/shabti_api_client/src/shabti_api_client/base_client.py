@@ -60,11 +60,14 @@ class BaseShabtiClient(ABC):
                 continue
             yield DocumentIngestInfo(**json_obj)
 
-    async def insert_urls(self, collection_id: str, urls: list[str]):
+    async def insert_urls(
+        self, collection_id: str, urls: list[str], max_depth: int = 1
+    ):
         async for line in self._stream_request(
             "POST",
             f"/collections/{collection_id}/documents/urls",
             json=urls,
+            params={"max_depth": max_depth},
         ):
             yield DocumentIngestInfo(**json.loads(line))
 

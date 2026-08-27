@@ -42,15 +42,6 @@ wheels = [
 ]
 
 [[package]]
-name = "async-property"
-version = "0.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a7/12/900eb34b3af75c11b69d6b78b74ec0fd1ba489376eceb3785f787d1a0a1d/async_property-0.2.2.tar.gz", hash = "sha256:17d9bd6ca67e27915a75d92549df64b5c7174e9dc806b30a3934dc4ff0506380", size = 16523, upload-time = "2023-07-03T17:21:55.688Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/80/9f608d13b4b3afcebd1dd13baf9551c95fc424d6390e4b1cfd7b1810cd06/async_property-0.2.2-py2.py3-none-any.whl", hash = "sha256:8924d792b5843994537f8ed411165700b27b2bd966cefc4daeefc1253442a9d7", size = 9546, upload-time = "2023-07-03T17:21:54.293Z" },
-]
-
-[[package]]
 name = "certifi"
 version = "2026.7.22"
 source = { registry = "https://pypi.org/simple" }
@@ -506,20 +497,19 @@ wheels = [
 
 [[package]]
 name = "python-keycloak"
-version = "5.8.1"
+version = "7.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
-    { name = "async-property" },
     { name = "deprecation" },
     { name = "httpx" },
     { name = "jwcrypto" },
     { name = "requests" },
     { name = "requests-toolbelt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f1/b4/b2c988d8f4f161ff3f68cf2980bd41adb4067e402ac6bb8bc2302e05a300/python_keycloak-5.8.1.tar.gz", hash = "sha256:b99a1efc7eb8715c3a7d915005728f8ba2ee03c81cdf12210c65ce794cd148ad", size = 69461, upload-time = "2025-08-19T21:08:13.136Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/67/e3/963aae33e9177b496def0ba47d2290391e9391d9f76a3f69cfde8c44c8b8/python_keycloak-7.1.1.tar.gz", hash = "sha256:38973e54694a656fe6f3f8fc2af0b89c78136863f928261f0d243445e9e486bc", size = 78907, upload-time = "2026-02-15T08:45:58.139Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b5/90/c9602f31c59f5706c4dfdf0beb7320706e62db597d0abf18f747f68f35e7/python_keycloak-5.8.1-py3-none-any.whl", hash = "sha256:f80accf3e63b6c907f0f873ffac7a07705bd89d935520ba235259ba81b9ed864", size = 77719, upload-time = "2025-08-19T21:08:11.536Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/9f/569a8bbdb0859498d33d8b86273bc82849bd0b445ac01416ad34996ca3d8/python_keycloak-7.1.1-py3-none-any.whl", hash = "sha256:d8295bec6c4805ab7335b03bc92753c8c6258d5511b080cac061da20ae77f61c", size = 87607, upload-time = "2026-02-15T08:45:57.054Z" },
 ]
 
 [[package]]
@@ -618,7 +608,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "httpx" },
-    { name = "python-keycloak", specifier = "~=5.8.1" },
+    { name = "python-keycloak", specifier = "==7.1.1" },
     { name = "shabti-types", editable = "../python_packages/shabti_types" },
 ]
 
@@ -638,7 +628,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "python-keycloak", specifier = "~=5.8.1" }]
+requires-dist = [{ name = "python-keycloak", specifier = "==7.1.1" }]
 
 [[package]]
 name = "shabti-types"
@@ -684,14 +674,14 @@ requires-dist = [
     { name = "shabti-keycloak", editable = "/app/python_packages/shabti_keycloak" },
     { name = "shabti-types", editable = "/app/python_packages/shabti_types" },
     { name = "shabti-util", editable = "/app/python_packages/shabti_util" },
-    { name = "shiny", specifier = "==1.6.3" },
-    { name = "shinyswatch", specifier = "==0.11.0" },
-    { name = "tqdm", specifier = "==4.67.3" },
+    { name = "shiny", specifier = "==1.7.0" },
+    { name = "shinyswatch", specifier = "==0.12.0" },
+    { name = "tqdm", specifier = "==4.70.0" },
 ]
 
 [[package]]
 name = "shiny"
-version = "1.6.3"
+version = "1.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
@@ -716,9 +706,9 @@ dependencies = [
     { name = "watchfiles", marker = "sys_platform != 'emscripten'" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/4e/73e3d4058356394d385ad997967488c75a3701986f1ab7f6235759a24335/shiny-1.6.3.tar.gz", hash = "sha256:29997e112413be71548725cb4eda64a199e4a5a7814467fa8f438a5cd5bd5619", size = 5128971, upload-time = "2026-06-01T21:52:45.497Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2f/45/5522068b8333d5b5feb01a36f82b0009af76e834fe6ddd797e53e55cd8e7/shiny-1.7.0.tar.gz", hash = "sha256:8b85a4e92acc24f3f297e5f347fde2b3d519055a88f4acf6605ce44ec090599b", size = 5280023, upload-time = "2026-07-29T03:51:14.081Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/b1/5c56bd1374951b29b5787089d4d6a6d199ce93f796b4ba0072bc23537018/shiny-1.6.3-py3-none-any.whl", hash = "sha256:f1987f6f3883b082d89c298190166ba447d5c04b246a376691da742938116008", size = 3931071, upload-time = "2026-06-01T21:52:43.884Z" },
+    { url = "https://files.pythonhosted.org/packages/af/ef/79c3c9198fe5713a597bdadffd872b99e6db20c499204e252bd70900099a/shiny-1.7.0-py3-none-any.whl", hash = "sha256:a6f5dc7402de4e8ef417f4af0bd7641b78bf521cd5dd8ec0b96ce5920f07650e", size = 4019890, upload-time = "2026-07-29T03:51:11.903Z" },
 ]
 
 [[package]]
@@ -737,7 +727,7 @@ wheels = [
 
 [[package]]
 name = "shinyswatch"
-version = "0.11.0"
+version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "htmltools" },
@@ -745,9 +735,9 @@ dependencies = [
     { name = "shiny" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/04/4ac4c5a3ef07163440ebb051dad50efbe3c648005c0cb71c6a7f7deabb8c/shinyswatch-0.11.0.tar.gz", hash = "sha256:c7c4ed4eb8131980697df5ce4a8b87b681ed80422fe7dca0a9d2bfdacba3ff2e", size = 1413496, upload-time = "2026-06-01T22:24:26.358Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/7b/2b/c55b0181ea63f7f238f0c0b378f632d4188212fd1614f2d97e9311e08a3b/shinyswatch-0.12.0.tar.gz", hash = "sha256:a4eeb33a35d9a1ef6a7c7889471a240709fa0554b885e702540f71de02399aff", size = 1416836, upload-time = "2026-07-29T04:11:09.866Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/c2/7498240c02e46be103e70ad8e938f9898afe8047c4e690b50b7b11140a5c/shinyswatch-0.11.0-py3-none-any.whl", hash = "sha256:2c4dd5036d00fe8f8bcd5ed90e8b433cfa64cfcff7b91424a768c0df9cd7e6ed", size = 1431623, upload-time = "2026-06-01T22:24:24.75Z" },
+    { url = "https://files.pythonhosted.org/packages/37/e6/f72496868dd078403ad3a7b8ad61f292149522877fdccb5007d66346ac0e/shinyswatch-0.12.0-py3-none-any.whl", hash = "sha256:3b37fadbbf353e7c234c2d0972ba0ea90784559aca37d1e17a4c977fece036e9", size = 1435079, upload-time = "2026-07-29T04:11:08.433Z" },
 ]
 
 [[package]]
@@ -764,14 +754,14 @@ wheels = [
 
 [[package]]
 name = "tqdm"
-version = "4.67.3"
+version = "4.70.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/09/a9/6ba95a270c6f1fbcd8dac228323f2777d886cb206987444e4bce66338dd4/tqdm-4.67.3.tar.gz", hash = "sha256:7d825f03f89244ef73f1d4ce193cb1774a8179fd96f31d7e1dcde62092b960bb", size = 169598, upload-time = "2026-02-03T17:35:53.048Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/21/3b/6c24bec5be5e743ffd99576daa5cc077722fc7d5bbc00bd133fa0c698dc6/tqdm-4.70.0.tar.gz", hash = "sha256:55b0b0dbd97462d06ebee91e4dac24ed4d4702be82b24f07e6c1d27e08cea220", size = 795438, upload-time = "2026-07-27T11:33:15.271Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/16/e1/3079a9ff9b8e11b846c6ac5c8b5bfb7ff225eee721825310c91b3b50304f/tqdm-4.67.3-py3-none-any.whl", hash = "sha256:ee1e4c0e59148062281c49d80b25b67771a127c85fc9676d3be5f243206826bf", size = 78374, upload-time = "2026-02-03T17:35:50.982Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/1c/01bfd571a64e7f270e6bab5e33777debe0edc56759233ce84f27dec92d14/tqdm-4.70.0-py3-none-any.whl", hash = "sha256:7f585706bfddbdebf89daac705b2dfcc16890130727d3197ca62c732b4310953", size = 80184, upload-time = "2026-07-27T11:33:13.167Z" },
 ]
 
 [[package]]

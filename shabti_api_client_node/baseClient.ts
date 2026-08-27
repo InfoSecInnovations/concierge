@@ -182,7 +182,7 @@ export class BaseShabtiClient {
 		);
 	}
 
-	async insertUrls(collectionId: string, urls: string[]) {
+	async insertUrls(collectionId: string, urls: string[], maxDepth = 1) {
 		return this.streamRequest(
 			"POST",
 			`collections/${collectionId}/documents/urls`,
@@ -195,6 +195,8 @@ export class BaseShabtiClient {
 					json.label,
 				),
 			urls,
+			undefined,
+			{ max_depth: maxDepth },
 		);
 	}
 

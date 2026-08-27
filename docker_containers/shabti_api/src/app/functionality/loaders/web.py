@@ -1,39 +1,213 @@
 from __future__ import annotations
-from .base_loader import ShabtiDocument, get_current_time
-from langchain_community.document_loaders.recursive_url_loader import RecursiveUrlLoader
-from bs4 import BeautifulSoup
+import asyncio
+import os
 import re
+from datetime import timedelta
+from hashlib import blake2b
+from urllib.parse import urlsplit
+from uuid import uuid4
+import trafilatura
+from crawlee import ConcurrencySettings, service_locator
+from crawlee.crawlers import (
+    BasicCrawlingContext,
+    BeautifulSoupCrawler,
+    BeautifulSoupCrawlingContext,
+)
+from crawlee.errors import ServiceConflictError
+from crawlee.http_clients import ImpitHttpClient
+from crawlee.storage_clients import MemoryStorageClient
+from crawlee.storages import RequestQueue
+from shabti_types import EmptyDocumentError
+from .base_loader import ShabtiDocument, get_current_time
+from .url_guard import check_url_allowed, same_origin
+
+# crawlee's service locator is a global singleton, and its default storage client writes crawl state
+# to ./storage on disk; a memory client has to be registered before any crawler is constructed, and
+# setting a different one afterwards raises ServiceConflictError
+try:
+    service_locator.set_storage_client(MemoryStorageClient())
+except ServiceConflictError:
+    pass
+
+HTML_CONTENT_TYPES = ("text/html", "application/xhtml+xml")
+
+DEFAULTS = {
+    "SHABTI_CRAWL_MAX_DEPTH": 5,
+    "SHABTI_CRAWL_MAX_PAGES": 50,
+    "SHABTI_CRAWL_MAX_PAGE_BYTES": 1000000,
+    "SHABTI_CRAWL_MAX_TOTAL_BYTES": 20000000,
+    "SHABTI_CRAWL_CONCURRENCY": 4,
+    "SHABTI_CRAWL_REQUESTS_PER_MINUTE": 120,
+    "SHABTI_CRAWL_TIMEOUT_SECONDS": 20,
+}
+DEFAULT_USER_AGENT = "ShabtiAI (+https://github.com/InfoSecInnovations/shabti)"
 
 
-def bs4_extractor(html: str) -> str:
-    soup = BeautifulSoup(html, "lxml")
-    return re.sub(r"\n\n+", "\n\n", soup.text).strip()
+def setting(name: str) -> int:
+    value = os.getenv(name)
+    return int(value) if value else DEFAULTS[name]
+
+
+def extract_text(html: bytes) -> str:
+    """Turn a page into plain text.
+
+    trafilatura's main content `extract()` is deliberately not used: it is tuned for articles and
+    silently mangles structured pages, keeping 16 of 250 rows on the country list test page while
+    duplicating each row's data, and because that damage makes the output *longer* no length or
+    coverage gate can tell it apart from a page where it merely removed chrome. `clean=True` still
+    drops script, style, nav, footer, aside, form and cookie banners, which is what the bs4
+    `soup.text` extractor this replaced failed to do.
+    """
+    return (trafilatura.html2txt(html, clean=True) or "").strip()
+
+
+def scope_patterns(url: str) -> list[re.Pattern[str]]:
+    """Patterns restricting a crawl to `url` and everything below it.
+
+    The trailing slash is stripped first so `/docs` and `/docs/` scope identically, and a seed with
+    a single path segment can no longer widen the crawl to the whole host.
+    """
+    parts = urlsplit(url)
+    base = f"{parts.scheme}://{parts.netloc}"
+    path = (parts.path or "/").rstrip("/")
+    return [
+        # crawlee matches these with re.match, so an escaped prefix is a prefix match
+        re.compile(re.escape(f"{base}{path}/")),
+        # the seed itself, with or without a query or fragment
+        re.compile(re.escape(f"{base}{path}") + r"([?#].*)?$"),
+    ]
 
 
 class WebLoader:
     @staticmethod
-    def load(url: str) -> ShabtiDocument | None:
+    async def load(url: str, max_depth: int = 1) -> ShabtiDocument:
+        """Crawl `url` and return its text as a document.
+
+        `max_depth` of 1 fetches only `url` itself. A deeper crawl only ever goes *downwards*: it
+        stays within `url`'s origin and under its path, so a caller who wants the siblings of a page
+        passes its parent URL. Raises ForbiddenUrlError for URLs the server must not fetch and
+        EmptyDocumentError when nothing could be extracted.
+        """
+        await check_url_allowed(url)
+        depth = max(1, min(max_depth, setting("SHABTI_CRAWL_MAX_DEPTH")))
+        max_page_bytes = setting("SHABTI_CRAWL_MAX_PAGE_BYTES")
+        max_total_bytes = setting("SHABTI_CRAWL_MAX_TOTAL_BYTES")
+        concurrency = setting("SHABTI_CRAWL_CONCURRENCY")
+        scope = scope_patterns(url)
+
         date_time = get_current_time()
-        loader = RecursiveUrlLoader(url, max_depth=50, extractor=bs4_extractor)
-        pages = loader.load_and_split()
-        if not len(pages):
-            return None
+        pages: list[ShabtiDocument.ShabtiPage] = []
+        seen: set[bytes] = set()
+        failures: list[str] = []
+        total_bytes = 0
+
+        # without a request manager of its own a crawler opens the *default* request queue, which
+        # concurrent ingests in this process would share
+        queue = await RequestQueue.open(alias=uuid4().hex)
+        crawler = BeautifulSoupCrawler(
+            request_manager=queue,
+            http_client=ImpitHttpClient(
+                # no browser impersonation: identify ourselves honestly
+                browser=None,
+                headers={
+                    "User-Agent": os.getenv("SHABTI_CRAWL_USER_AGENT")
+                    or DEFAULT_USER_AGENT
+                },
+            ),
+            max_crawl_depth=depth - 1,  # crawlee counts the starting URL as depth 0
+            max_requests_per_crawl=setting("SHABTI_CRAWL_MAX_PAGES"),
+            respect_robots_txt_file=True,
+            concurrency_settings=ConcurrencySettings(
+                max_concurrency=concurrency,
+                desired_concurrency=concurrency,
+                max_tasks_per_minute=setting("SHABTI_CRAWL_REQUESTS_PER_MINUTE"),
+            ),
+            navigation_timeout=timedelta(
+                seconds=setting("SHABTI_CRAWL_TIMEOUT_SECONDS")
+            ),
+            configure_logging=False,  # leave the API's JSON logging setup alone
+            statistics_log_format="inline",
+        )
+
+        @crawler.router.default_handler
+        async def handle_page(context: BeautifulSoupCrawlingContext) -> None:
+            nonlocal total_bytes
+            # loaded_url is the URL after redirects, so this is what stops a redirect from taking the
+            # crawl off the origin we checked
+            loaded_url = context.request.loaded_url or context.request.url
+            if not same_origin(loaded_url, url):
+                context.log.info(f"skipping {loaded_url}: redirected outside {url}")
+                return
+            content_type = context.http_response.headers.get("content-type", "")
+            if content_type.split(";")[0].strip().lower() not in HTML_CONTENT_TYPES:
+                context.log.info(f"skipping {loaded_url}: {content_type} is not HTML")
+                return
+
+            html = await context.http_response.read()
+            # extraction is synchronous lxml work, so keep it off the event loop
+            text = (await asyncio.to_thread(extract_text, html))[:max_page_bytes]
+            if not text:
+                context.log.info(f"skipping {loaded_url}: no text could be extracted")
+                return
+
+            # the same page is often reachable under more than one URL, and embedding its text
+            # twice would let it dominate knn results
+            digest = blake2b(text.encode(), digest_size=16).digest()
+            if digest in seen:
+                context.log.info(
+                    f"skipping {loaded_url}: duplicate of a page already read"
+                )
+                return
+            seen.add(digest)
+
+            pages.append(
+                ShabtiDocument.ShabtiPage(
+                    metadata=ShabtiDocument.ShabtiPage.PageMetadata(source=loaded_url),
+                    content=text,
+                )
+            )
+            total_bytes += len(text)
+            if total_bytes >= max_total_bytes:
+                crawler.stop(f"reached the {max_total_bytes} byte budget for one crawl")
+                return
+
+            if depth > 1:
+                await context.enqueue_links(strategy="same-origin", include=scope)
+
+        @crawler.failed_request_handler
+        async def handle_failure(
+            # a request that never got a response only has the basic context
+            context: BasicCrawlingContext,
+            error: Exception,
+        ) -> None:
+            failures.append(f"{context.request.url}: {error}")
+
+        @crawler.on_skipped_request
+        async def handle_skipped(request_url: str, reason: str) -> None:
+            failures.append(f"{request_url}: skipped ({reason})")
+
+        try:
+            # the queue is new for this crawl, so there is nothing to purge
+            await crawler.run([url], purge_request_queue=False)
+        finally:
+            await queue.drop()
+
+        if not pages:
+            # crawler.run() does not raise for individual request failures, so without this a 404 or
+            # a robots.txt disallow would only ever surface as "no pages"
+            raise EmptyDocumentError(
+                source=url,
+                message="; ".join(failures)
+                if failures
+                else "no text could be extracted from the page",
+            )
+
         return ShabtiDocument(
             metadata=ShabtiDocument.DocumentMetadata(
                 source=url,
                 ingest_date=date_time,
                 media_type="text/html",
-                languages=[pages[0].metadata["language"]]
-                if "language" in pages[0].metadata
-                else [],
+                languages=[],
             ),
-            pages=[
-                ShabtiDocument.ShabtiPage(
-                    metadata=ShabtiDocument.ShabtiPage.PageMetadata(
-                        source=page.metadata["source"]
-                    ),
-                    content=page.page_content,
-                )
-                for page in pages
-            ],
+            pages=pages,
         )

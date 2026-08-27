@@ -1,7 +1,7 @@
 from fastapi import UploadFile
 from .ingesting import insert_document
 from .loading import load_file
-from shabti_types import UnsupportedFileError, DocumentIngestError
+from shabti_types import UnsupportedFileError, DocumentIngestError, EmptyDocumentError
 import zipfile
 from io import BytesIO
 import os
@@ -49,6 +49,10 @@ async def insert_uploaded_files(
             except UnsupportedFileError as e:
                 yield DocumentIngestError(
                     error="UnsupportedFileError", message=e.message, filename=e.filename
+                )
+            except EmptyDocumentError as e:
+                yield DocumentIngestError(
+                    error="EmptyDocumentError", message=e.message, filename=e.source
                 )
             except Exception as e:
                 if zipfile.is_zipfile(file.file):
