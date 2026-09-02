@@ -1,6 +1,9 @@
+import asyncio
+from contextlib import aclosing, suppress
+from functools import cache
 from opensearchpy import helpers
-from .embeddings import create_embeddings
-from .loaders.base_loader import ShabtiDocument
+from .embeddings import create_embeddings, get_embeddings_model_id
+from .loaders.base_loader import ShabtiDocument, ShabtiPageStream
 from .opensearch import get_client, delete_opensearch_document
 from shabti_types import DocumentIngestInfo, EmptyDocumentError
 from semantic_text_splitter import TextSplitter
@@ -17,11 +20,8 @@ def get_field_type(python_type):
     return "keyword"
 
 
-def insert(
-    collection_id: str,
-    document: ShabtiDocument,
-    binary_path: str | None = None,
-):
+@cache
+def get_splitter() -> TextSplitter:
     tokenizer = Tokenizer.from_pretrained(
         "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
     )
@@ -30,77 +30,127 @@ def insert(
     # semantic-text-splitter >=0.31 reports the *truncated* token count for tokenizers with
     # truncation enabled, so oversized text measures exactly `capacity` and is never split
     tokenizer.no_truncation()
-    splitter = TextSplitter.from_huggingface_tokenizer(tokenizer, capacity, overlap=50)
+    return TextSplitter.from_huggingface_tokenizer(tokenizer, capacity, overlap=50)
 
-    total = len(document.pages)
-    if not total:
-        raise EmptyDocumentError(source=document.metadata.source)
 
+async def insert(
+    collection_id: str,
+    stream: ShabtiPageStream,
+    binary_path: str | None = None,
+):
+    """Embed and index a document's pages as the loader produces them.
+
+    Everything blocking runs in a thread so the event loop stays free for the loader: a crawl keeps
+    fetching while the page before it is being embedded. Within a document the same trick overlaps
+    the two servers involved, embedding each page while the previous one's vectors are still being
+    written to OpenSearch.
+    """
     client = get_client()
-    additional = {}
-    if binary_path:
-        additional["binary_path"] = binary_path
+    # both are per-document rather than per-page: the model listing is a round trip and the
+    # tokenizer is a download, and neither changes while one document is being ingested
+    model_id = await asyncio.to_thread(get_embeddings_model_id)
+    splitter = await asyncio.to_thread(get_splitter)
 
-    doc_id = client.index(
-        index=collection_id,
-        body={
-            "type": "document",
-            "child_item_to_document": "document",
-            **vars(document.metadata),
-            **additional,
-        },
-        refresh=True,
-    )["_id"]
+    label = stream.metadata.filename or stream.metadata.source
+    doc_id: str | None = None
+    pending: asyncio.Task | None = None
+    # the page whose write is in flight, which is also the next one to report progress for
+    written = -1
+
+    def create_parent() -> str:
+        additional = {"binary_path": binary_path} if binary_path else {}
+        return client.index(
+            index=collection_id,
+            body={
+                "type": "document",
+                "child_item_to_document": "document",
+                **vars(stream.metadata),
+                **additional,
+            },
+        )["_id"]
+
+    def split(page: ShabtiDocument.ShabtiPage) -> list[str]:
+        # don't allow empty or whitespace chunks
+        return [chunk for chunk in splitter.chunks(page.content) if chunk.strip()]
+
+    def write(page: ShabtiDocument.ShabtiPage, chunks: list[str], vects) -> None:
+        page_id = client.index(
+            index=collection_id,
+            body={
+                "child_item_to_document": {"name": "child_item", "parent": doc_id},
+                "type": "page",
+                **vars(page.metadata),
+            },
+            routing=doc_id,
+        )["_id"]
+        # flush per page rather than accumulating every vector for every page: a crawl or a large
+        # text file can be thousands of chunks of 768 floats. the rollback below deletes children
+        # by parent, so already flushed vectors are still cleaned up on failure.
+        helpers.bulk(
+            client,
+            [
+                {
+                    "_index": collection_id,
+                    "_routing": doc_id,
+                    "child_item_to_document": {
+                        "name": "child_item",
+                        "parent": doc_id,
+                    },
+                    "type": "vector",
+                    "text": chunk,
+                    "document_vector": vect,
+                    "page_id": page_id,
+                    "doc_id": doc_id,
+                }
+                for chunk, vect in zip(chunks, vects)
+            ],
+        )
+
+    def progress() -> DocumentIngestInfo:
+        return DocumentIngestInfo(
+            progress=written,
+            total=stream.estimated_total(),
+            document_id=doc_id,
+            document_type=stream.metadata.media_type,
+            label=label,
+        )
 
     try:
-        for index, page in enumerate(document.pages):
-            page_id = client.index(
-                index=collection_id,
-                body={
-                    "child_item_to_document": {"name": "child_item", "parent": doc_id},
-                    "type": "page",
-                    **vars(page.metadata),
-                },
-                routing=doc_id,
-                refresh=True,
-            )["_id"]
-            chunks = [
-                chunk for chunk in splitter.chunks(page.content) if chunk.strip()
-            ]  # don't allow empty or whitespace chunks
-            vects = create_embeddings(chunks)
-            # flush per page rather than accumulating every vector for every page: a crawl or a large
-            # text file can be thousands of chunks of 768 floats. the rollback below deletes children
-            # by parent, so already flushed vectors are still cleaned up on failure.
-            helpers.bulk(
-                client,
-                [
-                    {
-                        "_index": collection_id,
-                        "_routing": doc_id,
-                        "child_item_to_document": {
-                            "name": "child_item",
-                            "parent": doc_id,
-                        },
-                        "type": "vector",
-                        "text": chunks[index],
-                        "document_vector": vect,
-                        "page_id": page_id,
-                        "doc_id": doc_id,
-                    }
-                    for index, vect in enumerate(vects)
-                ],
-                refresh=True,
-            )
-            yield DocumentIngestInfo(
-                progress=index,
-                total=total,
-                document_id=doc_id,
-                document_type=document.metadata.media_type,
-                label=document.metadata.filename
-                if document.metadata.filename
-                else document.metadata.source,
-            )
+        # closed explicitly rather than left to the garbage collector: a crawl stream shuts its
+        # crawler down from there, and it has to happen when this loop ends however it ends
+        async with aclosing(stream.pages) as source:
+            async for page in source:
+                if doc_id is None:
+                    # created on the first page rather than up front, so a source that turns out to
+                    # be empty leaves nothing behind to clean up
+                    doc_id = await asyncio.to_thread(create_parent)
+                chunks = await asyncio.to_thread(split, page)
+                vects = await asyncio.to_thread(create_embeddings, chunks, model_id)
+                if pending:
+                    await pending
+                    yield progress()
+                written += 1
+                pending = asyncio.create_task(
+                    asyncio.to_thread(write, page, chunks, vects)
+                )
+
+        if pending:
+            await pending
+            yield progress()
+
+        if doc_id is None:
+            raise EmptyDocumentError(source=stream.metadata.source)
+
+        # nothing above refreshes, so this is what makes the document searchable and what the
+        # vector and page counts read straight after an ingest depend on
+        await asyncio.to_thread(client.indices.refresh, index=collection_id)
 
     except Exception as e:
-        delete_opensearch_document(collection_id, doc_id)
+        if pending:
+            # awaited rather than cancelled: a thread already running the write can't be stopped,
+            # and letting it land after the rollback would leave orphaned vectors behind
+            with suppress(Exception):
+                await pending
+        if doc_id is not None:
+            await asyncio.to_thread(delete_opensearch_document, collection_id, doc_id)
         raise e

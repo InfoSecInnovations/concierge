@@ -94,6 +94,9 @@ export default async () => {
 				currentLabel = item.label;
 				currentId = item.documentId;
 			}
+			// a crawl doesn't know how many pages it has until it has finished finding them, so the
+			// total moves as it goes and only the last items carry the real count
+			if (bar && bar.getTotal() !== item.total) bar.setTotal(item.total);
 			if (bar) bar.update(item.progress + 1); // progress is 0 indexed but the bar is 1 indexed
 		}
 		if (bar) {

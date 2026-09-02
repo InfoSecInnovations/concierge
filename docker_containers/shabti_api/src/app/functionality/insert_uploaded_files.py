@@ -2,6 +2,7 @@ from fastapi import UploadFile
 from .ingesting import insert_document
 from .loading import load_file
 from shabti_types import UnsupportedFileError, DocumentIngestError, EmptyDocumentError
+import asyncio
 import zipfile
 from io import BytesIO
 import os
@@ -21,8 +22,10 @@ async def insert_uploaded_files(
     async def handle_files(files: list[UploadFile]):
         for file in files:
             try:
-                doc = load_file(file.file, file.filename)
-                if not doc:
+                # Tika parsing is blocking and takes tens of seconds on a large PDF, which would
+                # otherwise stall every other request on the event loop for that whole time
+                stream = await asyncio.to_thread(load_file, file.file, file.filename)
+                if not stream:
                     raise UnsupportedFileError(
                         message="No content was able to be loaded from the file",
                         filename=file.filename,
@@ -36,7 +39,7 @@ async def insert_uploaded_files(
                     await f.write(await file.read())
                 try:
                     async for result in insert_document(
-                        token, collection_id, doc, file_unique_name
+                        token, collection_id, stream, file_unique_name
                     ):
                         yield result
                 except Exception as e:

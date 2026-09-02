@@ -1,4 +1,5 @@
 import os
+from functools import cache
 from opensearchpy import OpenSearch
 
 
@@ -7,7 +8,10 @@ FILES_INDEX_NAME = "file_mappings"
 OPENSEARCH_MAX_RESULTS = 10000
 
 
+@cache
 def get_client():
+    # one client for the process so its connection pool is actually reused: ingesting a large
+    # document makes thousands of calls, and a fresh client per call reconnects for every one
     port = 9200
     return OpenSearch(
         hosts=[{"host": os.getenv("OPENSEARCH_HOST", "localhost"), "port": port}],
@@ -329,6 +333,10 @@ def get_opensearch_document_types(collection_id: str):
 
 def delete_opensearch_document(collection_id: str, doc_id: str):
     client = get_client()
+    # both the parent and its children have to be searchable for `has_parent` to find anything, and
+    # ingesting no longer refreshes as it writes, so a rollback part way through an ingest would
+    # otherwise leave behind exactly the vectors it was called to remove
+    client.indices.refresh(index=collection_id)
     child_query = {
         "query": {
             "has_parent": {

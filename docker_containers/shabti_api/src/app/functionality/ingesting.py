@@ -1,5 +1,4 @@
 from .opensearch_ingesting import insert
-from isi_util.async_generator import asyncify_generator
 from shabti_types import DocumentIngestInfo, DocumentInfo
 from typing import AsyncGenerator, Any
 from shabti_util import auth_enabled
@@ -9,10 +8,10 @@ from .opensearch import get_document
 
 
 async def insert_document(
-    token, collection_id, document, binary_path=None
+    token, collection_id, stream, binary_path=None
 ) -> AsyncGenerator[DocumentIngestInfo, Any]:
     x = None
-    async for x in asyncify_generator(insert(collection_id, document, binary_path)):
+    async for x in insert(collection_id, stream, binary_path):
         yield x
     if logging_enabled() and x:
         collection_info = await get_collection_info(collection_id)
