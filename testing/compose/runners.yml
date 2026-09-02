@@ -1,0 +1,77 @@
+# The one-shot containers the tests actually run in. Every suite is invoked as
+# `docker compose run --rm <service> <command>`, which propagates the test process's exit code and
+# takes a command override -- both of which `up --attach` cannot do.
+#
+# Test types are assembled by layering files with -f (see testing/stack.ts) rather than with
+# `extends`, so the merge semantics are the documented override ones. runners.yml on its own is
+# the unit test type: no stack, no depends_on, no configurator fragments.
+
+services:
+  # The API tests build the app in process with TestClient(create_app()), so this service is
+  # configured like the shabti service rather than talking to it over the network. The env is
+  # spelled out instead of extending docker-compose-shabti.yml because that fragment sets
+  # container_name and ports, neither of which `compose run` can use.
+  #
+  # Also the home of the isi_util suite, which the Dockerfile's `local` target already uv syncs;
+  # testing/suites.ts points it at a different working directory.
+  pytest-api:
+    build:
+      context: ../../docker_containers/shabti_api
+      additional_contexts:
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile
+      target: local
+    environment:
+      - OPENSEARCH_HOST=opensearch-node1
+      - LLM_HOST=llama_cpp
+      - MODEL_LOADER_HOST=huggingface-downloader
+      - SHABTI_SECURITY_ENABLED=False
+      - SHABTI_LOGGING_ENABLED=False
+      - SHABTI_FILES_DIR=/opt/shabti_files
+      - TIKA_CLIENT_ONLY=True
+      - TIKA_SERVER_ENDPOINT=http://tika:9998
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - KEYCLOAK_HOST=keycloak
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
+    volumes:
+      - ../test_results:/test_results/
+      # both sets of tests are bind mounted rather than baked in: shabti_api's are excluded from
+      # the image so they don't ship to production, and isi_util's sit in an early COPY layer that
+      # a full uv sync rebuild hangs off
+      - ../../docker_containers/shabti_api/tests:/app/shabti/tests
+      - ../../python_packages/isi_util/tests:/app/python_packages/isi_util/tests
+    restart: "no"
+
+  pytest-python-client:
+    build:
+      context: ../../python_packages/shabti_api_client
+      additional_contexts:
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile
+    environment:
+      - SHABTI_SECURITY_ENABLED=False
+      - KEYCLOAK_HOST=keycloak
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
+    volumes:
+      - ../test_results:/test_results/
+      - ../../python_packages/shabti_api_client/tests:/python_packages/shabti_api_client/tests
+    restart: "no"
+
+  # every bun suite -- the hermetic versioning and dependencies ones as well as the node client and
+  # CLI end-to-end ones. The repo is copied into the image rather than bind mounted so the tests
+  # never see the host's node_modules, which is the whole point of running them in a container.
+  bun-tests:
+    build:
+      context: ../..
+      dockerfile: testing/images/Dockerfile.bun
+    environment:
+      - SHABTI_SECURITY_ENABLED=False
+      - API_URL=http://shabti:15131
+      - KEYCLOAK_HOST=keycloak
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-}
+      - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
+    volumes:
+      - ../test_results:/test_results/
+    restart: "no"

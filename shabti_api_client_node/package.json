@@ -6,7 +6,6 @@
 	"types": "./dist/index.d.ts",
 	"files": ["dist"],
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
 		"build:js": "bun build index.ts --bundle --platform=node --outdir=dist --packages=external",
 		"build:types": "tsc --declaration index.ts --emitDeclarationOnly --outDir ./dist",
 		"build": "bun run build:js && bun run build:types"

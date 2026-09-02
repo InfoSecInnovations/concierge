@@ -1,0 +1,27 @@
+# Layered last for the security-enabled test type. The cert paths come from testing/env/.generated.env,
+# which testing/security.ts writes after createCertificates() runs.
+
+services:
+  pytest-api:
+    environment:
+      - SHABTI_SECURITY_ENABLED=True
+      - ROOT_CA=/opensearch_certs/root-ca.pem
+    volumes:
+      - ${ROOT_CA}:/opensearch_certs/root-ca.pem
+      - ${API_CERT}:/api_certs/cert.pem
+      - ${API_KEY}:/api_certs/key.pem
+
+  pytest-python-client:
+    environment:
+      - SHABTI_SECURITY_ENABLED=True
+      - ROOT_CA=/opensearch_certs/root-ca.pem
+    volumes:
+      - ${ROOT_CA}:/opensearch_certs/root-ca.pem
+
+  bun-tests:
+    environment:
+      - SHABTI_SECURITY_ENABLED=True
+      - API_URL=https://shabti:15131
+      # TODO: the node tests should trust the root CA rather than skipping verification, same as
+      # the TODO in shabti_cli/getAuthClient.ts
+      - NODE_TLS_REJECT_UNAUTHORIZED=0

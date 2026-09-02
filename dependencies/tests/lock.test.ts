@@ -50,7 +50,7 @@ const repo = useRepo({
 		"shiny_demo_projects/pyproject.toml":
 			'[project]\nname = "shiny-demo-projects"\nversion = "0.1.0"\ndependencies = ["shiny>=1.5.1"]\n',
 		"elsewhere/package.json": '{ "name": "elsewhere" }\n',
-		"tests_docker_compose/bun.lock": '{ "lockfileVersion": 1 }\n',
+		"elsewhere/bun.lock": '{ "lockfileVersion": 1 }\n',
 	},
 });
 
@@ -100,11 +100,10 @@ describe("lockActionsFor", () => {
 		).toEqual([]);
 	});
 
-	test("never touches the stale nested bun.lock", async () => {
-		// its dependencies already live in the root bun.lock; running bun install there would revive it
-		expect(
-			await lockActionsFor(repo.dir, ["tests_docker_compose/bun.lock"]),
-		).toEqual([]);
+	test("never touches a nested bun.lock", async () => {
+		// one bun.lock at the root covers every workspace member; running bun install beside a
+		// stray nested lockfile would only revive it
+		expect(await lockActionsFor(repo.dir, ["elsewhere/bun.lock"])).toEqual([]);
 	});
 
 	test("deduplicates and orders the actions", async () => {

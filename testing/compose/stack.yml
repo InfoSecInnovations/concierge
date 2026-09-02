@@ -1,0 +1,53 @@
+name: shabti
+
+# The long running Shabti services. Only the test types that actually need a live stack layer this
+# file in, which is what keeps a unit run from paying for an OpenSearch cold start.
+
+include:
+  - ../../shabti_configurator/docker_compose/docker_compose_dependencies/${KEYCLOAK_SERVICE_FILE:-docker-compose-blank.yml}
+
+services:
+  llama-cpp:
+    extends:
+      file: ../../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-llama-cpp.yml
+      service: llama-cpp-${SHABTI_COMPUTE:-cpu}
+  opensearch-node1:
+    extends:
+      file: ../../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-opensearch.yml
+      service: opensearch-node-base
+  tika:
+    extends:
+      file: ../../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-tika.yml
+      service: tika
+  shabti:
+    extends:
+      file: ../../shabti_configurator/docker_compose/docker_compose_dependencies/docker-compose-shabti.yml
+      service: ${SHABTI_SERVICE:-shabti}
+    build:
+      context: ../../docker_containers/shabti_api
+      additional_contexts:
+        python_packages: ../../python_packages
+      dockerfile: Dockerfile
+      target: local
+    # docker_run.py will not reach uvicorn.run until its own wait on llama.cpp's /health returns, so
+    # without this a `compose run` on a suite that only depends on shabti starts shabti on its own
+    # and it waits for a container nothing ever asked for. None of these carry a healthcheck, and
+    # none is needed: the API and the test conftests poll the ones they use.
+    depends_on:
+      opensearch-node1:
+        condition: service_started
+      llama-cpp:
+        condition: service_started
+      tika:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  opensearch-data1:
+  llama-cpp-models:
+  llama-cpp-cache:
+  shabti-files:
+
+networks:
+  default:
+    name: shabti

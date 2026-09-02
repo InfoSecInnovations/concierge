@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, jest, test } from "bun:test";
 import { ShabtiClient } from "../client";
+import apiUrl from "./apiUrl";
 import path = require("node:path");
 import { randomBytes } from "node:crypto";
 import { afterEach } from "node:test";
@@ -10,12 +11,13 @@ const promptFilename = "test_doc.txt";
 const promptDocPath = path.join(import.meta.dir, promptFilename);
 const url = "https://www.scrapethissite.com/pages/simple/";
 
-jest.setTimeout(-1);
+// finite, so a hang shows up as a failure in the report instead of stalling the whole run
+jest.setTimeout(10 * 60_000);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	"Node Client - Security disabled Shabti instance",
 	() => {
-		const getClient = () => new ShabtiClient("http://localhost:15131");
+		const getClient = () => new ShabtiClient(apiUrl("http"));
 
 		// prompting runs on whichever chat model is currently loaded, so we make sure
 		// there is one

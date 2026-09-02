@@ -1,3 +1,5 @@
+# TikaFileLoader.load is an HTTP call to the Tika service, so this is not a unit test and
+# lives here rather than in tests/unit, which the runner's unit lane runs with no containers at all.
 from ...src.app.functionality.loaders.tika_loader import TikaFileLoader
 import os
 from fastapi import UploadFile

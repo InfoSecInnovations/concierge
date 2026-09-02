@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, jest, test } from "bun:test";
 import { ShabtiAuthorizationClient } from "../authClient";
+import getOpenIdConfig from "../getOpenIdConfig";
+import apiUrl from "./apiUrl";
 import * as openIdClient from "openid-client";
 import path = require("node:path");
 import { randomBytes } from "node:crypto";
@@ -11,19 +13,14 @@ const promptFilename = "test_doc.txt";
 const promptDocPath = path.join(import.meta.dir, promptFilename);
 const url = "https://www.scrapethissite.com/pages/simple/";
 
-jest.setTimeout(-1);
+// finite, so a hang shows up as a failure in the report instead of stalling the whole run
+jest.setTimeout(10 * 60_000);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 	"Node Client - Security enabled Shabti instance",
 	async () => {
-		const getConfig = () =>
-			openIdClient.discovery(
-				new URL(
-					`https://localhost:8443/realms/shabti/.well-known/openid-configuration`,
-				),
-				process.env.KEYCLOAK_CLIENT_ID!,
-				process.env.KEYCLOAK_CLIENT_SECRET!,
-			);
+		// the package's own helper, which already resolves KEYCLOAK_HOST
+		const getConfig = getOpenIdConfig;
 		const getClientForUser = async (username: string) => {
 			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 			const config = await getConfig();
@@ -31,21 +28,13 @@ describe.if(process.env.SHABTI_SECURITY_ENABLED == "True")(
 				username,
 				password: "test",
 			});
-			return new ShabtiAuthorizationClient(
-				"https://localhost:15131",
-				token,
-				config,
-			);
+			return new ShabtiAuthorizationClient(apiUrl("https"), token, config);
 		};
 		const getAdminClient = async () => {
 			process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 			const config = await getConfig();
 			const token = await openIdClient.clientCredentialsGrant(config);
-			return new ShabtiAuthorizationClient(
-				"https://localhost:15131",
-				token,
-				config,
-			);
+			return new ShabtiAuthorizationClient(apiUrl("https"), token, config);
 		};
 		// prompting runs on whichever chat model is currently loaded, so we make sure
 		// there is one

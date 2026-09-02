@@ -3,10 +3,11 @@
 		// Environment setup & latest features
 		"lib": ["ESNext"],
 		"target": "ESNext",
-		"module": "Preserve",
+		"module": "ESNext",
 		"moduleDetection": "force",
 		"jsx": "react-jsx",
 		"allowJs": true,
+		"types": ["bun"],
 
 		// Bundler mode
 		"moduleResolution": "bundler",
@@ -19,7 +20,6 @@
 		"skipLibCheck": true,
 		"noFallthroughCasesInSwitch": true,
 		"noUncheckedIndexedAccess": true,
-		"noImplicitOverride": true,
 
 		// Some stricter flags (disabled by default)
 		"noUnusedLocals": false,

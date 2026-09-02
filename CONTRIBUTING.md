@@ -45,9 +45,33 @@ Ruff will attempt to fix any errors, if the checks fail but all errors are fixed
 >
 > If there are changes to the required Docker dependencies, updating them may take a long time depending on your internet speed.
 
-End to end testing is in the process of being implemented, and some unit test coverage for the packages used by Shabti. To run the tests, enter the venv and simply use the `pytest` command. Green dots means all the tests passed. If you wish to stop the test run on the first failure to see where errors are occurring you can add the `--show-capture=stderr -x` to the command. This is useful as failing tests can generate a lot of noise in the output without these options.
+Everything runs from one command:
 
-We will be adding this as an automated step to PR submissions, so running the tests locally will allow you to save time getting your PR accepted.
+```
+bun run test
+```
+
+Every test runs in a container, so the only thing you need locally is Docker and bun. The run is
+split into three test types: `unit` (hermetic, no services, finishes in seconds), `disabled` and
+`enabled` (end to end against a security-disabled and a security-enabled instance). Only the
+end-to-end types start a stack, and the summary ends with why anything failed.
+
+While you are working on one thing, filter:
+
+```
+bun run test --list                  # the test types and suites
+bun run test unit                    # the fast type only
+bun run test unit versioning         # a single suite
+bun run test disabled api test_collections_api.py::test_create
+```
+
+A bare word after the suite name narrows it to a file; from the first flag onwards everything goes
+straight to pytest or bun, so `-k` and `-t` work as usual. See
+[testing/README.md](testing/README.md) for the rest, including `--keep-up` for faster re-runs.
+
+The run exits non-zero if anything failed, so it can gate a PR. We will be adding this as an
+automated step to PR submissions, so running the tests locally will allow you to save time getting
+your PR accepted.
 
 We welcome contributions of additional tests as there are many code paths still lacking coverage!
 

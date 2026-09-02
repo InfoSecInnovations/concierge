@@ -143,9 +143,10 @@ are in scope and have both already drifted from them.
 ## Tests
 
 ```sh
-bun run test:dependencies
+bun run test unit dependencies
 ```
 
 Every test is offline: HTTP is injected, and a request to a URL the fixture does not cover throws with
 that URL in the message, which is how an accidental live call is caught. The lockfile runner is
-injected the same way, so no test starts Docker.
+injected the same way, so no test starts Docker. The suite runs in a container along with the rest of
+the `unit` test type -- see [testing/README.md](../../testing/README.md).

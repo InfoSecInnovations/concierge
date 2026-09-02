@@ -13,7 +13,8 @@ import { $ } from "bun";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
 
-jest.setTimeout(-1);
+// finite, so a hang shows up as a failure in the report instead of stalling the whole run
+jest.setTimeout(10 * 60_000);
 
 describe.if(process.env.SHABTI_SECURITY_ENABLED == "False")(
 	"CLI - Security disabled Shabti instance",

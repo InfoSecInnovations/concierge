@@ -1,5 +1,7 @@
 # config files used by Shabti
 .env
+# the test runner's generated env, which carries the Keycloak client secret and local paths
+testing/env/.generated.env
 shabti_log.json
 shabti_logs/
 test_results/

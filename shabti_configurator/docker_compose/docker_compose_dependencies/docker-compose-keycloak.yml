@@ -30,8 +30,14 @@ services:
       - KC_DB_URL_DATABASE=keycloak
       - KC_HTTPS_CERTIFICATE_FILE=/opt/keycloak/tls/cert.pem
       - KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/tls/key.pem
-      - KC_HOSTNAME=${WEB_HOST:-localhost}
-      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC
+      # Keycloak advertises these URLs in its discovery document, so a client that discovers them
+      # rather than constructing them itself can only reach Keycloak wherever this says. Spelled as
+      # a full URL because hostname-backchannel-dynamic below is only allowed with one.
+      - KC_HOSTNAME=https://${WEB_HOST:-localhost}:8443
+      # On for the tests, which reach Keycloak by container name rather than on localhost. It makes
+      # the backchannel URLs -- token, jwks, introspection -- follow the host of the request that
+      # asked for them, while the browser facing ones stay pinned to KC_HOSTNAME above.
+      - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=${KEYCLOAK_BACKCHANNEL_DYNAMIC:-false}
       - SHABTI_HOST=${WEB_HOST:-localhost}
       - SHABTI_PORT=${WEB_PORT:-15130}
     restart: unless-stopped

@@ -10,8 +10,7 @@
 		"deps": "bun ./dependencies/check.ts",
 		"deps:set": "bun ./dependencies/set.ts",
 		"deps:migrate": "bun ./dependencies/migrate.ts",
-		"test:versioning": "bun test versioning",
-		"test:dependencies": "bun test dependencies"
+		"test": "bun ./testing/run.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
@@ -25,12 +24,12 @@
 		"shabti_configurator/",
 		"shabti_configurator/client/",
 		"shabti_cli/",
-		"shabti_api_client_node/",
-		"tests_docker_compose/"
+		"shabti_api_client_node/"
 	],
 	"dependencies": {
 		"commander": "15.0.0",
 		"dotenv": "17.4.2",
+		"fast-xml-parser": "5.10.1",
 		"octokit": "5.0.5",
 		"semver": "7.8.5"
 	},
