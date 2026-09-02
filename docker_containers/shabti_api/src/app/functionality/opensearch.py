@@ -183,69 +183,52 @@ async def delete_collection_indices(collection_id: str):
     return True
 
 
-async def add_document_metadata(collection_id, doc):
+async def get_document_counts(collection_id: str, doc_ids: list[str]):
+    # one aggregation for the whole page of documents. these counts used to be a pair of count
+    # queries per document, so listing N documents cost 2N round trips
+    counts = {doc_id: {"page_count": 0, "vector_count": 0} for doc_id in doc_ids}
+    if not doc_ids:
+        return counts
     client = get_client()
+    body = {
+        "size": 0,
+        "query": {
+            "bool": {
+                "filter": [
+                    {"terms": {"type": ["page", "vector"]}},
+                    {
+                        "has_parent": {
+                            "parent_type": "document",
+                            "query": {"ids": {"values": doc_ids}},
+                        }
+                    },
+                ]
+            }
+        },
+        "aggs": {
+            "document": {
+                # the join field's parent id, the only thing pages and vectors both carry: pages
+                # have no doc_id field of their own
+                "terms": {
+                    "field": "child_item_to_document#document",
+                    "size": len(doc_ids),
+                },
+                "aggs": {"type": {"terms": {"field": "type", "size": 2}}},
+            }
+        },
+    }
+    response = await client.search(body=body, index=collection_id)
+    for bucket in response["aggregations"]["document"]["buckets"]:
+        doc_counts = counts.get(bucket["key"])
+        if doc_counts is None:
+            continue
+        for type_bucket in bucket["type"]["buckets"]:
+            doc_counts[f"{type_bucket['key']}_count"] = type_bucket["doc_count"]
+    return counts
 
-    page_query = {
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "bool": {
-                            "filter": [
-                                {"term": {"type": "page"}},
-                            ]
-                        }
-                    },
-                    {
-                        "has_parent": {
-                            "parent_type": "document",
-                            "query": {
-                                "bool": {
-                                    "filter": [
-                                        {"term": {"_id": doc["id"]}},
-                                    ],
-                                }
-                            },
-                        }
-                    },
-                ]
-            }
-        }
-    }
-    doc["page_count"] = (await client.count(body=page_query, index=collection_id))[
-        "count"
-    ]
-    vector_query = {
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "bool": {
-                            "filter": [
-                                {"term": {"type": "vector"}},
-                            ]
-                        }
-                    },
-                    {
-                        "has_parent": {
-                            "parent_type": "document",
-                            "query": {
-                                "bool": {
-                                    "filter": [
-                                        {"term": {"_id": doc["id"]}},
-                                    ],
-                                }
-                            },
-                        }
-                    },
-                ]
-            }
-        }
-    }
-    doc["vector_count"] = (await client.count(body=vector_query, index=collection_id))[
-        "count"
-    ]
+
+async def add_document_metadata(collection_id, doc):
+    doc.update((await get_document_counts(collection_id, [doc["id"]]))[doc["id"]])
     return doc
 
 
@@ -325,10 +308,9 @@ async def get_opensearch_documents(
         if sort == "date_desc":
             body["sort"] = {"ingest_date": {"order": "desc"}}
     response = await client.search(body=body, index=collection_id)
-    docs = [
-        await add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
-        for hit in response["hits"]["hits"]
-    ]
+    hits = response["hits"]["hits"]
+    counts = await get_document_counts(collection_id, [hit["_id"] for hit in hits])
+    docs = [{**hit["_source"], "id": hit["_id"], **counts[hit["_id"]]} for hit in hits]
     body = {"query": {"bool": {"filter": [{"term": {"type": "document"}}]}}}
     count_response = await client.count(body=body, index=collection_id)
 

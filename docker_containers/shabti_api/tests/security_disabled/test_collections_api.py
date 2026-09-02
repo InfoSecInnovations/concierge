@@ -106,6 +106,32 @@ async def test_insert_urls_with_depth(shabti_client, shabti_collection_id):
     ).documents
 
 
+async def test_document_counts_are_per_document(shabti_client, shabti_collection_id):
+    response = shabti_client.post(
+        f"/collections/{shabti_collection_id}/documents/files",
+        files=[("files", open(file_path, "rb"))],
+    )
+    assert response.status_code == 200
+    response = shabti_client.post(
+        f"/collections/{shabti_collection_id}/documents/urls",
+        json=[listing_url],
+        params={"max_depth": 2},
+    )
+    assert response.status_code == 200
+    docs = await get_documents(None, shabti_collection_id)
+    file_doc = next((doc for doc in docs.documents if doc.filename == filename), None)
+    crawled_doc = next(
+        (doc for doc in docs.documents if doc.source == listing_url), None
+    )
+    assert file_doc and crawled_doc
+    # the counts for a listing come from one aggregation over every document on the page, so each
+    # document has to get its own bucket rather than the whole page sharing a count
+    assert file_doc.page_count == 1
+    assert crawled_doc.page_count >= 5
+    assert file_doc.vector_count > 0
+    assert crawled_doc.vector_count > 0
+
+
 @pytest.mark.parametrize(
     "forbidden_url",
     [
