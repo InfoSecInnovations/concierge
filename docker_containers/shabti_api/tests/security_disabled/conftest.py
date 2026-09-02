@@ -1,4 +1,6 @@
+import asyncio
 from ...src.app.functionality.status import check_opensearch
+from ...src.app.functionality.opensearch import close_client
 from ...src.load_dotenv import load_env
 from ...src.app.app import create_app
 from fastapi.testclient import TestClient
@@ -23,19 +25,21 @@ file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 @pytest_asyncio.fixture(loop_scope="session", autouse=True, scope="session")
 async def shabti_client():
     load_env()
-    while True:
-        try:
-            if check_opensearch():
-                break
-        except ConnectionError:
-            continue
-    yield TestClient(create_app())
+    # ping reports a cluster it can't reach as not running rather than raising, so this just polls
+    while not await check_opensearch():
+        await asyncio.sleep(1)
+    # entered as a context manager so every request shares one portal, and so the app's lifespan
+    # runs: a portal per request would mean an event loop per request, and the OpenSearch client
+    # is bound to the loop it was created on
+    with TestClient(create_app()) as client:
+        yield client
     collections = await get_collections(None)
     for collection in collections:
         try:
             await delete_collection(None, collection.collection_id)
         except Exception:  # we're not trying to test collection getting and deletion here so just do our best to clean up!
             pass
+    await close_client()
 
 
 # prompting runs on whichever chat model is currently loaded, so we make sure there is one

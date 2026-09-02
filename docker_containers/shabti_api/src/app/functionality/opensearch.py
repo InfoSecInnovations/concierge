@@ -1,25 +1,46 @@
+import asyncio
 import os
-from functools import cache
-from opensearchpy import OpenSearch
+from opensearchpy import AsyncOpenSearch
 
 
 MAPPING_INDEX_NAME = "collection_mappings"
 FILES_INDEX_NAME = "file_mappings"
 OPENSEARCH_MAX_RESULTS = 10000
 
-
-@cache
-def get_client():
-    # one client for the process so its connection pool is actually reused: ingesting a large
-    # document makes thousands of calls, and a fresh client per call reconnects for every one
-    port = 9200
-    return OpenSearch(
-        hosts=[{"host": os.getenv("OPENSEARCH_HOST", "localhost"), "port": port}],
-        use_ssl=False,
-    )
+_clients: dict[asyncio.AbstractEventLoop, AsyncOpenSearch] = {}
 
 
-def create_collection_index(collection_id):
+def get_client() -> AsyncOpenSearch:
+    # cached rather than built per call so its connection pool is actually reused: ingesting a
+    # large document makes thousands of calls, and a fresh client per call reconnects for every
+    # one. it can't be one client for the whole process either, because the aiohttp session
+    # underneath is created on the first request and stays bound to the loop that was running
+    # then, and any other loop then fails on timers and futures it doesn't own
+    loop = asyncio.get_running_loop()
+    client = _clients.get(loop)
+    if client is None:
+        # a closed loop can no longer run its client's shutdown, so drop the entry and leave the
+        # session to the garbage collector
+        for closed in [key for key in _clients if key.is_closed()]:
+            del _clients[closed]
+        port = 9200
+        client = AsyncOpenSearch(
+            hosts=[{"host": os.getenv("OPENSEARCH_HOST", "localhost"), "port": port}],
+            use_ssl=False,
+        )
+        _clients[loop] = client
+    return client
+
+
+async def close_client():
+    # closing has to happen on the loop that created the session, so this is a coroutine rather
+    # than something an exit handler could call
+    client = _clients.pop(asyncio.get_running_loop(), None)
+    if client is not None:
+        await client.close()
+
+
+async def create_collection_index(collection_id):
     client = get_client()
     collection_index_name = collection_id
     collection_index_body = {
@@ -53,17 +74,17 @@ def create_collection_index(collection_id):
             }
         },
     }
-    client.indices.create(index=collection_index_name, body=collection_index_body)
+    await client.indices.create(index=collection_index_name, body=collection_index_body)
 
 
-def create_index_mapping(collection_id, collection_name):
+async def create_index_mapping(collection_id, collection_name):
     client = get_client()
-    if not client.indices.exists(index=MAPPING_INDEX_NAME):
+    if not await client.indices.exists(index=MAPPING_INDEX_NAME):
         index_body = {
             "mappings": {"properties": {"collection_name": {"type": "keyword"}}}
         }
-        client.indices.create(index=MAPPING_INDEX_NAME, body=index_body)
-    client.index(
+        await client.indices.create(index=MAPPING_INDEX_NAME, body=index_body)
+    await client.index(
         index=MAPPING_INDEX_NAME,
         body={"collection_name": collection_name},
         id=collection_id,
@@ -71,20 +92,20 @@ def create_index_mapping(collection_id, collection_name):
     )
 
 
-def delete_index_mapping(collection_id):
+async def delete_index_mapping(collection_id):
     client = get_client()
-    client.delete(index=MAPPING_INDEX_NAME, id=collection_id, refresh=True)
+    await client.delete(index=MAPPING_INDEX_NAME, id=collection_id, refresh=True)
 
 
-def get_collection_mappings():
+async def get_collection_mappings():
     client = get_client()
-    if not client.indices.exists(index=MAPPING_INDEX_NAME):
+    if not await client.indices.exists(index=MAPPING_INDEX_NAME):
         return []
     query = {
         "size": OPENSEARCH_MAX_RESULTS,
         "query": {"match_all": {}},
     }
-    response = client.search(body=query, index=MAPPING_INDEX_NAME)
+    response = await client.search(body=query, index=MAPPING_INDEX_NAME)
     collections = [
         {
             "collection_name": hit["_source"]["collection_name"],
@@ -95,39 +116,39 @@ def get_collection_mappings():
     return collections
 
 
-def get_collection_mapping(collection_name: str):
+async def get_collection_mapping(collection_name: str):
     client = get_client()
-    if not client.indices.exists(index=MAPPING_INDEX_NAME):
+    if not await client.indices.exists(index=MAPPING_INDEX_NAME):
         return None
     query = {
         "size": 1,
         "query": {"bool": {"filter": [{"term": {"collection_name": collection_name}}]}},
     }
-    response = client.search(body=query, index=MAPPING_INDEX_NAME)
+    response = await client.search(body=query, index=MAPPING_INDEX_NAME)
     ids = [hit["_id"] for hit in response["hits"]["hits"]]
     if ids:
         return ids[0]
     return None
 
 
-def get_opensearch_collection_info(collection_id: str):
+async def get_opensearch_collection_info(collection_id: str):
     client = get_client()
-    if not client.indices.exists(index=MAPPING_INDEX_NAME):
+    if not await client.indices.exists(index=MAPPING_INDEX_NAME):
         return None
-    item = client.get(index=MAPPING_INDEX_NAME, id=collection_id)
+    item = await client.get(index=MAPPING_INDEX_NAME, id=collection_id)
     return {
         "collection_id": item["_id"],
         "collection_name": item["_source"]["collection_name"],
     }
 
 
-def freeze_collection_and_get_file_paths(collection_id: str):
+async def freeze_collection_and_get_file_paths(collection_id: str):
     client = get_client()
     paths = []
-    client.indices.add_block(
+    await client.indices.add_block(
         index=collection_id, block="write"
     )  # avoid additional writes to the index while we retrieve the list of file paths
-    pit_id = client.create_pit(index=collection_id, keep_alive="100m")["pit_id"]
+    pit_id = (await client.create_pit(index=collection_id, keep_alive="100m"))["pit_id"]
     body = {
         "_source": {"includes": ["binary_path"]},
         "size": OPENSEARCH_MAX_RESULTS,
@@ -142,27 +163,27 @@ def freeze_collection_and_get_file_paths(collection_id: str):
         "pit": {"id": pit_id, "keep_alive": "100m"},
         "sort": [{"ingest_date": {"order": "asc"}}],
     }
-    response = client.search(body=body)
+    response = await client.search(body=body)
     while len(response["hits"]["hits"]):
         paths = [
             *paths,
             *[hit["_source"]["binary_path"] for hit in response["hits"]["hits"]],
         ]
         body["search_after"] = response["hits"]["hits"][-1]["sort"]
-        response = client.search(body=body)
+        response = await client.search(body=body)
     return paths
 
 
-def delete_collection_indices(collection_id: str):
+async def delete_collection_indices(collection_id: str):
     client = get_client()
-    response = client.indices.delete(index=collection_id)
+    response = await client.indices.delete(index=collection_id)
     if not response["acknowledged"]:
         print(f"Failed to delete indices for {collection_id}")
         return False
     return True
 
 
-def add_document_metadata(collection_id, doc):
+async def add_document_metadata(collection_id, doc):
     client = get_client()
 
     page_query = {
@@ -192,7 +213,9 @@ def add_document_metadata(collection_id, doc):
             }
         }
     }
-    doc["page_count"] = client.count(body=page_query, index=collection_id)["count"]
+    doc["page_count"] = (await client.count(body=page_query, index=collection_id))[
+        "count"
+    ]
     vector_query = {
         "query": {
             "bool": {
@@ -220,27 +243,29 @@ def add_document_metadata(collection_id, doc):
             }
         }
     }
-    doc["vector_count"] = client.count(body=vector_query, index=collection_id)["count"]
+    doc["vector_count"] = (await client.count(body=vector_query, index=collection_id))[
+        "count"
+    ]
     return doc
 
 
-def get_document(collection_id: str, doc_id: str):
+async def get_document(collection_id: str, doc_id: str):
     client = get_client()
-    item = client.get(index=collection_id, id=doc_id)
+    item = await client.get(index=collection_id, id=doc_id)
     doc = {**item["_source"], "id": item["_id"]}
-    doc = add_document_metadata(collection_id, doc)
+    doc = await add_document_metadata(collection_id, doc)
     return doc
 
 
-def get_document_file_path(collection_id: str, doc_id: str):
+async def get_document_file_path(collection_id: str, doc_id: str):
     client = get_client()
-    item = client.get(index=collection_id, id=doc_id)
+    item = await client.get(index=collection_id, id=doc_id)
     if "binary_path" in item["_source"]:
         return item["_source"]["binary_path"]
     return None
 
 
-def get_opensearch_documents(
+async def get_opensearch_documents(
     collection_id: str, search, sort, max_results, filter_document_type, page=0
 ):
     client = get_client()
@@ -299,13 +324,13 @@ def get_opensearch_documents(
             body["sort"] = {"ingest_date": {"order": "asc"}}
         if sort == "date_desc":
             body["sort"] = {"ingest_date": {"order": "desc"}}
-    response = client.search(body=body, index=collection_id)
+    response = await client.search(body=body, index=collection_id)
     docs = [
-        add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
+        await add_document_metadata(collection_id, {**hit["_source"], "id": hit["_id"]})
         for hit in response["hits"]["hits"]
     ]
     body = {"query": {"bool": {"filter": [{"term": {"type": "document"}}]}}}
-    count_response = client.count(body=body, index=collection_id)
+    count_response = await client.count(body=body, index=collection_id)
 
     return {
         "documents": docs,
@@ -314,7 +339,7 @@ def get_opensearch_documents(
     }
 
 
-def get_opensearch_document_types(collection_id: str):
+async def get_opensearch_document_types(collection_id: str):
     client = get_client()
     body = {
         "size": 0,
@@ -325,18 +350,18 @@ def get_opensearch_document_types(collection_id: str):
         },
         "query": {"bool": {"filter": {"term": {"type": "document"}}}},
     }
-    response = client.search(body=body, index=collection_id)
+    response = await client.search(body=body, index=collection_id)
     return [
         bucket["key"] for bucket in response["aggregations"]["document_type"]["buckets"]
     ]
 
 
-def delete_opensearch_document(collection_id: str, doc_id: str):
+async def delete_opensearch_document(collection_id: str, doc_id: str):
     client = get_client()
     # both the parent and its children have to be searchable for `has_parent` to find anything, and
     # ingesting no longer refreshes as it writes, so a rollback part way through an ingest would
     # otherwise leave behind exactly the vectors it was called to remove
-    client.indices.refresh(index=collection_id)
+    await client.indices.refresh(index=collection_id)
     child_query = {
         "query": {
             "has_parent": {
@@ -351,17 +376,17 @@ def delete_opensearch_document(collection_id: str, doc_id: str):
             }
         }
     }
-    client.delete_by_query(index=collection_id, body=child_query, refresh=True)
-    client.delete(index=collection_id, id=doc_id, refresh=True)
+    await client.delete_by_query(index=collection_id, body=child_query, refresh=True)
+    await client.delete(index=collection_id, id=doc_id, refresh=True)
     return 1  # TODO: evaluate what we should actually return here
 
 
-def set_temp_file(file_path: str):
+async def set_temp_file(file_path: str):
     client = get_client()
-    if not client.indices.exists(index=FILES_INDEX_NAME):
+    if not await client.indices.exists(index=FILES_INDEX_NAME):
         index_body = {"mappings": {"properties": {"file_path": {"type": "keyword"}}}}
-        client.indices.create(index=FILES_INDEX_NAME, body=index_body)
-    response = client.index(
+        await client.indices.create(index=FILES_INDEX_NAME, body=index_body)
+    response = await client.index(
         index=FILES_INDEX_NAME,
         body={"file_path": file_path},
         refresh=True,
@@ -369,8 +394,8 @@ def set_temp_file(file_path: str):
     return response["_id"]
 
 
-def get_temp_file(id: str):
+async def get_temp_file(id: str):
     client = get_client()
-    if client.indices.exists(index=FILES_INDEX_NAME):
-        response = client.get(index=FILES_INDEX_NAME, id=id)
+    if await client.indices.exists(index=FILES_INDEX_NAME):
+        response = await client.get(index=FILES_INDEX_NAME, id=id)
         return response["_source"]["file_path"]

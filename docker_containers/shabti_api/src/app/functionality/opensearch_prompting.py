@@ -1,13 +1,15 @@
+import asyncio
 from .embeddings import create_embeddings
 from .opensearch import get_client, get_document
 
 
-def get_context_from_opensearch(
+async def get_context_from_opensearch(
     collection_id: str, reference_limit: int, user_input: str
 ):
     client = get_client()
 
-    embedding = create_embeddings(user_input)
+    # the embeddings server is reached with blocking requests, so it goes in a thread
+    embedding = await asyncio.to_thread(create_embeddings, user_input)
 
     query = {
         "size": reference_limit,
@@ -22,7 +24,7 @@ def get_context_from_opensearch(
         "_source": {"includes": ["page_id", "text", "child_item_to_document"]},
     }
 
-    response = client.search(body=query, index=collection_id)
+    response = await client.search(body=query, index=collection_id)
 
     hits = [hit["_source"] for hit in response["hits"]["hits"]]
 
@@ -30,14 +32,16 @@ def get_context_from_opensearch(
 
     for hit in hits:
         if hit["page_id"] not in page_metadata:
-            response = client.get(index=collection_id, id=hit["page_id"])
-            page_metadata[hit["page_id"]] = {**response["_source"]}
+            page_response = await client.get(index=collection_id, id=hit["page_id"])
+            page_metadata[hit["page_id"]] = {**page_response["_source"]}
 
     doc_metadata = {}
 
     for value in page_metadata.values():
         if value["child_item_to_document"]["parent"] not in doc_metadata:
-            doc_metadata[value["child_item_to_document"]["parent"]] = get_document(
+            doc_metadata[
+                value["child_item_to_document"]["parent"]
+            ] = await get_document(
                 collection_id, value["child_item_to_document"]["parent"]
             )
 

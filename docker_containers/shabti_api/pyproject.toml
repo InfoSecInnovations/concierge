@@ -8,7 +8,7 @@ dependencies = [
     "crawlee[beautifulsoup]==1.9.3",
     "fastapi[standard]==0.141.1",
     "lxml==6.1.2",
-    "opensearch-py==3.0.0",
+    "opensearch-py[async]==3.0.0",
     "python-json-logger==4.2.0",
     "aiofiles==25.1.0",
     "requests==2.34.2",
@@ -38,5 +38,8 @@ shabti-keycloak = { path = "/app/python_packages/shabti_keycloak", editable = tr
 
 [tool.pytest.ini_options]
 asyncio_mode="auto"
-asyncio_default_fixture_loop_scope="function"
+# the OpenSearch client binds to the loop it first ran on, so the whole suite shares one: the
+# fixtures and tests on pytest's loop, and every request through the TestClient portal's
+asyncio_default_fixture_loop_scope="session"
+asyncio_default_test_loop_scope="session"
 addopts = "--import-mode=importlib"

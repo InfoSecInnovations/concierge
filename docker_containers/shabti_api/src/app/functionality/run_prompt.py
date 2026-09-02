@@ -1,6 +1,7 @@
 import aiofiles
 from shabti_types import PromptInfo, PromptChunk, PromptSource, DocumentInfo, PageInfo
-from .prompting import stream_response, get_context
+from .prompting import stream_response
+from .opensearch_prompting import get_context_from_opensearch
 from .opensearch import get_temp_file
 from .load_prompter_config import load_prompter_config
 import json
@@ -30,13 +31,15 @@ async def run_prompt(token: None | str, prompt_info: PromptInfo):
         enhancer_prompts = None
 
     if prompt_info.file_id:
-        file_path = get_temp_file(prompt_info.file_id)
+        file_path = await get_temp_file(prompt_info.file_id)
         async with aiofiles.open(file_path) as f:
             source_file_contents = await f.read()
     else:
         source_file_contents = None
 
-    context = await get_context(prompt_info.collection_id, 5, prompt_info.user_input)
+    context = await get_context_from_opensearch(
+        prompt_info.collection_id, 5, prompt_info.user_input
+    )
 
     if not len(context["sources"]):
         yield PromptChunk(

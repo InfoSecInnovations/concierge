@@ -39,11 +39,16 @@ BLANK = {"/": b"<html><body></body></html>"}
 
 
 def serve(pages: dict[str, bytes], delay: float = 0.0):
-    """Start a server for `pages`, returning it, its base URL, and when it answered each page."""
+    """Start a server for `pages`, returning it, its base URL, and when it answered each page.
+
+    Anything not in `pages` 404s, `/robots.txt` included, which crawlee reads as allow all. Answer
+    it with a 5xx instead and the whole crawl is skipped, which surfaces only as an empty document.
+    """
     served: list[float] = []
 
     class Handler(BaseHTTPRequestHandler):
-        def do_get(self):
+        # BaseHTTPRequestHandler requires the functions to be named do_METHOD, so we tell the linter to ignore this one.
+        def do_GET(self):  # noqa: N802
             body = pages.get(self.path)
             if body is None:
                 self.send_error(404)

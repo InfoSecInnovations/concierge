@@ -34,6 +34,7 @@ from shabti_types import (
 from .functionality.insert_uploaded_files import insert_uploaded_files
 from .functionality.insert_urls import insert_urls
 from .functionality.status import check_llm, check_opensearch
+from .functionality.opensearch import close_client
 from .functionality.run_prompt import run_prompt
 from .functionality.load_prompter_config import load_prompter_config
 from .functionality.upload_prompt_file import upload_prompt_file
@@ -47,11 +48,20 @@ from .functionality.chat_model_selection import (
     set_chat_model_selection,
 )
 from collections.abc import AsyncIterable
+from contextlib import asynccontextmanager
 from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
 from .dependencies.prompt_info_validator import PromptInfoValidator
 from .dependencies.prompt_body_auth_checker import PromptBodyAuthChecker
 from .dependencies.url_list_validator import UrlListValidator
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    # the OpenSearch client holds an aiohttp session, which can only be closed from the loop it was
+    # created on, and this is the only place that loop is still running
+    await close_client()
 
 
 def create_app():
@@ -68,10 +78,11 @@ def create_app():
     auth_class = AuthChecker if auth_is_enabled else NoAuth
 
     app = FastAPI(
+        lifespan=lifespan,
         swagger_ui_init_oauth={
             "clientId": os.getenv("KEYCLOAK_CLIENT_ID"),
             "clientSecret": os.getenv("KEYCLOAK_CLIENT_SECRET"),
-        }
+        },
     )
 
     # TODO: probably don't wildcard this
@@ -226,8 +237,8 @@ def create_app():
         return ServiceStatus(running=check_llm())
 
     @app.get("/status/opensearch")
-    def opensearch_status():
-        return ServiceStatus(running=check_opensearch())
+    async def opensearch_status():
+        return ServiceStatus(running=await check_opensearch())
 
     @app.get(
         "/files/{collection_id}/{doc_id}", dependencies=[Depends(auth_class("read"))]

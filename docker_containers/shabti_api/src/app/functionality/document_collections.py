@@ -25,7 +25,6 @@ from .opensearch import (
     get_document_file_path,
     freeze_collection_and_get_file_paths,
 )
-from isi_util.async_single import asyncify
 from keycloak import KeycloakPostError
 from shabti_types import (
     CollectionInfo,
@@ -73,7 +72,7 @@ async def get_collections(token) -> list[CollectionInfo] | list[AuthzCollectionI
                 collection_name=mapping["collection_name"],
                 collection_id=mapping["collection_id"],
             )
-            for mapping in await asyncify(get_collection_mappings)
+            for mapping in await get_collection_mappings()
         ]
 
 
@@ -93,7 +92,7 @@ async def get_collection_info(collection_id) -> CollectionInfo | AuthzCollection
                 username=get_username(resource["attributes"]["shabti_owner"][0]),
             ),
         )
-    opensearch_info = get_opensearch_collection_info(collection_id)
+    opensearch_info = await get_opensearch_collection_info(collection_id)
     return CollectionInfo(
         collection_id=collection_id,
         collection_name=opensearch_info["collection_name"],
@@ -142,7 +141,7 @@ async def create_collection(
             else:
                 raise e
     else:
-        existing = get_collection_mapping(display_name)
+        existing = await get_collection_mapping(display_name)
         if existing:
             raise CollectionExistsError(
                 display_name,
@@ -150,8 +149,8 @@ async def create_collection(
             )
         resource_id = str(uuid4())
         # if we don't have authz configured, we write the collection name mapping to OpenSearch
-        await asyncify(create_index_mapping, resource_id, display_name)
-    await asyncify(create_collection_index, resource_id)
+        await create_index_mapping(resource_id, display_name)
+    await create_collection_index(resource_id)
     print(f"created {location or ''} collection {display_name} with ID {resource_id}")
     if auth_enabled():
         info = AuthzCollectionInfo(
@@ -186,9 +185,9 @@ async def delete_collection(token, collection_id):
             raise UnauthorizedOperationError()
         await delete_resource(collection_id)
     else:
-        await asyncify(delete_index_mapping, collection_id)
-    file_paths = await asyncify(freeze_collection_and_get_file_paths, collection_id)
-    await asyncify(delete_collection_indices, collection_id)
+        await delete_index_mapping(collection_id)
+    file_paths = await freeze_collection_and_get_file_paths(collection_id)
+    await delete_collection_indices(collection_id)
     for file_path in file_paths:
         os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), file_path))
     print(f"deleted collection with ID {collection_id}")
@@ -222,9 +221,7 @@ def create_document_info(doc):
 
 
 async def get_document_info(collection_id, document_id):
-    return create_document_info(
-        await asyncify(get_document, collection_id, document_id)
-    )
+    return create_document_info(await get_document(collection_id, document_id))
 
 
 async def get_documents(
@@ -240,14 +237,8 @@ async def get_documents(
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
-    result = await asyncify(
-        get_opensearch_documents,
-        collection_id,
-        search,
-        sort,
-        max_results,
-        filter_document_type,
-        page,
+    result = await get_opensearch_documents(
+        collection_id, search, sort, max_results, filter_document_type, page
     )
     return DocumentList(
         documents=[create_document_info(doc) for doc in result["documents"]],
@@ -261,7 +252,7 @@ async def get_document_types(token, collection_id):
         authorized = await authorize(token, collection_id, "read")
         if not authorized:
             raise UnauthorizedOperationError()
-    result = await asyncify(get_opensearch_document_types, collection_id)
+    result = await get_opensearch_document_types(collection_id)
     return result
 
 
@@ -270,15 +261,15 @@ async def delete_document(token, collection_id, document_id):
         authorized = await authorize(token, collection_id, "update")
         if not authorized:
             raise UnauthorizedOperationError()
-    binary_path = await asyncify(get_document_file_path, collection_id, document_id)
+    binary_path = await get_document_file_path(collection_id, document_id)
     doc_info = None
     if logging_enabled():
         doc_info = await get_document_info(collection_id, document_id)
     info = DeletedDocumentInfo(
         collection_id=collection_id,
         document_id=document_id,
-        deleted_element_count=await asyncify(
-            delete_opensearch_document, collection_id, document_id
+        deleted_element_count=await delete_opensearch_document(
+            collection_id, document_id
         ),
     )
     if binary_path:

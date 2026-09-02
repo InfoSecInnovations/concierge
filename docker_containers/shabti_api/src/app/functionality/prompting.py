@@ -1,18 +1,10 @@
 import os
-from .opensearch_prompting import get_context_from_opensearch
-from isi_util.async_single import asyncify
 import httpx
 from httpx_sse import aconnect_sse
 
 
 def host():
     return os.getenv("LLM_HOST") or "localhost"
-
-
-async def get_context(collection_id: str, reference_limit: int, user_input: str):
-    return await asyncify(
-        get_context_from_opensearch, collection_id, reference_limit, user_input
-    )
 
 
 def prepare_prompt(

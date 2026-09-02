@@ -6,7 +6,7 @@ import os
 
 async def serve_binary(collection_id: str, doc_id: str):
     client = get_client()
-    item = client.get(id=doc_id, index=collection_id)
+    item = await client.get(id=doc_id, index=collection_id)
     binary_path = os.path.join(
         os.getenv("SHABTI_FILES_DIR"), item["_source"]["binary_path"]
     )

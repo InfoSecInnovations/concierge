@@ -19,7 +19,7 @@ async def test_file_creation(shabti_client, shabti_collection_id):
         files=[("files", open(file_path, "rb"))],
     )
     doc_id = response.json()["document_id"]
-    document_file_path = get_document_file_path(shabti_collection_id, doc_id)
+    document_file_path = await get_document_file_path(shabti_collection_id, doc_id)
     async with aiofiles.open(
         os.path.join(os.getenv("SHABTI_FILES_DIR"), document_file_path)
     ) as f:
@@ -27,7 +27,7 @@ async def test_file_creation(shabti_client, shabti_collection_id):
 
 
 async def test_file_deletion_with_document(shabti_collection_id, shabti_document_id):
-    document_file_path = get_document_file_path(
+    document_file_path = await get_document_file_path(
         shabti_collection_id, shabti_document_id
     )
     await delete_document(None, shabti_collection_id, shabti_document_id)
@@ -45,7 +45,7 @@ async def test_file_deletion_with_collection(shabti_client, shabti_collection_id
         )
     docs = await get_documents(None, shabti_collection_id)
     paths = [
-        get_document_file_path(shabti_collection_id, doc.document_id)
+        await get_document_file_path(shabti_collection_id, doc.document_id)
         for doc in docs.documents
     ]
     await delete_collection(None, shabti_collection_id)

@@ -1,7 +1,7 @@
 import asyncio
 from contextlib import aclosing, suppress
 from functools import cache
-from opensearchpy import helpers
+from opensearchpy.helpers import async_bulk
 from .embeddings import create_embeddings, get_embeddings_model_id
 from .loaders.base_loader import ShabtiDocument, ShabtiPageStream
 from .opensearch import get_client, delete_opensearch_document
@@ -40,10 +40,11 @@ async def insert(
 ):
     """Embed and index a document's pages as the loader produces them.
 
-    Everything blocking runs in a thread so the event loop stays free for the loader: a crawl keeps
-    fetching while the page before it is being embedded. Within a document the same trick overlaps
-    the two servers involved, embedding each page while the previous one's vectors are still being
-    written to OpenSearch.
+    OpenSearch is awaited directly; the splitter and the embeddings server are blocking, so they
+    run in threads and the event loop stays free for the loader: a crawl keeps fetching while the
+    page before it is being embedded. Within a document each page's write is left running as a
+    task, which overlaps the two servers involved: a page is embedded while the previous one's
+    vectors are still being written to OpenSearch.
     """
     client = get_client()
     # both are per-document rather than per-page: the model listing is a round trip and the
@@ -57,36 +58,40 @@ async def insert(
     # the page whose write is in flight, which is also the next one to report progress for
     written = -1
 
-    def create_parent() -> str:
+    async def create_parent() -> str:
         additional = {"binary_path": binary_path} if binary_path else {}
-        return client.index(
-            index=collection_id,
-            body={
-                "type": "document",
-                "child_item_to_document": "document",
-                **vars(stream.metadata),
-                **additional,
-            },
+        return (
+            await client.index(
+                index=collection_id,
+                body={
+                    "type": "document",
+                    "child_item_to_document": "document",
+                    **vars(stream.metadata),
+                    **additional,
+                },
+            )
         )["_id"]
 
     def split(page: ShabtiDocument.ShabtiPage) -> list[str]:
         # don't allow empty or whitespace chunks
         return [chunk for chunk in splitter.chunks(page.content) if chunk.strip()]
 
-    def write(page: ShabtiDocument.ShabtiPage, chunks: list[str], vects) -> None:
-        page_id = client.index(
-            index=collection_id,
-            body={
-                "child_item_to_document": {"name": "child_item", "parent": doc_id},
-                "type": "page",
-                **vars(page.metadata),
-            },
-            routing=doc_id,
+    async def write(page: ShabtiDocument.ShabtiPage, chunks: list[str], vects) -> None:
+        page_id = (
+            await client.index(
+                index=collection_id,
+                body={
+                    "child_item_to_document": {"name": "child_item", "parent": doc_id},
+                    "type": "page",
+                    **vars(page.metadata),
+                },
+                routing=doc_id,
+            )
         )["_id"]
         # flush per page rather than accumulating every vector for every page: a crawl or a large
         # text file can be thousands of chunks of 768 floats. the rollback below deletes children
         # by parent, so already flushed vectors are still cleaned up on failure.
-        helpers.bulk(
+        await async_bulk(
             client,
             [
                 {
@@ -123,16 +128,14 @@ async def insert(
                 if doc_id is None:
                     # created on the first page rather than up front, so a source that turns out to
                     # be empty leaves nothing behind to clean up
-                    doc_id = await asyncio.to_thread(create_parent)
+                    doc_id = await create_parent()
                 chunks = await asyncio.to_thread(split, page)
                 vects = await asyncio.to_thread(create_embeddings, chunks, model_id)
                 if pending:
                     await pending
                     yield progress()
                 written += 1
-                pending = asyncio.create_task(
-                    asyncio.to_thread(write, page, chunks, vects)
-                )
+                pending = asyncio.create_task(write(page, chunks, vects))
 
         if pending:
             await pending
@@ -143,14 +146,14 @@ async def insert(
 
         # nothing above refreshes, so this is what makes the document searchable and what the
         # vector and page counts read straight after an ingest depend on
-        await asyncio.to_thread(client.indices.refresh, index=collection_id)
+        await client.indices.refresh(index=collection_id)
 
     except Exception as e:
         if pending:
-            # awaited rather than cancelled: a thread already running the write can't be stopped,
-            # and letting it land after the rollback would leave orphaned vectors behind
+            # awaited rather than cancelled: cancelling part way through the bulk would let the
+            # rest of it land after the rollback had already run, leaving orphaned vectors behind
             with suppress(Exception):
                 await pending
         if doc_id is not None:
-            await asyncio.to_thread(delete_opensearch_document, collection_id, doc_id)
+            await delete_opensearch_document(collection_id, doc_id)
         raise e

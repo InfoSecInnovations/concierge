@@ -13,6 +13,6 @@ def check_llm():
         return False
 
 
-def check_opensearch():
+async def check_opensearch():
     client = get_client()
-    return client.ping()
+    return await client.ping()

@@ -12,7 +12,7 @@ async def test_source_file(shabti_client):
     )
     assert response.status_code == 200
     file_id = response.json()["id"]
-    prompt_file_path = get_temp_file(file_id)
+    prompt_file_path = await get_temp_file(file_id)
     assert prompt_file_path
     async with aiofiles.open(prompt_file_path) as f:
         assert await f.read() == "This is not a real document, it's just a test."

@@ -15,7 +15,7 @@ async def insert_document(
         yield x
     if logging_enabled() and x:
         collection_info = await get_collection_info(collection_id)
-        doc = get_document(collection_id, x.document_id)
+        doc = await get_document(collection_id, x.document_id)
         document_info = DocumentInfo(
             source=doc["source"],
             ingest_date=doc["ingest_date"],
