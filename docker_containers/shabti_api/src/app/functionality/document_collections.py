@@ -38,6 +38,7 @@ from shabti_types import (
     DocumentList,
 )
 from ..shabti_logging import log_user_action, log_action, logging_enabled
+import aiofiles.os
 import os
 
 type Location = Literal["private", "shared"]
@@ -189,7 +190,7 @@ async def delete_collection(token, collection_id):
     file_paths = await freeze_collection_and_get_file_paths(collection_id)
     await delete_collection_indices(collection_id)
     for file_path in file_paths:
-        os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), file_path))
+        await aiofiles.os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), file_path))
     print(f"deleted collection with ID {collection_id}")
     if auth_enabled():
         await log_user_action(
@@ -274,7 +275,9 @@ async def delete_document(token, collection_id, document_id):
     )
     if binary_path:
         try:  # if ingesting was cut short by a crash or stopping Shabti manually, the file may not actually be saved
-            os.remove(os.path.join(os.getenv("SHABTI_FILES_DIR"), binary_path))
+            await aiofiles.os.remove(
+                os.path.join(os.getenv("SHABTI_FILES_DIR"), binary_path)
+            )
         except FileNotFoundError:
             pass
     if logging_enabled():
