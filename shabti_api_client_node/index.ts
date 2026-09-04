@@ -8,4 +8,6 @@ export {
 	IngestInfo,
 	IngestItemInfo,
 	type IngestStatus,
+	parseIngestInfo,
+	parseIngestLine,
 } from "./dataTypes";

@@ -4,13 +4,14 @@ import * as querystring from "node:querystring";
 import { EXPECTED_CODES } from "./codes";
 import {
 	DocumentInfo,
-	DocumentIngestInfo,
 	DocumentList,
+	IngestInfo,
 	ModelLoadInfo,
 	ModelStatusInfo,
+	parseIngestInfo,
+	parseIngestLine,
 	PromptConfigInfo,
 	TaskInfo,
-	UnsupportedFileError,
 	WebFile,
 } from "./dataTypes";
 
@@ -75,10 +76,23 @@ export class BaseShabtiClient {
 		const reader = res.body.getReader();
 		const decoder = new TextDecoder();
 		let current = "";
+		const emit = (
+			controller: ReadableStreamDefaultController<T>,
+			line: string,
+		) => {
+			if (!line.trim()) return;
+			const json = JSON.parse(line);
+			controller.enqueue(resultFunction ? resultFunction(json) : json);
+		};
 		const stream = new ReadableStream<T>({
 			async pull(controller) {
 				const { done, value } = await reader.read();
 				if (done) {
+					// a last line with no trailing newline is still a line, and it's the one carrying
+					// the completion event. decode() with no argument also flushes whatever the
+					// decoder was holding on to of a split multi byte character
+					emit(controller, current + decoder.decode());
+					current = "";
 					controller.close();
 					return;
 				}
@@ -94,11 +108,13 @@ export class BaseShabtiClient {
 					const lines = [current + splits[0], ...splits.slice(1, -1)];
 					// the last split is either empty due to the newline being at the end or contains the start of a new chunk
 					current = splits[splits.length - 1]!;
-					for (const line of lines.filter((line) => line.trim())) {
-						const json = JSON.parse(line);
-						controller.enqueue(resultFunction ? resultFunction(json) : json);
-					}
+					for (const line of lines) emit(controller, line);
 				}
+			},
+			cancel(reason) {
+				// detaching from an ingest partway through is an ordinary thing to do now that it
+				// keeps running without us, and without this the connection stays open
+				return reader.cancel(reason);
 			},
 		});
 
@@ -159,45 +175,61 @@ export class BaseShabtiClient {
 		return (await res.json()) as string[];
 	}
 
-	async insertFiles(collectionId: string, filePaths: string[]) {
-		return this.streamRequest(
+	async startFilesIngest(
+		collectionId: string,
+		filePaths: string[],
+	): Promise<IngestInfo> {
+		const res = await this.makeRequest(
 			"POST",
 			`collections/${collectionId}/documents/files`,
-			(json) => {
-				if (json.error) {
-					if (json.error == "UnsupportedFileError")
-						return new UnsupportedFileError(json.message, json.filename);
-					throw new Error(`${json.error}: ${json.message}`);
-				}
-				return new DocumentIngestInfo(
-					json.progress,
-					json.total,
-					json.document_id,
-					json.document_type,
-					json.label,
-				);
-			},
 			undefined,
 			await this.createFormData("files", filePaths),
 		);
+		return parseIngestInfo(await res.json());
 	}
 
-	async insertUrls(collectionId: string, urls: string[], maxDepth = 1) {
-		return this.streamRequest(
+	async startUrlsIngest(
+		collectionId: string,
+		urls: string[],
+		maxDepth = 1,
+	): Promise<IngestInfo> {
+		const res = await this.makeRequest(
 			"POST",
 			`collections/${collectionId}/documents/urls`,
-			(json) =>
-				new DocumentIngestInfo(
-					json.progress,
-					json.total,
-					json.document_id,
-					json.document_type,
-					json.label,
-				),
 			urls,
 			undefined,
 			{ max_depth: maxDepth },
 		);
+		return parseIngestInfo(await res.json());
+	}
+
+	async getIngests(): Promise<IngestInfo[]> {
+		const res = await this.makeRequest("GET", "ingests");
+		const json = (await res.json()) as any[];
+		return json.map((item: any) => parseIngestInfo(item));
+	}
+
+	async streamIngest(ingestId: string) {
+		return this.streamRequest("GET", `ingests/${ingestId}`, parseIngestLine);
+	}
+
+	async cancelIngest(ingestId: string): Promise<IngestInfo> {
+		const res = await this.makeRequest("DELETE", `ingests/${ingestId}`);
+		return parseIngestInfo(await res.json());
+	}
+
+	// an ingest outlives the request that starts it now, so this is the POST plus a drain of the
+	// stream it returns, which ends when the ingest does. The POST stays inside this await because
+	// it's where a permission denial surfaces, and callers get that back before they start
+	// iterating rather than partway through
+	async insertFiles(collectionId: string, filePaths: string[]) {
+		const ingest = await this.startFilesIngest(collectionId, filePaths);
+		return this.streamIngest(ingest.ingestId);
+	}
+
+	async insertUrls(collectionId: string, urls: string[], maxDepth = 1) {
+		const ingest = await this.startUrlsIngest(collectionId, urls, maxDepth);
+		return this.streamIngest(ingest.ingestId);
 	}
 
 	async deleteDocument(collectionId: string, documentId: string) {

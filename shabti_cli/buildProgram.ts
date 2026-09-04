@@ -6,6 +6,7 @@ import { UnsupportedFileError } from "@infosecinnovations/shabti-api-client";
 import type { ShabtiAuthorizationClient } from "@infosecinnovations/shabti-api-client";
 import type { ShabtiClient } from "@infosecinnovations/shabti-api-client";
 import {
+	type DocumentIngestError,
 	type DocumentIngestInfo,
 	type PromptConfigInfo,
 } from "@infosecinnovations/shabti-api-client/dist/dataTypes";
@@ -69,7 +70,9 @@ export default async () => {
 		);
 
 	const insert = async (
-		insertStream: ReadableStream<DocumentIngestInfo | UnsupportedFileError>,
+		insertStream: ReadableStream<
+			DocumentIngestInfo | DocumentIngestError | UnsupportedFileError
+		>,
 		command: any,
 	) => {
 		let bar: cliProgress.SingleBar | undefined = undefined;

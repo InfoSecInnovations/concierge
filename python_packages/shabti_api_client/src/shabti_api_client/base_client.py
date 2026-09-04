@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from contextlib import ExitStack
 from shabti_types import (
     TaskInfo,
     PromptConfigInfo,
@@ -7,11 +8,32 @@ from shabti_types import (
     PromptChunk,
     UnsupportedFileError,
     DocumentIngestInfo,
+    DocumentIngestError,
     DocumentList,
+    IngestInfo,
 )
 import httpx
 import json
 from typing import Any
+
+
+def ingest_line(
+    json_obj: dict,
+) -> DocumentIngestInfo | DocumentIngestError | UnsupportedFileError:
+    """One line of an ingest stream as the object a caller sees.
+
+    Discriminated the way the API discriminates it: an `error` key means the item failed. An
+    unsupported file keeps arriving as the exception type, which is what the `isinstance` checks in
+    the UIs are written against, and every other failure is a plain object so one bad document
+    doesn't end the stream for the rest of them.
+    """
+    if "error" in json_obj:
+        if json_obj["error"] == "UnsupportedFileError":
+            return UnsupportedFileError(
+                json_obj.get("filename"), json_obj.get("message", "")
+            )
+        return DocumentIngestError(**json_obj)
+    return DocumentIngestInfo(**json_obj)
 
 
 class BaseShabtiClient(ABC):
@@ -48,28 +70,59 @@ class BaseShabtiClient(ABC):
         response = await self._make_request("DELETE", f"collections/{collection_id}")
         return response.json()["collection_id"]
 
-    async def insert_files(self, collection_id: str, file_paths: list[str]):
-        async for line in self._stream_request(
-            "POST",
-            f"/collections/{collection_id}/documents/files",
-            files=[("files", open(file_path, "rb")) for file_path in file_paths],
-        ):
-            json_obj = json.loads(line)
-            if "error" in json_obj and json_obj["error"] == "UnsupportedFileError":
-                yield UnsupportedFileError(json_obj["filename"], json_obj["message"])
-                continue
-            yield DocumentIngestInfo(**json_obj)
+    async def start_files_ingest(
+        self, collection_id: str, file_paths: list[str]
+    ) -> IngestInfo:
+        # the handles close once the request has been sent rather than whenever the garbage
+        # collector gets around to them, which is what the old inline `open()` calls relied on
+        with ExitStack() as stack:
+            response = await self._make_request(
+                "POST",
+                f"/collections/{collection_id}/documents/files",
+                files=[
+                    ("files", stack.enter_context(open(file_path, "rb")))
+                    for file_path in file_paths
+                ],
+            )
+        return IngestInfo(**response.json())
 
-    async def insert_urls(
+    async def start_urls_ingest(
         self, collection_id: str, urls: list[str], max_depth: int = 1
-    ):
-        async for line in self._stream_request(
+    ) -> IngestInfo:
+        response = await self._make_request(
             "POST",
             f"/collections/{collection_id}/documents/urls",
             json=urls,
             params={"max_depth": max_depth},
-        ):
-            yield DocumentIngestInfo(**json.loads(line))
+        )
+        return IngestInfo(**response.json())
+
+    async def get_ingests(self) -> list[IngestInfo]:
+        response = await self._make_request("GET", "ingests")
+        return [IngestInfo(**item) for item in response.json()]
+
+    async def stream_ingest(self, ingest_id: str):
+        async for line in self._stream_request("GET", f"ingests/{ingest_id}"):
+            yield ingest_line(json.loads(line))
+
+    async def cancel_ingest(self, ingest_id: str) -> IngestInfo:
+        response = await self._make_request("DELETE", f"ingests/{ingest_id}")
+        return IngestInfo(**response.json())
+
+    # an ingest outlives the request that starts it now, so this is the POST plus a drain of the
+    # stream it returns, which ends when the ingest does. Still a generator that does nothing until
+    # it's iterated, so the POST, and with it a permission denial, lands on the first `__anext__`
+    async def insert_files(self, collection_id: str, file_paths: list[str]):
+        ingest = await self.start_files_ingest(collection_id, file_paths)
+        async for item in self.stream_ingest(ingest.ingest_id):
+            yield item
+
+    async def insert_urls(
+        self, collection_id: str, urls: list[str], max_depth: int = 1
+    ):
+        ingest = await self.start_urls_ingest(collection_id, urls, max_depth)
+        async for item in self.stream_ingest(ingest.ingest_id):
+            yield item
 
     async def get_documents(
         self,

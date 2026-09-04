@@ -91,7 +91,12 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
             # if not it has probably been refreshed and we're good to go
             # try to rerun using current token
             return await self._make_request(
-                method=method, url=url, json=json, files=files, stream=stream
+                method=method,
+                url=url,
+                json=json,
+                files=files,
+                stream=stream,
+                params=params,
             )
 
     async def _stream_request(
@@ -100,9 +105,13 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
         response = await self._make_request(
             method=method, url=url, json=json, files=files, stream=True, params=params
         )
-        async for line in response.aiter_lines():
-            yield line
-        await response.aclose()
+        # closed however the iteration ends: detaching from an ingest partway through is an
+        # ordinary thing to do now, and a `break` used to leak the connection
+        try:
+            async for line in response.aiter_lines():
+                yield line
+        finally:
+            await response.aclose()
 
     async def create_collection(
         self, collection_name: str, location: str, owner_username: str | None = None

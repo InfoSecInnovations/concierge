@@ -181,6 +181,63 @@ export class UnsupportedFileError {
 	}
 }
 
+// The API's keys are snake_case, and `response_model_exclude_unset` means an optional the server
+// never set is absent rather than null - except the fields an ingest snapshot always passes
+// explicitly, which arrive as null while it is still running. Both collapse to undefined here so a
+// caller only has one kind of absent to check for. Written out per type rather than as a generic
+// converter because these build class instances, and the constructors don't take their arguments
+// in the order the wire uses.
+export const parseDocumentIngestInfo = (json: any) =>
+	new DocumentIngestInfo(
+		json.progress,
+		json.total,
+		json.document_id,
+		json.document_type,
+		json.label,
+		json.complete ?? false,
+	);
+
+export const parseDocumentIngestError = (json: any) =>
+	new DocumentIngestError(
+		json.error,
+		json.message,
+		json.filename ?? undefined,
+		json.label ?? undefined,
+	);
+
+export const parseIngestItemInfo = (json: any) =>
+	new IngestItemInfo(
+		json.item_id,
+		json.label,
+		json.info ? parseDocumentIngestInfo(json.info) : undefined,
+		json.error ? parseDocumentIngestError(json.error) : undefined,
+	);
+
+export const parseIngestInfo = (json: any) =>
+	new IngestInfo(
+		json.ingest_id,
+		json.collection_id,
+		json.status,
+		json.started,
+		json.items.map((item: any) => parseIngestItemInfo(item)),
+		json.finished ?? undefined,
+		json.error ?? undefined,
+	);
+
+// one line of an ingest stream. An `error` key means the item failed: an unsupported file keeps its
+// own class, which is what the `instanceof` checks in the CLI and the web UI are written against,
+// and anything else comes back as an object so one bad document doesn't end the stream for the rest
+export const parseIngestLine = (
+	json: any,
+): DocumentIngestInfo | DocumentIngestError | UnsupportedFileError => {
+	if (json.error) {
+		if (json.error == "UnsupportedFileError")
+			return new UnsupportedFileError(json.message, json.filename);
+		return parseDocumentIngestError(json);
+	}
+	return parseDocumentIngestInfo(json);
+};
+
 export class PromptConfigInfo {
 	prompt?: string;
 	constructor(prompt?: string) {
