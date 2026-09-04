@@ -337,20 +337,42 @@ filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
 
-def ingest_document_api(user, collection_id, shabti_client):
+def drain_ingest(shabti_client, ingest_id, headers):
+    """Follow a detached ingest to its end, returning the document id it produced.
+
+    The POST only accepts the ingest now, so the wait moved here: the stream ends when the ingest
+    does. The caller's own token goes on this request too - reading someone else's ingest is
+    refused, which is what the scoping tests below check.
+    """
     document_id = None
+    with shabti_client.stream(
+        "GET", f"/ingests/{ingest_id}", headers=headers
+    ) as stream:
+        for item in stream.iter_lines():
+            if not item.strip():
+                continue
+            line = json.loads(item)
+            if "document_id" in line:
+                document_id = line["document_id"]
+    return document_id
+
+
+def ingest_document_api(user, collection_id, shabti_client):
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
-    response = shabti_client.post(
-        f"/collections/{collection_id}/documents/files",
-        files=[("files", open(file_path, "rb"))],
-        headers={"Authorization": f"Bearer {token['access_token']}"},
+    headers = {"Authorization": f"Bearer {token['access_token']}"}
+    with open(file_path, "rb") as f:
+        response = shabti_client.post(
+            f"/collections/{collection_id}/documents/files",
+            files=[("files", f)],
+            headers=headers,
+        )
+    if response.status_code != 201:
+        return (None, response)
+    return (
+        drain_ingest(shabti_client, response.json()["ingest_id"], headers),
+        response,
     )
-    for item in response.iter_lines():
-        line = json.loads(item)
-        if "document_id" in line:
-            document_id = line["document_id"]
-    return (document_id, response)
 
 
 @pytest.mark.parametrize(
@@ -366,7 +388,7 @@ def ingest_document_api(user, collection_id, shabti_client):
 )
 async def test_can_ingest_document(user, shabti_collection_id, shabti_client):
     result = ingest_document_api(user, shabti_collection_id, shabti_client)
-    assert result[1].status_code == 200
+    assert result[1].status_code == 201
     assert result[0]
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
@@ -406,19 +428,20 @@ url = "https://www.scrapethissite.com/pages/simple/"
 
 
 def ingest_url_api(user, collection_id, shabti_client):
-    document_id = None
     keycloak_client = get_keycloak_client()
     token = keycloak_client.token(user, "test")
+    headers = {"Authorization": f"Bearer {token['access_token']}"}
     response = shabti_client.post(
         f"/collections/{collection_id}/documents/urls",
         json=[url],
-        headers={"Authorization": f"Bearer {token['access_token']}"},
+        headers=headers,
     )
-    for item in response.iter_lines():
-        line = json.loads(item)
-        if "document_id" in line:
-            document_id = line["document_id"]
-    return (document_id, response)
+    if response.status_code != 201:
+        return (None, response)
+    return (
+        drain_ingest(shabti_client, response.json()["ingest_id"], headers),
+        response,
+    )
 
 
 @pytest.mark.parametrize(
@@ -434,7 +457,7 @@ def ingest_url_api(user, collection_id, shabti_client):
 )
 async def test_can_ingest_url(user, shabti_collection_id, shabti_client):
     result = ingest_url_api(user, shabti_collection_id, shabti_client)
-    assert result[1].status_code == 200
+    assert result[1].status_code == 201
     assert result[0]
     admin_token = get_keycloak_admin_openid_token()
     docs = await get_documents(admin_token["access_token"], shabti_collection_id)
@@ -767,3 +790,44 @@ async def test_cannot_prompt(
         headers={"Authorization": f"Bearer {token['access_token']}"},
     )
     assert response.status_code == 403
+
+
+@pytest.mark.parametrize(
+    "shabti_collection_id",
+    [{"username": "testadmin", "location": "private"}],
+    indirect=["shabti_collection_id"],
+)
+async def test_an_ingest_is_only_visible_to_its_owner(
+    shabti_collection_id, shabti_client
+):
+    keycloak_client = get_keycloak_client()
+    owner = keycloak_client.token("testadmin", "test")
+    owner_headers = {"Authorization": f"Bearer {owner['access_token']}"}
+    with open(file_path, "rb") as f:
+        response = shabti_client.post(
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+            headers=owner_headers,
+        )
+    assert response.status_code == 201
+    ingest_id = response.json()["ingest_id"]
+    other = keycloak_client.token("testnothing", "test")
+    other_headers = {"Authorization": f"Bearer {other['access_token']}"}
+    # a foreign ingest is a 404 rather than a 403, so ids can't be probed for existence
+    listed = shabti_client.get("/ingests", headers=other_headers)
+    assert listed.status_code == 200
+    assert not any(item["ingest_id"] == ingest_id for item in listed.json())
+    assert (
+        shabti_client.get(f"/ingests/{ingest_id}", headers=other_headers).status_code
+        == 404
+    )
+    assert (
+        shabti_client.delete(f"/ingests/{ingest_id}", headers=other_headers).status_code
+        == 404
+    )
+    # the owner still sees it, and it still finishes
+    assert any(
+        item["ingest_id"] == ingest_id
+        for item in shabti_client.get("/ingests", headers=owner_headers).json()
+    )
+    assert drain_ingest(shabti_client, ingest_id, owner_headers)

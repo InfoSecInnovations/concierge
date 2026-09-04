@@ -15,6 +15,7 @@ from shabti_keycloak import (
     get_keycloak_admin_openid_token,
 )
 from ...src.app.functionality.ingesting import insert_document
+from ...src.app.shabti_logging import get_actor
 from ...src.app.functionality.models import get_models, default_model_id, load_model
 import os
 from ...src.app.functionality.loading import load_file
@@ -86,12 +87,16 @@ async def shabti_document_id(shabti_collection_id):
         "wb",
     ) as f:
         await f.write(binary)
+    document_id = None
     async for ingest_info in insert_document(
-        token["access_token"], shabti_collection_id, doc, unique_filename
+        await get_actor(token["access_token"]),
+        shabti_collection_id,
+        doc,
+        unique_filename,
     ):
-        pass
+        document_id = ingest_info.document_id
 
-    yield ingest_info.document_id
+    yield document_id
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -106,9 +111,13 @@ async def shabti_prompt_document_id(shabti_collection_id):
         "wb",
     ) as f:
         await f.write(binary)
+    document_id = None
     async for ingest_info in insert_document(
-        token["access_token"], shabti_collection_id, doc, unique_filename
+        await get_actor(token["access_token"]),
+        shabti_collection_id,
+        doc,
+        unique_filename,
     ):
-        pass
+        document_id = ingest_info.document_id
 
-    yield ingest_info.document_id
+    yield document_id

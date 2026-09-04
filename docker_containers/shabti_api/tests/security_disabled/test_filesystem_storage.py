@@ -13,12 +13,17 @@ file_dir = os.path.join(os.path.dirname(__file__), "..", "assets")
 file_path = os.path.join(file_dir, filename)
 
 
-async def test_file_creation(shabti_client, shabti_collection_id):
-    response = shabti_client.post(
-        f"/collections/{shabti_collection_id}/documents/files",
-        files=[("files", open(file_path, "rb"))],
-    )
-    doc_id = response.json()["document_id"]
+async def test_file_creation(shabti_client, shabti_collection_id, ingest_and_wait):
+    with open(file_path, "rb") as f:
+        response, ingest, _ = ingest_and_wait(
+            "POST",
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+        )
+    assert response.status_code == 201
+    # the id comes off the ingest's item rather than the response body: the POST is now an
+    # acknowledgement, and a document only has an id once its first page has been written
+    doc_id = next(item.info.document_id for item in ingest.items if item.info)
     document_file_path = await get_document_file_path(shabti_collection_id, doc_id)
     async with aiofiles.open(
         os.path.join(os.getenv("SHABTI_FILES_DIR"), document_file_path)
@@ -36,13 +41,17 @@ async def test_file_deletion_with_document(shabti_collection_id, shabti_document
     )
 
 
-async def test_file_deletion_with_collection(shabti_client, shabti_collection_id):
+async def test_file_deletion_with_collection(
+    shabti_client, shabti_collection_id, ingest_and_wait
+):
     files = await aiofiles.os.listdir(file_dir)
     for file in files:
-        shabti_client.post(
-            f"/collections/{shabti_collection_id}/documents/files",
-            files=[("files", open(os.path.join(file_dir, file), "rb"))],
-        )
+        with open(os.path.join(file_dir, file), "rb") as f:
+            ingest_and_wait(
+                "POST",
+                f"/collections/{shabti_collection_id}/documents/files",
+                files=[("files", f)],
+            )
     docs = await get_documents(None, shabti_collection_id)
     paths = [
         await get_document_file_path(shabti_collection_id, doc.document_id)

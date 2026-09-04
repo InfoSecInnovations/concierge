@@ -6,6 +6,9 @@ from ...src.app.functionality.document_collections import (
 from shabti_util import auth_enabled
 import pytest
 import secrets
+import json
+import asyncio
+from uuid import uuid4
 
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
@@ -49,12 +52,15 @@ async def test_list_collections(shabti_client, shabti_collection_id):
     )
 
 
-async def test_insert_documents(shabti_client, shabti_collection_id):
-    response = shabti_client.post(
-        f"/collections/{shabti_collection_id}/documents/files",
-        files=[("files", open(file_path, "rb"))],
-    )
-    assert response.status_code == 200
+async def test_insert_documents(shabti_client, shabti_collection_id, ingest_and_wait):
+    with open(file_path, "rb") as f:
+        response, ingest, _ = ingest_and_wait(
+            "POST",
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+        )
+    assert response.status_code == 201
+    assert ingest.status == "complete"
     docs = await get_documents(None, shabti_collection_id)
     assert next((doc for doc in docs.documents if doc.filename == filename), None)
 
@@ -64,11 +70,12 @@ url = "https://www.scrapethissite.com/pages/simple/"
 listing_url = "https://www.scrapethissite.com/pages/"
 
 
-async def test_insert_urls(shabti_client, shabti_collection_id):
-    response = shabti_client.post(
-        f"/collections/{shabti_collection_id}/documents/urls", json=[url]
+async def test_insert_urls(shabti_client, shabti_collection_id, ingest_and_wait):
+    response, ingest, _ = ingest_and_wait(
+        "POST", f"/collections/{shabti_collection_id}/documents/urls", json=[url]
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
+    assert ingest.status == "complete"
     docs = await get_documents(None, shabti_collection_id)
     doc = next((doc for doc in docs.documents if doc.source == url), None)
     assert doc
@@ -82,13 +89,25 @@ async def test_insert_urls(shabti_client, shabti_collection_id):
     assert found.documents
 
 
-async def test_insert_urls_with_depth(shabti_client, shabti_collection_id):
-    response = shabti_client.post(
+async def test_insert_urls_with_depth(
+    shabti_client, shabti_collection_id, ingest_and_wait
+):
+    response, ingest, lines = ingest_and_wait(
+        "POST",
         f"/collections/{shabti_collection_id}/documents/urls",
         json=[listing_url],
         params={"max_depth": 2},
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
+    assert ingest.status == "complete"
+    # a crawl's estimated total moves as it discovers pages, so `progress + 1 == total` is not a
+    # completion signal and `complete` has to be one: this asserts the stream really does contain
+    # an event where the two disagree, and still ends with exactly one completion
+    assert any(
+        not line.get("complete") and line["progress"] + 1 != line["total"]
+        for line in lines
+    )
+    assert len([line for line in lines if line.get("complete")]) == 1
     docs = await get_documents(None, shabti_collection_id)
     doc = next((doc for doc in docs.documents if doc.source == listing_url), None)
     assert doc
@@ -106,18 +125,25 @@ async def test_insert_urls_with_depth(shabti_client, shabti_collection_id):
     ).documents
 
 
-async def test_document_counts_are_per_document(shabti_client, shabti_collection_id):
-    response = shabti_client.post(
-        f"/collections/{shabti_collection_id}/documents/files",
-        files=[("files", open(file_path, "rb"))],
-    )
-    assert response.status_code == 200
-    response = shabti_client.post(
+async def test_document_counts_are_per_document(
+    shabti_client, shabti_collection_id, ingest_and_wait
+):
+    with open(file_path, "rb") as f:
+        response, ingest, _ = ingest_and_wait(
+            "POST",
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+        )
+    assert response.status_code == 201
+    assert ingest.status == "complete"
+    response, ingest, _ = ingest_and_wait(
+        "POST",
         f"/collections/{shabti_collection_id}/documents/urls",
         json=[listing_url],
         params={"max_depth": 2},
     )
-    assert response.status_code == 200
+    assert response.status_code == 201
+    assert ingest.status == "complete"
     docs = await get_documents(None, shabti_collection_id)
     file_doc = next((doc for doc in docs.documents if doc.filename == filename), None)
     crawled_doc = next(
@@ -174,3 +200,101 @@ async def test_delete_collection(shabti_client, shabti_collection_id):
         collection.collection_id == response_json["collection_id"]
         for collection in collections
     )
+
+
+async def test_documents_ingest_in_parallel(
+    shabti_client, shabti_collection_id, ingest_and_wait
+):
+    handles = [open(file_path, "rb") for _ in range(3)]
+    try:
+        response, ingest, lines = ingest_and_wait(
+            "POST",
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", handle) for handle in handles],
+        )
+    finally:
+        for handle in handles:
+            handle.close()
+    assert response.status_code == 201
+    # every submitted file is reported as an item straight away, before any of them has progress
+    assert len(response.json()["items"]) == 3
+    assert not any("info" in item for item in response.json()["items"])
+    assert ingest.status == "complete"
+    ids = {item.info.document_id for item in ingest.items if item.info}
+    assert len(ids) == 3
+    # exactly one completion per document, and it is the last thing said about it
+    completions = [line for line in lines if line.get("complete")]
+    assert {line["document_id"] for line in completions} == ids
+    assert len(completions) == 3
+
+
+async def test_ingest_survives_a_detached_client(shabti_client, shabti_collection_id):
+    with open(file_path, "rb") as f:
+        response = shabti_client.post(
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+        )
+    assert response.status_code == 201
+    ingest_id = response.json()["ingest_id"]
+    # nothing read the stream at all, which used to abort the ingest
+    while True:
+        listed = shabti_client.get("/ingests").json()
+        info = next(item for item in listed if item["ingest_id"] == ingest_id)
+        if info["status"] != "running":
+            break
+        await asyncio.sleep(0.5)
+    assert info["status"] == "complete"
+    docs = await get_documents(None, shabti_collection_id)
+    assert next((doc for doc in docs.documents if doc.filename == filename), None)
+
+
+async def test_a_finished_ingest_stays_readable(
+    shabti_client, shabti_collection_id, ingest_and_wait
+):
+    with open(file_path, "rb") as f:
+        response, ingest, _ = ingest_and_wait(
+            "POST",
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+        )
+    assert ingest.status == "complete"
+    # asked for again after it is over: a terminal snapshot and a closed stream, not a 404
+    again = shabti_client.get(f"/ingests/{ingest.ingest_id}")
+    assert again.status_code == 200
+    lines = [json.loads(line) for line in again.text.splitlines() if line.strip()]
+    assert lines and all(line.get("complete") for line in lines)
+
+
+async def test_ingest_of_a_missing_collection_is_rejected(shabti_client):
+    with open(file_path, "rb") as f:
+        response = shabti_client.post(
+            f"/collections/{uuid4().hex}/documents/files",
+            files=[("files", f)],
+        )
+    assert response.status_code == 404
+    assert response.json()["error_type"] == "CollectionNotFoundError"
+
+
+async def test_cancelling_an_ingest_leaves_nothing_behind(
+    shabti_client, shabti_collection_id
+):
+    handles = [open(file_path, "rb") for _ in range(3)]
+    try:
+        response = shabti_client.post(
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", handle) for handle in handles],
+        )
+    finally:
+        for handle in handles:
+            handle.close()
+    assert response.status_code == 201
+    seeded = response.json()
+    cancelled = shabti_client.delete(f"/ingests/{seeded['ingest_id']}")
+    assert cancelled.status_code == 200
+    assert cancelled.json()["status"] == "cancelled"
+    # anything a stopped job had already written is rolled back or swept, and every saved binary
+    # goes with it since no document ever claimed one
+    for item in seeded["items"]:
+        assert not os.path.exists(
+            os.path.join(os.getenv("SHABTI_FILES_DIR"), item["item_id"])
+        )

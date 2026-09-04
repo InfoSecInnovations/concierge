@@ -381,3 +381,10 @@ async def get_temp_file(id: str):
     if await client.indices.exists(index=FILES_INDEX_NAME):
         response = await client.get(index=FILES_INDEX_NAME, id=id)
         return response["_source"]["file_path"]
+
+
+async def collection_index_exists(collection_id: str) -> bool:
+    # the per-collection index is created in both modes, unlike the name mapping, which is only
+    # written when security is disabled
+    client = get_client()
+    return await client.indices.exists(index=collection_id)

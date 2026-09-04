@@ -11,7 +11,7 @@ from shabti_types import ShabtiError, DocumentList
 import logging
 from fastapi import Depends
 from typing import Annotated
-from .functionality.document_collections import get_documents
+from .functionality.document_collections import get_documents, require_collection
 from .dependencies.valid_access_token import valid_access_token
 from fastapi import UploadFile
 from .functionality.document_collections import (
@@ -30,9 +30,16 @@ from shabti_types import (
     DocumentIngestInfo,
     DocumentIngestError,
     PromptChunk,
+    IngestInfo,
+    IngestItemInfo,
 )
 from .functionality.insert_uploaded_files import insert_uploaded_files
 from .functionality.insert_urls import insert_urls
+from .functionality.ingest_registry import IngestRegistry, IngestTask, stream_ingest
+from .functionality.save_uploads import save_uploads, discard
+from .functionality.opensearch_ingesting import get_tokenizer
+from .functionality.user_settings import user_id
+from .shabti_logging import get_actor
 from .functionality.status import check_llm, check_opensearch
 from .functionality.opensearch import close_client
 from .functionality.run_prompt import run_prompt
@@ -40,6 +47,7 @@ from .functionality.load_prompter_config import load_prompter_config
 from .functionality.upload_prompt_file import upload_prompt_file
 from .functionality.opensearch_binary import serve_binary
 from .authorization import (
+    UnauthorizedOperationError,
     list_scopes,
 )
 from .functionality.models import load_model, get_models
@@ -48,7 +56,9 @@ from .functionality.chat_model_selection import (
     set_chat_model_selection,
 )
 from collections.abc import AsyncIterable
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+import asyncio
+from uuid import uuid4
 from .dependencies.auth_checker import AuthChecker
 from .dependencies.no_auth import NoAuth
 from .dependencies.prompt_info_validator import PromptInfoValidator
@@ -58,7 +68,15 @@ from .dependencies.url_list_validator import UrlListValidator
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # the tokenizer is a download, and the first ingest would otherwise pay for it - now with
+    # several documents possibly racing to fetch it at once. not being able to reach it at boot is
+    # not a reason to refuse to start
+    with suppress(Exception):
+        await asyncio.to_thread(get_tokenizer)
     yield
+    # before the client closes: the ingests winding down are rolling documents back through it, and
+    # closing it under them would strand exactly the partial documents they are there to remove
+    await app.state.ingest_registry.shutdown()
     # the OpenSearch client holds an aiohttp session, which can only be closed from the loop it was
     # created on, and this is the only place that loop is still running
     await close_client()
@@ -84,6 +102,41 @@ def create_app():
             "clientSecret": os.getenv("KEYCLOAK_CLIENT_SECRET"),
         },
     )
+
+    # on the app rather than in a module global, following the OpenSearch client: an ingest holds
+    # asyncio objects bound to the loop it started on, and the tests build an app per session
+    registry = IngestRegistry()
+    app.state.ingest_registry = registry
+
+    async def ingest_owner(credentials: str | None) -> str:
+        # a fixed owner with security disabled, so listing and re-attaching still work there
+        return await user_id(credentials) if auth_is_enabled else "local"
+
+    class OwnedIngest:
+        """Resolve the caller's own ingest, before the route starts streaming.
+
+        A dependency rather than the route's first statement because two of these routes stream and
+        a 404 cannot be reported once the body has begun. `auth_class` is no use here either:
+        AuthChecker takes a bare `collection_id`, which FastAPI binds from the path - and with no
+        `{collection_id}` in these paths it would silently become a required query parameter.
+
+        Ownership is the whole check, and deliberately so. Re-authorizing the collection on every
+        attach was tried and reverted: it is a Keycloak round trip per attach on top of the one the
+        POST already paid, it made `test_can_ingest_document[testshared-...]` fail reproducibly with
+        a dropped connection to Keycloak, and the web UI is about to poll this listing once a
+        second. What it would have bought is narrow - an ingest is the caller's own, listing the
+        filenames they submitted moments ago, so losing collection access midway through does not
+        make their own upload a secret from them.
+        """
+
+        async def __call__(
+            self,
+            ingest_id: str,
+            credentials: Annotated[str, Depends(access_token)],
+        ) -> IngestTask:
+            return registry.get(ingest_id, await ingest_owner(credentials))
+
+    owned_ingest = OwnedIngest()
 
     # TODO: probably don't wildcard this
     app.add_middleware(
@@ -152,19 +205,40 @@ def create_app():
     @app.post(
         "/collections/{collection_id}/documents/files",
         response_model_exclude_unset=True,
+        status_code=201,
         dependencies=[Depends(auth_class("update"))],
     )
     async def insert_files_document_route(
         collection_id: str,
         files: list[UploadFile],
         credentials: Annotated[str, Depends(access_token)],
-    ) -> AsyncIterable[DocumentIngestInfo | DocumentIngestError]:
-        async for x in insert_uploaded_files(credentials, collection_id, files):
-            yield x
+    ) -> IngestInfo:
+        await require_collection(collection_id)
+        actor = await get_actor(credentials)
+        # written to disk before this returns: Starlette closes an upload's spooled temp file when
+        # the request ends, and the ingest that reads them now outlives the request
+        saved = await save_uploads(files)
+        items = [
+            IngestItemInfo(item_id=entry.item_id, label=entry.label) for entry in saved
+        ]
+        try:
+            return await registry.start(
+                await ingest_owner(credentials),
+                collection_id,
+                items,
+                lambda pool: insert_uploaded_files(actor, collection_id, saved, pool),
+            )
+        except Exception:
+            # a refused ingest never gets the chance to clean up after itself, and nothing else
+            # knows about these files yet
+            for entry in saved:
+                await discard(entry.item_id)
+            raise
 
     @app.post(
         "/collections/{collection_id}/documents/urls",
         response_model_exclude_unset=True,
+        status_code=201,
         dependencies=[Depends(auth_class("update")), Depends(UrlListValidator())],
     )
     async def insert_urls_document_route(
@@ -174,9 +248,35 @@ def create_app():
         # 1 ingests only the given URLs; deeper crawls stay within the directory each URL is in, and
         # are clamped to SHABTI_CRAWL_MAX_DEPTH by the loader
         max_depth: Annotated[int, Query(ge=1)] = 1,
-    ) -> AsyncIterable[DocumentIngestInfo]:
-        async for x in insert_urls(credentials, collection_id, urls, max_depth):
+    ) -> IngestInfo:
+        await require_collection(collection_id)
+        actor = await get_actor(credentials)
+        items = [IngestItemInfo(item_id=uuid4().hex, label=url) for url in urls]
+        return await registry.start(
+            await ingest_owner(credentials),
+            collection_id,
+            items,
+            lambda pool: insert_urls(actor, collection_id, items, max_depth, pool),
+        )
+
+    @app.get("/ingests", response_model_exclude_unset=True)
+    async def get_ingests_route(
+        credentials: Annotated[str, Depends(access_token)],
+    ) -> list[IngestInfo]:
+        return registry.list(await ingest_owner(credentials))
+
+    @app.get("/ingests/{ingest_id}", response_model_exclude_unset=True)
+    async def stream_ingest_route(
+        task: Annotated[IngestTask, Depends(owned_ingest)],
+    ) -> AsyncIterable[DocumentIngestInfo | DocumentIngestError]:
+        async for x in stream_ingest(task):
             yield x
+
+    @app.delete("/ingests/{ingest_id}", response_model_exclude_unset=True)
+    async def cancel_ingest_route(
+        task: Annotated[IngestTask, Depends(owned_ingest)],
+    ) -> IngestInfo:
+        return await registry.cancel(task)
 
     @app.delete(
         "/collections/{collection_id}/documents/{document_id}",
@@ -276,6 +376,18 @@ def create_app():
         # TODO: should this be locked behind higher permissions levels?
         async for x in load_model(model_info.model_name):
             yield x
+
+    @app.exception_handler(UnauthorizedOperationError)
+    def unauthorized_operation_handler(
+        request: Request, exc: UnauthorizedOperationError
+    ):
+        # a denial from Keycloak normally arrives as a 403 KeycloakPostError, so this only fires
+        # where the decision came back negative rather than as an error. without it the exception
+        # is unhandled, which on a streaming route cannot be reported to the caller at all
+        return JSONResponse(
+            content={"error_type": exc.__class__.__name__},
+            status_code=403,
+        )
 
     @app.exception_handler(ShabtiError)
     def shabti_error_handler(request: Request, exc: ShabtiError):

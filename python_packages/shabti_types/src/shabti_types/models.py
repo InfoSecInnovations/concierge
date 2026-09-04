@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from enum import StrEnum
 
 
 class UserInfo(BaseModel):
@@ -55,12 +56,50 @@ class DocumentIngestInfo(BaseModel):
     document_id: str
     document_type: str
     label: str
+    # the last event for a document, sent once it is refreshed into the index. left unset on
+    # progress events, so `response_model_exclude_unset` keeps it off the lines clients already
+    # parse: build it conditionally rather than passing False
+    complete: bool = False
 
 
 class DocumentIngestError(BaseModel):
     error: str
     message: str
     filename: Optional[str] = None
+    # which item of an ingest this error belongs to. `filename` is overloaded for that today, and
+    # carries a URL's source for the URL route
+    label: Optional[str] = None
+
+
+class IngestStatus(StrEnum):
+    RUNNING = "running"
+    COMPLETE = "complete"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class IngestItemInfo(BaseModel):
+    """One file or URL of an ingest.
+
+    Keyed by an `item_id` minted when the ingest is requested rather than by `document_id`: a file
+    that fails to load, an unsupported file or a forbidden URL never gets one, and progress can't be
+    attributed before the parent document exists. `document_id` lives inside `info` once it appears.
+    """
+
+    item_id: str
+    label: str
+    info: Optional[DocumentIngestInfo] = None
+    error: Optional[DocumentIngestError] = None
+
+
+class IngestInfo(BaseModel):
+    ingest_id: str
+    collection_id: str
+    status: IngestStatus
+    started: int
+    finished: Optional[int] = None
+    error: Optional[str] = None
+    items: list[IngestItemInfo]
 
 
 class ModelLoadInfo(BaseModel):

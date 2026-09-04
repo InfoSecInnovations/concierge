@@ -20,6 +20,7 @@ from .opensearch import (
     get_opensearch_documents,
     delete_opensearch_document,
     get_opensearch_collection_info,
+    collection_index_exists,
     get_document,
     get_opensearch_document_types,
     get_document_file_path,
@@ -33,6 +34,7 @@ from shabti_types import (
     DeletedDocumentInfo,
     UserInfo,
     CollectionExistsError,
+    CollectionNotFoundError,
     InvalidLocationError,
     InvalidUserError,
     DocumentList,
@@ -309,3 +311,17 @@ async def get_collection_scopes(token, collection_id):
     if not auth_enabled():
         return {"read", "update", "delete"}
     return set(await list_scopes(token, collection_id))
+
+
+async def require_collection(collection_id: str) -> None:
+    """Raise a clean 404 for an ingest into a collection that isn't there.
+
+    Nothing validated this before: with security disabled the failure surfaced from OpenSearch part
+    way through the response stream, and an ingest is detached now, so it would land on a task
+    nobody is reading rather than on the caller.
+    """
+    if not await collection_index_exists(collection_id):
+        raise CollectionNotFoundError(
+            collection_id=collection_id,
+            message=f"No collection with ID {collection_id}",
+        )

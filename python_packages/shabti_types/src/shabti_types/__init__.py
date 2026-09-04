@@ -20,6 +20,9 @@ from .models import (
     PromptSource as PromptSource,
     DocumentList as DocumentList,
     DocumentIngestError as DocumentIngestError,
+    IngestStatus as IngestStatus,
+    IngestItemInfo as IngestItemInfo,
+    IngestInfo as IngestInfo,
 )
 from .exceptions import (
     ShabtiError as ShabtiError,
@@ -31,4 +34,7 @@ from .exceptions import (
     EmbeddingsError as EmbeddingsError,
     EmptyDocumentError as EmptyDocumentError,
     ForbiddenUrlError as ForbiddenUrlError,
+    CollectionNotFoundError as CollectionNotFoundError,
+    IngestNotFoundError as IngestNotFoundError,
+    TooManyIngestsError as TooManyIngestsError,
 )

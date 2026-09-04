@@ -49,3 +49,21 @@ class ForbiddenUrlError(ShabtiError):
     def __init__(self, url="", message=""):
         super().__init__(message, 403)
         self.url = url
+
+
+class CollectionNotFoundError(ShabtiError):
+    def __init__(self, collection_id="", message=""):
+        super().__init__(message, 404)
+        self.collection_id = collection_id
+
+
+class IngestNotFoundError(ShabtiError):
+    def __init__(self, ingest_id="", message=""):
+        # 404 for a foreign ingest as well as a missing one, so ids aren't enumerable
+        super().__init__(message, 404)
+        self.ingest_id = ingest_id
+
+
+class TooManyIngestsError(ShabtiError):
+    def __init__(self, message=""):
+        super().__init__(message, 429)

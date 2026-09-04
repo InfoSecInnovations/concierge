@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from ..functionality.document_collections import (
     get_collections,
     create_collection,
@@ -43,8 +43,12 @@ async def create_collection_route(
 @router.delete("/collections/{collection_id}", response_model_exclude_unset=True)
 async def delete_collection_route(
     collection_id: str,
+    request: Request,
     credentials: Annotated[str, Depends(valid_access_token)],
 ) -> AuthzCollectionInfo:
+    # an ingest is detached now, so without this it would keep writing into an index that has been
+    # dropped out from under it
+    await request.app.state.ingest_registry.cancel_for_collection(collection_id)
     return await delete_collection(credentials, collection_id)
 
 

@@ -72,9 +72,10 @@ async def shabti_document_id(shabti_collection_id):
         "wb",
     ) as f:
         await f.write(binary)
+    document_id = None
     async for ingest_info in insert_document(
         None, shabti_collection_id, doc, unique_filename
     ):
-        pass
+        document_id = ingest_info.document_id
 
-    yield ingest_info.document_id
+    yield document_id

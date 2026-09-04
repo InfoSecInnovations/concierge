@@ -19,6 +19,7 @@ from crawlee.storage_clients import MemoryStorageClient
 from crawlee.storages import RequestQueue
 from shabti_types import EmptyDocumentError
 from .base_loader import ShabtiDocument, ShabtiPageStream, get_current_time
+from ..settings import setting
 from .url_guard import check_url_allowed, same_origin
 
 # crawlee's service locator is a global singleton, and its default storage client writes crawl state
@@ -31,21 +32,7 @@ except ServiceConflictError:
 
 HTML_CONTENT_TYPES = ("text/html", "application/xhtml+xml")
 
-DEFAULTS = {
-    "SHABTI_CRAWL_MAX_DEPTH": 5,
-    "SHABTI_CRAWL_MAX_PAGES": 50,
-    "SHABTI_CRAWL_MAX_PAGE_BYTES": 1000000,
-    "SHABTI_CRAWL_MAX_TOTAL_BYTES": 20000000,
-    "SHABTI_CRAWL_CONCURRENCY": 4,
-    "SHABTI_CRAWL_REQUESTS_PER_MINUTE": 120,
-    "SHABTI_CRAWL_TIMEOUT_SECONDS": 20,
-}
 DEFAULT_USER_AGENT = "ShabtiAI (+https://github.com/InfoSecInnovations/shabti)"
-
-
-def setting(name: str) -> int:
-    value = os.getenv(name)
-    return int(value) if value else DEFAULTS[name]
 
 
 def extract_text(html: bytes) -> str:

@@ -82,6 +82,9 @@ export class DocumentIngestInfo {
 	documentId: string;
 	documentType: string;
 	label: string;
+	// the last event for a document, sent once it is in the index. absent from the lines the API
+	// emitted before this existed, so read it as `json.complete ?? false`
+	complete: boolean;
 
 	constructor(
 		progress: number,
@@ -89,12 +92,82 @@ export class DocumentIngestInfo {
 		documentId: string,
 		documentType: string,
 		label: string,
+		complete = false,
 	) {
 		this.progress = progress;
 		this.total = total;
 		this.documentId = documentId;
 		this.documentType = documentType;
 		this.label = label;
+		this.complete = complete;
+	}
+}
+
+export class DocumentIngestError {
+	error: string;
+	message: string;
+	filename?: string;
+	label?: string;
+
+	constructor(
+		error: string,
+		message: string,
+		filename?: string,
+		label?: string,
+	) {
+		this.error = error;
+		this.message = message;
+		this.filename = filename;
+		this.label = label;
+	}
+}
+
+export type IngestStatus = "running" | "complete" | "failed" | "cancelled";
+
+export class IngestItemInfo {
+	itemId: string;
+	label: string;
+	info?: DocumentIngestInfo;
+	error?: DocumentIngestError;
+
+	constructor(
+		itemId: string,
+		label: string,
+		info?: DocumentIngestInfo,
+		error?: DocumentIngestError,
+	) {
+		this.itemId = itemId;
+		this.label = label;
+		this.info = info;
+		this.error = error;
+	}
+}
+
+export class IngestInfo {
+	ingestId: string;
+	collectionId: string;
+	status: IngestStatus;
+	started: number;
+	items: IngestItemInfo[];
+	finished?: number;
+	error?: string;
+
+	constructor(
+		ingestId: string,
+		collectionId: string,
+		status: IngestStatus,
+		started: number,
+		items: IngestItemInfo[],
+		finished?: number,
+		error?: string,
+	) {
+		this.ingestId = ingestId;
+		this.collectionId = collectionId;
+		this.status = status;
+		this.started = started;
+		this.items = items;
+		this.finished = finished;
+		this.error = error;
 	}
 }
 

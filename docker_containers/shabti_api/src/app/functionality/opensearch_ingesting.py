@@ -21,7 +21,13 @@ def get_field_type(python_type):
 
 
 @cache
-def get_splitter() -> TextSplitter:
+def get_tokenizer() -> tuple[str, int]:
+    """The downloaded tokenizer as JSON, plus the chunk capacity read off it.
+
+    The download is what's worth caching, not the object: `functools.cache` doesn't lock across the
+    wrapped call, so concurrent first calls would each fetch it, and a single cached `TextSplitter`
+    would hand one mutated `Tokenizer` to every embedding thread at once.
+    """
     tokenizer = Tokenizer.from_pretrained(
         "sentence-transformers/paraphrase-multilingual-mpnet-base-v2"
     )
@@ -30,7 +36,16 @@ def get_splitter() -> TextSplitter:
     # semantic-text-splitter >=0.31 reports the *truncated* token count for tokenizers with
     # truncation enabled, so oversized text measures exactly `capacity` and is never split
     tokenizer.no_truncation()
-    return TextSplitter.from_huggingface_tokenizer(tokenizer, capacity, overlap=50)
+    return tokenizer.to_str(), capacity
+
+
+def get_splitter() -> TextSplitter:
+    # built per document rather than cached: parsing the tokenizer costs a fraction of embedding one
+    # page, and the alternative is several documents splitting through the same Rust-backed object
+    payload, capacity = get_tokenizer()
+    return TextSplitter.from_huggingface_tokenizer(
+        Tokenizer.from_str(payload), capacity, overlap=50
+    )
 
 
 async def insert(
@@ -111,13 +126,17 @@ async def insert(
             ],
         )
 
-    def progress() -> DocumentIngestInfo:
+    def progress(complete: bool = False) -> DocumentIngestInfo:
         return DocumentIngestInfo(
             progress=written,
             total=stream.estimated_total(),
             document_id=doc_id,
             document_type=stream.metadata.media_type,
             label=label,
+            # built conditionally rather than passed as False: the routes serialise with
+            # `response_model_exclude_unset`, so leaving it unset is what keeps the key off the
+            # progress lines existing clients already parse
+            **({"complete": True} if complete else {}),
         )
 
     try:
@@ -148,6 +167,14 @@ async def insert(
         # vector and page counts read straight after an ingest depend on
         await client.indices.refresh(index=collection_id)
 
+        # after the refresh, not before: a consumer acting on `complete` has to be able to find the
+        # document. this is also the last suspension point, so a stop delivered here still lands
+        # inside the `try` and rolls the document back, which is right - the ingest was cancelled
+        yield progress(complete=True)
+
+    # not BaseException: this cannot catch GeneratorExit, so *closing* this generator rather than
+    # throwing into it would skip the rollback and orphan a partial document. that is why the stop
+    # in isi_util.stream_pool is an ordinary Exception delivered with athrow, never aclose
     except Exception as e:
         if pending:
             # awaited rather than cancelled: cancelling part way through the bulk would let the
