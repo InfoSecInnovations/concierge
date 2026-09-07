@@ -36,5 +36,4 @@ from .exceptions import (
     ForbiddenUrlError as ForbiddenUrlError,
     CollectionNotFoundError as CollectionNotFoundError,
     IngestNotFoundError as IngestNotFoundError,
-    TooManyIngestsError as TooManyIngestsError,
 )

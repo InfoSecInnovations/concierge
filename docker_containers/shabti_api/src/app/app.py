@@ -229,8 +229,9 @@ def create_app():
                 lambda pool: insert_uploaded_files(actor, collection_id, saved, pool),
             )
         except Exception:
-            # a refused ingest never gets the chance to clean up after itself, and nothing else
-            # knows about these files yet
+            # an ingest that was never created never gets the chance to clean up after itself, and
+            # nothing else knows about these files yet. one that was created does its own cleanup,
+            # queued or running, so this is only the narrow window before that
             for entry in saved:
                 await discard(entry.item_id)
             raise

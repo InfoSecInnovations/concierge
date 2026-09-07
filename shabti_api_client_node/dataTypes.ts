@@ -122,7 +122,14 @@ export class DocumentIngestError {
 	}
 }
 
-export type IngestStatus = "running" | "complete" | "failed" | "cancelled";
+// queued is an ingest the server accepted but has not started: the concurrency caps hold it back
+// rather than the POST being refused
+export type IngestStatus =
+	| "queued"
+	| "running"
+	| "complete"
+	| "failed"
+	| "cancelled";
 
 export class IngestItemInfo {
 	itemId: string;

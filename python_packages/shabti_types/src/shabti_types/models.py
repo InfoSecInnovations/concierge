@@ -72,6 +72,9 @@ class DocumentIngestError(BaseModel):
 
 
 class IngestStatus(StrEnum):
+    # accepted but not started. the caps are on how many ingests run at once rather than on how many
+    # may be submitted, so a POST is never refused and waits its turn here instead
+    QUEUED = "queued"
     RUNNING = "running"
     COMPLETE = "complete"
     FAILED = "failed"

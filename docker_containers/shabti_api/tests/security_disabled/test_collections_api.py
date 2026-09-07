@@ -240,12 +240,39 @@ async def test_ingest_survives_a_detached_client(shabti_client, shabti_collectio
     while True:
         listed = shabti_client.get("/ingests").json()
         info = next(item for item in listed if item["ingest_id"] == ingest_id)
-        if info["status"] != "running":
+        if info["status"] not in ("queued", "running"):
             break
         await asyncio.sleep(0.5)
     assert info["status"] == "complete"
     docs = await get_documents(None, shabti_collection_id)
     assert next((doc for doc in docs.documents if doc.filename == filename), None)
+
+
+async def test_ingests_beyond_the_cap_queue_rather_than_fail(
+    shabti_client, shabti_collection_id, monkeypatch
+):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    ingest_ids = []
+    for _ in range(3):
+        with open(file_path, "rb") as f:
+            response = shabti_client.post(
+                f"/collections/{shabti_collection_id}/documents/files",
+                files=[("files", f)],
+            )
+        # nothing is refused over the cap any more, it waits for a slot
+        assert response.status_code == 201
+        ingest_ids.append(response.json()["ingest_id"])
+    while True:
+        listed = {
+            item["ingest_id"]: item for item in shabti_client.get("/ingests").json()
+        }
+        mine = [listed[ingest_id] for ingest_id in ingest_ids]
+        if not any(item["status"] in ("queued", "running") for item in mine):
+            break
+        await asyncio.sleep(0.5)
+    assert [item["status"] for item in mine] == ["complete"] * 3
+    docs = await get_documents(None, shabti_collection_id)
+    assert len([doc for doc in docs.documents if doc.filename == filename]) == 3
 
 
 async def test_a_finished_ingest_stays_readable(

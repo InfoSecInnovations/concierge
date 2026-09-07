@@ -14,7 +14,6 @@ from shabti_types import (
     IngestItemInfo,
     IngestNotFoundError,
     IngestStatus,
-    TooManyIngestsError,
 )
 
 from ...src.app.functionality.ingest_events import (
@@ -47,9 +46,21 @@ def seed(*item_ids: str) -> list[IngestItemInfo]:
     return [IngestItemInfo(item_id=item_id, label=item_id) for item_id in item_ids]
 
 
+def worker_of(events):
+    """A worker that reports the given events and ends."""
+
+    async def worker(_pool):
+        for event in events:
+            yield event
+
+    return worker
+
+
 def bare_task(*item_ids: str) -> IngestTask:
-    """A task with no worker behind it, for the state and fan-out behaviour on its own."""
-    return IngestTask("ingest", "owner", "collection", seed(*item_ids), StreamPool(1))
+    """A task no registry ever started, for the state and fan-out behaviour on its own."""
+    return IngestTask(
+        "ingest", "owner", "collection", seed(*item_ids), StreamPool(1), worker_of([])
+    )
 
 
 class Removals:
@@ -62,16 +73,6 @@ class Removals:
 
 def registry(removals: Removals | None = None) -> IngestRegistry:
     return IngestRegistry(remove_document=removals or Removals())
-
-
-def worker_of(events):
-    """A worker that reports the given events and ends."""
-
-    async def worker(_pool):
-        for event in events:
-            yield event
-
-    return worker
 
 
 def endless_worker(item_id: str, stopped: list[str]):
@@ -102,6 +103,33 @@ def endless_worker(item_id: str, stopped: list[str]):
             async for result in pool.results():
                 if isinstance(result, PoolValue):
                     yield ItemProgress(result.key, result.value)
+
+    return worker
+
+
+def cleanup_worker(item_id: str, ran: list[str], cleaned: list[str]):
+    """A worker shaped like the files one: work that must not run, cleanup that must.
+
+    `insert_uploaded_files` deletes whatever binary no document claimed in its own `finally`, and
+    that is the only thing which knows a queued ingest's uploads are sitting on disk.
+    """
+
+    async def worker(pool):
+        async def factory():
+            async def generator():
+                ran.append(item_id)
+                yield info(item_id, 1)
+
+            return generator()
+
+        try:
+            async with pool:
+                pool.submit(factory, key=item_id)
+                async for result in pool.results():
+                    if isinstance(result, PoolValue):
+                        yield ItemProgress(result.key, result.value)
+        finally:
+            cleaned.append(item_id)
 
     return worker
 
@@ -313,7 +341,7 @@ async def test_cancelling_a_collection_leaves_other_collections_alone():
     await reg.cancel(other_task)
 
 
-# --- ownership, capacity and retention --------------------------------------------------------
+# --- ownership, the queue and retention -------------------------------------------------------
 
 
 async def test_ingests_are_scoped_to_their_owner():
@@ -330,23 +358,188 @@ async def test_ingests_are_scoped_to_their_owner():
         reg.get("nonexistent", "me")
 
 
-async def test_too_many_active_ingests_is_refused(monkeypatch):
+async def test_an_ingest_over_the_owner_cap_is_queued_not_refused(monkeypatch):
     monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
     reg = registry()
     stopped: list[str] = []
     first = await reg.start(
         "owner", "collection", seed("a"), endless_worker("a", stopped)
     )
-    with pytest.raises(TooManyIngestsError):
-        await reg.start("owner", "collection", seed("b"), worker_of([]))
-    # another owner is unaffected by the per-owner cap
-    other = await reg.start(
-        "other", "collection", seed("c"), endless_worker("c", stopped)
+    second = await reg.start("owner", "collection", seed("b"), worker_of([]))
+    # the POST succeeded, which is the whole point: nothing is refused any more
+    assert second.status == IngestStatus.QUEUED
+    assert reg.get(second.ingest_id, "owner").task is None
+    await reg.cancel(reg.get(first.ingest_id, "owner"))
+    await reg.cancel(reg.get(second.ingest_id, "owner"))
+
+
+async def test_a_freed_slot_starts_the_next_queued_ingest(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    stopped: list[str] = []
+    first = await reg.start(
+        "owner", "collection", seed("a"), endless_worker("a", stopped)
+    )
+    second = await reg.start(
+        "owner", "collection", seed("b"), endless_worker("b", stopped)
+    )
+    queued = reg.get(second.ingest_id, "owner")
+    await reg.cancel(reg.get(first.ingest_id, "owner"))
+    await until(lambda: queued.snapshot().items[0].info is not None)
+    assert queued.snapshot().status == IngestStatus.RUNNING
+    await reg.cancel(queued)
+
+
+async def test_a_finished_ingest_hands_its_slot_on(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    first = await reg.start("owner", "collection", seed("a"), worker_of([]))
+    second = await reg.start("owner", "collection", seed("b"), worker_of([]))
+    queued = reg.get(second.ingest_id, "owner")
+    # nobody cancels anything here, so promotion has to fire from the first ingest's own ending
+    await reg.get(first.ingest_id, "owner").task
+    await until(lambda: queued.task is not None)
+    await queued.task
+    assert queued.snapshot().status == IngestStatus.COMPLETE
+
+
+async def test_the_server_cap_queues_across_owners(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE", "1")
+    reg = registry()
+    stopped: list[str] = []
+    mine = await reg.start("me", "collection", seed("a"), endless_worker("a", stopped))
+    theirs = await reg.start(
+        "them", "collection", seed("b"), endless_worker("b", stopped)
+    )
+    # their very first ingest, so only the server wide cap can be holding it back
+    assert theirs.status == IngestStatus.QUEUED
+    queued = reg.get(theirs.ingest_id, "them")
+    await reg.cancel(reg.get(mine.ingest_id, "me"))
+    await until(lambda: queued.snapshot().status == IngestStatus.RUNNING)
+    await reg.cancel(queued)
+
+
+async def test_an_owner_at_their_cap_does_not_block_another(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE", "3")
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    stopped: list[str] = []
+    mine = await reg.start("me", "collection", seed("a"), endless_worker("a", stopped))
+    blocked = await reg.start("me", "collection", seed("b"), worker_of([]))
+    assert blocked.status == IngestStatus.QUEUED
+    # the walk past a full owner has to skip rather than stop, or this one never starts
+    theirs = await reg.start(
+        "them", "collection", seed("c"), endless_worker("c", stopped)
+    )
+    assert theirs.status == IngestStatus.RUNNING
+    await reg.cancel(reg.get(mine.ingest_id, "me"))
+    await reg.cancel(reg.get(blocked.ingest_id, "me"))
+    await reg.cancel(reg.get(theirs.ingest_id, "them"))
+
+
+async def test_queued_ingests_start_oldest_first(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    stopped: list[str] = []
+    first = await reg.start(
+        "owner", "collection", seed("a"), endless_worker("a", stopped)
+    )
+    second = await reg.start(
+        "owner", "collection", seed("b"), endless_worker("b", stopped)
+    )
+    third = await reg.start(
+        "owner", "collection", seed("c"), endless_worker("c", stopped)
     )
     await reg.cancel(reg.get(first.ingest_id, "owner"))
-    await reg.cancel(reg.get(other.ingest_id, "other"))
-    # and once it is over the owner can start another
-    await reg.start("owner", "collection", seed("d"), worker_of([]))
+    assert reg.get(second.ingest_id, "owner").snapshot().status == IngestStatus.RUNNING
+    assert reg.get(third.ingest_id, "owner").snapshot().status == IngestStatus.QUEUED
+    await reg.cancel(reg.get(second.ingest_id, "owner"))
+    await reg.cancel(reg.get(third.ingest_id, "owner"))
+
+
+async def test_a_queued_ingest_is_never_pruned(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    monkeypatch.setenv("SHABTI_INGEST_MAX_FINISHED", "0")
+    monkeypatch.setenv("SHABTI_INGEST_RETENTION_SECONDS", "0")
+    reg = registry()
+    stopped: list[str] = []
+    first = await reg.start(
+        "owner", "collection", seed("a"), endless_worker("a", stopped)
+    )
+    second = await reg.start("owner", "collection", seed("b"), worker_of([]))
+    # `list` prunes, and a queued ingest mistaken for a finished one has no `finished` timestamp to
+    # beat the cutoff with, so it would be dropped right here
+    listed = {item.ingest_id: item.status for item in reg.list("owner")}
+    assert listed[second.ingest_id] == IngestStatus.QUEUED
+    # the queued one first: cancelling the running one would promote it, and with retention zeroed
+    # it would finish and be pruned before there was anything left to tidy up
+    await reg.cancel(reg.get(second.ingest_id, "owner"))
+    await reg.cancel(reg.get(first.ingest_id, "owner"))
+
+
+async def test_cancelling_a_queued_ingest_runs_its_cleanup(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    stopped: list[str] = []
+    ran: list[str] = []
+    cleaned: list[str] = []
+    first = await reg.start(
+        "owner", "collection", seed("a"), endless_worker("a", stopped)
+    )
+    second = await reg.start(
+        "owner", "collection", seed("b"), cleanup_worker("b", ran, cleaned)
+    )
+    final = await reg.cancel(reg.get(second.ingest_id, "owner"))
+    assert final.status == IngestStatus.CANCELLED
+    # the work never happened, but the worker still got to release what the POST saved
+    assert ran == []
+    assert cleaned == ["b"]
+    await reg.cancel(reg.get(first.ingest_id, "owner"))
+
+
+async def test_shutdown_cancels_queued_ingests_too(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    stopped: list[str] = []
+    first = await reg.start(
+        "owner", "collection", seed("a"), endless_worker("a", stopped)
+    )
+    second = await reg.start(
+        "owner", "collection", seed("b"), endless_worker("b", stopped)
+    )
+    await reg.shutdown()
+    assert reg.get(first.ingest_id, "owner").snapshot().status == IngestStatus.CANCELLED
+    assert (
+        reg.get(second.ingest_id, "owner").snapshot().status == IngestStatus.CANCELLED
+    )
+
+
+async def test_cancelling_a_collection_takes_its_queued_ingests(monkeypatch):
+    monkeypatch.setenv("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER", "1")
+    reg = registry()
+    stopped: list[str] = []
+    running = await reg.start(
+        "owner", "doomed", seed("a"), endless_worker("a", stopped)
+    )
+    queued = await reg.start("owner", "doomed", seed("b"), worker_of([]))
+    await reg.cancel_for_collection("doomed")
+    assert (
+        reg.get(running.ingest_id, "owner").snapshot().status == IngestStatus.CANCELLED
+    )
+    assert (
+        reg.get(queued.ingest_id, "owner").snapshot().status == IngestStatus.CANCELLED
+    )
+
+
+async def test_the_stream_waits_while_the_ingest_is_queued():
+    task = bare_task("a")
+    stream = stream_ingest(task)
+    # a queued ingest has nothing to say yet, and closing its stream would tell the client it was
+    # over before it had begun
+    with pytest.raises(TimeoutError):
+        await asyncio.wait_for(anext(stream), 0.05)
+    task.finish(IngestStatus.CANCELLED, None)
+    assert not [line async for line in stream]
 
 
 async def test_finished_ingests_are_pruned_but_read_ones_are_kept(monkeypatch):

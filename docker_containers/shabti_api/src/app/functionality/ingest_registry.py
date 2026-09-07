@@ -11,6 +11,7 @@ breaks re-attach outright, since an ingest would live in whichever worker took t
 
 import asyncio
 import logging
+from collections import Counter
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable
 from contextlib import suppress
 from dataclasses import dataclass, field
@@ -24,7 +25,6 @@ from shabti_types import (
     IngestItemInfo,
     IngestNotFoundError,
     IngestStatus,
-    TooManyIngestsError,
 )
 
 from .ingest_events import IngestEvent, ItemFailed, ItemProgress, ItemQueued
@@ -38,8 +38,23 @@ type IngestWorker = Callable[
 type DocumentRemover = Callable[[str, str], Awaitable[None]]
 
 
-def is_active(status: IngestStatus) -> bool:
+def is_running(status: IngestStatus) -> bool:
+    """Holding one of the concurrency slots right now."""
     return status == IngestStatus.RUNNING
+
+
+def is_finished(status: IngestStatus) -> bool:
+    """Over for good. Queued is neither of these: not started, and not finished either.
+
+    Two predicates rather than three, because every site that wants "queued or running" reads
+    better as `not is_finished(...)` - and getting that one wrong in `_prune` would delete an
+    accepted ingest before its task even existed.
+    """
+    return status in (
+        IngestStatus.COMPLETE,
+        IngestStatus.FAILED,
+        IngestStatus.CANCELLED,
+    )
 
 
 @dataclass
@@ -64,13 +79,18 @@ class IngestTask:
         collection_id: str,
         items: list[IngestItemInfo],
         pool: StreamPool[DocumentIngestInfo],
+        worker: IngestWorker,
     ) -> None:
         self.ingest_id = ingest_id
         self.owner_id = owner_id
         self.collection_id = collection_id
         self.items = {item.item_id: item for item in items}
         self.pool = pool
-        self.status = IngestStatus.RUNNING
+        # held here rather than in a second dict keyed by id, which would have to be kept in step
+        # with `_tasks` by cancellation and pruning both
+        self.worker = worker
+        self.status = IngestStatus.QUEUED
+        # when it was submitted, not when it started: this is what orders the queue
         self.started = get_current_time()
         self.finished: int | None = None
         self.error: str | None = None
@@ -158,7 +178,9 @@ async def stream_ingest(
     """The snapshot, then live updates, ending when the ingest does.
 
     A finished ingest streams its terminal snapshot and closes rather than erroring: a small file
-    can be ingested before the client's follow-up request even lands.
+    can be ingested before the client's follow-up request even lands. A queued one holds the reader
+    open with nothing to say until it starts, which is why the wait is on `is_finished` rather than
+    on the ingest running.
     """
     subscriber = task.subscribe()
     try:
@@ -175,23 +197,24 @@ async def stream_ingest(
                 emitted = line(item) if item else None
                 if emitted:
                     yield emitted
-            if not is_active(task.status) and not subscriber.dirty:
+            if is_finished(task.status) and not subscriber.dirty:
                 return
             subscriber.event.clear()
-            if not subscriber.dirty and is_active(task.status):
+            if not subscriber.dirty and not is_finished(task.status):
                 await subscriber.event.wait()
     finally:
         task.unsubscribe(subscriber)
 
 
 class IngestRegistry:
-    """Every ingest this process is running or has recently run."""
+    """Every ingest this process is running, has queued, or has recently run."""
 
     def __init__(self, remove_document: DocumentRemover | None = None) -> None:
         # no asyncio objects here: this is built by create_app(), before any loop is running
         self._tasks: dict[str, IngestTask] = {}
         self._remove_document = remove_document or delete_opensearch_document
         self._logger = logging.getLogger("shabti")
+        self._closing = False
 
     async def start(
         self,
@@ -201,19 +224,90 @@ class IngestRegistry:
         worker: IngestWorker,
     ) -> IngestInfo:
         self._prune()
-        self._check_capacity(owner_id)
         # built here rather than inside the task, so a DELETE arriving before the task has first run
         # still has something to stop: a stopped pool never starts its queued jobs at all
         pool = StreamPool[DocumentIngestInfo](
             limit=setting("SHABTI_INGEST_CONCURRENCY"),
             stop_grace=setting("SHABTI_INGEST_STOP_GRACE_SECONDS"),
         )
-        task = IngestTask(uuid4().hex, owner_id, collection_id, items, pool)
+        task = IngestTask(uuid4().hex, owner_id, collection_id, items, pool, worker)
         self._tasks[task.ingest_id] = task
-        task.task = asyncio.create_task(
-            self._run(task, worker), name=f"ingest-{task.ingest_id}"
-        )
+        self._warn_if_backed_up(owner_id)
+        # before the snapshot, so an ingest that has room reports itself running in the very response
+        # to the POST that made it, exactly as it did before there was a queue. "queued" is only ever
+        # what a client sees under load
+        self._promote()
         return task.snapshot()
+
+    def _promote(self) -> None:
+        """Start whatever the caps now have room for, oldest submission first.
+
+        A client holding a connection open used to be the natural limit on concurrency; detaching
+        removed it, so without these caps ten POSTs and a disconnect would put MAX_ACTIVE *
+        CONCURRENCY documents through the embeddings server at once. They bound how many ingests
+        *run*, not how many may be submitted - over the cap an ingest waits rather than being
+        refused, and the slot it eventually gets is handed to it by whichever ingest ended.
+        """
+        if self._closing:
+            return
+        running = [task for task in self._tasks.values() if is_running(task.status)]
+        per_owner = Counter(task.owner_id for task in running)
+        free = setting("SHABTI_INGEST_MAX_ACTIVE") - len(running)
+        # `started` is milliseconds, so simultaneous submissions tie - a stable sort over a dict
+        # that is already in insertion order breaks those ties on arrival
+        queued = sorted(
+            (
+                task
+                for task in self._tasks.values()
+                if task.status == IngestStatus.QUEUED
+            ),
+            key=lambda task: task.started,
+        )
+        for task in queued:
+            if free <= 0:
+                return
+            if per_owner[task.owner_id] >= setting(
+                "SHABTI_INGEST_MAX_ACTIVE_PER_OWNER"
+            ):
+                # skipped rather than returned on, or one owner sitting at their own cap would stall
+                # everybody queued behind them
+                continue
+            self._begin(task)
+            per_owner[task.owner_id] += 1
+            free -= 1
+
+    def _begin(self, task: IngestTask) -> None:
+        """Give a queued ingest its slot. The only place an ingest's task is created.
+
+        The status flip and the create_task happen in the same turn with nothing awaited between
+        them, which is the whole interlock: nothing else can pick a task up once it has stopped
+        being queued.
+        """
+        task.status = IngestStatus.RUNNING
+        task.task = asyncio.create_task(
+            self._run(task, task.worker), name=f"ingest-{task.ingest_id}"
+        )
+
+    def _warn_if_backed_up(self, owner_id: str) -> None:
+        """Say something before the disk does.
+
+        Nothing bounds the queue now that a submission is never refused, and a queued files ingest
+        pins the binaries the POST saved for as long as it waits. If this ever needs a real limit it
+        wants to be a per-owner staged-byte quota, not a rejection.
+        """
+        depth = len(
+            [
+                task
+                for task in self._tasks.values()
+                if task.status == IngestStatus.QUEUED and task.owner_id == owner_id
+            ]
+        )
+        if depth >= setting("SHABTI_INGEST_QUEUE_WARN_DEPTH"):
+            self._logger.warning(
+                "owner %s has %s ingests queued, holding their uploads on disk",
+                owner_id,
+                depth,
+            )
 
     def list(self, owner_id: str) -> list[IngestInfo]:
         self._prune()
@@ -243,6 +337,13 @@ class IngestRegistry:
         """
         task.cancel_requested = True
         task.pool.stop()
+        if task.task is None:
+            # a queued ingest still has cleaning up to do - a files ingest's binaries were written to
+            # disk by the POST - and its worker is the only thing that knows what. Run against a
+            # stopped pool it submits nothing, reads an empty stream and falls straight into its own
+            # cleanup, so a queued ingest unwinds down exactly the path a running one does. Started
+            # regardless of the caps: it does no work, and waiting for a slot would hang the DELETE
+            self._begin(task)
         if task.task is not None:
             with suppress(Exception):
                 await task.task
@@ -254,14 +355,17 @@ class IngestRegistry:
         )
 
     async def shutdown(self) -> None:
+        # nothing queued should be promoted into a container that is stopping, and an ingest ending
+        # under us would otherwise do exactly that. `cancel_for_collection` deliberately doesn't
+        self._closing = True
         await self._cancel_all(self._tasks.values())
 
     async def _cancel_all(self, tasks: Iterable[IngestTask]) -> None:
         # together rather than one after another: each waits out its own stop grace, and shutdown
         # has to finish inside the container's stop timeout or the process is killed under it
-        running = [task for task in list(tasks) if is_active(task.status)]
+        unfinished = [task for task in list(tasks) if not is_finished(task.status)]
         await asyncio.gather(
-            *(self.cancel(task) for task in running), return_exceptions=True
+            *(self.cancel(task) for task in unfinished), return_exceptions=True
         )
 
     async def _run(self, task: IngestTask, worker: IngestWorker) -> None:
@@ -281,6 +385,9 @@ class IngestRegistry:
             if task.cancel_requested:
                 status = IngestStatus.CANCELLED
             task.finish(status, error)
+            # after the status is terminal, or this ingest is still counted against the very cap it
+            # is trying to hand on
+            self._promote()
 
     async def _sweep(self, task: IngestTask) -> None:
         """Delete any document an interrupted ingest left half written.
@@ -297,24 +404,6 @@ class IngestRegistry:
                         task.collection_id, item.info.document_id
                     )
 
-    def _check_capacity(self, owner_id: str) -> None:
-        """Cap concurrent ingests, which nothing else does now.
-
-        A client holding a connection open used to be the natural limit; detaching removes it, so
-        without this ten POSTs and a disconnect would put MAX_ACTIVE * CONCURRENCY documents through
-        the embeddings server at once.
-        """
-        active = [task for task in self._tasks.values() if is_active(task.status)]
-        if len(active) >= setting("SHABTI_INGEST_MAX_ACTIVE"):
-            raise TooManyIngestsError(
-                message="Too many ingests are already running on this server"
-            )
-        mine = [task for task in active if task.owner_id == owner_id]
-        if len(mine) >= setting("SHABTI_INGEST_MAX_ACTIVE_PER_OWNER"):
-            raise TooManyIngestsError(
-                message="You already have the maximum number of ingests running"
-            )
-
     def _prune(self) -> None:
         """Forget finished ingests, oldest first, keeping any a client is still reading.
 
@@ -322,7 +411,10 @@ class IngestRegistry:
         file and then asks about the ingest has to get its terminal snapshot, not a 404.
         """
         cutoff = get_current_time() - setting("SHABTI_INGEST_RETENTION_SECONDS") * 1000
-        finished = [task for task in self._tasks.values() if not is_active(task.status)]
+        # `is_finished` rather than "not running": a queued ingest counted as finished would have
+        # `finished or 0` of 0, which is under any cutoff, so it would be dropped on the very next
+        # `list()` - an accepted ingest lost before its task even existed
+        finished = [task for task in self._tasks.values() if is_finished(task.status)]
         prunable = sorted(
             (task for task in finished if not task.subscriber_count),
             key=lambda task: task.finished or 0,

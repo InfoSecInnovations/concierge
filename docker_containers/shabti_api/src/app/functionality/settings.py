@@ -26,9 +26,15 @@ DEFAULTS = {
     "SHABTI_INGEST_RETENTION_SECONDS": 3600,
     "SHABTI_INGEST_MAX_FINISHED": 50,
     # detaching removes the natural limit of a client holding a connection open, so without these
-    # a client firing POSTs and disconnecting could put MAX_ACTIVE * CONCURRENCY documents in flight
+    # a client firing POSTs and disconnecting could put MAX_ACTIVE * CONCURRENCY documents in flight.
+    # a cap on how many ingests run at once, not on how many may be submitted: one over the cap waits
+    # for a slot rather than being refused
     "SHABTI_INGEST_MAX_ACTIVE": 4,
     "SHABTI_INGEST_MAX_ACTIVE_PER_OWNER": 2,
+    # nothing bounds the queue, so this is only where a warning is logged: a client that keeps
+    # POSTing files holds every one of them in SHABTI_FILES_DIR until its ingest runs. the real fix,
+    # if it is ever needed, is a per-owner staged-byte quota rather than a rejection
+    "SHABTI_INGEST_QUEUE_WARN_DEPTH": 20,
     # expanding an archive is bounded by disk now that members stream to files rather than memory
     "SHABTI_INGEST_MAX_ZIP_MEMBERS": 100,
     "SHABTI_INGEST_MAX_ZIP_BYTES": 200000000,
