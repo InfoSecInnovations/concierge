@@ -1,0 +1,7 @@
+/* The toast container is the app's only progress surface, and running ingest toasts cannot be
+   dismissed, so the stack has to scroll rather than run off the top of the viewport. */
+[data-bslib-toast-container="bottom-right"] {
+	width: 350px;
+	max-height: 80vh;
+	overflow-y: auto;
+}

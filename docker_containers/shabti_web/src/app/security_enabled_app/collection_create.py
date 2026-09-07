@@ -3,6 +3,7 @@ from ..common.collections_data import CollectionsData
 from shabti_types import CollectionExistsError, AuthzCollectionInfo
 from shabti_api_client import ShabtiAuthorizationClient
 from ..common.text_input_enter import text_input_enter_ui, text_input_enter_server
+from ..common.toasts import show_message
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
 
@@ -51,9 +52,7 @@ def collection_create_server(
             )
             selected_collection.set(collection_id)
         except CollectionExistsError:
-            ui.notification_show(
-                "Collection with this name already exists", type="error"
-            )
+            show_message("Collection with this name already exists", type="danger")
         creating.set(False)
 
     @reactive.effect

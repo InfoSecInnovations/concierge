@@ -2,7 +2,7 @@ from shiny import module, reactive, ui, render, Inputs, Outputs, Session
 from .collection_create import collection_create_ui, collection_create_server
 from .collection_selector_server import collection_selector_server
 from ..common.collection_selector_ui import collection_selector_ui
-from ..common.ingester import ingester_ui, ingest_jobs_ui, ingester_server
+from ..common.ingester import ingester_ui, ingester_server
 from .format_collection_name import format_collection_name
 from ..common.collections_data import CollectionsData
 from shabti_api_client import ShabtiAuthorizationClient
@@ -30,7 +30,7 @@ def collection_management_server(
     collection_selector_server(
         "collection_select", selected_collection, collections, user_info
     )
-    ingestion_done_trigger, ingest_started_trigger = ingester_server(
+    ingestion_done_trigger = ingester_server(
         "ingester", client, selected_collection, collections, llm_status
     )
     current_scopes = reactive.value(set())
@@ -73,9 +73,6 @@ def collection_management_server(
                         value="ingest_documents",
                     )
                 )
-            # outside the update scope gate above: jobs span collections, so this shows even
-            # where this one can't be ingested into
-            accordion_elements.append(ingest_jobs_ui("ingester"))
             accordion_elements.append(
                 ui.accordion_panel(
                     ui.output_ui("documents_title"),
@@ -171,14 +168,6 @@ def collection_management_server(
     def on_ingestion_done():
         ui.update_accordion_panel(
             "collection_management_accordion", "manage_documents", show=True
-        )
-
-    @reactive.effect
-    @reactive.event(ingest_started_trigger)
-    def on_ingest_started():
-        # the panel is where progress lives now, and the accordion opens only its first panel
-        ui.update_accordion_panel(
-            "collection_management_accordion", "ingest_jobs", show=True
         )
 
     document_list_server(

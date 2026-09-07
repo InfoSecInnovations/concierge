@@ -4,8 +4,16 @@ from dataclasses import dataclass, field
 from shabti_types import IngestInfo
 from shabti_api_client import BaseShabtiClient, ShabtiRequestError
 from .collections_data import CollectionsData
-from .ingest_job import cancel_button_server, ingest_job_card, is_active
+from .ingest_job import (
+    collection_label,
+    done_message,
+    ingest_toast_server,
+    ingest_toast_ui,
+    is_active,
+    progress_rows,
+)
 from .load_models import load_models
+from .toasts import TOAST_POSITION, ProgressToast, show_message
 import os
 import time
 
@@ -14,9 +22,10 @@ POLL_ACTIVE_SECONDS = 1
 # idle, this is only watching for a job started from another tab or the CLI, at the rate status.py
 # already polls at
 POLL_IDLE_SECONDS = 10
-# the API keeps a finished ingest for an hour, which is far more history than this panel wants:
-# long enough that a reload right after a job ended still shows how it went, and no longer
-FINISHED_VISIBLE_SECONDS = 300
+# a job that ended just before a reload still gets its outcome announced, which is what the panel's
+# five minutes of history used to be for. long enough to survive a refresh someone made because an
+# ingest looked stuck, short enough that it isn't reporting news from a previous sitting
+FINISHED_ANNOUNCE_SECONDS = 30
 
 
 @dataclass
@@ -33,10 +42,8 @@ class Submission:
     urls: list[str] = field(default_factory=list)
 
 
-def is_visible(job: IngestInfo) -> bool:
-    if is_active(job):
-        return True
-    return (job.finished or 0) > (time.time() - FINISHED_VISIBLE_SECONDS) * 1000
+def just_finished(job: IngestInfo) -> bool:
+    return (job.finished or 0) > (time.time() - FINISHED_ANNOUNCE_SECONDS) * 1000
 
 
 def submit_error_text(error: Exception) -> str:
@@ -58,17 +65,6 @@ def ingester_ui():
     )
 
 
-@module.ui
-def ingest_jobs_ui():
-    # deliberately given the same module id as `ingester_server`: jobs span collections, so this
-    # panel is shown even where the selected collection can't be ingested into
-    return ui.accordion_panel(
-        ui.output_ui("ingest_jobs_title"),
-        ui.output_ui("ingest_jobs_content"),
-        value="ingest_jobs",
-    )
-
-
 @module.server
 def ingester_server(
     input: Inputs,
@@ -82,14 +78,14 @@ def ingester_server(
     file_input_trigger = reactive.value(0)
     url_input_trigger = reactive.value(0)
     ingesting_done = reactive.value(0)
-    ingest_started = reactive.value(0)
     embedding_model_loaded = reactive.value(False)
-    jobs: reactive.Value[list[IngestInfo]] = reactive.value([])
-    cancelling: reactive.Value[set[str]] = reactive.value(set())
     submit_queue: reactive.Value[list[Submission]] = reactive.value([])
-    # bookkeeping nothing renders from, so plain sets rather than reactive values
+    # bookkeeping nothing renders from, so plain sets rather than reactive values: a toast's
+    # contents are pushed to it directly, so nothing here has to invalidate anything
     seen_terminal: set[str] = set()
-    started_servers: set[str] = set()
+    job_toasts: dict[str, ProgressToast] = {}
+    cancelling: set[str] = set()
+    active_ingests: set[str] = set()
     polled_once = reactive.value(False)
     # tracked here rather than read off the tasks, because one call at a time is a correctness
     # requirement for both of them: re-invoking an extended task cancels the call it is already
@@ -109,7 +105,7 @@ def ingester_server(
             ui.markdown("#### URLs"),
             ui.output_ui("url_input"),
             # not a task button: with nothing to bind it to it would enter its busy state on click
-            # and never leave it. the jobs panel is the feedback now
+            # and never leave it. the toasts are the feedback now
             ui.input_action_button(id="ingest", label="Ingest"),
         )
 
@@ -122,6 +118,54 @@ def ingester_server(
     @reactive.event(url_input_trigger, ignore_none=False, ignore_init=False)
     def url_input():
         return text_input_list("url_input_list")
+
+    def toast_id(ingest_id: str) -> str:
+        return f"ingest-{ingest_id}"
+
+    async def show_job_toast(job: IngestInfo):
+        toast = ProgressToast(
+            toast_id(job.ingest_id),
+            "Ingesting documents",
+            ingest_toast_ui(job.ingest_id),
+            # not dismissable while it runs, because it holds the only Cancel button there is
+            closable=False,
+        )
+        job_toasts[job.ingest_id] = toast
+        # the server before the toast goes up: it registers the Cancel button's handlers
+        # synchronously, so the input exists by the time the client binds to it
+        ingest_toast_server(job.ingest_id, client, job.ingest_id, toast, cancelling)
+        await update_job_toast(job)
+
+    async def update_job_toast(job: IngestInfo):
+        rows, status = progress_rows(
+            job,
+            job.ingest_id in cancelling,
+            collection_label(job, collections, selected_collection),
+        )
+        # the first call is what puts the toast up, so the Cancel button and the bars arrive
+        # together rather than the toast flashing empty
+        await job_toasts[job.ingest_id].set_rows(rows, status)
+
+    def announce_done(job: IngestInfo):
+        message, kind = done_message(
+            job, collection_label(job, collections, selected_collection)
+        )
+        # the shape load_models already uses: something to watch while it runs, then a brief word
+        # once it is over. under its own id, because the progress toast's was just taken down
+        ui.show_toast(
+            ui.toast(
+                message,
+                id=f"{toast_id(job.ingest_id)}-done",
+                type=kind,
+                duration_s=5,
+                position=TOAST_POSITION,
+            )
+        )
+
+    def close_job_toast(job: IngestInfo):
+        job_toasts.pop(job.ingest_id).hide()
+        cancelling.discard(job.ingest_id)
+        announce_done(job)
 
     @reactive.extended_task
     async def fetch_ingests() -> list[IngestInfo] | None:
@@ -144,43 +188,57 @@ def ingester_server(
 
     @reactive.effect
     def poll_ingests():
-        # isolated so the effect's only dependency is its own timer: reading `jobs` reactively would
-        # re-run it on every result and stack a timer per poll
-        with reactive.isolate():
-            interval = (
-                POLL_ACTIVE_SECONDS
-                if any(is_active(job) for job in jobs.get())
-                else POLL_IDLE_SECONDS
-            )
+        # `active_ingests` is a plain set rather than a reactive value for this reason: the effect's
+        # only dependency has to be its own timer, or a poll result would re-run it and stack a
+        # timer per poll
+        interval = POLL_ACTIVE_SECONDS if active_ingests else POLL_IDLE_SECONDS
         poll_now()
         reactive.invalidate_later(interval)
 
     @reactive.effect
-    def ingests_effect():
+    async def ingests_effect():
         latest = fetch_ingests.result()
         with reactive.isolate():
             polling.set(False)
         if latest is None:
+            # the API went away mid poll. a listing we never got is not evidence that anything
+            # finished, still less that anything was pruned, so leave every toast where it is
             return
         with reactive.isolate():
             first_poll = not polled_once.get()
             for job in latest:
-                if is_active(job) or job.ingest_id in seen_terminal:
+                if is_active(job):
+                    if job.ingest_id in job_toasts:
+                        await update_job_toast(job)
+                    elif job.ingest_id not in seen_terminal:
+                        # only a job that is running when we first see it gets a progress toast:
+                        # the API keeps a finished ingest for an hour, and a page load must not pop
+                        # one toast per job that ended before the tab was even open
+                        await show_job_toast(job)
+                    continue
+                # checked before `seen_terminal` is added to below, or the toast for a job that has
+                # just finished would never be taken down
+                if job.ingest_id in job_toasts:
+                    close_job_toast(job)
+                elif first_poll and just_finished(job):
+                    announce_done(job)
+                if job.ingest_id in seen_terminal:
                     continue
                 seen_terminal.add(job.ingest_id)
                 # the first poll of a session sees up to an hour of finished jobs. refreshing for
                 # those would force the documents panel open on every single page load
                 if not first_poll and job.collection_id == selected_collection.get():
                     ingesting_done.set(ingesting_done.get() + 1)
+            # a job the API pruned, or one lost across an API restart, never reports a terminal
+            # status, so its toast's only remaining signal is the listing no longer mentioning it
+            listed = {job.ingest_id for job in latest}
+            for ingest_id in [i for i in job_toasts if i not in listed]:
+                job_toasts.pop(ingest_id).hide()
+                cancelling.discard(ingest_id)
+                seen_terminal.add(ingest_id)
+            active_ingests.clear()
+            active_ingests.update(job.ingest_id for job in latest if is_active(job))
             polled_once.set(True)
-            visible = sorted(
-                (job for job in latest if is_visible(job)),
-                key=lambda job: job.started,
-                reverse=True,
-            )
-            # the panel is rendered wholesale, so don't churn the DOM when nothing has moved
-            if visible != jobs.get():
-                jobs.set(visible)
 
     @reactive.extended_task
     async def start_ingests(submissions: list[Submission]) -> list[str]:
@@ -221,7 +279,7 @@ def ingester_server(
         with reactive.isolate():
             submitting.set(False)
         for message in errors:
-            ui.notification_show(message, type="error")
+            show_message(message, type="danger")
         # rather than waiting out the poll interval to show what was just submitted
         poll_now()
 
@@ -245,7 +303,9 @@ def ingester_server(
         submit_queue.set(
             [*submit_queue.get(), Submission(collection_id, files=named_files)]
         )
-        ingest_started.set(ingest_started.get() + 1)
+        # the input has already been cleared and the upload itself can take a while, so without
+        # this there would be nothing at all on screen until the POST lands and the next poll runs
+        show_message("Submitting ingest...", duration_s=3)
 
     @reactive.effect
     @reactive.event(input.ingest, ignore_none=False, ignore_init=True)
@@ -258,41 +318,7 @@ def ingester_server(
         # replaced to clear the submitted URLs, which blanking the list out used to do
         url_input_trigger.set(url_input_trigger.get() + 1)
         submit_queue.set([*submit_queue.get(), Submission(collection_id, urls=urls)])
-        ingest_started.set(ingest_started.get() + 1)
-
-    @render.ui
-    def ingest_jobs_title():
-        active = len([job for job in jobs.get() if is_active(job)])
-        return ui.markdown(f"#### Ingest Jobs{f' ({active} active)' if active else ''}")
-
-    @render.ui
-    def ingest_jobs_content():
-        current = jobs.get()
-        if not current:
-            return ui.markdown("No recent ingest jobs")
-        known = collections.get().collections
-        return [
-            ingest_job_card(
-                job,
-                # jobs span collections, so say which one when it isn't the one on screen
-                known[job.collection_id].collection_name
-                if job.collection_id != selected_collection.get()
-                and job.collection_id in known
-                else None,
-                job.ingest_id in cancelling.get(),
-            )
-            for job in current
-        ]
-
-    @reactive.effect
-    def cancel_button_servers():
-        for job in jobs.get():
-            # unlike document_list's rand_hex element ids, an ingest id is stable across polls, so
-            # creating a server per pass would stack up an observer a second
-            if job.ingest_id in started_servers:
-                continue
-            started_servers.add(job.ingest_id)
-            cancel_button_server(job.ingest_id, client, job.ingest_id, cancelling)
+        show_message("Submitting ingest...", duration_s=3)
 
     @reactive.extended_task
     async def load_embedding_model():
@@ -310,6 +336,4 @@ def ingester_server(
         if llm_status.get() and not embedding_model_loaded.get():
             load_embedding_model()
 
-    # the accordion this lives in belongs to the parent, so opening the jobs panel on a submission
-    # is its call to make, the same way finishing one already reveals the documents panel
-    return ingesting_done, ingest_started
+    return ingesting_done

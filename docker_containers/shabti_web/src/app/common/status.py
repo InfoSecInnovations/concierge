@@ -2,6 +2,12 @@ from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from shabti_api_client import BaseShabtiClient
 from httpx import ConnectError
 
+POLL_SECONDS = 10
+# a cold stack comes up in stages - the API, then the LLM host - and at the settled interval a page
+# opened during startup waits out a whole tick per stage before anything behind the status, a model
+# load in particular, even begins
+RETRY_SECONDS = 2
+
 
 @module.ui
 def status_ui():
@@ -48,14 +54,27 @@ def status_server(
 
     @reactive.effect
     def poll():
-        reactive.invalidate_later(10)
+        # isolated so the interval is all this read affects: the effect's only dependency has to be
+        # its own timer, or a status change would re-run it and stack a timer per poll
+        with reactive.isolate():
+            settled = api_status.get() == "online"
+        reactive.invalidate_later(POLL_SECONDS if settled else RETRY_SECONDS)
         get_api_status()
 
     # the LLM and OpenSearch statuses are obtained through the API, so the API needs to be online before we can verify the others
     @reactive.effect
     def on_api_status():
-        reactive.invalidate_later(10)
-        if api_status.get() == "online":
+        # this one read is deliberately not isolated: it is what makes this fire the moment the API
+        # comes online, rather than waiting out its own timer
+        online = api_status.get() == "online"
+        with reactive.isolate():
+            settled = (
+                online
+                and llm_status.get() == "online"
+                and opensearch_status.get() == "online"
+            )
+        reactive.invalidate_later(POLL_SECONDS if settled else RETRY_SECONDS)
+        if online:
             get_llm_status()
             get_opensearch_status()
         else:

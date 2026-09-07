@@ -20,9 +20,11 @@ from ..common.prompter import prompter_ui, prompter_server
 from .collection_selector_server import collection_selector_server
 from .get_api_url import get_api_url
 from ..common.update_status import update_status_reactives
+from ..common.app_assets import app_assets
 
 
 app_ui = ui.page_auto(
+    app_assets(),
     ui.output_ui("script_output"),
     ui.output_ui("shabti_main"),
     theme=shinyswatch.theme.pulse,

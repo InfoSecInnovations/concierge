@@ -1,8 +1,9 @@
-from shiny import module, reactive, ui, req, Inputs, Outputs, Session
+from shiny import module, reactive, req, Inputs, Outputs, Session
 from ..common.collections_data import CollectionsData
 from shabti_types import CollectionExistsError
 from shabti_api_client import ShabtiClient
 from ..common.text_input_enter import text_input_enter_ui, text_input_enter_server
+from ..common.toasts import show_message
 from shabti_types import CollectionInfo
 
 COLLECTION_PLACEHOLDER = "new_collection_name"
@@ -48,9 +49,7 @@ def collection_create_server(
             )
             selected_collection.set(collection_id)
         except CollectionExistsError:
-            ui.notification_show(
-                "Collection with this name already exists", type="error"
-            )
+            show_message("Collection with this name already exists", type="danger")
         creating.set(False)
 
     @reactive.effect

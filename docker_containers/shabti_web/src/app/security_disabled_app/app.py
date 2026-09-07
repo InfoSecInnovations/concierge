@@ -7,6 +7,7 @@ from .home import home_ui, home_server
 from .collection_management import collection_management_server
 from ..common.collection_management_ui import collection_management_ui
 from ..common.update_status import update_status_reactives
+from ..common.app_assets import app_assets
 from ..common.prompter import prompter_ui, prompter_server
 from starlette.applications import Starlette
 from starlette.routing import Mount, Route
@@ -16,7 +17,10 @@ from .collection_selector_server import collection_selector_server
 from .get_api_url import get_api_url
 
 app_ui = ui.page_auto(
-    ui.output_ui("shabti_main"), theme=shinyswatch.theme.pulse, lang="en"
+    app_assets(),
+    ui.output_ui("shabti_main"),
+    theme=shinyswatch.theme.pulse,
+    lang="en",
 )
 
 
