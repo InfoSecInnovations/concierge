@@ -57,6 +57,11 @@ async def test_file_deletion_with_collection(
         await get_document_file_path(shabti_collection_id, doc.document_id)
         for doc in docs.documents
     ]
+    # the assets include an archive, which becomes one document per member and none of its own, so
+    # there are more documents here than there were files to upload. this is the only test that
+    # covers an expanded member's binary being deleted with its collection
+    assert len(paths) > len(files)
+    assert all(paths)
     await delete_collection(None, shabti_collection_id)
     for path in paths:
         assert not await aiofiles.os.path.exists(

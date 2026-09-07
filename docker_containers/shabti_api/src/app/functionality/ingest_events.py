@@ -31,4 +31,16 @@ class ItemFailed:
     error: DocumentIngestError
 
 
-type IngestEvent = ItemQueued | ItemProgress | ItemFailed
+@dataclass(frozen=True)
+class ItemExpanded:
+    """An archive whose members were queued as items in its place.
+
+    Its own event rather than a synthetic `ItemProgress`: the archive never produced a document, so
+    there is no `document_id`, and `DocumentIngestInfo` requires one.
+    """
+
+    item_id: str
+    members: int
+
+
+type IngestEvent = ItemQueued | ItemProgress | ItemFailed | ItemExpanded

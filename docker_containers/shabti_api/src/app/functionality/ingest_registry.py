@@ -27,7 +27,13 @@ from shabti_types import (
     IngestStatus,
 )
 
-from .ingest_events import IngestEvent, ItemFailed, ItemProgress, ItemQueued
+from .ingest_events import (
+    IngestEvent,
+    ItemExpanded,
+    ItemFailed,
+    ItemProgress,
+    ItemQueued,
+)
 from .loaders.base_loader import get_current_time
 from .opensearch import delete_opensearch_document
 from .settings import setting
@@ -113,6 +119,11 @@ class IngestTask:
             self._item_or_seed(
                 event.item_id, event.error.label or ""
             ).error = event.error
+        elif isinstance(event, ItemExpanded):
+            # the archive was handled, it just produced items rather than a document of its own.
+            # seeded rather than looked up so a nested archive - one that arrived as a member and
+            # was then expanded itself - goes through this same line
+            self._item_or_seed(event.item_id, "").expanded = event.members
         for subscriber in self._subscribers:
             subscriber.dirty.add(event.item_id)
             subscriber.event.set()
@@ -167,7 +178,9 @@ def line(item: IngestItemInfo) -> DocumentIngestInfo | DocumentIngestError | Non
     """One item's state as a stream line, or nothing while it is still queued.
 
     Queued items stay off the stream, which is what keeps `DocumentIngestInfo.document_id` a
-    required string; a client learns about them from the POST response and `GET /ingests`.
+    required string; a client learns about them from the POST response and `GET /ingests`. An
+    expanded archive stays off it for the same reason: it never had a document of its own, so there
+    is nothing a `DocumentIngestInfo` could carry, and its members speak for it.
     """
     return item.error or item.info
 

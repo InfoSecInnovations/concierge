@@ -34,6 +34,10 @@ services:
       - KEYCLOAK_HOST=keycloak
       - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID:-}
       - KEYCLOAK_CLIENT_SECRET=${KEYCLOAK_CLIENT_SECRET:-}
+    # so `python -m asyncio pstree <pid>` can dump a live asyncio task tree when a suite hangs.
+    # the host's yama ptrace_scope is 1, which this capability bypasses
+    cap_add:
+      - SYS_PTRACE
     volumes:
       - ../test_results:/test_results/
       # both sets of tests are bind mounted rather than baked in: shabti_api's are excluded from

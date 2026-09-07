@@ -13,6 +13,10 @@ from uuid import uuid4
 filename = "test_doc.txt"
 file_path = os.path.join(os.path.dirname(__file__), "..", "assets", filename)
 
+zip_filename = "test_docs.zip"
+zip_path = os.path.join(os.path.dirname(__file__), "..", "assets", zip_filename)
+zip_members = {"test_doc.txt", "test_doc_2.txt", "prompt_test.md"}
+
 
 def test_auth_setting():
     assert not auth_enabled()
@@ -63,6 +67,47 @@ async def test_insert_documents(shabti_client, shabti_collection_id, ingest_and_
     assert ingest.status == "complete"
     docs = await get_documents(None, shabti_collection_id)
     assert next((doc for doc in docs.documents if doc.filename == filename), None)
+
+
+async def test_a_zip_is_ingested_as_one_document_per_member(
+    shabti_client, shabti_collection_id, ingest_and_wait
+):
+    with open(zip_path, "rb") as f:
+        response, ingest, lines = ingest_and_wait(
+            "POST",
+            f"/collections/{shabti_collection_id}/documents/files",
+            files=[("files", f)],
+        )
+    assert response.status_code == 201
+    # the POST knows only the archive: its members are discovered once the ingest is running
+    assert [item["label"] for item in response.json()["items"]] == [zip_filename]
+    assert ingest.status == "complete"
+    by_label = {item.label: item for item in ingest.items}
+    assert set(by_label) == zip_members | {zip_filename}
+    archive = by_label[zip_filename]
+    # it produced items rather than a document of its own, so it reports how many instead of
+    # sitting at "queued" for ever with neither progress nor an error
+    assert archive.expanded == 3
+    assert archive.info is None and archive.error is None
+    # a single item failing does not fail the ingest, so name the item and its error rather than
+    # tripping over its missing `info` on the next line
+    assert not [item for item in ingest.items if item.error], [
+        (item.label, item.error.message) for item in ingest.items if item.error
+    ]
+    assert all(by_label[label].info.complete for label in zip_members)
+    docs = await get_documents(None, shabti_collection_id)
+    # one document per member, not one flattened document holding every member's text, and the
+    # archive itself was never indexed
+    assert {doc.filename for doc in docs.documents} == zip_members
+    assert "application/zip" not in {doc.media_type for doc in docs.documents}
+    # "ingest" appears in test_doc_2.txt and in neither other member, so finding it through the
+    # child text search proves each member was extracted, chunked and embedded on its own
+    found = await get_documents(None, shabti_collection_id, search="ingest")
+    assert [doc.filename for doc in found.documents] == ["test_doc_2.txt"]
+    # the archive stays off the progress stream: it never had a document, and `document_id` is a
+    # required field of every line
+    assert len([line for line in lines if line.get("complete")]) == 3
+    assert not any(line.get("label") == zip_filename for line in lines)
 
 
 url = "https://www.scrapethissite.com/pages/simple/"

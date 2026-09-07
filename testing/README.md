@@ -47,6 +47,23 @@ long run ends rather than a count. Each failure comes with the command that repr
 one. A suite that died before writing any results has no test to blame, so the last few lines it
 printed stand in for one; that is the only record of, say, a missing binary or a bad path.
 
+## When a suite hangs
+
+The Python suites carry a per-test `timeout` (`shabti_api/pyproject.toml`), so a stalled ingest
+fails one test instead of blocking the run. To see where it stalled rather than just that it did:
+
+```
+bun run test disabled api --timeout-method=thread    # every thread's stack, then the run aborts
+```
+
+The `pytest-api` container has `SYS_PTRACE`, so a run that is *still* stuck can be opened up from
+outside without killing it:
+
+```
+docker ps                                            # find the shabti-pytest-api-run-* container
+docker exec <container> /app/shabti/.venv/bin/python -m asyncio pstree 11
+```
+
 ## Where things are
 
 | | |

@@ -57,13 +57,41 @@ def extract_pages(xhtml: str) -> list[ShabtiDocument.ShabtiPage]:
     ]
 
 
+def container_value(metadata, key: str):
+    """One metadata value as the container itself reported it.
+
+    `/rmeta/xml` answers with an entry per embedded resource as well as one for the container, and
+    tika-python merges them into a single dict, promoting every key more than one entry carries to a
+    list. So a zip's - or a docx-with-an-image's - `Content-Type` arrives as
+    `["application/zip", "text/plain", ...]` rather than the string the rest of the stack is typed
+    for, which used to reach `DocumentIngestInfo.document_type` and fail validation there. The
+    container is the first entry, so its own value is the first element.
+    """
+    value = metadata.get(key)
+    return value[0] if isinstance(value, list) else value
+
+
 def get_languages(metadata) -> list[str]:
-    # Tika reports this as a bare string for most formats and a list where a document declares more
-    # than one
+    """Every language the container declares, without what the merge above adds.
+
+    Tika reports this as a bare string for most formats and a list where a document declares more
+    than one, and merging appends one entry per embedded resource - each usually repeating its
+    container's language, and each possibly a list of its own, so the result can be nested.
+    Flattened and deduplicated rather than truncated to the first: a genuinely multilingual document
+    and a merged one are indistinguishable by this point, and dropping duplicates is right for both.
+    """
     language = metadata.get("dc:language")
     if not language:
         return []
-    return list(language) if isinstance(language, list) else [language]
+    values = language if isinstance(language, list) else [language]
+    flattened = [
+        item
+        for value in values
+        for item in (value if isinstance(value, list) else [value])
+        if item
+    ]
+    # `dict.fromkeys` rather than a set: the container's own language should stay first
+    return list(dict.fromkeys(flattened))
 
 
 class TikaFileLoader:
@@ -83,8 +111,14 @@ class TikaFileLoader:
                 source=filename,
                 filename=filename,
                 ingest_date=date_time,
-                media_type=parsed["metadata"]["Content-Type"],
+                # never None: `DocumentIngestInfo.document_type` is a required str, and Tika
+                # omits the header for a format it could not identify at all
+                media_type=container_value(parsed["metadata"], "Content-Type")
+                or "application/octet-stream",
                 languages=get_languages(parsed["metadata"]),
             ),
-            extract_pages(parsed["content"]),
+            # tika-python leaves this None when Tika extracted no text at all, which used to
+            # be a TypeError in the parse and so a load failure. Empty is the truth: the
+            # caller reports an empty document rather than one that could not be read
+            extract_pages(parsed["content"] or ""),
         )

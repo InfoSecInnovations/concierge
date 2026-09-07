@@ -93,6 +93,11 @@ class IngestItemInfo(BaseModel):
     label: str
     info: Optional[DocumentIngestInfo] = None
     error: Optional[DocumentIngestError] = None
+    # how many files an archive was expanded into. An archive has no document of its own - its
+    # members each became an item - so it has neither `info` nor `error`, and without this it reads
+    # as queued for ever. Not on the progress stream: that carries only DocumentIngestInfo, whose
+    # `document_id` is a required str precisely because an item with no document stays off it
+    expanded: Optional[int] = None
 
 
 class IngestInfo(BaseModel):

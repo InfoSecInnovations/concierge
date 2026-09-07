@@ -15,6 +15,14 @@ DEFAULTS = {
     "SHABTI_CRAWL_CONCURRENCY": 4,
     "SHABTI_CRAWL_REQUESTS_PER_MINUTE": 120,
     "SHABTI_CRAWL_TIMEOUT_SECONDS": 20,
+    # a whole crawl, not one navigation: nothing else bounds crawler.run()
+    "SHABTI_CRAWL_MAX_SECONDS": 300,
+    # crawlee's autoscaler refuses to schedule requests once the *process* RSS exceeds 90% of this
+    # budget, and defaults it to a quarter of system RAM. That assumes it owns the process; ours
+    # also holds the API, the tokenizer and every in-flight ingest, so RSS says nothing about
+    # whether another page can be fetched - and once it is over, nothing brings it back down and
+    # the crawl stalls silently for ever. Concurrency is already bounded by the settings above.
+    "SHABTI_CRAWL_MEMORY_MB": 16000,
     # documents ingested at once within one ingest. a memory knob as much as a speed one: each slot
     # holds a whole Tika parse or a crawl's extracted text, and the crawl limits above are per
     # crawl, so N concurrent URL ingests multiply all of them

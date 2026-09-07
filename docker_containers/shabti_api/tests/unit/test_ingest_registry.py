@@ -17,6 +17,7 @@ from shabti_types import (
 )
 
 from ...src.app.functionality.ingest_events import (
+    ItemExpanded,
     ItemFailed,
     ItemProgress,
     ItemQueued,
@@ -174,6 +175,21 @@ async def test_events_become_item_state():
     assert by_id["c"].label == "member.txt" and by_id["c"].info is None
 
 
+async def test_an_expanded_archive_reports_its_member_count():
+    task = bare_task("zip")
+    task.apply(ItemQueued("a", "a.txt"))
+    task.apply(ItemQueued("b", "b.txt"))
+    task.apply(ItemExpanded("zip", 2))
+    by_id = {item.item_id: item for item in task.snapshot().items}
+    archive = by_id["zip"]
+    # handled rather than queued for ever: it produced items instead of a document of its own
+    assert archive.expanded == 2
+    assert archive.info is None and archive.error is None
+    assert archive.label == "zip"
+    assert {by_id["a"].label, by_id["b"].label} == {"a.txt", "b.txt"}
+    assert by_id["a"].expanded is None
+
+
 async def test_the_snapshot_is_a_copy():
     task = bare_task("a")
     task.apply(ItemProgress("a", info("a", 1)))
@@ -202,6 +218,17 @@ async def test_queued_items_are_not_streamed():
     task.apply(ItemProgress("a", info("a", 1)))
     task.finish(IngestStatus.COMPLETE, None)
     lines = [line async for line in stream_ingest(task)]
+    assert [line.document_id for line in lines] == ["doc-a"]
+
+
+async def test_an_expanded_archive_is_not_streamed():
+    task = bare_task("zip")
+    task.apply(ItemQueued("a", "a.txt"))
+    task.apply(ItemProgress("a", info("a", 1, complete=True)))
+    task.apply(ItemExpanded("zip", 1))
+    task.finish(IngestStatus.COMPLETE, None)
+    lines = [line async for line in stream_ingest(task)]
+    # it never had a document, so there is no `document_id` a line could carry
     assert [line.document_id for line in lines] == ["doc-a"]
 
 
@@ -300,6 +327,17 @@ async def test_a_completed_document_is_not_swept():
         worker_of([ItemProgress("a", info("a", 2, complete=True))]),
     )
     await reg.get(started.ingest_id, "owner").task
+    assert not removals.calls
+
+
+async def test_an_expanded_archive_is_not_swept():
+    removals = Removals()
+    reg = registry(removals)
+    started = await reg.start(
+        "owner", "collection", seed("zip"), worker_of([ItemExpanded("zip", 2)])
+    )
+    await reg.get(started.ingest_id, "owner").task
+    # nothing to roll back: its members own the documents, and its binary is already discarded
     assert not removals.calls
 
 

@@ -136,17 +136,22 @@ export class IngestItemInfo {
 	label: string;
 	info?: DocumentIngestInfo;
 	error?: DocumentIngestError;
+	// how many files an archive was expanded into. An archive produces no document of its own, so
+	// it has neither info nor error, and it never reaches the progress stream either
+	expanded?: number;
 
 	constructor(
 		itemId: string,
 		label: string,
 		info?: DocumentIngestInfo,
 		error?: DocumentIngestError,
+		expanded?: number,
 	) {
 		this.itemId = itemId;
 		this.label = label;
 		this.info = info;
 		this.error = error;
+		this.expanded = expanded;
 	}
 }
 
@@ -218,6 +223,7 @@ export const parseIngestItemInfo = (json: any) =>
 		json.label,
 		json.info ? parseDocumentIngestInfo(json.info) : undefined,
 		json.error ? parseDocumentIngestError(json.error) : undefined,
+		json.expanded ?? undefined,
 	);
 
 export const parseIngestInfo = (json: any) =>

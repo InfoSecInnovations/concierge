@@ -40,6 +40,13 @@ def progress_bar(percent: int, class_: str = ""):
 def item_detail(item: IngestItemInfo):
     if item.error:
         return ui.tags.span(item.error.message, class_="small text-danger")
+    if item.expanded is not None:
+        # an archive has no document of its own, so it has no `info` either: checked before the
+        # queued branch below, which it would otherwise fall into for ever
+        return ui.TagList(
+            progress_bar(100, "bg-success"),
+            ui.tags.span(f"expanded into {item.expanded} files", class_="small"),
+        )
     if item.info is None:
         # queued items never reach the progress stream, only the listing this panel polls
         return ui.TagList(

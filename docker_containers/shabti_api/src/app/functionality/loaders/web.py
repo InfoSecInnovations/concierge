@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 import trafilatura
 from crawlee import ConcurrencySettings, service_locator
+from crawlee.configuration import Configuration
 from crawlee.crawlers import (
     BasicCrawlingContext,
     BeautifulSoupCrawler,
@@ -105,6 +106,14 @@ class WebLoader:
             queue = await RequestQueue.open(alias=uuid4().hex)
             crawler = BeautifulSoupCrawler(
                 request_manager=queue,
+                # a budget of its own rather than the default share of system RAM, which crawlee
+                # measures against this whole process's RSS: see SHABTI_CRAWL_MEMORY_MB
+                configuration=Configuration(
+                    memory_mbytes=setting("SHABTI_CRAWL_MEMORY_MB")
+                ),
+                # the same instance the line above would have picked up implicitly, passed only
+                # because crawlee warns when a configuration is explicit and this is not
+                event_manager=service_locator.get_event_manager(),
                 http_client=ImpitHttpClient(
                     # no browser impersonation: identify ourselves honestly
                     browser=None,
@@ -202,13 +211,31 @@ class WebLoader:
 
         async def run_crawl(crawler) -> None:
             try:
-                # the queue is new for this crawl, so there is nothing to purge
-                await crawler.run([url], purge_request_queue=False)
-                outbox.put_nowait(DONE)
+                # crawler.run() has no deadline of its own - SHABTI_CRAWL_TIMEOUT_SECONDS is per
+                # navigation - and crawlee's autoscaler can stop dispatching requests altogether
+                # without ever returning, so this is the only thing that bounds a crawl
+                async with asyncio.timeout(setting("SHABTI_CRAWL_MAX_SECONDS")):
+                    # the queue is new for this crawl, so there is nothing to purge
+                    await crawler.run([url], purge_request_queue=False)
+            except TimeoutError:
+                outbox.put_nowait(
+                    TimeoutError(f"crawl of {url} did not finish in time")
+                )
             except Exception as e:
                 # hand the failure to the consumer so it is raised where the pages are being read,
                 # rather than left on a task nobody awaits
                 outbox.put_nowait(e)
+            except BaseException as e:
+                # the consumer waits on this queue with no timeout of its own, so a BaseException
+                # out of crawler.run() - a CancelledError from crawlee's internals - would park it
+                # for ever on a sentinel nobody enqueued. The cancel from `pages()`'s own finally
+                # arrives here too; nothing is reading by then, so the item goes with the queue
+                outbox.put_nowait(
+                    RuntimeError(f"crawl of {url} ended abnormally: {e!r}")
+                )
+                raise
+            else:
+                outbox.put_nowait(DONE)
 
         async def pages():
             nonlocal crawl_task
