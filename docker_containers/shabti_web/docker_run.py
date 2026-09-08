@@ -1,6 +1,7 @@
 from shiny import run_app
 from shabti_util import auth_enabled
 from glob import glob
+from multiprocessing import active_children
 import argparse
 
 if __name__ == "__main__":
@@ -34,11 +35,23 @@ if __name__ == "__main__":
             *sorted(glob("/app/python_packages/*/src")),
         ]
 
-    run_app(
-        app="src.app.app:app",
-        port=15130,
-        launch_browser=False,
-        host="0.0.0.0",
-        reload=is_dev,
-        **args,
-    )
+    try:
+        run_app(
+            app="src.app.app:app",
+            port=15130,
+            launch_browser=False,
+            host="0.0.0.0",
+            reload=is_dev,
+            **args,
+        )
+    except Exception:
+        # uvicorn's reload supervisor has no error handling around its watcher, so a transient
+        # failure - failing to allocate under memory pressure, say - propagates out of here with
+        # the spawned server process still running. Nothing terminates it, and multiprocessing
+        # joins non-daemonic children at exit, so without this the process blocks here forever:
+        # the app carries on serving, reload is dead, and the container looks healthy enough that
+        # restart: unless-stopped never fires. Killing the children lets the exit happen, so the
+        # container restarts and comes back with a working reloader
+        for child in active_children():
+            child.kill()
+        raise

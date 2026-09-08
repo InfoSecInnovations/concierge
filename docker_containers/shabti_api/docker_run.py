@@ -4,7 +4,7 @@ from logging_config import logging_config
 import os
 import argparse
 from glob import glob
-from multiprocessing import freeze_support
+from multiprocessing import active_children, freeze_support
 import requests
 
 if __name__ == "__main__":
@@ -41,10 +41,17 @@ if __name__ == "__main__":
         except Exception:
             pass
 
-    uvicorn.run(
-        app="src.app.app:app",
-        port=15131,
-        host="0.0.0.0",
-        reload=command_line_args.development,
-        **args,
-    )
+    try:
+        uvicorn.run(
+            app="src.app.app:app",
+            port=15131,
+            host="0.0.0.0",
+            reload=command_line_args.development,
+            **args,
+        )
+    except Exception:
+        # a failure out of the reload supervisor leaves the spawned server process running and
+        # would block here forever joining it, see the comment in shabti_web/docker_run.py
+        for child in active_children():
+            child.kill()
+        raise
