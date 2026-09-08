@@ -25,6 +25,11 @@ function fillProgressRow(row, spec) {
 	const indeterminate = spec.percent === null || spec.percent === undefined;
 	bar.classList.toggle("progress-bar-striped", indeterminate);
 	bar.classList.toggle("progress-bar-animated", indeterminate);
+	// toggled rather than added: a row that was in progress last poll and is finished now is the
+	// same node, and `add` on an empty variant throws. utility classes rather than literal colours,
+	// because the theme picker can change what success and danger look like at runtime
+	bar.classList.toggle("bg-success", spec.variant === "success");
+	bar.classList.toggle("bg-danger", spec.variant === "danger");
 	bar.style.width = indeterminate ? "100%" : `${spec.percent}%`;
 }
 

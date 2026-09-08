@@ -1,7 +1,22 @@
-/* The toast container is the app's only progress surface, and running ingest toasts cannot be
-   dismissed, so the stack has to scroll rather than run off the top of the viewport. */
+/* The toast container is the app's only progress surface, and neither a running ingest's toast nor
+   an ingest error's is dismissed on a timer, so the stack has to scroll rather than run off the top
+   of the viewport. */
 [data-bslib-toast-container="bottom-right"] {
 	width: 350px;
 	max-height: 80vh;
 	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+}
+
+/* The container scrolls from the top, and error toasts sit there until they are clicked away, so
+   the progress toasts are ordered above them: those hold the only Cancel button there is. */
+.toast.shabti-progress {
+	order: -1;
+}
+
+/* bslib emits a plain .btn-close whatever colour the toast is, and an error toast never auto-hides,
+   so the X being legible is the difference between dismissable and not. */
+.toast.text-bg-danger .btn-close {
+	filter: var(--bs-btn-close-white-filter);
 }

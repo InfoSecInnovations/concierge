@@ -41,6 +41,8 @@ class ProgressRow:
     # None renders an indeterminate striped bar: work that is known to be happening but has not
     # reported a number yet
     percent: int | None = None
+    # "success" or "danger", to colour a finished row by how it finished
+    variant: str | None = None
 
 
 def progress_body(status: str = ""):
@@ -93,6 +95,9 @@ class ProgressToast:
                 duration_s=None,
                 closable=self._closable,
                 position=TOAST_POSITION,
+                # so CSS can order these above toasts that don't auto-hide: this one holds the
+                # Cancel button, and has to stay where the container scrolls to by default
+                class_="shabti-progress",
             )
         )
         # `show_toast` sends synchronously, which can leave a partly run coroutine behind; py-shiny
@@ -141,6 +146,7 @@ class ProgressToast:
                         "label": row.label,
                         "detail": row.detail,
                         "percent": row.percent,
+                        "variant": row.variant,
                     }
                     for row in self._rows.values()
                 ],

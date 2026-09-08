@@ -1,7 +1,7 @@
 from shiny import ui, reactive, render, Inputs, Outputs, Session, module
 from .text_input_list import text_input_list
 from dataclasses import dataclass, field
-from shabti_types import IngestInfo
+from shabti_types import IngestInfo, IngestStatus
 from shabti_api_client import BaseShabtiClient, ShabtiRequestError
 from .collections_data import CollectionsData
 from .ingest_job import (
@@ -10,6 +10,8 @@ from .ingest_job import (
     ingest_toast_server,
     ingest_toast_ui,
     is_active,
+    item_done,
+    item_label,
     progress_rows,
 )
 from .load_models import load_models
@@ -84,6 +86,13 @@ def ingester_server(
     # contents are pushed to it directly, so nothing here has to invalidate anything
     seen_terminal: set[str] = set()
     job_toasts: dict[str, ProgressToast] = {}
+    # per job, every item already flashed: an item's coloured bar, and a failure's own toast, happen
+    # on the poll it finished on and on no other - including across a reload part way through a job
+    flashed: dict[str, set[str]] = {}
+    # ingest ids whose toast is living out one more poll so that whatever finished along with the
+    # job still gets seen. the terminal listing travels with them, because by the time we come back
+    # the API may have pruned the job or restarted, and the summary has to be right anyway
+    pending_close: dict[str, IngestInfo] = {}
     cancelling: set[str] = set()
     active_ingests: set[str] = set()
     polled_once = reactive.value(False)
@@ -131,16 +140,34 @@ def ingester_server(
             closable=False,
         )
         job_toasts[job.ingest_id] = toast
+        # a job met part way through - a reload during a long ingest - must not replay a bar and an
+        # error toast for every item that finished before this tab was open, so its history counts
+        # as already flashed. a job watched from its submission has nothing done yet
+        flashed[job.ingest_id] = {i.item_id for i in job.items if item_done(i)}
         # the server before the toast goes up: it registers the Cancel button's handlers
         # synchronously, so the input exists by the time the client binds to it
         ingest_toast_server(job.ingest_id, client, job.ingest_id, toast, cancelling)
         await update_job_toast(job)
 
     async def update_job_toast(job: IngestInfo):
+        done_now = {item.item_id for item in job.items if item_done(item)}
+        # `item_done` only ever goes from false to true, so an item is flashed exactly once
+        flashing = done_now - flashed[job.ingest_id]
+        flashed[job.ingest_id] = done_now
+        for item in job.items:
+            if item.item_id in flashing and item.error is not None:
+                # its own toast, and one that stays until it is clicked away: a failure that only
+                # flashed for a poll would be missed by anyone not watching at that moment
+                show_message(
+                    f"{item_label(item)}: {item.error.message or item.error.error}",
+                    type="danger",
+                    duration_s=None,
+                )
         rows, status = progress_rows(
             job,
             job.ingest_id in cancelling,
             collection_label(job, collections, selected_collection),
+            flashing,
         )
         # the first call is what puts the toast up, so the Cancel button and the bars arrive
         # together rather than the toast flashing empty
@@ -165,6 +192,7 @@ def ingester_server(
     def close_job_toast(job: IngestInfo):
         job_toasts.pop(job.ingest_id).hide()
         cancelling.discard(job.ingest_id)
+        flashed.pop(job.ingest_id, None)
         announce_done(job)
 
     @reactive.extended_task
@@ -191,7 +219,11 @@ def ingester_server(
         # `active_ingests` is a plain set rather than a reactive value for this reason: the effect's
         # only dependency has to be its own timer, or a poll result would re-run it and stack a
         # timer per poll
-        interval = POLL_ACTIVE_SECONDS if active_ingests else POLL_IDLE_SECONDS
+        interval = (
+            POLL_ACTIVE_SECONDS
+            if active_ingests or pending_close
+            else POLL_IDLE_SECONDS
+        )
         poll_now()
         reactive.invalidate_later(interval)
 
@@ -200,6 +232,13 @@ def ingester_server(
         latest = fetch_ingests.result()
         with reactive.isolate():
             polling.set(False)
+            # the poll before this one was some job's last. its toast was left up for the interval
+            # so that whatever finished with it got seen, and it comes down now - from the listing
+            # we kept rather than from this one, so a job the API has since pruned, or lost to a
+            # restart, still gets its summary and still lets the poll drop back to idle
+            for finished in pending_close.values():
+                close_job_toast(finished)
+            pending_close.clear()
         if latest is None:
             # the API went away mid poll. a listing we never got is not evidence that anything
             # finished, still less that anything was pruned, so leave every toast where it is
@@ -219,7 +258,16 @@ def ingester_server(
                 # checked before `seen_terminal` is added to below, or the toast for a job that has
                 # just finished would never be taken down
                 if job.ingest_id in job_toasts:
-                    close_job_toast(job)
+                    if job.status == IngestStatus.CANCELLED:
+                        # nothing left to flash: a cancelled job's unfinished items were rolled
+                        # back, so holding its toast open would only prolong a stale status line
+                        close_job_toast(job)
+                    else:
+                        # one more update rather than the close, because the items that finished
+                        # along with the job are only being reported now, and a bar nobody saw is
+                        # the whole point of this
+                        await update_job_toast(job)
+                        pending_close[job.ingest_id] = job
                 elif first_poll and just_finished(job):
                     announce_done(job)
                 if job.ingest_id in seen_terminal:
@@ -235,6 +283,8 @@ def ingester_server(
             for ingest_id in [i for i in job_toasts if i not in listed]:
                 job_toasts.pop(ingest_id).hide()
                 cancelling.discard(ingest_id)
+                flashed.pop(ingest_id, None)
+                pending_close.pop(ingest_id, None)
                 seen_terminal.add(ingest_id)
             active_ingests.clear()
             active_ingests.update(job.ingest_id for job in latest if is_active(job))
