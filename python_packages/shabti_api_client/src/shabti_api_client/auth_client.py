@@ -9,7 +9,7 @@ from .codes import EXPECTED_CODES
 from shabti_types import (
     AuthzCollectionInfo,
 )
-from .base_client import BaseShabtiClient
+from .base_client import POOL_LIMITS, BaseShabtiClient, send_with_retry
 from .raise_error import raise_error
 
 
@@ -30,7 +30,9 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
         verify: SSLContext | None = None,
     ):
         self.server_url = server_url
-        self.httpx_client = httpx.AsyncClient(verify=verify, timeout=None)
+        self.httpx_client = httpx.AsyncClient(
+            verify=verify, timeout=None, limits=POOL_LIMITS
+        )
         self.token = token
         self.keycloak_client = keycloak_client
         self.refresh_task: Task | None = None
@@ -42,15 +44,23 @@ class ShabtiAuthorizationClient(BaseShabtiClient):
             headers = (
                 {"Authorization": f"Bearer {token['access_token']}"} if token else None
             )
-            request = self.httpx_client.build_request(
-                method=method,
-                url=urljoin(self.server_url, url),
-                headers=headers,
-                json=json,
-                files=files,
-                params=params,
-            )
-            response = await self.httpx_client.send(request, stream=stream)
+
+            # built inside `send` rather than once outside it, so a retry is a fresh request
+            async def send():
+                request = self.httpx_client.build_request(
+                    method=method,
+                    url=urljoin(self.server_url, url),
+                    headers=headers,
+                    json=json,
+                    files=files,
+                    params=params,
+                )
+                return await self.httpx_client.send(request, stream=stream)
+
+            # the status handling stays out here: a status code is never a reason to re-send. A
+            # streaming send returns once the headers are read, before any body is consumed, so a
+            # retry is safe for those too
+            response = await send_with_retry(method, send)
             if response.status_code == 401:
                 raise ShabtiTokenExpiredError(status_code=401)
             if response.status_code == 403:

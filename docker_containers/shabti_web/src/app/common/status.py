@@ -1,6 +1,6 @@
 from shiny import module, reactive, ui, render, Inputs, Outputs, Session, req
 from shabti_api_client import BaseShabtiClient
-from httpx import ConnectError
+from httpx import TransportError
 
 POLL_SECONDS = 10
 # a cold stack comes up in stages - the API, then the LLM host - and at the settled interval a page
@@ -26,14 +26,18 @@ def status_server(
     async def get_llm_status():
         try:
             return "online" if await client.llm_status() else "offline"
-        except ConnectError:
+        # every way the connection itself can fail, not just a refused one: a cold stack also drops
+        # keep-alive connections mid request, and anything escaping here is an unhandled error in
+        # the effect below, which takes the whole session down rather than just this poll.
+        # Deliberately no wider - a ShabtiRequestError or a malformed body is a real fault
+        except TransportError:
             return "loading"
 
     @reactive.extended_task
     async def get_opensearch_status():
         try:
             return "online" if await client.opensearch_status() else "offline"
-        except ConnectError:
+        except TransportError:
             return "loading"
 
     @reactive.extended_task

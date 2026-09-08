@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
 from shabti_types import (
     TaskInfo,
@@ -34,6 +35,44 @@ def ingest_line(
             )
         return DocumentIngestError(**json_obj)
     return DocumentIngestInfo(**json_obj)
+
+
+# httpx and uvicorn both expire an idle keep-alive connection after five seconds, so with the two
+# timers on the same number the pool can hand back a connection the API is closing as we write to
+# it, and the request dies with RemoteProtocolError. Retiring ours first is what removes the race.
+# Three seconds keeps a connection warm across the web UI's two second startup poll - otherwise
+# that's a handshake per poll, a TLS one with security enabled - while leaving margin for the two
+# timers not starting at the same instant. max_connections and max_keepalive_connections are
+# httpx's own defaults restated, because Limits() defaults them to None, which means unbounded
+# rather than "leave them alone"
+POOL_LIMITS = httpx.Limits(
+    max_connections=100, max_keepalive_connections=20, keepalive_expiry=3.0
+)
+
+# only GET and HEAD, because from out here a connection that died before the response is
+# indistinguishable from one the server processed before it went. A repeated POST would start a
+# second ingest, and one carrying files= would resend handles the first attempt has already read to
+# the end. DELETE and PUT are out for the same reason: a retry landing after the first one succeeded
+# turns it into a 404, which is a worse failure than the transport error it replaced
+RETRYABLE_METHODS = frozenset({"GET", "HEAD"})
+
+
+async def send_with_retry(
+    method: str, send: Callable[[], Awaitable[httpx.Response]]
+) -> httpx.Response:
+    """`send` once more if the connection it picked turned out to be one the server was closing.
+
+    Belt and braces for POOL_LIMITS, which narrows that window rather than closing it, and a cold
+    stack polling every two seconds against an API busy loading models is where it shows up.
+    """
+    try:
+        return await send()
+    except httpx.RemoteProtocolError:
+        if method.upper() not in RETRYABLE_METHODS:
+            raise
+        # the dead connection is dropped from the pool on the way out, so this attempt opens a new
+        # one. Once only: with POOL_LIMITS in place, twice in a row is a real fault
+        return await send()
 
 
 class BaseShabtiClient(ABC):
