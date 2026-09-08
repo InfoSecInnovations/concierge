@@ -3,6 +3,7 @@ from shabti_util import auth_enabled
 from logging_config import logging_config
 import os
 import argparse
+from glob import glob
 from multiprocessing import freeze_support
 import requests
 
@@ -21,6 +22,14 @@ if __name__ == "__main__":
     if auth_enabled():
         args["ssl_keyfile"] = "/api_certs/key.pem"
         args["ssl_certfile"] = "/api_certs/cert.pem"
+
+    if command_line_args.development:
+        # keeps the reloader off the .venv sitting in the working directory, see the comment in
+        # shabti_web/docker_run.py. Only set alongside reload, which uvicorn warns about otherwise
+        args["reload_dirs"] = [
+            "/app/shabti/src",
+            *sorted(glob("/app/python_packages/*/src")),
+        ]
 
     while True:
         try:
